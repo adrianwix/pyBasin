@@ -48,5 +48,6 @@ if __name__ == "__main__":
     print("Basin Stability:", basin_stability)
 
     bse.plots()
-    bse.save("basin_stability_results.json")
-    
+
+    # Disabled since result file is too big
+    # bse.save("basin_stability_results.json")
