@@ -36,11 +36,32 @@ class RandomSampler(Sampler):
         return rng.uniform(self.min_limits, self.max_limits, (N, self.state_dim))
 
 
-class UniformSampler(Sampler):
-    """Generates evenly spaced samples within the specified range."""
+class GridSampler(Sampler):
+    """Generates evenly spaced samples in a grid pattern within the specified range."""
 
     def sample(self, N: int) -> np.ndarray:
-        return np.linspace(self.min_limits, self.max_limits, N)
+        """
+        Generate a grid of N^(1/d) points per dimension, where d is the number of dimensions.
+        
+        :param N: Approximate total number of points desired
+        :return: Array of shape (N_actual, state_dim) containing grid points
+        """
+        # Calculate number of points per dimension
+        n_per_dim = int(np.floor(N**(1/self.state_dim)))
+        
+        # Create grid points for each dimension
+        grid_points = [np.linspace(min_val, max_val, n_per_dim) 
+                      for min_val, max_val in zip(self.min_limits, self.max_limits)]
+        
+        # Create meshgrid
+        grid_matrices = np.meshgrid(*grid_points)
+        
+        # Reshape to get all combinations
+        points = np.vstack([grid.flatten() for grid in grid_matrices]).T
+        
+        print(f"Created grid with {len(points)} points ({n_per_dim} points per dimension)")
+        
+        return points
 
 
 class GaussianSampler(Sampler):

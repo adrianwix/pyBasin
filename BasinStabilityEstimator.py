@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from concurrent.futures import ProcessPoolExecutor
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 
 from ClusterClassifier import ClusterClassifier
 from FeatureExtractor import FeatureExtractor
@@ -107,6 +107,11 @@ class BasinStabilityEstimator:
         features_array = np.vstack([sol.features for sol in solutions])
         
         # Step 4: Perform clustering/classification.
+        self.cluster_classifier.fit(
+            solver=self.solver,
+            ode_system=self.ode_system,
+            feature_extractor=self.feature_extractor)
+        
         assignments = self.cluster_classifier.get_labels(features_array)
         
         # Update each Solution instance with its label.
@@ -223,6 +228,65 @@ class BasinStabilityEstimator:
         plt.tight_layout()
         plt.show()
 
+    def plot_templates(self, plotted_var: int, time_span: tuple, y_lims: Optional[Union[tuple, list]] = None):
+        """
+        Plot the time integrations of template solutions.
+        Shows trajectory of the first state variable for each template solution.
+
+        Args:
+            plotted_var (int): Index of the variable to plot
+            time_span (tuple): Time range to plot (t_start, t_end)
+            y_lims (tuple or list, optional): Y-axis limits. If tuple, applies to all plots.
+                                            If list of tuples, applies individually to each plot.
+        """
+        if self.cluster_classifier.initial_conditions is None:
+            raise ValueError("No template solutions available.")
+        
+        if time_span is not None:
+            assert time_span[0] >= 0, "Time span must be non-negative."
+            assert time_span[1] > time_span[0], "Time span must be positive."
+
+        n_solutions = len(self.cluster_classifier.initial_conditions)
+
+        # Validate y_lims if provided
+        if y_lims is not None:
+            if isinstance(y_lims, tuple):
+                y_lims = [y_lims] * n_solutions
+            else:
+                assert len(y_lims) == n_solutions, f"Length of y_lims ({len(y_lims)}) must match number of solutions ({n_solutions})"
+                assert all(isinstance(lim, tuple) for lim in y_lims), "All elements in y_lims must be tuples"
+        
+        plt.figure(figsize=(4, 1.5*n_solutions))
+
+        # Generate template trajectories and plot
+        for i, (ic, label) in enumerate(zip(
+            self.cluster_classifier.initial_conditions, 
+            self.cluster_classifier.labels
+        ), 1):
+            # Integrate template
+            ode_lambda = lambda t, y: self.ode_system.ode(t, y)
+            t, y = self.solver.integrate(ode_lambda, np.array(ic))
+            
+            if time_span is not None:
+                max_ts = t[len(t) - 1]
+                assert time_span[1] <= max_ts, f"Time span exceeds maximum time {max_ts}"
+
+            # Find the indices corresponding to the time span
+            idx = (t >= time_span[0]) & (t <= time_span[1])
+
+            # Plot only first state variable
+            ax = plt.subplot(n_solutions, 1, i)
+            ax.plot(t[idx], y[idx, plotted_var])  # y[:, 0] is the first state
+            ax.set_xlabel('time')
+            ax.set_ylabel('state 1')
+            ax.set_title(f'Class {i}, Label: {label}')
+
+            # Apply y-axis limits if specified
+            if y_lims is not None:
+                ax.set_ylim(y_lims[i-1])
+
+        plt.tight_layout()
+        plt.show()
     
     def save(self, filename: str):
         """

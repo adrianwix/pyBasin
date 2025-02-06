@@ -64,3 +64,22 @@ class PendulumFeatureExtractor(FeatureExtractor):
             # LC (Limit Cycle)
             return np.array(PendulumOHE["LC"], dtype=np.float64)
 
+
+class DuffingFeatureExtractor(FeatureExtractor):
+    """
+    Feature extractor for the Duffing oscillator.
+    Extracts two features from the first state variable:
+    1. Maximum value
+    2. Standard deviation
+    """
+    
+    def extract_features(self, solution: Solution):
+        # Get the steady-state portion of the trajectory
+        y_filtered = self.filter_time(solution)
+        
+        # Calculate features using first state (y[:,0])
+        max_val = np.max(y_filtered[:, 0])
+        std_val = np.std(y_filtered[:, 0])
+        
+        return np.array([max_val, std_val], dtype=np.float64)
+

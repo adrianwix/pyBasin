@@ -5,6 +5,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
 from sklearn.base import ClusterMixin
 
+from FeatureExtractor import FeatureExtractor
+from ODESystem import ODESystem
+from Solution import Solution
+from Solver import Solver
+
 class ClusterClassifier(ABC):
     """
     Abstract base class for clustering/classification.
@@ -30,6 +35,21 @@ class ClusterClassifier(ABC):
         """
         pass
 
+    def fit(self, solver: Solver, ode_system: ODESystem, feature_extractor: FeatureExtractor) -> None:
+        # Generate features for each template initial condition
+        template_features = []
+
+        for ic in self.initial_conditions:
+            t, y = solver.integrate(lambda t, y: ode_system.ode(t, y), np.array(ic))
+            sol = Solution(initial_condition=np.array(ic), time=t, y=y)
+            features = feature_extractor.extract_features(sol)
+            template_features.append(features)
+
+        trainX = np.array(template_features)
+        trainY = np.array(self.labels)
+
+        self.classifier.fit(trainX, trainY)
+
 
 class KNNCluster(ClusterClassifier):
     """
@@ -42,7 +62,7 @@ class KNNCluster(ClusterClassifier):
     In our example, trainY should contain the strings "Fixed Point" and "Limit Cycle".
     """
     
-    def __init__(self, classifier: KNeighborsClassifier, trainX: np.ndarray, trainY: np.ndarray):
+    def __init__(self, classifier: KNeighborsClassifier, initial_conditions: np.ndarray, labels: np.ndarray):
         """
         Initialize the KNNCluster.
         
@@ -56,10 +76,9 @@ class KNNCluster(ClusterClassifier):
             Training labels (shape: (n_samples,)). Expected labels are strings.
         """
         self.classifier = classifier
-        self.trainX = trainX
-        self.trainY = trainY
-        # Fit the classifier using the provided training data.
-        self.classifier.fit(trainX, trainY)
+        self.initial_conditions = initial_conditions
+        self.labels = labels
+     
     
     def get_labels(self, features: np.ndarray) -> np.ndarray:
         """
