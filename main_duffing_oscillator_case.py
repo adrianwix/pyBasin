@@ -19,8 +19,8 @@ if __name__ == "__main__":
     ode_system = DuffingODE(params)  # for example
 
     sampler = GridSampler(
-        min_limits= (-1, -0.5), 
-        max_limits= (1, 1))
+        min_limits=(-1, -0.5),
+        max_limits=(1, 1))
 
     solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
 
@@ -35,10 +35,10 @@ if __name__ == "__main__":
         [-0.43, 0.12],   # y5: n=3 cycle
     ]
     classifier_labels = [
-        'y1: small n=1 cycle', 
-        'y2: large n=1 cycle', 
-        'y3: first n=2 cycle', 
-        'y4: second n=2 cycle', 
+        'y1: small n=1 cycle',
+        'y2: large n=1 cycle',
+        'y3: first n=2 cycle',
+        'y4: second n=2 cycle',
         'y5: n=3 cycle']
 
     # Create a KNeighborsClassifier with k=1
@@ -46,10 +46,10 @@ if __name__ == "__main__":
 
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
-        classifier=knn, 
-        initial_conditions=classifier_initial_conditions, 
+        classifier=knn,
+        initial_conditions=classifier_initial_conditions,
         labels=classifier_labels)
-    
+
     bse = BasinStabilityEstimator(
         name="duffing_oscillator",
         N=N,

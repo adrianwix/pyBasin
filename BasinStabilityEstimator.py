@@ -22,10 +22,6 @@ from Solution import Solution
 from Solver import Solver
 import json
 from json import JSONEncoder
-from joblib import Memory
-
-# Add cache directory setup after imports
-memory = Memory('cache_dir', verbose=0)
 
 
 class BasinStabilityEstimator:
@@ -134,7 +130,6 @@ class BasinStabilityEstimator:
 
         return self.bs_vals
 
-    @memory.cache
     def _integrate_sample(self, i, y0, ode_system, solver) -> Solution:
         """
         Integrate a single sample and return a Solution instance.

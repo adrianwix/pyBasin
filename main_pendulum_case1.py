@@ -19,8 +19,8 @@ def preview_plot_templates():
     ode_system = PendulumODE(params)  # for example
 
     sampler = RandomSampler(
-        min_limits= (-np.pi + np.arcsin(params["T"] / params["K"]), -10.0), 
-        max_limits= (np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
+        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
+        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
     solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
 
@@ -40,8 +40,8 @@ def preview_plot_templates():
 
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
-        classifier=knn, 
-        initial_conditions=classifier_initial_conditions, 
+        classifier=knn,
+        initial_conditions=classifier_initial_conditions,
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
@@ -59,7 +59,6 @@ def preview_plot_templates():
         y_lims=[(-0.6, 0.6), (-1, params["T"] / params["alpha"] + 1)])
 
 
-
 if __name__ == "__main__":
     # We can test and visualize the templates before running the Basin Stability Estimator
     # preview_plot_templates()
@@ -73,8 +72,8 @@ if __name__ == "__main__":
     ode_system = PendulumODE(params)  # for example
 
     sampler = RandomSampler(
-        min_limits= (-np.pi + np.arcsin(params["T"] / params["K"]), -10.0), 
-        max_limits= (np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
+        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
+        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
     solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
 
@@ -92,8 +91,8 @@ if __name__ == "__main__":
 
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
-        classifier=knn, 
-        initial_conditions=classifier_initial_conditions, 
+        classifier=knn,
+        initial_conditions=classifier_initial_conditions,
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
@@ -106,9 +105,9 @@ if __name__ == "__main__":
         cluster_classifier=knn_cluster
     )
 
-    bse.plot_templates(
-        plotted_var=1,
-        time_span=(0, 50 * np.pi))
+    # bse.plot_templates(
+    #     plotted_var=1,
+    #     time_span=(0, 50 * np.pi))
 
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
@@ -117,4 +116,3 @@ if __name__ == "__main__":
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")
-
