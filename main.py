@@ -16,47 +16,14 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 
-from ODESystem import PendulumODE
+from ODESystem import ODESystem, PendulumODE, PendulumParams
+from Sampler import RandomSampler, Sampler
+from Solver import SciPySolver, Solver
 
 OHE = {
     "FP": np.array([1.0, 0.0], dtype=np.float64),
     "LC": np.array([0.0, 1.0], dtype=np.float64)
 }
-
-
-class Params(TypedDict):
-    alpha: float
-    T: float
-    K: float
-
-
-# def pendulum_ode(t: float, y: NDArray[np.float64], params: Params) -> List[float]:
-#     """
-#     Right-hand side (RHS) for the pendulum ODE.
-
-#     Parameters
-#     ----------
-#     t : float
-#         The current time (not explicitly used if the system is time-invariant).
-#     y : NDArray[np.float64], shape (2,)
-#         The current state, [theta, theta_dot].
-#     params : Params
-#         Dictionary of model parameters, for example {"alpha": 0.1, "T": 0.5, "K": 1.0}.
-
-#     Returns
-#     -------
-#     dydt : List[float]
-#         The derivatives: [dtheta/dt, dtheta_dot/dt].
-#     """
-#     alpha = params["alpha"]
-#     T = params["T"]
-#     K = params["K"]
-
-#     theta, theta_dot = y
-#     dtheta_dt = theta_dot
-#     dtheta_dot_dt = -alpha * theta_dot + T - K * np.sin(theta)
-
-#     return [dtheta_dt, dtheta_dot_dt]
 
 
 def features_pendulum(
@@ -152,38 +119,43 @@ def cluster_assign(
         return kmeans.labels_.astype(np.int64)
 
 
-def integrate_sample(i, Y0, params, time_span, method, steady_state_time):
+def integrate_sample(i, Y0, ode_system: ODESystem, solver, steady_state_time):
+    """
+    Integrates a single ODE sample using the specified solver.
+
+    :param i: Index of the sample.
+    :param Y0: Array of initial conditions (shape: (num_samples, num_states)).
+    :param params: Parameters for the ODE system.
+    :param solver: An instance of Solver (e.g., SciPySolver).
+    :param steady_state_time: Time after which steady-state features are computed.
+    :return: Flattened feature vector.
+    """
     y0 = Y0[i, :]
     print(f"Integrating sample {i+1}/{len(Y0)} with initial condition {y0}")
-    sol = solve_ivp(
-        # Move ODE to param
-        fun=lambda t, y: PendulumODE(params).ode(t, y),
-        t_span=time_span,
-        y0=y0,
-        method=method,
-        rtol=1e-8,
-        dense_output=True
-    )
-    t = sol.t
-    y = sol.y.T  # shape => (len(t), 2)
+
+    # Define the ODE system
+    ode_lambda = lambda t, y: ode_system.ode(t, y)
+
+    # Integrate using the solver
+    t, y = solver.integrate(ode_lambda, y0)
+
+    # Extract features
     X_i = features_pendulum(t, y, steady_state_time=steady_state_time)
     return X_i.flatten()  # shape => (2,)
 
 
 def compute_basin_stability(
     N: int,
-    time_span: Tuple[float, float],
     # TODO: Move this to features extraction. It depends on the end of time span
     # but besides that, it is not used at all.
     steady_state_time: float,
-    params: Params,
+    ode_system: ODESystem,
     # Defines the state space limits for initial conditions (Region of Interest)
-    min_limits: Tuple[float, float],
-    max_limits: Tuple[float, float],
+    sampler: Sampler,
+    solver: Solver,
     # Clustering
     supervised: bool = True,
     templates: Optional[NDArray[np.float64]] = None,
-    method: str = "RK45"
 ) -> Tuple[NDArray[np.int64], Dict[int, float]]:
     """
     Main function: estimate basin stability for the pendulum system.
@@ -203,12 +175,9 @@ def compute_basin_stability(
         Time-interval for integration, (t0, tf).
     steady_state_time : float
         Time after which to measure steady-state features.
-    params : Dict[str, float]
+    ode_system : ODESystem
         Dictionary with pendulum parameters, e.g. {"T": 0.1, "K": 0.5}.
-    min_limits : Tuple[float, float]
-        Lower bounds for [theta, theta_dot].
-    max_limits : Tuple[float, float]
-        Upper bounds for [theta, theta_dot].
+
     supervised : bool
         If True, do a supervised classification with the given templates.
     templates : Optional[NDArray[np.float64]]
@@ -224,24 +193,19 @@ def compute_basin_stability(
     basin_stability : Dict[int, float]
         Dictionary mapping {label: fraction_of_samples_in_that_label}.
     """
-    rng = np.random.default_rng()
 
     # Step 1: Generate random initial conditions
     # shape => (N, 2)
-    thetas = rng.uniform(min_limits[0], max_limits[0], N)
-    theta_dots = rng.uniform(min_limits[1], max_limits[1], N)
-    Y0 = np.column_stack((thetas, theta_dots))
+    Y0 = sampler.sample(N)
 
     # Step 2/3: Integrate and extract features
+    
     all_features = []
 
     with ProcessPoolExecutor() as executor:
         all_features = list(executor.map(integrate_sample, range(
-            N), [Y0]*N, [params]*N, [time_span]*N, [method]*N, [steady_state_time]*N))
+            N), [Y0]*N, [ode_system]*N, [solver]*N, [steady_state_time]*N))
 
-    # for i in range(N):
-    #     all_features.append(
-    #         integrate_sample(i, Y0, params, t_span, method, t_star))
 
     features_array = np.vstack(all_features)  # shape => (N, 2)
 
@@ -263,24 +227,28 @@ def compute_basin_stability(
 
 
 if __name__ == "__main__":
-    # Example usage
-    # We request 10_000 initial conditions, run the simulation, classify them.
+
     N = 1000
-    # Example param dictionary
-    params = {"alpha": 0.1, "T": 0.5, "K": 1.0}
-    min_limits = (-np.pi + np.arcsin(params["T"] / params["K"]), -10.0)
-    max_limits = (np.pi + np.arcsin(params["T"] / params["K"]),  10.0)
+
+    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
+    ode_system = PendulumODE(params)
+
+    sampler = RandomSampler(
+        min_limits= (-np.pi + np.arcsin(params["T"] / params["K"]), -10.0), 
+        max_limits= (np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
+    
+    solver = SciPySolver(time_span=(0, 1000), method="RK45")
 
     assignments, basin_stab, Y0, features_array = compute_basin_stability(
         N=N,
-        params=params,
-        min_limits=min_limits,
-        max_limits=max_limits,
-        time_span=(0, 1000),
+        ode_system=ode_system,
+        sampler=sampler,
+        solver=solver,
+        # Move to feature extractor
         steady_state_time=950.0,
+        # Move to clustering
         supervised=True,
         templates=np.array([[1, 0], [0, 1]], dtype=np.float64),
-        method="RK45"
     )
 
     print("Assignments (first 20):", assignments[:20])
