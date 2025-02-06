@@ -25,7 +25,7 @@ class Solution:
         self,
         initial_condition: np.ndarray,
         time: np.ndarray,
-        trajectory: np.ndarray,
+        y: np.ndarray,
         features: Optional[np.ndarray] = None,
         label: Optional[Any] = None,
         model_params: Optional[Dict[str, Any]] = None,
@@ -42,7 +42,7 @@ class Solution:
         """
         self.initial_condition = np.array(initial_condition)
         self.time = np.array(time)
-        self.trajectory = np.array(trajectory)
+        self.trajectory = np.array(y)
         self.features = np.array(features) if features is not None else None
         self.label = label
         self.model_params = model_params

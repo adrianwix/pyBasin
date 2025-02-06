@@ -275,7 +275,7 @@ if __name__ == "__main__":
     plt.title("Initial Conditions in State Space")
     plt.xlabel("theta")
     plt.ylabel("theta_dot")
-    plt.legend()
+    plt.legend(loc="upper left")
 
     # 3) Feature space scatter plot with classifier results
     plt.subplot(2, 2, 3)
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     plt.title("Feature Space with Classifier Results")
     plt.xlabel("Feature 1")
     plt.ylabel("Feature 2")
-    plt.legend()
+    plt.legend(loc="upper left")
 
     # 4) Empty plot for future use
     plt.subplot(2, 2, 4)

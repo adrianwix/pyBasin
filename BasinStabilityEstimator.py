@@ -4,6 +4,7 @@ import pickle
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Dict
 
+from FeatureExtractor import FeatureExtractor
 from ODESystem import ODESystem
 
 from typing import Dict, Optional
@@ -21,55 +22,56 @@ from Solution import Solution
 #     "FP": np.array([1.0, 0.0], dtype=np.float64),
 #     "LC": np.array([0.0, 1.0], dtype=np.float64)
 # }
-OHE = {"FP": [1, 0], "LC": [0, 1]}
+# OHE = {"FP": [1, 0], "LC": [0, 1]}
 
-def features_pendulum(
-    t: NDArray[np.float64],
-    y: NDArray[np.float64],
-    steady_state_time: float = 950.0
-) -> NDArray[np.float64]:
-    """
-    Replicates the MATLAB 'features_pendulum' function in Python:
-      1) Identify time indices for t > steady_state_time (steady-state).
-      2) Compute Delta = |max(theta_dot) - mean(theta_dot)|.
-      3) If Delta < 0.01 => [1,0] (FP), else => [0,1] (LC).
+# def _features_pendulum(
+#     t: NDArray[np.float64],
+#     y: NDArray[np.float64],
+#     steady_state_time: float = 950.0
+# ) -> NDArray[np.float64]:
+#     """
+#     Replicates the MATLAB 'features_pendulum' function in Python:
+#       1) Identify time indices for t > steady_state_time (steady-state).
+#       2) Compute Delta = |max(theta_dot) - mean(theta_dot)|.
+#       3) If Delta < 0.01 => [1,0] (FP), else => [0,1] (LC).
 
-    Parameters
-    ----------
-    t : NDArray[np.float64]
-        Time values from the integration.
-    y : NDArray[np.float64], shape (len(t), 2)
-        The states at each time in t.  y[:,0] = theta, y[:,1] = theta_dot
-    steady_state_time : float
-        Time after which we consider the system to be near steady-state.
+#     Parameters
+#     ----------
+#     t : NDArray[np.float64]
+#         Time values from the integration.
+#     y : NDArray[np.float64], shape (len(t), 2)
+#         The states at each time in t.  y[:,0] = theta, y[:,1] = theta_dot
+#     steady_state_time : float
+#         Time after which we consider the system to be near steady-state.
 
-    Returns
-    -------
-    X : NDArray[np.float64], shape (2, 1)
-        A one-hot vector, [1,0]^T for FP or [0,1]^T for LC.
-    """
-    # Indices where t > steady_state_time
-    idx_steady = np.where(t > steady_state_time)[0]
-    if len(idx_steady) == 0:
-        print("Warning: No steady state found.")
-        # If we never get beyond steady_state_time, default to [1,0]
-        return np.array(OHE["FP"], dtype=np.float64)
+#     Returns
+#     -------
+#     X : NDArray[np.float64], shape (2, 1)
+#         A one-hot vector, [1,0]^T for FP or [0,1]^T for LC.
+#     """
+#     # Indices where t > steady_state_time
+#     idx_steady = np.where(t > steady_state_time)[0]
+#     if len(idx_steady) == 0:
+#         print("Warning: No steady state found.")
+#         # If we never get beyond steady_state_time, default to [1,0]
+#         return np.array(OHE["FP"], dtype=np.float64)
 
-    print(f"Steady state found at t={t[idx_steady[0]]}")
-    idx_start = idx_steady[0]
+#     print(f"Steady state found at t={t[idx_steady[0]]}")
+#     idx_start = idx_steady[0]
 
-    # Use the second state (theta_dot) for the portion after steady_state_time
-    portion = y[idx_start:, 1]
-    delta = np.abs(np.max(portion) - np.mean(portion))
-    print(f"Delta = {delta}")
+#     # Use the second state (theta_dot) for the portion after steady_state_time
+#     portion = y[idx_start:, 1]
+    
+#     delta = np.abs(np.max(portion) - np.mean(portion))
+#     print(f"Delta = {delta}")
 
-    if delta < 0.01:
-        print("Fixed Point (FP)")
-        # FP (Fixed Point)
-        return np.array(OHE["FP"], dtype=np.float64)
-    else:
-        # LC (Limit Cycle)
-        return np.array(OHE["LC"], dtype=np.float64)
+#     if delta < 0.01:
+#         print("Fixed Point (FP)")
+#         # FP (Fixed Point)
+#         return np.array(OHE["FP"], dtype=np.float64)
+#     else:
+#         # LC (Limit Cycle)
+#         return np.array(OHE["LC"], dtype=np.float64)
 
 
 def cluster_assign(
@@ -143,10 +145,11 @@ class BasinStabilityEstimator:
     def __init__(
         self,
         N: int,
-        steady_state_time: float,
         ode_system,   # Expected to be an instance of an ODE system class.
         sampler,      # Expected to be an instance of Sampler.
         solver,       # Expected to be an instance of Solver.
+        feature_extractor: FeatureExtractor,
+        # TODO: extract cluster class  
         supervised: bool = True,
         templates: Optional[np.ndarray] = None,
     ):
@@ -162,10 +165,11 @@ class BasinStabilityEstimator:
         :param templates: Templates for supervised clustering (if any).
         """
         self.N = N
-        self.steady_state_time = steady_state_time
         self.ode_system = ode_system
         self.sampler = sampler
         self.solver = solver
+        self.feature_extractor = feature_extractor
+
         self.supervised = supervised
         self.templates = templates
 
@@ -203,10 +207,9 @@ class BasinStabilityEstimator:
             solutions = list(executor.map(
                 self._integrate_sample,
                 range(self.N),
-                [self.Y0] * self.N,
+                self.Y0,
                 [self.ode_system] * self.N,
                 [self.solver] * self.N,
-                [self.steady_state_time] * self.N
             ))
         self.solutions = solutions
         
@@ -235,7 +238,7 @@ class BasinStabilityEstimator:
         
         return self.bs_vals
 
-    def _integrate_sample(self, i, Y0, ode_system, solver, steady_state_time) -> Solution:
+    def _integrate_sample(self, i, y0, ode_system, solver) -> Solution:
         """
         Integrate a single sample and return a Solution instance.
         
@@ -243,11 +246,10 @@ class BasinStabilityEstimator:
         :param Y0: Array of initial conditions.
         :param ode_system: The ODE system model.
         :param solver: The Solver instance for integration.
-        :param steady_state_time: Time after which features are extracted.
         :return: A Solution instance.
         """
-        y0 = Y0[i, :]
-        print(f"Integrating sample {i+1}/{len(Y0)} with initial condition {y0}")
+        # y0 = Y0[i, :]
+        print(f"Integrating sample {i+1}/{self.N} with initial condition {y0}")
         
         # Define the ODE system lambda function
         ode_lambda = lambda t, y: ode_system.ode(t, y)
@@ -255,16 +257,21 @@ class BasinStabilityEstimator:
         # Perform integration
         t, y = solver.integrate(ode_lambda, y0)
         
-        # Extract features (for example, using a feature extractor function)
-        features = features_pendulum(t, y, steady_state_time=steady_state_time)
-        
         # Create and return a Solution instance
-        return Solution(
+        solution = Solution(
             initial_condition=y0,
             time=t,
-            trajectory=y,
-            features=features
+            y=y,
         )
+
+        # Extract features (for example, using a feature extractor function)
+        features = self.feature_extractor.extract_features(solution)
+
+        solution.set_features(features)
+
+        return solution
+        
+        
     
     def plots(self):
         """
@@ -302,25 +309,25 @@ class BasinStabilityEstimator:
                 initial_conditions[idx, 1],
                 s=5,
                 alpha=0.5,
-                label=f"Class {label}"
+                label=label
             )
         plt.title("Initial Conditions in State Space")
-        plt.xlabel("theta")
-        plt.ylabel("theta_dot")
-        plt.legend()
+        # TODO: Have custom labels per case
+        plt.xlabel("y_1")
+        plt.ylabel("y_2")
+        plt.legend(loc="upper left")
 
         # 3) Feature space scatter plot with classifier results.
         plt.subplot(2, 2, 3)
         for label in unique_labels:
             idx = assignments == label
             # Map labels to class names if desired (example mapping below)
-            class_name = "Fixed Point" if label == 0 else "Limit Cycle"
             plt.scatter(
                 features_array[idx, 0],
                 features_array[idx, 1],
                 s=5,
                 alpha=0.5,
-                label=class_name
+                label=label
             )
         plt.title("Feature Space with Classifier Results")
         plt.xlabel("Feature 1")
@@ -354,7 +361,7 @@ class BasinStabilityEstimator:
             "features_array": self.features_array,
             "solutions": self.solutions,
             "N": self.N,
-            "steady_state_time": self.steady_state_time,
+            "steady_state_time": self.feature_extractor.time_steady,
         }
         with open(filename, "wb") as f:
             pickle.dump(results, f)
