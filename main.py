@@ -16,6 +16,8 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 
+from ODESystem import PendulumODE
+
 OHE = {
     "FP": np.array([1.0, 0.0], dtype=np.float64),
     "LC": np.array([0.0, 1.0], dtype=np.float64)
@@ -28,33 +30,33 @@ class Params(TypedDict):
     K: float
 
 
-def pendulum_ode(t: float, y: NDArray[np.float64], params: Params) -> List[float]:
-    """
-    Right-hand side (RHS) for the pendulum ODE.
+# def pendulum_ode(t: float, y: NDArray[np.float64], params: Params) -> List[float]:
+#     """
+#     Right-hand side (RHS) for the pendulum ODE.
 
-    Parameters
-    ----------
-    t : float
-        The current time (not explicitly used if the system is time-invariant).
-    y : NDArray[np.float64], shape (2,)
-        The current state, [theta, theta_dot].
-    params : Params
-        Dictionary of model parameters, for example {"alpha": 0.1, "T": 0.5, "K": 1.0}.
+#     Parameters
+#     ----------
+#     t : float
+#         The current time (not explicitly used if the system is time-invariant).
+#     y : NDArray[np.float64], shape (2,)
+#         The current state, [theta, theta_dot].
+#     params : Params
+#         Dictionary of model parameters, for example {"alpha": 0.1, "T": 0.5, "K": 1.0}.
 
-    Returns
-    -------
-    dydt : List[float]
-        The derivatives: [dtheta/dt, dtheta_dot/dt].
-    """
-    alpha = params["alpha"]
-    T = params["T"]
-    K = params["K"]
+#     Returns
+#     -------
+#     dydt : List[float]
+#         The derivatives: [dtheta/dt, dtheta_dot/dt].
+#     """
+#     alpha = params["alpha"]
+#     T = params["T"]
+#     K = params["K"]
 
-    theta, theta_dot = y
-    dtheta_dt = theta_dot
-    dtheta_dot_dt = -alpha * theta_dot + T - K * np.sin(theta)
+#     theta, theta_dot = y
+#     dtheta_dt = theta_dot
+#     dtheta_dot_dt = -alpha * theta_dot + T - K * np.sin(theta)
 
-    return [dtheta_dt, dtheta_dot_dt]
+#     return [dtheta_dt, dtheta_dot_dt]
 
 
 def features_pendulum(
@@ -150,13 +152,13 @@ def cluster_assign(
         return kmeans.labels_.astype(np.int64)
 
 
-def integrate_sample(i, Y0, params, t_span, method, steady_state_time):
+def integrate_sample(i, Y0, params, time_span, method, steady_state_time):
     y0 = Y0[i, :]
     print(f"Integrating sample {i+1}/{len(Y0)} with initial condition {y0}")
     sol = solve_ivp(
         # Move ODE to param
-        fun=lambda t, y: pendulum_ode(t, y, params),
-        t_span=t_span,
+        fun=lambda t, y: PendulumODE(params).ode(t, y),
+        t_span=time_span,
         y0=y0,
         method=method,
         rtol=1e-8,
