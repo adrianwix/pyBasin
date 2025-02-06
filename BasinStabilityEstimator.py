@@ -4,6 +4,7 @@ import pickle
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Dict
 
+from ClusterClassifier import ClusterClassifier
 from FeatureExtractor import FeatureExtractor
 from ODESystem import ODESystem
 
@@ -16,114 +17,11 @@ import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 
 from ODESystem import ODESystem
+from Sampler import Sampler
 from Solution import Solution
-
-# OHE = {
-#     "FP": np.array([1.0, 0.0], dtype=np.float64),
-#     "LC": np.array([0.0, 1.0], dtype=np.float64)
-# }
-# OHE = {"FP": [1, 0], "LC": [0, 1]}
-
-# def _features_pendulum(
-#     t: NDArray[np.float64],
-#     y: NDArray[np.float64],
-#     steady_state_time: float = 950.0
-# ) -> NDArray[np.float64]:
-#     """
-#     Replicates the MATLAB 'features_pendulum' function in Python:
-#       1) Identify time indices for t > steady_state_time (steady-state).
-#       2) Compute Delta = |max(theta_dot) - mean(theta_dot)|.
-#       3) If Delta < 0.01 => [1,0] (FP), else => [0,1] (LC).
-
-#     Parameters
-#     ----------
-#     t : NDArray[np.float64]
-#         Time values from the integration.
-#     y : NDArray[np.float64], shape (len(t), 2)
-#         The states at each time in t.  y[:,0] = theta, y[:,1] = theta_dot
-#     steady_state_time : float
-#         Time after which we consider the system to be near steady-state.
-
-#     Returns
-#     -------
-#     X : NDArray[np.float64], shape (2, 1)
-#         A one-hot vector, [1,0]^T for FP or [0,1]^T for LC.
-#     """
-#     # Indices where t > steady_state_time
-#     idx_steady = np.where(t > steady_state_time)[0]
-#     if len(idx_steady) == 0:
-#         print("Warning: No steady state found.")
-#         # If we never get beyond steady_state_time, default to [1,0]
-#         return np.array(OHE["FP"], dtype=np.float64)
-
-#     print(f"Steady state found at t={t[idx_steady[0]]}")
-#     idx_start = idx_steady[0]
-
-#     # Use the second state (theta_dot) for the portion after steady_state_time
-#     portion = y[idx_start:, 1]
-    
-#     delta = np.abs(np.max(portion) - np.mean(portion))
-#     print(f"Delta = {delta}")
-
-#     if delta < 0.01:
-#         print("Fixed Point (FP)")
-#         # FP (Fixed Point)
-#         return np.array(OHE["FP"], dtype=np.float64)
-#     else:
-#         # LC (Limit Cycle)
-#         return np.array(OHE["LC"], dtype=np.float64)
-
-
-def cluster_assign(
-    features: NDArray[np.float64],
-    supervised: bool = True,
-    templates: Optional[NDArray[np.float64]] = None
-) -> NDArray[np.int64]:
-    """
-    Assign a cluster/label to each feature vector.
-
-    In 'supervised' mode with known templates, we use k-Nearest Neighbors (k=1).
-    Otherwise, we do an unsupervised KMeans with 2 clusters.
-
-    Parameters
-    ----------
-    features : NDArray[np.float64], shape (N, num_features)
-        Extracted features for each sample (row).
-    supervised : bool
-        If True, do supervised classification (requires 'templates').
-        If False, do KMeans with 2 clusters.
-    templates : Optional[NDArray[np.float64]]
-        Labeled samples for training in the supervised scenario. 
-        E.g. np.array([[1, 0], [0, 1]]) with implicit labels 0 => FP, 1 => LC.
-
-    Returns
-    -------
-    assignments : NDArray[np.int64], shape (N,)
-        The integer label for each feature row.
-    """
-    # TODO: This function looks wrong
-    if supervised and (templates is not None):
-        # Suppose templates is [[1,0], [0,1]] => we map them to y_template=[0,1]
-        X_template = templates
-        y_template = np.array(["Fixed Point", "Limit Cycle"])
-
-        knn = KNeighborsClassifier(n_neighbors=1)
-        knn.fit(X_template, y_template)
-        assignments = knn.predict(features)
-        return assignments
-    else:
-        # Unsupervised KMeans with 2 clusters
-        kmeans = KMeans(n_clusters=2, n_init="auto")
-        kmeans.fit(features)
-        return kmeans.labels_.astype(np.int64)
-
-
-# It is assumed that these functions/classes are defined elsewhere:
-#   - integrate_sample(i, Y0, ode_system, solver, steady_state_time) -> feature vector (np.ndarray)
-#   - cluster_assign(features_array, supervised: bool, templates: Optional[np.ndarray]) -> np.ndarray of assignments
-#   - features_pendulum (used inside integrate_sample)
-#   - ODE system class, Sampler, Solver, etc.
-#   - OHE dictionary for default templates, e.g., OHE = {"FP": [1, 0], "LC": [0, 1]}
+from Solver import Solver
+import json
+from json import JSONEncoder
 
 
 class BasinStabilityEstimator:
@@ -145,13 +43,11 @@ class BasinStabilityEstimator:
     def __init__(
         self,
         N: int,
-        ode_system,   # Expected to be an instance of an ODE system class.
-        sampler,      # Expected to be an instance of Sampler.
-        solver,       # Expected to be an instance of Solver.
+        ode_system: ODESystem,
+        sampler: Sampler,
+        solver: Solver,
         feature_extractor: FeatureExtractor,
-        # TODO: extract cluster class  
-        supervised: bool = True,
-        templates: Optional[np.ndarray] = None,
+        cluster_classifier: ClusterClassifier,
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -161,24 +57,20 @@ class BasinStabilityEstimator:
         :param ode_system: The ODE system model.
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system.
-        :param supervised: Whether to perform supervised clustering/classification.
-        :param templates: Templates for supervised clustering (if any).
+        :param cluster_classifier: The ClusterClassifier object to assign labels.
         """
         self.N = N
         self.ode_system = ode_system
         self.sampler = sampler
         self.solver = solver
         self.feature_extractor = feature_extractor
+        self.cluster_classifier = cluster_classifier
 
-        self.supervised = supervised
-        self.templates = templates
+
 
         # Attributes to be populated during estimation
         self.bs_vals: Optional[Dict[int, float]] = None
-        self.num_pts: int = N
-        self.assignments = None
         self.Y0 = None
-        self.features_array = None
         self.solutions = None  # List of Solution instances
 
     def estimate_bs(self) -> Dict[int, float]:
@@ -193,8 +85,6 @@ class BasinStabilityEstimator:
         This method sets:
             - self.Y0
             - self.solutions
-            - self.features_array
-            - self.assignments
             - self.bs_vals
         
         :return: A dictionary of basin stability values per class.
@@ -214,25 +104,17 @@ class BasinStabilityEstimator:
         self.solutions = solutions
         
         # Build the features array from the Solution instances.
-        self.features_array = np.vstack([sol.features for sol in solutions])
+        features_array = np.vstack([sol.features for sol in solutions])
         
-        # Step 4: Set default templates if needed (for supervised clustering).
-        if self.supervised and self.templates is None:
-            try:
-                global OHE
-                self.templates = np.array([OHE["FP"], OHE["LC"]], dtype=np.float64)
-            except NameError:
-                raise ValueError("Templates not provided and default OHE is not defined. Please supply templates.")
-        
-        # Perform clustering/classification.
-        self.assignments = cluster_assign(self.features_array, supervised=self.supervised, templates=self.templates)
+        # Step 4: Perform clustering/classification.
+        assignments = self.cluster_classifier.get_labels(features_array)
         
         # Update each Solution instance with its label.
-        for sol, label in zip(self.solutions, self.assignments):
+        for sol, label in zip(self.solutions, assignments):
             sol.assign_label(label)
         
         # Step 5: Compute basin stability as the fraction of samples per class.
-        unique_labels, counts = np.unique(self.assignments, return_counts=True)
+        unique_labels, counts = np.unique(assignments, return_counts=True)
         fractions = counts / float(self.N)
         self.bs_vals = dict(zip(unique_labels.tolist(), fractions.tolist()))
         
@@ -344,25 +226,47 @@ class BasinStabilityEstimator:
     
     def save(self, filename: str):
         """
-        Save the basin stability results to a file.
-        
-        Currently, pickle is used for serialization.
-        (Future work might involve supporting additional file formats.)
+        Save the basin stability results to a JSON file.
+        Handles numpy arrays and Solution objects by converting them to standard Python types.
         
         :param filename: The file path where results will be saved.
         """
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
-    
+
         results = {
-            "assignments": self.assignments,
+            "assignments": [sol.label for sol in self.solutions],
             "bs_vals": self.bs_vals,
             "Y0": self.Y0,
-            "features_array": self.features_array,
+            "features_array": np.vstack([sol.features for sol in self.solutions]),
             "solutions": self.solutions,
             "N": self.N,
             "steady_state_time": self.feature_extractor.time_steady,
         }
-        with open(filename, "wb") as f:
-            pickle.dump(results, f)
+
+        # Ensure the filename ends with .json
+        if not filename.endswith('.json'):
+            filename += '.json'
+
+        with open(filename, 'w') as f:
+            json.dump(results, f, cls=NumpyEncoder, indent=2)
+        
         print(f"Results saved to {filename}")
+
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, Solution):
+            return {
+                "initial_condition": obj.initial_condition.tolist(),
+                "time": obj.time.tolist(),
+                "trajectory": obj.trajectory.tolist(),
+                "features": obj.features.tolist() if obj.features is not None else None,
+                "label": obj.label
+            }
+        return super(NumpyEncoder, self).default(obj)

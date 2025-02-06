@@ -1,5 +1,7 @@
 import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
 from BasinStabilityEstimator import BasinStabilityEstimator
+from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
 from Solver import SciPySolver
@@ -23,8 +25,15 @@ if __name__ == "__main__":
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
-    # For supervised clustering, you might need default templates:
-    templates = np.array([PendulumOHE["FP"], PendulumOHE["LC"]], dtype=np.float64)
+    # Define training data.
+    trainX = np.array([PendulumOHE["FP"], PendulumOHE["LC"]])
+    trainY = np.array(["Fixed Point", "Limit Cycle"])
+
+    # Create a KNeighborsClassifier with k=1.
+    knn = KNeighborsClassifier(n_neighbors=1)
+
+    # Instantiate the KNNCluster with the training data.
+    knn_cluster = KNNCluster(classifier=knn, trainX=trainX, trainY=trainY)
 
     bse = BasinStabilityEstimator(
         N=N,
@@ -32,12 +41,12 @@ if __name__ == "__main__":
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        # TODO: Move to cluster class
-        supervised=True,
-        templates=templates  # or None to trigger default templates (if OHE is defined)
+        cluster_classifier=knn_cluster
     )
 
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
+
     bse.plots()
-    bse.save("basin_stability_results.pkl")
+    bse.save("basin_stability_results.json")
+    
