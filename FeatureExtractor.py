@@ -8,14 +8,15 @@ class FeatureExtractor(ABC):
 
     def __init__(self, time_steady: float, exclude_states=None):
         self.exclude_states = exclude_states
-        self.time_steady = time_steady  # defaults to zero - extract feature from complete time series. Recommended
+        # defaults to zero - extract feature from complete time series. Recommended
+        self.time_steady = time_steady
         # choice however is last 10% of the time signal to avoid transients
 
     @abstractmethod
     def extract_features(self, solution: Solution):
         pass
 
-    # TODO: Find out where do we need this. 
+    # TODO: Find out where do we need this.
     def filter_states(self, solution: Solution):
         # exclude states (self.exclude_states is a tuple)
 
@@ -30,7 +31,7 @@ class FeatureExtractor(ABC):
         # extract the time section for which the user wants to compute the feature
         if self.time_steady is None:
             raise ValueError("time_steady is not set")
-        
+
         idx_steady_state = np.where(solution.time > self.time_steady)[0]
         idx_start = idx_steady_state[0]
 
@@ -40,6 +41,7 @@ class FeatureExtractor(ABC):
 
 
 PendulumOHE = {"FP": [1, 0], "LC": [0, 1]}
+
 
 class PendulumFeatureExtractor(FeatureExtractor):
 
@@ -54,10 +56,8 @@ class PendulumFeatureExtractor(FeatureExtractor):
 
         # only theta_dot is used to calculate delta
         delta = np.abs(np.max(temp_sol.y[:, 1]) - np.mean(temp_sol.y[:, 1]))
-        print(f"Delta = {delta}")
 
         if delta < 0.01:
-            print("Fixed Point (FP)")
             # FP (Fixed Point)
             return np.array(PendulumOHE["FP"], dtype=np.float64)
         else:
@@ -72,14 +72,13 @@ class DuffingFeatureExtractor(FeatureExtractor):
     1. Maximum value
     2. Standard deviation
     """
-    
+
     def extract_features(self, solution: Solution):
         # Get the steady-state portion of the trajectory
         y_filtered = self.filter_time(solution)
-        
+
         # Calculate features using first state (y[:,0])
         max_val = np.max(y_filtered[:, 0])
         std_val = np.std(y_filtered[:, 0])
-        
-        return np.array([max_val, std_val], dtype=np.float64)
 
+        return np.array([max_val, std_val], dtype=np.float64)

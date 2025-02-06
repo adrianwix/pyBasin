@@ -11,7 +11,6 @@ from FeatureExtractor import PendulumFeatureExtractor, PendulumOHE
 
 
 def preview_plot_templates():
-    # Example usage (ensure that the necessary helper functions and classes are imported):
     N = 1000
 
     # Instantiate your ODE system, sampler, and solver:
