@@ -51,6 +51,7 @@ if __name__ == "__main__":
         labels=classifier_labels)
     
     bse = BasinStabilityEstimator(
+        name="duffing_oscillator",
         N=N,
         ode_system=ode_system,
         sampler=sampler,

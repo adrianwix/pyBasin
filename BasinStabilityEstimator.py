@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
+import os
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Dict, Union
 
@@ -42,6 +42,7 @@ class BasinStabilityEstimator:
     """
     def __init__(
         self,
+        name: str,
         N: int,
         ode_system: ODESystem,
         sampler: Sampler,
@@ -52,6 +53,7 @@ class BasinStabilityEstimator:
         """
         Initialize the BasinStabilityEstimator.
         
+        :param name: Name of the case study. Used for saving results.
         :param N: Number of initial conditions (samples) to generate.
         :param steady_state_time: Time after which steady-state features are extracted.
         :param ode_system: The ODE system model.
@@ -59,6 +61,7 @@ class BasinStabilityEstimator:
         :param solver: The Solver object to integrate the ODE system.
         :param cluster_classifier: The ClusterClassifier object to assign labels.
         """
+        self.name = name
         self.N = N
         self.ode_system = ode_system
         self.sampler = sampler
@@ -226,6 +229,14 @@ class BasinStabilityEstimator:
         plt.title("Future Plot")
 
         plt.tight_layout()
+
+        # Save the figure
+        # Create results directory if it does not exist
+        results_dir = f"results_{self.name}"
+        os.makedirs(results_dir, exist_ok=True)
+        plot_filename = os.path.join(results_dir, "diagnostic_plots.png")
+        plt.savefig(plot_filename, dpi=300)
+
         plt.show()
 
     def plot_templates(self, plotted_var: int, time_span: tuple, y_lims: Optional[Union[tuple, list]] = None):
@@ -286,6 +297,14 @@ class BasinStabilityEstimator:
                 ax.set_ylim(y_lims[i-1])
 
         plt.tight_layout()
+
+        # Save the figure
+        # Create results directory if it does not exist
+        results_dir = f"results_{self.name}"
+        os.makedirs(results_dir, exist_ok=True)
+        plot_filename = os.path.join(results_dir, "time_trayector_of_template_points.png")
+        plt.savefig(plot_filename, dpi=300)
+
         plt.show()
     
     def save(self, filename: str):
@@ -298,6 +317,11 @@ class BasinStabilityEstimator:
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
 
+        # Create results directory if it does not exist
+        results_dir = f"results_{self.name}"
+        os.makedirs(results_dir, exist_ok=True)
+        real_filename = os.path.join(results_dir, filename)
+
         results = {
             "assignments": [sol.label for sol in self.solutions],
             "bs_vals": self.bs_vals,
@@ -309,13 +333,13 @@ class BasinStabilityEstimator:
         }
 
         # Ensure the filename ends with .json
-        if not filename.endswith('.json'):
-            filename += '.json'
+        if not real_filename.endswith('.json'):
+            real_filename += '.json'
 
-        with open(filename, 'w') as f:
+        with open(real_filename, 'w') as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
         
-        print(f"Results saved to {filename}")
+        print(f"Results saved to {real_filename}")
 
 class NumpyEncoder(JSONEncoder):
     def default(self, obj):

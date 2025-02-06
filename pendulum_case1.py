@@ -98,6 +98,7 @@ if __name__ == "__main__":
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
+        name="pendulum_case1",
         N=N,
         ode_system=ode_system,
         sampler=sampler,
