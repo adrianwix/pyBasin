@@ -4,6 +4,117 @@ import pickle
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Dict
 
+from ODESystem import ODESystem
+
+from typing import Dict, Optional
+import numpy as np
+from numpy.typing import NDArray
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from concurrent.futures import ProcessPoolExecutor
+
+from ODESystem import ODESystem
+
+# OHE = {
+#     "FP": np.array([1.0, 0.0], dtype=np.float64),
+#     "LC": np.array([0.0, 1.0], dtype=np.float64)
+# }
+OHE = {"FP": [1, 0], "LC": [0, 1]}
+
+def features_pendulum(
+    t: NDArray[np.float64],
+    y: NDArray[np.float64],
+    steady_state_time: float = 950.0
+) -> NDArray[np.float64]:
+    """
+    Replicates the MATLAB 'features_pendulum' function in Python:
+      1) Identify time indices for t > steady_state_time (steady-state).
+      2) Compute Delta = |max(theta_dot) - mean(theta_dot)|.
+      3) If Delta < 0.01 => [1,0] (FP), else => [0,1] (LC).
+
+    Parameters
+    ----------
+    t : NDArray[np.float64]
+        Time values from the integration.
+    y : NDArray[np.float64], shape (len(t), 2)
+        The states at each time in t.  y[:,0] = theta, y[:,1] = theta_dot
+    steady_state_time : float
+        Time after which we consider the system to be near steady-state.
+
+    Returns
+    -------
+    X : NDArray[np.float64], shape (2, 1)
+        A one-hot vector, [1,0]^T for FP or [0,1]^T for LC.
+    """
+    # Indices where t > steady_state_time
+    idx_steady = np.where(t > steady_state_time)[0]
+    if len(idx_steady) == 0:
+        print("Warning: No steady state found.")
+        # If we never get beyond steady_state_time, default to [1,0]
+        return np.array(OHE["FP"], dtype=np.float64)
+
+    print(f"Steady state found at t={t[idx_steady[0]]}")
+    idx_start = idx_steady[0]
+
+    # Use the second state (theta_dot) for the portion after steady_state_time
+    portion = y[idx_start:, 1]
+    delta = np.abs(np.max(portion) - np.mean(portion))
+    print(f"Delta = {delta}")
+
+    if delta < 0.01:
+        print("Fixed Point (FP)")
+        # FP (Fixed Point)
+        return np.array(OHE["FP"], dtype=np.float64)
+    else:
+        # LC (Limit Cycle)
+        return np.array(OHE["LC"], dtype=np.float64)
+
+
+def cluster_assign(
+    features: NDArray[np.float64],
+    supervised: bool = True,
+    templates: Optional[NDArray[np.float64]] = None
+) -> NDArray[np.int64]:
+    """
+    Assign a cluster/label to each feature vector.
+
+    In 'supervised' mode with known templates, we use k-Nearest Neighbors (k=1).
+    Otherwise, we do an unsupervised KMeans with 2 clusters.
+
+    Parameters
+    ----------
+    features : NDArray[np.float64], shape (N, num_features)
+        Extracted features for each sample (row).
+    supervised : bool
+        If True, do supervised classification (requires 'templates').
+        If False, do KMeans with 2 clusters.
+    templates : Optional[NDArray[np.float64]]
+        Labeled samples for training in the supervised scenario. 
+        E.g. np.array([[1, 0], [0, 1]]) with implicit labels 0 => FP, 1 => LC.
+
+    Returns
+    -------
+    assignments : NDArray[np.int64], shape (N,)
+        The integer label for each feature row.
+    """
+    # TODO: This function looks wrong
+    if supervised and (templates is not None):
+        # Suppose templates is [[1,0], [0,1]] => we map them to y_template=[0,1]
+        X_template = templates
+        y_template = np.array([0, 1], dtype=np.int64)
+
+        knn = KNeighborsClassifier(n_neighbors=1)
+        knn.fit(X_template, y_template)
+        assignments = knn.predict(features)
+        return assignments
+    else:
+        # Unsupervised KMeans with 2 clusters
+        kmeans = KMeans(n_clusters=2, n_init="auto")
+        kmeans.fit(features)
+        return kmeans.labels_.astype(np.int64)
+
+
 # It is assumed that these functions/classes are defined elsewhere:
 #   - integrate_sample(i, Y0, ode_system, solver, steady_state_time) -> feature vector (np.ndarray)
 #   - cluster_assign(features_array, supervised: bool, templates: Optional[np.ndarray]) -> np.ndarray of assignments
@@ -64,6 +175,32 @@ class BasinStabilityEstimator:
         self.Y0 = None
         self.features_array = None
 
+
+    def _integrate_sample(self, i, Y0, ode_system: ODESystem, solver, steady_state_time):
+        """
+        Integrates a single ODE sample using the specified solver.
+
+        :param i: Index of the sample.
+        :param Y0: Array of initial conditions (shape: (num_samples, num_states)).
+        :param params: Parameters for the ODE system.
+        :param solver: An instance of Solver (e.g., SciPySolver).
+        :param steady_state_time: Time after which steady-state features are computed.
+        :return: Flattened feature vector.
+        """
+        y0 = Y0[i, :]
+        print(f"Integrating sample {i+1}/{len(Y0)} with initial condition {y0}")
+
+        # Define the ODE system
+        ode_lambda = lambda t, y: ode_system.ode(t, y)
+
+        # Integrate using the solver
+        t, y = solver.integrate(ode_lambda, y0)
+
+        # Extract features
+        X_i = features_pendulum(t, y, steady_state_time=steady_state_time)
+        return X_i.flatten()  # shape => (2,)
+
+
     def estimate_bs(self) -> Dict[int, float]:
         """
         Estimate the basin stability by:
@@ -89,7 +226,7 @@ class BasinStabilityEstimator:
             # The arguments are broadcast so that each call of integrate_sample gets the same
             # ode_system, solver, and steady_state_time. The index i is passed uniquely.
             all_features = list(executor.map(
-                integrate_sample,
+                self._integrate_sample,
                 range(self.N),
                 [self.Y0] * self.N,
                 [self.ode_system] * self.N,
@@ -198,35 +335,3 @@ class BasinStabilityEstimator:
             pickle.dump(results, f)
         print(f"Results saved to {filename}")
 
-# =============================================================================
-# Example usage (ensure that the necessary helper functions and classes are imported):
-#
-# N = 100
-# steady_state_time = 950.0
-#
-# # Instantiate your ODE system, sampler, and solver:
-# ode_system = PendulumODE(params)  # for example
-# min_limits = [-np.pi, -2.0]
-# max_limits = [np.pi, 2.0]
-# sampler = RandomSampler(min_limits, max_limits)
-# solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
-#
-# # For supervised clustering, you might need default templates:
-# OHE = {"FP": [1, 0], "LC": [0, 1]}
-# templates = np.array([OHE["FP"], OHE["LC"]], dtype=np.float64)
-#
-# bse = BasinStabilityEstimator(
-#     N=N,
-#     steady_state_time=steady_state_time,
-#     ode_system=ode_system,
-#     sampler=sampler,
-#     solver=solver,
-#     supervised=True,
-#     templates=templates  # or None to trigger default templates (if OHE is defined)
-# )
-#
-# basin_stability = bse.estimate_bs()
-# print("Basin Stability:", basin_stability)
-# bse.plots()
-# bse.save("basin_stability_results.pkl")
-# =============================================================================
