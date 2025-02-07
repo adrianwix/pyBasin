@@ -1,7 +1,9 @@
+from joblib import Parallel, delayed
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 import os
-from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Dict, Union
 
 from ClusterClassifier import ClusterClassifier
@@ -11,7 +13,6 @@ from ODESystem import ODESystem
 from typing import Dict, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor
 
 from ODESystem import ODESystem
 from Sampler import Sampler
@@ -89,14 +90,20 @@ class BasinStabilityEstimator:
         self.Y0 = self.sampler.sample(self.N)
 
         # Step 2/3: Integrate and extract features. Parallel by default
-        with ProcessPoolExecutor() as executor:
-            solutions = list(executor.map(
-                self._integrate_sample,
-                range(self.N),
-                self.Y0,
-                [self.ode_system] * self.N,
-                [self.solver] * self.N,
-            ))
+        # with ProcessPoolExecutor() as executor:
+        #     solutions = list(executor.map(
+        #         self._integrate_sample,
+        #         range(self.N),
+        #         self.Y0,
+        #         [self.ode_system] * self.N,
+        #         [self.solver] * self.N,
+        #     ))
+
+        solutions = Parallel(n_jobs=-1)(
+            delayed(self._integrate_sample)(i, y0, self.ode_system, self.solver)
+            for i, y0 in enumerate(self.Y0)
+        )
+        
         self.solutions = solutions
 
         # Build the features array from the Solution instances.
