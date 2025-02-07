@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode45
 from sklearn.cluster import KMeans
 
-
 def plot_exemplary_trajectories(res_detail, props):
     # Convert to numpy array
     res_detail = np.array(res_detail)

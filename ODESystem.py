@@ -1,12 +1,3 @@
-"""
--- ODESystem(ABC): contains the ODE formulation, and optional model parameters
-+ method .ode  -> first order ODE definition
-+ parameters will be handled over as dictionary
-+ method .symbolic_ode [optional] for graphical display (tbd)
---
-"""
-
-
 from abc import ABC, abstractmethod
 from typing import TypedDict, List, Dict, TypeVar, Generic
 import numpy as np

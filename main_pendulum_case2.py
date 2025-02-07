@@ -1,14 +1,12 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
-from BasinStabilityEstimator import BasinStabilityEstimator
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
-from Solution import Solution
 from Solver import SciPySolver
 
-from FeatureExtractor import PendulumFeatureExtractor, PendulumOHE
+from FeatureExtractor import PendulumFeatureExtractor
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from concurrent.futures import ProcessPoolExecutor
-from typing import Literal, Optional, Dict, TypedDict, Union
+from typing import Optional, Dict, Union
 
 from ClusterClassifier import ClusterClassifier
 from FeatureExtractor import FeatureExtractor
@@ -10,9 +10,6 @@ from ODESystem import ODESystem
 
 from typing import Dict, Optional
 import numpy as np
-from numpy.typing import NDArray
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 

@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from concurrent.futures import ProcessPoolExecutor
-from typing import Literal, Optional, Dict, TypedDict, Union
+from typing import Literal, Dict, TypedDict, Union
 from sklearn.cluster import KMeans
 
 from BasinStabilityEstimator import BasinStabilityEstimator
@@ -10,20 +9,14 @@ from ClusterClassifier import ClusterClassifier
 from FeatureExtractor import FeatureExtractor
 from ODESystem import ODESystem
 
-from typing import Dict, Optional
+from typing import Dict
 import numpy as np
-from numpy.typing import NDArray
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor
 
 from ODESystem import ODESystem
 from Sampler import Sampler
-from Solution import Solution
 from Solver import Solver
-import json
-from json import JSONEncoder
 
 
 class AdaptiveStudyParams(TypedDict):

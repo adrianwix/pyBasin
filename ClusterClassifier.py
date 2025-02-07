@@ -4,7 +4,6 @@ from typing import Optional
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
 from sklearn.base import ClusterMixin
-
 from FeatureExtractor import FeatureExtractor
 from ODESystem import ODESystem
 from Solution import Solution

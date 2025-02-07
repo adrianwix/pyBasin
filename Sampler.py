@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import List, Tuple
+from typing import List
 
 class Sampler(ABC):
     """Abstract base class for sampling initial conditions."""

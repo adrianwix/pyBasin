@@ -4,10 +4,8 @@ from BasinStabilityEstimator import BasinStabilityEstimator
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
-from Solution import Solution
 from Solver import SciPySolver
-
-from FeatureExtractor import PendulumFeatureExtractor, PendulumOHE
+from FeatureExtractor import PendulumFeatureExtractor
 
 
 def preview_plot_templates():

@@ -1,11 +1,8 @@
-from typing import Tuple, List, Dict, Optional, TypedDict
+from typing import List, Dict
 import numpy as np
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor
 
 params = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 y0 = [0.0, 0.0]  # Initial conditions: [theta, theta_dot]
