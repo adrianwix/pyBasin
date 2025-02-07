@@ -5,11 +5,10 @@ from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
 from Solver import SciPySolver
-
 from FeatureExtractor import PendulumFeatureExtractor
+from utils import time_execution  # Import the utility function
 
-
-if __name__ == "__main__":
+def main():
     N = 1000
 
     # Instantiate your ODE system, sampler, and solver:
@@ -65,3 +64,6 @@ if __name__ == "__main__":
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")
+
+if __name__ == "__main__":
+    time_execution("main_pendulum_case2.py", main)

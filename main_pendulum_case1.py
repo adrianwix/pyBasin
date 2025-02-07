@@ -6,6 +6,7 @@ from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
 from Solver import SciPySolver
 from FeatureExtractor import PendulumFeatureExtractor
+from utils import time_execution
 
 
 def preview_plot_templates():
@@ -57,7 +58,7 @@ def preview_plot_templates():
         y_lims=[(-0.6, 0.6), (-1, params["T"] / params["alpha"] + 1)])
 
 
-if __name__ == "__main__":
+def main():
     # We can test and visualize the templates before running the Basin Stability Estimator
     # preview_plot_templates()
 
@@ -114,3 +115,7 @@ if __name__ == "__main__":
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")
+
+
+if __name__ == "__main__":
+    time_execution("main_pendulum_case1.py", main)
