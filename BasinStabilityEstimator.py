@@ -1,25 +1,20 @@
-from joblib import Parallel, delayed
+import torch
+from torchdiffeq import odeint
+from json import JSONEncoder
+import json
+from Solver import Solver
+from Solution import Solution
+from Sampler import Sampler
+from typing import Dict, Optional
+from ODESystem import ODESystem
+from FeatureExtractor import FeatureExtractor
+from ClusterClassifier import ClusterClassifier
+from typing import Optional, Dict, Union
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
-import os
-from typing import Optional, Dict, Union
-
-from ClusterClassifier import ClusterClassifier
-from FeatureExtractor import FeatureExtractor
-from ODESystem import ODESystem
-
-from typing import Dict, Optional
-import numpy as np
-import matplotlib.pyplot as plt
-
-from ODESystem import ODESystem
-from Sampler import Sampler
-from Solution import Solution
-from Solver import Solver
-import json
-from json import JSONEncoder
 
 
 class BasinStabilityEstimator:
@@ -89,25 +84,25 @@ class BasinStabilityEstimator:
         # Step 1: Generate initial conditions.
         self.Y0 = self.sampler.sample(self.N)
 
-        # Step 2/3: Integrate and extract features. Parallel by default
-        # with ProcessPoolExecutor() as executor:
-        #     solutions = list(executor.map(
-        #         self._integrate_sample,
-        #         range(self.N),
-        #         self.Y0,
-        #         [self.ode_system] * self.N,
-        #         [self.solver] * self.N,
-        #     ))
+        # Step 2/3: Integrate and extract features (no parallelization needed).
+        t, y = self.solver.integrate(self.ode_system, self.Y0)
 
-        solutions = Parallel(n_jobs=-1)(
-            delayed(self._integrate_sample)(i, y0, self.ode_system, self.solver)
-            for i, y0 in enumerate(self.Y0)
-        )
-        
-        self.solutions = solutions
+        # Initialize solutions list
+        self.solutions = []
+
+        # Iterate over each initial condition (batch)
+        for i in range(self.Y0.shape[0]):
+            solution = Solution(
+                initial_condition=self.Y0[i].detach().cpu().numpy(),
+                time=t,
+                y=y[:, i, :]
+            )
+            features = self.feature_extractor.extract_features(solution)
+            solution.set_features(features)
+            self.solutions.append(solution)
 
         # Build the features array from the Solution instances.
-        features_array = np.vstack([sol.features for sol in solutions])
+        features_array = np.vstack([sol.features for sol in self.solutions])
 
         # Step 4: Perform clustering/classification.
         self.cluster_classifier.fit(
@@ -142,23 +137,19 @@ class BasinStabilityEstimator:
         Note: The entire function is cached, including feature extraction
         """
         print(f"Integrating sample {i+1}/{self.N} with initial condition {y0}")
+        # y0_torch = torch.tensor(y0, dtype=torch.float32)
 
-        # Define the ODE system lambda function
-        def ode_lambda(t, y): return ode_system.ode(t, y)
+        # Use the solver class to integrate
+        t, y = solver.integrate(ode_system, y0)
 
-        # Perform integration
-        # Convert y0 to tuple for hashing
-        t, y = solver.integrate(ode_lambda, tuple(y0))
-
-        # Create and return a Solution instance
         solution = Solution(
             initial_condition=y0,
             time=t,
-            y=y,
+            y=y
         )
 
-        # Extract features
         features = self.feature_extractor.extract_features(solution)
+
         solution.set_features(features)
 
         return solution

@@ -9,6 +9,8 @@ numpy = "*"
 matplotlib = "*"
 scikit-learn = "*"
 joblib = "*"
+torch = "*"
+torchdiffeq = "*"
 
 [dev-packages]
 

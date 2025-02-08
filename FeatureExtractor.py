@@ -16,27 +16,20 @@ class FeatureExtractor(ABC):
     def extract_features(self, solution: Solution):
         pass
 
-    # TODO: Find out where do we need this.
     def filter_states(self, solution: Solution):
         # exclude states (self.exclude_states is a tuple)
-
         if self.exclude_states is not None:
             y_filtered = np.delete(solution.y, self.exclude_states, axis=1)
         else:
             y_filtered = solution.y
-
         return y_filtered
 
     def filter_time(self, solution: Solution):
-        # extract the time section for which the user wants to compute the feature
-        if self.time_steady is None:
-            raise ValueError("time_steady is not set")
-
-        idx_steady_state = np.where(solution.time > self.time_steady)[0]
-        idx_start = idx_steady_state[0]
-
-        y_filtered = solution.trajectory[idx_start:, :]
-
+        # Convert time array to numpy if needed, then find indices
+        time_arr = solution.time  # shape (T,)
+        idx_steady = np.where(time_arr > self.time_steady)[0]
+        start_idx = idx_steady[0]
+        y_filtered = solution.y[start_idx:, :]
         return y_filtered
 
 
@@ -46,16 +39,10 @@ PendulumOHE = {"FP": [1, 0], "LC": [0, 1]}
 class PendulumFeatureExtractor(FeatureExtractor):
 
     def extract_features(self, solution: Solution):
-        temp_sol = copy.deepcopy(solution)
-
-        # get the steady-state time regime
-        temp_sol.y = self.filter_time(solution=solution)
-
-        # exclude some states
-        temp_sol.y = self.filter_states(solution=temp_sol)
-
-        # only theta_dot is used to calculate delta
-        delta = np.abs(np.max(temp_sol.y[:, 1]) - np.mean(temp_sol.y[:, 1]))
+        # Use filter_time to get steady-state data
+        y_filtered = self.filter_time(solution)
+        # y_filtered shape is (T_after, 2)
+        delta = np.abs(np.max(y_filtered[:, 1]) - np.mean(y_filtered[:, 1]))
 
         if delta < 0.01:
             # FP (Fixed Point)

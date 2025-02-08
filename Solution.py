@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Optional, Dict, Any
 
+
 class Solution:
     """
     Solution: Represents the time integration result for a single initial condition.
@@ -42,7 +43,7 @@ class Solution:
         """
         self.initial_condition = np.array(initial_condition)
         self.time = np.array(time)
-        self.trajectory = np.array(y)
+        self.y = np.array(y)
         self.features = np.array(features) if features is not None else None
         self.label = label
         self.model_params = model_params
@@ -80,5 +81,3 @@ class Solution:
 
     def __repr__(self) -> str:
         return f"Solution(IC={self.initial_condition}, Label={self.label}, Features={self.features})"
-
-

@@ -4,13 +4,14 @@ from BasinStabilityEstimator import BasinStabilityEstimator
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
-from Solver import SciPySolver
+from Solver import TorchDiffEqSolver
 from FeatureExtractor import PendulumFeatureExtractor
 from utils import time_execution
+import torch
 
 
 def preview_plot_templates():
-    N = 1000
+    N = 10
 
     # Instantiate your ODE system, sampler, and solver:
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
@@ -21,7 +22,7 @@ def preview_plot_templates():
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
-    solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), N=N)
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
@@ -74,7 +75,7 @@ def main():
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
-    solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), N=N)
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
@@ -91,7 +92,8 @@ def main():
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
         classifier=knn,
-        initial_conditions=classifier_initial_conditions,
+        initial_conditions=torch.tensor(
+            classifier_initial_conditions, dtype=torch.float32),
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
