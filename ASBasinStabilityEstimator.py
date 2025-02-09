@@ -1,24 +1,17 @@
+from Solver import Solver
+from Sampler import Sampler
+from typing import Dict
+from ODESystem import ODESystem
+from FeatureExtractor import FeatureExtractor
+from ClusterClassifier import ClusterClassifier
+from BasinStabilityEstimator import BasinStabilityEstimator
+from sklearn.cluster import KMeans
+from typing import Literal, Dict, TypedDict, Union
+import os
+import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import os
-from typing import Literal, Dict, TypedDict, Union
-from sklearn.cluster import KMeans
-
-from BasinStabilityEstimator import BasinStabilityEstimator
-from ClusterClassifier import ClusterClassifier
-from FeatureExtractor import FeatureExtractor
-from ODESystem import ODESystem
-
-from typing import Dict
-import numpy as np
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-
-from ODESystem import ODESystem
-from Sampler import Sampler
-from Solver import Solver
 
 
 class AdaptiveStudyParams(TypedDict):
@@ -115,14 +108,20 @@ class ASBasinStabilityEstimator:
         if not self.parameter_values or not self.basin_stabilities:
             raise ValueError("No results available. Run estimate_as_bs first.")
 
+        # Collect all unique labels across all basin_stabilities
+        labels = set()
+        for bs_dict in self.basin_stabilities:
+            labels.update(bs_dict.keys())
+        labels = list(labels)  # Convert to list for consistent ordering
+
         # Convert list of dictionaries to arrays for plotting
-        labels = list(self.basin_stabilities[0].keys())  # Get unique labels
         bs_values = {label: [] for label in labels}
 
         # Reorganize data by label
         for bs_dict in self.basin_stabilities:
             for label in labels:
-                bs_values[label].append(bs_dict[label])
+                # Use 0 if label is missing
+                bs_values[label].append(bs_dict.get(label, 0))
 
         # Create single plot with all labels
         plt.figure(figsize=(10, 6))

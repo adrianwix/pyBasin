@@ -1,12 +1,14 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+import torch
 from ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
 from Sampler import RandomSampler
-from Solver import SciPySolver
+from Solver import TorchDiffEqSolver
 from FeatureExtractor import PendulumFeatureExtractor
 from utils import time_execution  # Import the utility function
+
 
 def main():
     N = 1000
@@ -20,15 +22,15 @@ def main():
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
-    solver = SciPySolver(time_span=(0, 1000), method="RK45", rtol=1e-8)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), N=N)
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
     # Template initial conditions from MATLAB code
-    classifier_initial_conditions = [
+    classifier_initial_conditions = torch.tensor([
         [0.5, 0.0],    # FP: stable fixed point
         [2.7, 0.0],    # LC: limit cycle
-    ]
+    ], dtype=torch.float32)
     classifier_labels = ['FP', 'LC']  # Original MATLAB labels
 
     # Create a KNeighborsClassifier with k=1.
@@ -41,7 +43,7 @@ def main():
         labels=classifier_labels)
 
     as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=np.arange(0.01, 1.05, 0.3),
+        adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
         adaptative_parameter_name='ode_system.params["T"]')
 
     bse = ASBasinStabilityEstimator(
@@ -57,13 +59,16 @@ def main():
 
     param_values, basin_stabilities = bse.estimate_as_bs()
 
-    print({param_values[i]: basin_stabilities[i]
-          for i in range(len(param_values))})
+    # Improved readability for the print statement
+    for i in range(len(param_values)):
+        print(
+            f"Parameter value: {param_values[i]}, Basin Stability: {basin_stabilities[i]}")
 
     bse.plot_basin_stability_variation()
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")
+
 
 if __name__ == "__main__":
     time_execution("main_pendulum_case2.py", main)

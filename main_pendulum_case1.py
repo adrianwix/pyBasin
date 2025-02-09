@@ -80,10 +80,10 @@ def main():
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
     # Template initial conditions from MATLAB code
-    classifier_initial_conditions = [
+    classifier_initial_conditions = torch.tensor([
         [0.5, 0.0],    # FP: stable fixed point
         [2.7, 0.0],    # LC: limit cycle
-    ]
+    ], dtype=torch.float32)
     classifier_labels = ['FP', 'LC']  # Original MATLAB labels
 
     # Create a KNeighborsClassifier with k=1.
@@ -92,8 +92,7 @@ def main():
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
         classifier=knn,
-        initial_conditions=torch.tensor(
-            classifier_initial_conditions, dtype=torch.float32),
+        initial_conditions=classifier_initial_conditions,
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
@@ -113,7 +112,7 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    # bse.plots()
+    bse.plots()
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")

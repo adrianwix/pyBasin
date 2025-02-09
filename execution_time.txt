@@ -3,3 +3,9 @@
 2025-02-08 21:19:20 - main_pendulum_case1.py: 18.03850483894348 seconds
 2025-02-09 12:00:08 - main_pendulum_case1.py: 9.998533010482788 seconds
 2025-02-09 12:00:44 - main_pendulum_case1.py: 7.3033998012542725 seconds
+2025-02-09 12:49:05 - main_pendulum_case2.py: 166.97433805465698 seconds
+2025-02-09 12:58:27 - main_pendulum_case2.py: 191.5860140323639 seconds
+2025-02-09 13:06:16 - main_pendulum_case1.py: 34.613943099975586 seconds
+2025-02-09 13:09:05 - main_pendulum_case1.py: 23.8828022480011 seconds
+2025-02-09 13:13:15 - main_pendulum_case1.py: 15.251185894012451 seconds
+2025-02-09 13:23:30 - main_pendulum_case1.py: 17.190351724624634 seconds
