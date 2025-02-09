@@ -28,8 +28,10 @@ class BasinStabilityEstimator:
     Attributes:
         bs_vals (Optional[Dict[int, float]]): Basin stability values (fraction of samples per class).
         Y0 (np.ndarray): Array of initial conditions.
-        solutions (List[Solution]): List of Solution instances (one per initial condition).
+        solution (Solution): Solution instance.
     """
+    solution: Solution
+    bs_vals: Optional[Dict[int, float]]
 
     def __init__(
         self,
@@ -63,7 +65,7 @@ class BasinStabilityEstimator:
         # Attributes to be populated during estimation
         self.bs_vals: Optional[Dict[int, float]] = None
         self.Y0 = None
-        self.solutions = None  # List of Solution instances
+        self.solution = None
 
     def estimate_bs(self) -> Dict[int, float]:
         """
@@ -76,7 +78,7 @@ class BasinStabilityEstimator:
 
         This method sets:
             - self.Y0
-            - self.solutions
+            - self.solution
             - self.bs_vals
 
         :return: A dictionary of basin stability values per class.
@@ -88,40 +90,34 @@ class BasinStabilityEstimator:
         t, y = self.solver.integrate(self.ode_system, self.Y0)
 
         # Initialize solutions list
-        self.solutions = []
-
-        # Iterate over each initial condition (batch)
-        for i in range(self.Y0.shape[0]):
-            solution = Solution(
-                initial_condition=self.Y0[i].detach().cpu().numpy(),
-                time=t,
-                y=y[:, i, :]
-            )
-            features = self.feature_extractor.extract_features(solution)
-            solution.set_features(features)
-            self.solutions.append(solution)
+        self.solution = Solution(
+            initial_condition=self.Y0,
+            time=t,
+            y=y
+        )
 
         # Build the features array from the Solution instances.
-        features_array = np.vstack([sol.features for sol in self.solutions])
+        features = self.feature_extractor.extract_features(self.solution)
+
+        self.solution.set_features(features)
 
         # Step 4: Perform clustering/classification.
-        self.cluster_classifier.fit(
-            solver=self.solver,
-            ode_system=self.ode_system,
-            feature_extractor=self.feature_extractor)
+        if self.cluster_classifier.type == 'supervised':
+            self.cluster_classifier.fit(
+                solver=self.solver,
+                ode_system=self.ode_system,
+                feature_extractor=self.feature_extractor)
 
-        assignments = self.cluster_classifier.get_labels(features_array)
+        labels = self.cluster_classifier.get_labels(features)
 
-        # Update each Solution instance with its label.
-        for sol, label in zip(self.solutions, assignments):
-            sol.assign_label(label)
+        self.solution.set_labels(labels)
 
         # Step 5: Compute basin stability as the fraction of samples per class.
         # Initialize with zeros for all possible labels
-        self.bs_vals = {label: 0.0 for label in self.cluster_classifier.labels}
+        self.bs_vals = {label: 0.0 for label in labels}
 
         # Update with actual fractions where they exist
-        unique_labels, counts = np.unique(assignments, return_counts=True)
+        unique_labels, counts = np.unique(labels, return_counts=True)
         fractions = counts / float(self.N)
 
         for label, fraction in zip(unique_labels, fractions):
@@ -156,21 +152,21 @@ class BasinStabilityEstimator:
 
     def plots(self):
         """
-        Generate diagnostic plots using the data stored in self.solutions:
+        Generate diagnostic plots using the data stored in self.solution:
             1. A bar plot of basin stability values.
             2. A scatter plot of initial conditions (state space).
             3. A scatter plot of the feature space with classifier results.
             4. A placeholder plot for future use.
         """
-        if self.solutions is None:
+        if self.solution is None:
             raise ValueError(
                 "No solutions available. Please run estimate_bs() before plotting.")
 
         # Extract data from each Solution instance.
-        initial_conditions = np.array(
-            [sol.initial_condition for sol in self.solutions])
-        features_array = np.array([sol.features for sol in self.solutions])
-        assignments = np.array([sol.label for sol in self.solutions])
+        initial_conditions = self.solution.initial_condition.cpu().numpy()
+
+        features_array = self.solution.features.cpu().numpy()
+        labels = self.solution.labels
 
         plt.figure(figsize=(10, 6))
 
@@ -184,9 +180,9 @@ class BasinStabilityEstimator:
 
         # 2) State space scatter plot: class-labeled initial conditions.
         plt.subplot(2, 2, 2)
-        unique_labels = np.unique(assignments)
+        unique_labels = np.unique(labels)
         for label in unique_labels:
-            idx = assignments == label
+            idx = labels == label
             plt.scatter(
                 initial_conditions[idx, 0],
                 initial_conditions[idx, 1],
@@ -203,7 +199,7 @@ class BasinStabilityEstimator:
         # 3) Feature space scatter plot with classifier results.
         plt.subplot(2, 2, 3)
         for label in unique_labels:
-            idx = assignments == label
+            idx = labels == label
             # Map labels to class names if desired (example mapping below)
             plt.scatter(
                 features_array[idx, 0],
@@ -321,11 +317,11 @@ class BasinStabilityEstimator:
         real_filename = os.path.join(results_dir, filename)
 
         results = {
-            "assignments": [sol.label for sol in self.solutions],
+            "assignments": [sol.label for sol in self.solution],
             "bs_vals": self.bs_vals,
             "Y0": self.Y0,
-            "features_array": np.vstack([sol.features for sol in self.solutions]),
-            "solutions": self.solutions,
+            "features_array": np.vstack([sol.features for sol in self.solution]),
+            "solutions": self.solution,
             "N": self.N,
             "steady_state_time": self.feature_extractor.time_steady,
         }

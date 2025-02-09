@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import Optional
+from typing import Literal, Optional
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
 from sklearn.base import ClusterMixin
@@ -18,6 +18,18 @@ class ClusterClassifier(ABC):
     Subclasses must implement the get_labels(features) method, which takes a
     feature array (shape: (N, num_features)) and returns an array of labels.
     """
+    initial_conditions: tensor
+    labels: np.ndarray
+
+    @property
+    @abstractmethod
+    def type(self) -> Literal['supervised', 'unsupervised']:
+        """Abstract property that must be implemented in subclasses."""
+        pass
+
+    def __init__(self, initial_conditions: tensor, labels: np.ndarray):
+        self.initial_conditions = initial_conditions
+        self.labels = labels
 
     @abstractmethod
     def get_labels(self, features: np.ndarray) -> np.ndarray:
@@ -36,25 +48,23 @@ class ClusterClassifier(ABC):
         """
         pass
 
+    # TODO: Unsupervised clustering method don't need a traning set so this method is not always needed
     def fit(self, solver: Solver, ode_system: ODESystem, feature_extractor: FeatureExtractor) -> None:
         # Generate features for each template initial condition
-        template_features = []
-
         t, y = solver.integrate(
             ode_system, self.initial_conditions)
 
-        # Iterate over each initial condition (batch)
-        for i in range(self.initial_conditions.shape[0]):
-            solution = Solution(
-                initial_condition=self.initial_conditions[i],
-                time=t,
-                y=y[:, i, :]
-            )
-            features = feature_extractor.extract_features(solution)
-            template_features.append(features)
+        self.solution = Solution(
+            initial_condition=self.initial_conditions,
+            time=t,
+            y=y
+        )
 
-        trainX = np.array(template_features)
-        trainY = np.array(self.labels)
+        # Build the features array from the Solution instances.
+        features = feature_extractor.extract_features(self.solution)
+
+        trainX = features.detach().cpu().numpy()
+        trainY = self.labels
 
         self.classifier.fit(trainX, trainY)
 
@@ -70,7 +80,7 @@ class KNNCluster(ClusterClassifier):
     In our example, trainY should contain the strings "Fixed Point" and "Limit Cycle".
     """
 
-    def __init__(self, classifier: KNeighborsClassifier, initial_conditions: tensor, labels: np.ndarray):
+    def __init__(self, initial_conditions: tensor, labels: np.ndarray, classifier: KNeighborsClassifier):
         """
         Initialize the KNNCluster.
 
@@ -84,8 +94,11 @@ class KNNCluster(ClusterClassifier):
             Training labels (shape: (n_samples,)). Expected labels are strings.
         """
         self.classifier = classifier
-        self.initial_conditions = initial_conditions
-        self.labels = labels
+        super().__init__(initial_conditions, labels)
+
+    @property
+    def type(self) -> Literal['supervised', 'unsupervised']:
+        return 'supervised'
 
     def get_labels(self, features: np.ndarray) -> np.ndarray:
         """
@@ -113,7 +126,7 @@ class DBSCANCluster(ClusterClassifier):
     arguments to create a DBSCAN instance.
     """
 
-    def __init__(self, classifier: Optional[ClusterMixin] = None, **kwargs):
+    def __init__(self, classifier: DBSCAN = None, **kwargs):
         """
         Initialize the DBSCANCluster.
 
@@ -128,7 +141,10 @@ class DBSCANCluster(ClusterClassifier):
         if classifier is None:
             classifier = DBSCAN(**kwargs)
         self.classifier = classifier
-        self.classifier.fit()
+
+    @property
+    def type(self) -> Literal['supervised', 'unsupervised']:
+        return 'unsupervised'
 
     def get_labels(self, features: np.ndarray) -> np.ndarray:
         """
@@ -144,4 +160,4 @@ class DBSCANCluster(ClusterClassifier):
         np.ndarray
             Array of integer labels. Note that DBSCAN may label noise points as -1.
         """
-        return self.classifier.predict(features)
+        return self.classifier.fit_predict(features)

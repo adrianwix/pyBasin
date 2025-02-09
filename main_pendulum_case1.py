@@ -113,7 +113,7 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    bse.plots()
+    # bse.plots()
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")

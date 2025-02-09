@@ -19,7 +19,7 @@ class Solver(ABC):
         self.params = kwargs  # Additional solver parameters
 
     @abstractmethod
-    def integrate(self, ode_system, y0):
+    def integrate(self, ode_system, y0) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Abstract method to solve an ODE system.
 
@@ -39,13 +39,11 @@ class TorchDiffEqSolver(Solver):
     def __init__(self, time_span, N, **kwargs):
         super().__init__(time_span, N, **kwargs)
 
-    def integrate(self, ode_system, y0):
+    def integrate(self, ode_system, y0) -> tuple[torch.Tensor, torch.Tensor]:
         # y0 is already a torch.Tensor
         t_start, t_end = self.time_span
         t_eval = torch.linspace(t_start, t_end, self.n_steps)
 
         y_torch = odeint(ode_system, y0, t_eval)
 
-        t = t_eval.detach().cpu().numpy()
-        y = y_torch.detach().cpu().numpy()
-        return t, y
+        return t_eval, y_torch
