@@ -125,31 +125,6 @@ class BasinStabilityEstimator:
 
         return self.bs_vals
 
-    def _integrate_sample(self, i, y0, ode_system, solver) -> Solution:
-        """
-        Integrate a single sample and return a Solution instance.
-        Uses disk caching to avoid recomputing the same integrations.
-
-        Note: The entire function is cached, including feature extraction
-        """
-        print(f"Integrating sample {i+1}/{self.N} with initial condition {y0}")
-        # y0_torch = torch.tensor(y0, dtype=torch.float32)
-
-        # Use the solver class to integrate
-        t, y = solver.integrate(ode_system, y0)
-
-        solution = Solution(
-            initial_condition=y0,
-            time=t,
-            y=y
-        )
-
-        features = self.feature_extractor.extract_features(solution)
-
-        solution.set_features(features)
-
-        return solution
-
     def plots(self):
         """
         Generate diagnostic plots using the data stored in self.solution:
@@ -166,15 +141,17 @@ class BasinStabilityEstimator:
         initial_conditions = self.solution.initial_condition.cpu().numpy()
 
         features_array = self.solution.features.cpu().numpy()
-        labels = self.solution.labels
+
+        # ['LC' 'LC' 'FP' 'LC' 'LC' ... ]
+        labels = np.array(self.solution.labels)
 
         plt.figure(figsize=(10, 6))
 
         # 1) Bar plot for basin stability values.
         plt.subplot(2, 2, 1)
-        labels, values = zip(*self.bs_vals.items())
-        plt.bar(labels, values, color=["#1f77b4", "#ff7f0e"])
-        plt.xticks(labels)
+        bar_labels, values = zip(*self.bs_vals.items())
+        plt.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])
+        plt.xticks(bar_labels)
         plt.ylabel("Fraction of samples")
         plt.title("Basin Stability")
 
@@ -182,7 +159,7 @@ class BasinStabilityEstimator:
         plt.subplot(2, 2, 2)
         unique_labels = np.unique(labels)
         for label in unique_labels:
-            idx = labels == label
+            idx = np.where(labels == label)
             plt.scatter(
                 initial_conditions[idx, 0],
                 initial_conditions[idx, 1],
@@ -199,7 +176,7 @@ class BasinStabilityEstimator:
         # 3) Feature space scatter plot with classifier results.
         plt.subplot(2, 2, 3)
         for label in unique_labels:
-            idx = labels == label
+            idx = np.where(labels == label)
             # Map labels to class names if desired (example mapping below)
             plt.scatter(
                 features_array[idx, 0],
