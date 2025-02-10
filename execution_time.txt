@@ -9,3 +9,9 @@
 2025-02-09 13:09:05 - main_pendulum_case1.py: 23.8828022480011 seconds
 2025-02-09 13:13:15 - main_pendulum_case1.py: 15.251185894012451 seconds
 2025-02-09 13:23:30 - main_pendulum_case1.py: 17.190351724624634 seconds
+2025-02-09 13:25:27 - main_pendulum_case1.py: 19.264562845230103 seconds
+2025-02-09 14:32:52 - main_pendulum_case1.py: 34.75124979019165 seconds
+2025-02-09 22:59:13 - main_pendulum_case2.py: 141.42870998382568 seconds
+2025-02-09 23:05:40 - main_pendulum_case2.py: 219.42635798454285 seconds
+2025-02-09 23:08:27 - deepcopy(ode_system): 0.00016117095947265625 seconds
+2025-02-09 23:08:58 - deepcopy(ode_system): 0.00010895729064941406 seconds

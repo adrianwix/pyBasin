@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 import numpy as np
-from typing import Literal, Optional
+from typing import Dict, Literal
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
-from sklearn.base import ClusterMixin
 from torch import tensor
 from FeatureExtractor import FeatureExtractor
 from ODESystem import ODESystem
 from Solution import Solution
 from Solver import Solver
+from utils import time_execution
 
 
 class ClusterClassifier(ABC):
@@ -27,9 +28,10 @@ class ClusterClassifier(ABC):
         """Abstract property that must be implemented in subclasses."""
         pass
 
-    def __init__(self, initial_conditions: tensor, labels: np.ndarray):
+    def __init__(self, initial_conditions: tensor, labels: np.ndarray, ode_params: Dict):
         self.initial_conditions = initial_conditions
         self.labels = labels
+        self.ode_params = deepcopy(ode_params)
 
     @abstractmethod
     def get_labels(self, features: np.ndarray) -> np.ndarray:
@@ -51,8 +53,11 @@ class ClusterClassifier(ABC):
     # TODO: Unsupervised clustering method don't need a traning set so this method is not always needed
     def fit(self, solver: Solver, ode_system: ODESystem, feature_extractor: FeatureExtractor) -> None:
         # Generate features for each template initial condition
+        classifier_ode_system = deepcopy(ode_system)
+        classifier_ode_system.params = self.ode_params
+
         t, y = solver.integrate(
-            ode_system, self.initial_conditions)
+            classifier_ode_system, self.initial_conditions)
 
         self.solution = Solution(
             initial_condition=self.initial_conditions,
@@ -80,7 +85,7 @@ class KNNCluster(ClusterClassifier):
     In our example, trainY should contain the strings "Fixed Point" and "Limit Cycle".
     """
 
-    def __init__(self, initial_conditions: tensor, labels: np.ndarray, classifier: KNeighborsClassifier):
+    def __init__(self, initial_conditions: tensor, labels: np.ndarray, classifier: KNeighborsClassifier, ode_params: Dict):
         """
         Initialize the KNNCluster.
 
@@ -94,7 +99,7 @@ class KNNCluster(ClusterClassifier):
             Training labels (shape: (n_samples,)). Expected labels are strings.
         """
         self.classifier = classifier
-        super().__init__(initial_conditions, labels)
+        super().__init__(initial_conditions, labels, ode_params)
 
     @property
     def type(self) -> Literal['supervised', 'unsupervised']:

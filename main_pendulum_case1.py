@@ -11,10 +11,10 @@ import torch
 
 
 def preview_plot_templates():
-    N = 10
+    N = 10000
 
     # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
+    params: PendulumParams = {"alpha": 0.1, "T": 0.2, "K": 1.0}
 
     ode_system = PendulumODE(params)  # for example
 
@@ -22,17 +22,15 @@ def preview_plot_templates():
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
-    solver = TorchDiffEqSolver(time_span=(0, 1000), N=N)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
     # Template initial conditions from MATLAB code
-    golden_ratio = (1 + np.sqrt(5)) / 2
-    epsilom = 0.1
-    classifier_initial_conditions = [
-        [-epsilom, epsilom],    # FP: stable fixed point
-        [golden_ratio - np.pi + epsilom, epsilom],    # LC: limit cycle
-    ]
+    classifier_initial_conditions = torch.tensor([
+        [0.5, 0.0],    # FP: stable fixed point
+        [0, 6],        # LC: limit cycle
+    ], dtype=torch.float32)
     classifier_labels = ['FP', 'LC']  # Original MATLAB labels
 
     # Create a KNeighborsClassifier with k=1.
@@ -45,6 +43,7 @@ def preview_plot_templates():
         labels=classifier_labels)
 
     bse = BasinStabilityEstimator(
+        name="pendulum_case1_templates",
         N=N,
         ode_system=ode_system,
         sampler=sampler,
@@ -55,19 +54,19 @@ def preview_plot_templates():
 
     bse.plot_templates(
         plotted_var=1,
-        time_span=(0, 50 * np.pi),
-        y_lims=[(-0.6, 0.6), (-1, params["T"] / params["alpha"] + 1)])
+        time_span=(0, 200))
 
 
 def main():
     # We can test and visualize the templates before running the Basin Stability Estimator
-    # preview_plot_templates()
+    preview_plot_templates()
+    exit(1)
 
     # Example usage (ensure that the necessary helper functions and classes are imported):
-    N = 1000
+    N = 10000
 
     # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
+    params: PendulumParams = {"alpha": 0.1, "T": 0.2, "K": 1.0}
 
     ode_system = PendulumODE(params)  # for example
 
@@ -75,7 +74,7 @@ def main():
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
-    solver = TorchDiffEqSolver(time_span=(0, 1000), N=N)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
 
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 

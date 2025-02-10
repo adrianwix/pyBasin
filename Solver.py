@@ -7,15 +7,17 @@ from torchdiffeq import odeint
 class Solver(ABC):
     """Abstract base class for ODE solvers."""
 
-    def __init__(self, time_span: tuple[int, int], N: int, **kwargs):
+    def __init__(self, time_span: tuple[float, float], fs: float, **kwargs):
         """
         Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining integration interval.
-        :param rtol: Relative tolerance for integration.
+        :param fs: Sampling frequency (Hz) - number of samples per time unit.
         """
         self.time_span = time_span
-        self.n_steps = N
+        self.fs = fs
+        dt = 1/fs
+        self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
         self.params = kwargs  # Additional solver parameters
 
     @abstractmethod
@@ -33,17 +35,17 @@ class Solver(ABC):
 class TorchDiffEqSolver(Solver):
     """
     ODE solver using torchdiffeq. 
-    Expects y0 to be a torch.Tensor and uses N as the total number of steps.
+    Expects y0 to be a torch.Tensor and uses sampling frequency for time steps.
     """
 
-    def __init__(self, time_span, N, **kwargs):
-        super().__init__(time_span, N, **kwargs)
+    def __init__(self, time_span, fs, **kwargs):
+        super().__init__(time_span, fs, **kwargs)
 
     def integrate(self, ode_system, y0) -> tuple[torch.Tensor, torch.Tensor]:
         # y0 is already a torch.Tensor
         t_start, t_end = self.time_span
         t_eval = torch.linspace(t_start, t_end, self.n_steps)
 
-        y_torch = odeint(ode_system, y0, t_eval)
+        y_torch = odeint(ode_system, y0, t_eval, rtol=1e-8)
 
         return t_eval, y_torch
