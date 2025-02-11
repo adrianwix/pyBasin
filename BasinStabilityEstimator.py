@@ -83,46 +83,50 @@ class BasinStabilityEstimator:
 
         :return: A dictionary of basin stability values per class.
         """
-        # Step 1: Generate initial conditions.
+        print("\nStarting Basin Stability Estimation...")
+
+        print("\n1. Generating initial conditions...")
         self.Y0 = self.sampler.sample(self.N)
+        print(f"   Generated {self.N} initial conditions")
 
-        # Step 2/3: Integrate and extract features (no parallelization needed).
+        print("\n2. Integrating ODE system...")
         t, y = self.solver.integrate(self.ode_system, self.Y0)
+        print(f"   Integration complete - trajectory shape: {y.shape}")
 
-        # Initialize solutions list
+        print("\n3. Creating Solution object...")
         self.solution = Solution(
             initial_condition=self.Y0,
             time=t,
             y=y
         )
 
-        # Build the features array from the Solution instances.
+        print("\n4. Extracting features...")
         features = self.feature_extractor.extract_features(self.solution)
-
         self.solution.set_features(features)
+        print(f"   Features shape: {features.shape}")
 
-        # Step 4: Perform clustering/classification.
+        print("\n5. Performing classification...")
         if self.cluster_classifier.type == 'supervised':
+            print("   Fitting classifier with template data...")
             self.cluster_classifier.fit(
                 solver=self.solver,
                 ode_system=self.ode_system,
                 feature_extractor=self.feature_extractor)
 
         labels = self.cluster_classifier.get_labels(features)
-
         self.solution.set_labels(labels)
+        print("   Classification complete")
 
-        # Step 5: Compute basin stability as the fraction of samples per class.
-        # Initialize with zeros for all possible labels
+        print("\n6. Computing basin stability values...")
         self.bs_vals = {label: 0.0 for label in labels}
-
-        # Update with actual fractions where they exist
         unique_labels, counts = np.unique(labels, return_counts=True)
         fractions = counts / float(self.N)
 
         for label, fraction in zip(unique_labels, fractions):
             self.bs_vals[label] = fraction
+            print(f"   {label}: {fraction:.3f}")
 
+        print("\nBasin Stability Estimation Complete!")
         return self.bs_vals
 
     def plots(self):
@@ -163,7 +167,7 @@ class BasinStabilityEstimator:
             plt.scatter(
                 initial_conditions[idx, 0],
                 initial_conditions[idx, 1],
-                s=5,
+                s=4,
                 alpha=0.5,
                 label=label
             )

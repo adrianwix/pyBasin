@@ -55,6 +55,11 @@ class ClusterClassifier(ABC):
         # Generate features for each template initial condition
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
+        print("classifier.fit - ode_system.params: ",
+              classifier_ode_system.params)
+        print("classifier.fit - self.initial_conditions: ",
+              self.initial_conditions)
+        print("classifier.fit - self.labels: ", self.labels)
 
         t, y = solver.integrate(
             classifier_ode_system, self.initial_conditions)
@@ -70,6 +75,8 @@ class ClusterClassifier(ABC):
 
         trainX = features.detach().cpu().numpy()
         trainY = self.labels
+
+        print(trainX, trainY)
 
         self.classifier.fit(trainX, trainY)
 

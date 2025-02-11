@@ -3,7 +3,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from BasinStabilityEstimator import BasinStabilityEstimator
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
-from Sampler import RandomSampler
+from Sampler import UniformRandomSampler
 from Solver import TorchDiffEqSolver
 from FeatureExtractor import PendulumFeatureExtractor
 from utils import time_execution
@@ -14,11 +14,11 @@ def preview_plot_templates():
     N = 10000
 
     # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.2, "K": 1.0}
+    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 
     ode_system = PendulumODE(params)  # for example
 
-    sampler = RandomSampler(
+    sampler = UniformRandomSampler(
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
@@ -29,7 +29,7 @@ def preview_plot_templates():
     # Template initial conditions from MATLAB code
     classifier_initial_conditions = torch.tensor([
         [0.5, 0.0],    # FP: stable fixed point
-        [0, 6],        # LC: limit cycle
+        [2.7, 0],        # LC: limit cycle
     ], dtype=torch.float32)
     classifier_labels = ['FP', 'LC']  # Original MATLAB labels
 
@@ -40,7 +40,8 @@ def preview_plot_templates():
     knn_cluster = KNNCluster(
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
-        labels=classifier_labels)
+        labels=classifier_labels,
+        ode_params=params)
 
     bse = BasinStabilityEstimator(
         name="pendulum_case1_templates",
@@ -66,11 +67,11 @@ def main():
     N = 10000
 
     # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.2, "K": 1.0}
+    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 
     ode_system = PendulumODE(params)  # for example
 
-    sampler = RandomSampler(
+    sampler = UniformRandomSampler(
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 
@@ -92,7 +93,8 @@ def main():
     knn_cluster = KNNCluster(
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
-        labels=classifier_labels)
+        labels=classifier_labels,
+        ode_params=params)
 
     bse = BasinStabilityEstimator(
         name="pendulum_case1",

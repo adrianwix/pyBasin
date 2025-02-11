@@ -5,7 +5,7 @@ import torch
 from ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
 from ClusterClassifier import KNNCluster
 from ODESystem import PendulumODE, PendulumParams
-from Sampler import RandomSampler
+from Sampler import UniformRandomSampler
 from Solver import TorchDiffEqSolver
 from FeatureExtractor import PendulumFeatureExtractor
 from utils import time_execution  # Import the utility function
@@ -19,7 +19,7 @@ def main():
 
     ode_system = PendulumODE(params)  # for example
 
-    sampler = RandomSampler(
+    sampler = UniformRandomSampler(
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
 

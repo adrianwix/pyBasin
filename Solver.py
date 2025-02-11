@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional, Callable
 import numpy as np
 import torch
 from torchdiffeq import odeint
@@ -33,19 +34,23 @@ class Solver(ABC):
 
 
 class TorchDiffEqSolver(Solver):
-    """
-    ODE solver using torchdiffeq. 
-    Expects y0 to be a torch.Tensor and uses sampling frequency for time steps.
-    """
-
     def __init__(self, time_span, fs, **kwargs):
         super().__init__(time_span, fs, **kwargs)
 
     def integrate(self, ode_system, y0) -> tuple[torch.Tensor, torch.Tensor]:
-        # y0 is already a torch.Tensor
         t_start, t_end = self.time_span
-        t_eval = torch.linspace(t_start, t_end, self.n_steps)
+        t_eval = torch.linspace(
+            t_start, t_end, self.n_steps, dtype=torch.float64)
 
-        y_torch = odeint(ode_system, y0, t_eval, rtol=1e-8)
+        try:
+            y_torch = odeint(
+                ode_system,
+                y0,
+                t_eval,
+                rtol=1e-8,
+                atol=1e-6
+            )
+        except RuntimeError as e:
+            raise e
 
         return t_eval, y_torch

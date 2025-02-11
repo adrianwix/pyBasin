@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 
 from ODESystem import ODESystem, PendulumODE, PendulumParams
-from Sampler import RandomSampler, Sampler
+from Sampler import UniformRandomSampler, Sampler
 from Solver import SciPySolver, Solver
 
 OHE = {
@@ -134,7 +134,7 @@ def integrate_sample(i, Y0, ode_system: ODESystem, solver, steady_state_time):
     print(f"Integrating sample {i+1}/{len(Y0)} with initial condition {y0}")
 
     # Define the ODE system
-    ode_lambda = lambda t, y: ode_system.ode(t, y)
+    def ode_lambda(t, y): return ode_system.ode(t, y)
 
     # Integrate using the solver
     t, y = solver.integrate(ode_lambda, y0)
@@ -199,13 +199,12 @@ def compute_basin_stability(
     Y0 = sampler.sample(N)
 
     # Step 2/3: Integrate and extract features
-    
+
     all_features = []
 
     with ProcessPoolExecutor() as executor:
         all_features = list(executor.map(integrate_sample, range(
             N), [Y0]*N, [ode_system]*N, [solver]*N, [steady_state_time]*N))
-
 
     features_array = np.vstack(all_features)  # shape => (N, 2)
 
@@ -233,10 +232,10 @@ if __name__ == "__main__":
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
     ode_system = PendulumODE(params)
 
-    sampler = RandomSampler(
-        min_limits= (-np.pi + np.arcsin(params["T"] / params["K"]), -10.0), 
-        max_limits= (np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
-    
+    sampler = UniformRandomSampler(
+        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
+        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
+
     solver = SciPySolver(time_span=(0, 1000), method="RK45")
 
     assignments, basin_stab, Y0, features_array = compute_basin_stability(

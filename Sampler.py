@@ -35,7 +35,7 @@ class Sampler(ABC):
     #     return tensor.numpy()
 
 
-class RandomSampler(Sampler):
+class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
     def sample(self, N: int) -> torch.Tensor:
