@@ -10,9 +10,9 @@ matplotlib = "*"
 scikit-learn = "*"
 torch = "*"
 torchdiffeq = "*"
-pybasin = {file = "pyBasin", editable = true}
+pybasin = {file = "pybasin", editable = true}
 
 [dev-packages]
 
 [requires]
-python_version = "3.12.3"
+python_version = "3.12.7"

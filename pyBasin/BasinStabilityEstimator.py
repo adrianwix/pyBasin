@@ -1,3 +1,4 @@
+import inspect
 from json import JSONEncoder
 import json
 from typing import Dict, Optional
@@ -6,13 +7,16 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import datetime
+import inspect
+import uuid
 
-from pyBasin.Solver import Solver
-from pyBasin.Solution import Solution
-from pyBasin.Sampler import Sampler
-from pyBasin.ODESystem import ODESystem
-from pyBasin.FeatureExtractor import FeatureExtractor
-from pyBasin.ClusterClassifier import ClusterClassifier
+from pybasin.Solver import Solver
+from pybasin.Solution import Solution
+from pybasin.Sampler import Sampler
+from pybasin.ODESystem import ODESystem
+from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.ClusterClassifier import ClusterClassifier
 
 matplotlib.use('TkAgg')
 
@@ -42,6 +46,7 @@ class BasinStabilityEstimator:
         solver: Solver,
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
+        save_to: Optional[str] = None,
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -53,6 +58,7 @@ class BasinStabilityEstimator:
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system.
         :param cluster_classifier: The ClusterClassifier object to assign labels.
+        :param save_to: Optional file path to save results.
         """
         self.name = name
         self.N = N
@@ -61,6 +67,7 @@ class BasinStabilityEstimator:
         self.solver = solver
         self.feature_extractor = feature_extractor
         self.cluster_classifier = cluster_classifier
+        self.save_to = save_to
 
         # Attributes to be populated during estimation
         self.bs_vals: Optional[Dict[int, float]] = None
@@ -128,6 +135,53 @@ class BasinStabilityEstimator:
 
         print("\nBasin Stability Estimation Complete!")
         return self.bs_vals
+
+    def _get_results_dir(self) -> str:
+        """
+        Determine the directory where results should be saved.
+        If save_to was provided, use it; otherwise, use the directory of the calling script.
+        """
+        if self.save_to:
+            base_dir = os.path.abspath(self.save_to)
+            results_dir = os.path.join(base_dir, f"results_{self.name}")
+            os.makedirs(results_dir, exist_ok=True)
+            return results_dir
+        else:
+            raise ValueError(
+                "No save_to directory provided. Please specify a directory to save results.")
+
+    def _get_caller_dir(self):
+        """
+        Inspects the call stack to determine the directory of the calling script.
+        This implementation iterates over the stack frames and returns the first frame
+        whose __file__ is different from this module's file.
+        """
+        library_file = os.path.abspath(__file__)
+        for frame in inspect.stack():
+            caller_file = frame.frame.f_globals.get('__file__')
+            if caller_file and os.path.abspath(caller_file) != library_file:
+                return os.path.dirname(os.path.abspath(caller_file))
+        # Fallback if __file__ is not found (e.g. interactive shell)
+        return os.getcwd()
+
+    def _generate_filename(self):
+        """
+        Generates a unique filename using either a timestamp or a UUID.
+        """
+        if False:
+            unique_part = uuid.uuid4().hex
+        else:
+            unique_part = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        return f"plot_{unique_part}.png"
+
+    def _resolve_folder(self):
+        """
+        Resolves the folder path relative to the caller's directory and ensures it exists.
+        """
+        base_dir = self._get_caller_dir()
+        full_folder = os.path.join(base_dir, self.save_to)
+        os.makedirs(full_folder, exist_ok=True)
+        return full_folder
 
     def plots(self):
         """
@@ -202,10 +256,18 @@ class BasinStabilityEstimator:
 
         # Save the figure
         # Create results directory if it does not exist
-        results_dir = f"results_{self.name}"
-        os.makedirs(results_dir, exist_ok=True)
-        plot_filename = os.path.join(results_dir, "diagnostic_plots.png")
-        plt.savefig(plot_filename, dpi=300)
+        if (self.save_to):
+            # results_dir = self._get_results_dir()
+            # results_dir = self.get_full_path(self.save_to)
+            # os.makedirs(os.path.dirname(results_dir), exist_ok=True)
+
+            full_folder = self._resolve_folder()
+            file_name = self._generate_filename()
+            full_path = os.path.join(full_folder, file_name)
+
+            # plot_filename = os.path.join(results_dir, "diagnostic_plots.png")
+            print("Saving plots to: ", full_path)
+            plt.savefig(full_path, dpi=300)
 
         plt.show()
 

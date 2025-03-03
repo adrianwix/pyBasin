@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="pyBasin",
+    name="pybasin",
     description="Basin stability estimation for dynamical systems",
     version="0.1",
     packages=find_packages(),

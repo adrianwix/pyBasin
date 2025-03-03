@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8ae7db4caf7e2874a372d1111b26e25bfee421cba1bfe45a77468aa0d3b1998e"
+            "sha256": "7bdd5fd39e5ab7ccc34380536189460d3ff2cc19fda26d4c0b558ccde3cfd8af"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.12.3"
+            "python_version": "3.12.7"
         },
         "sources": [
             {
@@ -531,7 +531,7 @@
         },
         "pybasin": {
             "editable": true,
-            "file": "pyBasin"
+            "file": "pybasin"
         },
         "pyparsing": {
             "hashes": [

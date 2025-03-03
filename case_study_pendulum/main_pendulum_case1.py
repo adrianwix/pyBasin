@@ -1,12 +1,12 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from pyBasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pyBasin.ClusterClassifier import KNNCluster
-from pyBasin.ODESystem import PendulumODE, PendulumParams
-from pyBasin.Sampler import UniformRandomSampler
-from pyBasin.Solver import TorchDiffEqSolver
-from pyBasin.FeatureExtractor import PendulumFeatureExtractor
-from pyBasin.utils import time_execution
+from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
+from pybasin.ClusterClassifier import KNNCluster
+from pybasin.ODESystem import PendulumODE, PendulumParams
+from pybasin.Sampler import UniformRandomSampler
+from pybasin.Solver import TorchDiffEqSolver
+from pybasin.FeatureExtractor import PendulumFeatureExtractor
+from pybasin.utils import time_execution
 import torch
 
 
@@ -103,7 +103,8 @@ def main():
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster
+        cluster_classifier=knn_cluster,
+        save_to="results"
     )
 
     # bse.plot_templates(

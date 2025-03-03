@@ -1,12 +1,12 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from pyBasin.BasinStabilityEstimator import BasinStabilityEstimator
-from ..pyBasin.ClusterClassifier import KNNCluster
-from ..pyBasin.ODESystem import LorenzODE, LorenzParams
-from ..pyBasin.Sampler import UniformRandomSampler
-from ..pyBasin.Solver import TorchDiffEqSolver
-from ..pyBasin.FeatureExtractor import LorenzFeatureExtractor
-from ..pyBasin.utils import time_execution
+from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
+from ..pybasin.ClusterClassifier import KNNCluster
+from ..pybasin.ODESystem import LorenzODE, LorenzParams
+from ..pybasin.Sampler import UniformRandomSampler
+from ..pybasin.Solver import TorchDiffEqSolver
+from ..pybasin.FeatureExtractor import LorenzFeatureExtractor
+from ..pybasin.utils import time_execution
 import torch
 
 

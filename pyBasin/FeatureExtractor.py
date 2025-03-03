@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import torch
-from pyBasin.Solution import Solution
+from pybasin.Solution import Solution
 
 
 class FeatureExtractor(ABC):

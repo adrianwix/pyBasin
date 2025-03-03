@@ -1,12 +1,12 @@
 """Adaptive Study Basin Stability Estimator."""
 
-from thesis.pyBasin.Solver import Solver
-from thesis.pyBasin.Sampler import Sampler
+from thesis.pybasin.Solver import Solver
+from thesis.pybasin.Sampler import Sampler
 from typing import Dict
-from thesis.pyBasin.ODESystem import ODESystem
-from thesis.pyBasin.FeatureExtractor import FeatureExtractor
-from thesis.pyBasin.ClusterClassifier import ClusterClassifier
-from thesis.pyBasin.BasinStabilityEstimator import BasinStabilityEstimator
+from thesis.pybasin.ODESystem import ODESystem
+from thesis.pybasin.FeatureExtractor import FeatureExtractor
+from thesis.pybasin.ClusterClassifier import ClusterClassifier
+from thesis.pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from sklearn.cluster import KMeans
 from typing import Literal, Dict, TypedDict, Union
 import os

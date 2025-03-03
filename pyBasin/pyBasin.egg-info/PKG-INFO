@@ -1,9 +1,11 @@
 Metadata-Version: 2.2
-Name: pyBasin
+Name: pybasin
 Version: 0.1
+Summary: Basin stability estimation for dynamical systems
 Requires-Dist: numpy
 Requires-Dist: matplotlib
 Requires-Dist: scikit-learn
 Requires-Dist: torch
 Requires-Dist: torchdiffeq
 Dynamic: requires-dist
+Dynamic: summary
