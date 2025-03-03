@@ -1,7 +1,6 @@
-import copy
 from abc import ABC, abstractmethod
 import torch
-from Solution import Solution
+from pyBasin.Solution import Solution
 
 
 class FeatureExtractor(ABC):

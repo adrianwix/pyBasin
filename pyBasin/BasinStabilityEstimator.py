@@ -1,19 +1,19 @@
-import torch
-from torchdiffeq import odeint
 from json import JSONEncoder
 import json
-from Solver import Solver
-from Solution import Solution
-from Sampler import Sampler
 from typing import Dict, Optional
-from ODESystem import ODESystem
-from FeatureExtractor import FeatureExtractor
-from ClusterClassifier import ClusterClassifier
-from typing import Optional, Dict, Union
+from typing import Optional, Dict
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+
+from pyBasin.Solver import Solver
+from pyBasin.Solution import Solution
+from pyBasin.Sampler import Sampler
+from pyBasin.ODESystem import ODESystem
+from pyBasin.FeatureExtractor import FeatureExtractor
+from pyBasin.ClusterClassifier import ClusterClassifier
+
 matplotlib.use('TkAgg')
 
 
@@ -249,6 +249,39 @@ class BasinStabilityEstimator:
         plt.savefig(os.path.join(
             results_dir, "template_trajectories.png"), dpi=300)
 
+        plt.show()
+
+    def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: Optional[int] = None):
+        """
+        Plot trajectories for the template initial conditions in 2D or 3D phase space.
+        """
+        if self.cluster_classifier.initial_conditions is None:
+            raise ValueError("No template solutions available.")
+
+        t, trajectories = self.solver.integrate(
+            self.ode_system, self.cluster_classifier.initial_conditions
+        )
+
+        fig = plt.figure(figsize=(8, 6))
+        if z_var is None:
+            ax = fig.add_subplot(111)
+            for i, (label, traj) in enumerate(zip(self.cluster_classifier.labels, trajectories.permute(1, 0, 2))):
+                ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))
+            ax.set_xlabel(f'State {x_var}')
+            ax.set_ylabel(f'State {y_var}')
+            ax.set_title('2D Phase Plot')
+        else:
+            ax = fig.add_subplot(111, projection='3d')
+            for i, (label, traj) in enumerate(zip(self.cluster_classifier.labels, trajectories.permute(1, 0, 2))):
+                ax.plot(traj[:, x_var], traj[:, y_var],
+                        traj[:, z_var], label=str(label))
+            ax.set_xlabel(f'State {x_var}')
+            ax.set_ylabel(f'State {y_var}')
+            ax.set_zlabel(f'State {z_var}')
+            ax.set_title('3D Phase Plot')
+
+        plt.legend()
+        plt.tight_layout()
         plt.show()
 
     def save(self, filename: str):

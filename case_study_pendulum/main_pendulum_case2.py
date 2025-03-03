@@ -2,13 +2,13 @@ from copy import deepcopy
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 import torch
-from ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
-from ClusterClassifier import KNNCluster
-from ODESystem import PendulumODE, PendulumParams
-from Sampler import UniformRandomSampler
-from Solver import TorchDiffEqSolver
-from FeatureExtractor import PendulumFeatureExtractor
-from utils import time_execution  # Import the utility function
+from pyBasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
+from thesis.pyBasin.ClusterClassifier import KNNCluster
+from thesis.pyBasin.ODESystem import PendulumODE, PendulumParams
+from thesis.pyBasin.Sampler import UniformRandomSampler
+from thesis.pyBasin.Solver import TorchDiffEqSolver
+from thesis.pyBasin.FeatureExtractor import PendulumFeatureExtractor
+from thesis.pyBasin.utils import time_execution  # Import the utility function
 
 
 def main():

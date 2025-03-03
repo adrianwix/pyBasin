@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TypedDict, List, Dict, TypeVar, Generic
-import numpy as np
-from numpy.typing import NDArray
+from typing import TypedDict, Dict, TypeVar, Generic
 import torch
 import torch.nn as nn
 

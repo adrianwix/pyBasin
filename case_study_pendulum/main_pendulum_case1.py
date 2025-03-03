@@ -1,12 +1,12 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from BasinStabilityEstimator import BasinStabilityEstimator
-from ClusterClassifier import KNNCluster
-from ODESystem import PendulumODE, PendulumParams
-from Sampler import UniformRandomSampler
-from Solver import TorchDiffEqSolver
-from FeatureExtractor import PendulumFeatureExtractor
-from utils import time_execution
+from pyBasin.BasinStabilityEstimator import BasinStabilityEstimator
+from pyBasin.ClusterClassifier import KNNCluster
+from pyBasin.ODESystem import PendulumODE, PendulumParams
+from pyBasin.Sampler import UniformRandomSampler
+from pyBasin.Solver import TorchDiffEqSolver
+from pyBasin.FeatureExtractor import PendulumFeatureExtractor
+from pyBasin.utils import time_execution
 import torch
 
 
@@ -60,8 +60,8 @@ def preview_plot_templates():
 
 def main():
     # We can test and visualize the templates before running the Basin Stability Estimator
-    preview_plot_templates()
-    exit(1)
+    # preview_plot_templates()
+    # exit(1)
 
     # Example usage (ensure that the necessary helper functions and classes are imported):
     N = 10000

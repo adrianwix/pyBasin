@@ -5,11 +5,10 @@ from typing import Dict, Literal
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
 from torch import tensor
-from FeatureExtractor import FeatureExtractor
-from ODESystem import ODESystem
-from Solution import Solution
-from Solver import Solver
-from utils import time_execution
+from pyBasin.FeatureExtractor import FeatureExtractor
+from pyBasin.ODESystem import ODESystem
+from pyBasin.Solution import Solution
+from pyBasin.Solver import Solver
 
 
 class ClusterClassifier(ABC):

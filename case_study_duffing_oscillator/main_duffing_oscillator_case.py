@@ -1,11 +1,11 @@
 from sklearn.neighbors import KNeighborsClassifier
-from BasinStabilityEstimator import BasinStabilityEstimator
-from ClusterClassifier import KNNCluster
-from ODESystem import DuffingODE, DuffingParams
-from Sampler import GridSampler
-from Solver import SciPySolver
+from thesis.pyBasin.BasinStabilityEstimator import BasinStabilityEstimator
+from thesis.pyBasin.ClusterClassifier import KNNCluster
+from thesis.pyBasin.ODESystem import DuffingODE, DuffingParams
+from thesis.pyBasin.Sampler import GridSampler
+from thesis.pyBasin.Solver import SciPySolver
 
-from FeatureExtractor import DuffingFeatureExtractor, PendulumFeatureExtractor, PendulumOHE
+from thesis.pyBasin.FeatureExtractor import DuffingFeatureExtractor, PendulumFeatureExtractor, PendulumOHE
 
 if __name__ == "__main__":
     # Example usage (ensure that the necessary helper functions and classes are imported):

@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 
+
 def time_execution(script_name, func, *args, **kwargs):
     start_time = time.time()  # Record the start time
     result = func(*args, **kwargs)  # Execute the function

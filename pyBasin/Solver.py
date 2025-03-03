@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Callable
 import numpy as np
 import torch
 from torchdiffeq import odeint
