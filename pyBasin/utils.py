@@ -35,15 +35,22 @@ def generate_filename(name: str):
 
 def _get_caller_dir():
     """
-    Inspects the call stack to determine the directory of the calling script.
-    This implementation iterates over the stack frames and returns the first frame
-    whose __file__ is different from this module's file.
+    Inspects the call stack to determine the directory of the calling script
+    that is outside the pybasin module. This implementation iterates over the
+    stack frames and returns the first frame whose __file__ is not within the
+    pybasin package directory.
     """
-    library_file = os.path.abspath(__file__)
+    # Get the absolute directory of the current (pybasin) module.
+    library_dir = os.path.abspath(os.path.dirname(__file__))
+
     for frame in inspect.stack():
         caller_file = frame.frame.f_globals.get('__file__')
-        if caller_file and os.path.abspath(caller_file) != library_file:
-            return os.path.dirname(os.path.abspath(caller_file))
+        if caller_file:
+            abs_caller_file = os.path.abspath(caller_file)
+            # Check if the caller file is outside of the pybasin module directory.
+            if not abs_caller_file.startswith(library_dir):
+                return os.path.dirname(abs_caller_file)
+
     # Fallback if __file__ is not found (e.g. interactive shell)
     return os.getcwd()
 
