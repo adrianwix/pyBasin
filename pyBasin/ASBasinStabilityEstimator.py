@@ -17,6 +17,7 @@ matplotlib.use('TkAgg')
 
 
 class AdaptiveStudyParams(TypedDict):
+    # TODO: Delete mode
     mode: Literal['hyper_parameter', 'model_parameter']
     adaptative_parameter_values: list
     adaptative_parameter_name: str
@@ -68,10 +69,17 @@ class ASBasinStabilityEstimator:
         self.parameter_values = []
         self.basin_stabilities = []
 
+        print(
+            f"Estimating Basin Stability for parameter: {self.as_params['adaptative_parameter_name']}")
+
+        print(
+            f"Parameter values: {self.as_params['adaptative_parameter_values']}")
+
         for param_value in self.as_params["adaptative_parameter_values"]:
             # Update parameter using eval
             assignment = f"{self.as_params['adaptative_parameter_name']} = {
                 param_value}"
+
             eval(compile(assignment, '<string>', 'exec'), {
                 "ode_system": self.ode_system,
                 "sampler": self.sampler,
@@ -80,8 +88,8 @@ class ASBasinStabilityEstimator:
                 "cluster_classifier": self.cluster_classifier,
             })
 
-            print(f"Current {self.as_params['adaptative_parameter_name']} value: {
-                  self.ode_system.params['T']}")
+            print(
+                f"Current {self.as_params['adaptative_parameter_name']} value: {param_value}")
 
             bse = BasinStabilityEstimator(
                 # Add parameter value to name

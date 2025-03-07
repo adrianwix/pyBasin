@@ -1,64 +1,42 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from ..pybasin.ClusterClassifier import KNNCluster
-from ..pybasin.ODESystem import LorenzODE, LorenzParams
-from ..pybasin.Sampler import UniformRandomSampler
-from ..pybasin.Solver import TorchDiffEqSolver
-from ..pybasin.FeatureExtractor import LorenzFeatureExtractor
-from ..pybasin.utils import time_execution
+from pybasin.ClusterClassifier import KNNCluster
+from pybasin.Plotter import Plotter
+from pybasin.utils import time_execution
 import torch
 
 
-def setup_lorenz_system():
-    N = 10000  # Following MATLAB example
+def main():
+    # Preview templates first
+    preview_plot_templates()
+    exit(1)
 
-    # Parameters for broken butterfly system
-    params: LorenzParams = {
-        "sigma": 0.12,
-        "r": 0.0,
-        "b": -0.6
-    }
+    props = setup_lorenz_system()
+    N = props["N"]
+    ode_system = props["ode_system"]
+    sampler = props["sampler"]
+    solver = props["solver"]
+    feature_extractor = props["feature_extractor"]
+    knn_cluster = props["cluster_classifier"]
 
-    ode_system = LorenzODE(params)
-
-    sampler = UniformRandomSampler(
-        min_limits=[-10.0, -20.0, 0.0],
-        max_limits=[10.0, 20.0, 0.0]
+    bse = BasinStabilityEstimator(
+        name="lorenz_case1",
+        N=N,
+        ode_system=ode_system,
+        sampler=sampler,
+        solver=solver,
+        feature_extractor=feature_extractor,
+        cluster_classifier=knn_cluster
     )
 
-    solver = TorchDiffEqSolver(
-        time_span=(0, 1000),
-        fs=25
-    )
+    basin_stability = bse.estimate_bs()
+    print("Basin Stability:", basin_stability)
 
-    feature_extractor = LorenzFeatureExtractor(time_steady=900)
+    plt = Plotter(bse=bse)
 
-    classifier_initial_conditions = torch.tensor([
-        [0.8, -3.0, 0.0],
-        [-0.8, 3.0, 0.0],
-        [10.0, 50.0, 0.0],
-    ], dtype=torch.float32)
-
-    classifier_labels = ['butterfly1', 'butterfly2', 'unbounded']
-
-    knn = KNeighborsClassifier(n_neighbors=1)
-
-    knn_cluster = KNNCluster(
-        classifier=knn,
-        initial_conditions=classifier_initial_conditions,
-        labels=classifier_labels,
-        ode_params=params
-    )
-
-    return {
-        "N": N,
-        "ode_system": ode_system,
-        "sampler": sampler,
-        "solver": solver,
-        "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster
-    }
+    plt.plot_bse_results()
 
 
 def preview_plot_templates():
@@ -100,47 +78,21 @@ def preview_plot_templates():
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster
+        cluster_classifier=knn_cluster,
+        save_to="results"
     )
+
+    plt = Plotter(bse=bse)
 
     print("Generating template trajectories...")
 
     # Plot the first state variable (x) trajectories
-    bse.plot_templates(
+    plt.plot_templates(
         plotted_var=1,
         time_span=(0, 200)
     )
 
-    bse.plot_phase(x_var=1, y_var=2)
-
-
-def main():
-    # Preview templates first
-    preview_plot_templates()
-    exit(1)
-
-    props = setup_lorenz_system()
-    N = props["N"]
-    ode_system = props["ode_system"]
-    sampler = props["sampler"]
-    solver = props["solver"]
-    feature_extractor = props["feature_extractor"]
-    knn_cluster = props["cluster_classifier"]
-
-    bse = BasinStabilityEstimator(
-        name="lorenz_case1",
-        N=N,
-        ode_system=ode_system,
-        sampler=sampler,
-        solver=solver,
-        feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster
-    )
-
-    basin_stability = bse.estimate_bs()
-    print("Basin Stability:", basin_stability)
-
-    bse.plots()
+    plt.plot_phase(x_var=1, y_var=2)
 
 
 if __name__ == "__main__":

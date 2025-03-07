@@ -1,12 +1,18 @@
-import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
+# Pybasin Imports
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from pybasin.ClusterClassifier import KNNCluster
-from pybasin.ODESystem import PendulumODE, PendulumParams
+from pybasin.Plotter import Plotter
 from pybasin.Sampler import UniformRandomSampler
 from pybasin.Solver import TorchDiffEqSolver
-from pybasin.FeatureExtractor import PendulumFeatureExtractor
 from pybasin.utils import time_execution
+
+# Case Study classes
+from PendulumODE import PendulumODE, PendulumParams
+from PendulumFeatureExtractor import PendulumFeatureExtractor
+
+# Third Parties
+import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
 import torch
 
 
@@ -114,7 +120,8 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    bse.plots()
+    plt = Plotter(bse=bse)
+    plt.plot_bse_results()
 
     # Disabled since result file is too big
     # bse.save("basin_stability_results.json")

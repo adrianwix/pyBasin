@@ -1,5 +1,12 @@
+import inspect
+from json import JSONEncoder
+import os
 import time
 from datetime import datetime
+
+import numpy as np
+
+from pybasin.Solution import Solution
 
 
 def time_execution(script_name, func, *args, **kwargs):
@@ -16,3 +23,55 @@ def time_execution(script_name, func, *args, **kwargs):
         f.write(f"{current_time} - {script_name}: {elapsed_time} seconds\n")
 
     return result
+
+
+def generate_filename(name: str):
+    """
+    Generates a unique filename using either a timestamp or a UUID.
+    """
+    date = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return f"plot_{date}_{name}.png"
+
+
+def _get_caller_dir():
+    """
+    Inspects the call stack to determine the directory of the calling script.
+    This implementation iterates over the stack frames and returns the first frame
+    whose __file__ is different from this module's file.
+    """
+    library_file = os.path.abspath(__file__)
+    for frame in inspect.stack():
+        caller_file = frame.frame.f_globals.get('__file__')
+        if caller_file and os.path.abspath(caller_file) != library_file:
+            return os.path.dirname(os.path.abspath(caller_file))
+    # Fallback if __file__ is not found (e.g. interactive shell)
+    return os.getcwd()
+
+
+def resolve_folder(save_to: str):
+    """
+    Resolves the folder path relative to the caller's directory and ensures it exists.
+    """
+    base_dir = _get_caller_dir()
+    full_folder = os.path.join(base_dir, save_to)
+    os.makedirs(full_folder, exist_ok=True)
+    return full_folder
+
+
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, Solution):
+            return {
+                "initial_condition": obj.initial_condition.tolist(),
+                "time": obj.time.tolist(),
+                "trajectory": obj.trajectory.tolist(),
+                "features": obj.features.tolist() if obj.features is not None else None,
+                "label": obj.label
+            }
+        return super(NumpyEncoder, self).default(obj)

@@ -63,7 +63,7 @@ if __name__ == "__main__":
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    bse.plots()
+    bse.plot_bse_results()
 
     # Disabled since result file is too big
     # bse.save("duffing_oscillator_case_results.json")
