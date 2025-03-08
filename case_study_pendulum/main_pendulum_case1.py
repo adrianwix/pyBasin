@@ -1,9 +1,11 @@
 # Pybasin Imports
+from case_study_pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.Plotter import Plotter
 from pybasin.Sampler import UniformRandomSampler
 from pybasin.Solver import TorchDiffEqSolver
+from pybasin.types import SetupProperties
 from pybasin.utils import time_execution
 
 # Case Study classes
@@ -16,91 +18,14 @@ from sklearn.neighbors import KNeighborsClassifier
 import torch
 
 
-def preview_plot_templates():
-    N = 10000
-
-    # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
-
-    ode_system = PendulumODE(params)  # for example
-
-    sampler = UniformRandomSampler(
-        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
-        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
-
-    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
-
-    feature_extractor = PendulumFeatureExtractor(time_steady=950)
-
-    # Template initial conditions from MATLAB code
-    classifier_initial_conditions = torch.tensor([
-        [0.5, 0.0],    # FP: stable fixed point
-        [2.7, 0],        # LC: limit cycle
-    ], dtype=torch.float32)
-    classifier_labels = ['FP', 'LC']  # Original MATLAB labels
-
-    # Create a KNeighborsClassifier with k=1.
-    knn = KNeighborsClassifier(n_neighbors=1)
-
-    # Instantiate the KNNCluster with the training data.
-    knn_cluster = KNNCluster(
-        classifier=knn,
-        initial_conditions=classifier_initial_conditions,
-        labels=classifier_labels,
-        ode_params=params)
-
-    bse = BasinStabilityEstimator(
-        name="pendulum_case1_templates",
-        N=N,
-        ode_system=ode_system,
-        sampler=sampler,
-        solver=solver,
-        feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster
-    )
-
-    bse.plot_templates(
-        plotted_var=1,
-        time_span=(0, 200))
-
-
 def main():
-    # We can test and visualize the templates before running the Basin Stability Estimator
-    # preview_plot_templates()
-    # exit(1)
-
-    # Example usage (ensure that the necessary helper functions and classes are imported):
-    N = 10000
-
-    # Instantiate your ODE system, sampler, and solver:
-    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
-
-    ode_system = PendulumODE(params)  # for example
-
-    sampler = UniformRandomSampler(
-        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
-        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]),  10.0))
-
-    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
-
-    feature_extractor = PendulumFeatureExtractor(time_steady=950)
-
-    # Template initial conditions from MATLAB code
-    classifier_initial_conditions = torch.tensor([
-        [0.5, 0.0],    # FP: stable fixed point
-        [2.7, 0.0],    # LC: limit cycle
-    ], dtype=torch.float32)
-    classifier_labels = ['FP', 'LC']  # Original MATLAB labels
-
-    # Create a KNeighborsClassifier with k=1.
-    knn = KNeighborsClassifier(n_neighbors=1)
-
-    # Instantiate the KNNCluster with the training data.
-    knn_cluster = KNNCluster(
-        classifier=knn,
-        initial_conditions=classifier_initial_conditions,
-        labels=classifier_labels,
-        ode_params=params)
+    props = setup_pendulum_system()
+    N = props["N"]
+    ode_system = props["ode_system"]
+    sampler = props["sampler"]
+    solver = props["solver"]
+    feature_extractor = props["feature_extractor"]
+    knn_cluster = props["cluster_classifier"]
 
     bse = BasinStabilityEstimator(
         name="pendulum_case1",
@@ -113,17 +38,16 @@ def main():
         save_to="results"
     )
 
-    # bse.plot_templates(
-    #     plotted_var=1,
-    #     time_span=(0, 50 * np.pi))
-
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    plt = Plotter(bse=bse)
-    plt.plot_bse_results()
+    # plotter = Plotter(bse=bse)
+    # plotter.plot_templates(
+    #     plotted_var=1,
+    #     time_span=(0, 200))
+    # plotter.plot_bse_results()
 
-    # Disabled since result file is too big
+    # Uncomment to save the results to a JSON file
     # bse.save("basin_stability_results.json")
 
 

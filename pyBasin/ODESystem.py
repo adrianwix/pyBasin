@@ -34,6 +34,15 @@ class ODESystem(ABC, Generic[P], nn.Module):
         """
         pass
 
+    @abstractmethod
+    def get_str(self) -> str:
+        """
+        Returns a string representation of the ODE system with its parameters.
+
+        The string is constructed using multiple line f-string interpolation.
+        """
+        raise NotImplementedError
+
     def forward(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
         Calls the ODE function in a manner consistent with nn.Module.

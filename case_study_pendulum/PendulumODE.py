@@ -37,3 +37,18 @@ class PendulumODE(ODESystem[PendulumParams]):
         """
         print("dtheta/dt = theta_dot")
         print("dtheta_dot/dt = -alpha * theta_dot + T - K * sin(theta)")
+
+    def get_str(self) -> str:
+        """
+        Returns a string representation of the ODE system with its parameters.
+
+        The string is constructed using multiple line f-string interpolation.
+        """
+        alpha = self.params["alpha"]
+        T = self.params["T"]
+        K = self.params["K"]
+        description = (
+            f"  dtheta/dt      = theta_dot\n"
+            f"  dtheta_dot/dt  = -({alpha}) * theta_dot + ({T}) - ({K}) * sin(theta)\n"
+        )
+        return description

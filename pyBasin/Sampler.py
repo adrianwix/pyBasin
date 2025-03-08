@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 import torch
 import numpy as np
 
@@ -38,8 +38,11 @@ class Sampler(ABC):
 class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
-    def sample(self, N: int) -> torch.Tensor:
-        return torch.rand(N, self.state_dim) * (
+    def sample(self, N: int, seed: Optional[int] = 299792458) -> torch.Tensor:
+        generator = torch.Generator()
+        if seed is not None:
+            generator.manual_seed(seed)
+        return torch.rand(N, self.state_dim, generator=generator) * (
             self.max_limits - self.min_limits) + self.min_limits
 
 
