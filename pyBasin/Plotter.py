@@ -90,13 +90,13 @@ class Plotter:
         # Save the figure
         # Create results directory if it does not exist
         if (self.bse.save_to):
-            self.save_plot('bse_results')
+            self.save_plot('bse_results_plot')
 
         plt.show()
 
     def save_plot(self, plot_name: str):
         full_folder = resolve_folder(self.bse.save_to)
-        file_name = generate_filename(plot_name)
+        file_name = generate_filename(plot_name, 'png')
         full_path = os.path.join(full_folder, file_name)
 
         print("Saving plots to: ", full_path)
@@ -175,6 +175,6 @@ class Plotter:
 
         # Save plot
         if (self.bse.save_to):
-            self.save_plot('template_trajectories')
+            self.save_plot('template_trajectories_plot')
 
         plt.show()

@@ -25,12 +25,12 @@ def time_execution(script_name, func, *args, **kwargs):
     return result
 
 
-def generate_filename(name: str):
+def generate_filename(name: str, file_extension: str):
     """
     Generates a unique filename using either a timestamp or a UUID.
     """
     date = datetime.now().strftime('%Y%m%d_%H%M%S')
-    return f"plot_{date}_{name}.png"
+    return f"{date}_{name}.{file_extension}"
 
 
 def _get_caller_dir():

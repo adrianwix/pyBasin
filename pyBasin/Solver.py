@@ -1,6 +1,7 @@
 import os
 import pickle
 import hashlib
+import shutil
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -89,8 +90,20 @@ class Solver(ABC):
         print(f"[{self.__class__.__name__}] Cache miss. Integrating...")
         result = self._integrate(ode_system, y0, t_eval)
         self._cache[cache_key] = result
-        with open(cache_file, "wb") as f:
-            pickle.dump(result, f)
+
+        # Check available disk space (in GB)
+        usage = shutil.disk_usage(os.path.dirname(cache_file))
+        free_gb = usage.free / (1024**3)
+        if free_gb < 1:  # set a threshold (e.g., 1GB)
+            print(f"\nWarning: Only {free_gb:.2f}GB free space available.")
+
+        try:
+            with open(cache_file, "wb") as f:
+                pickle.dump(result, f)
+        except OSError as e:
+            print(f"Error during pickle.dump: {e}")
+            raise
+
         print(
             f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
         return result

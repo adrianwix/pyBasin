@@ -1,15 +1,10 @@
-import inspect
-from json import JSONEncoder
+
 import json
 from typing import Dict, Optional
 from typing import Optional, Dict
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
-import datetime
-import inspect
-import uuid
 
 from pybasin.Solver import Solver
 from pybasin.Solution import Solution
@@ -121,12 +116,13 @@ class BasinStabilityEstimator:
                 ode_system=self.ode_system,
                 feature_extractor=self.feature_extractor)
 
-        labels = self.cluster_classifier.get_labels(features)
+        labels = self.cluster_classifier.predict_labels(features)
         self.solution.set_labels(labels)
         print("   Classification complete")
 
         print("\n6. Computing basin stability values...")
-        self.bs_vals = {str(label): 0.0 for label in labels}
+        self.bs_vals = {
+            str(label): 0.0 for label in self.cluster_classifier.labels}
         unique_labels, counts = np.unique(labels, return_counts=True)
         fractions = counts / float(self.N)
 
@@ -137,7 +133,7 @@ class BasinStabilityEstimator:
         print("\nBasin Stability Estimation Complete!")
         return self.bs_vals
 
-    def save(self, filename: str):
+    def save(self):
         """
         Save the basin stability results to a JSON file.
         Handles numpy arrays and Solution objects by converting them to standard Python types.
@@ -148,26 +144,31 @@ class BasinStabilityEstimator:
             raise ValueError(
                 "No results to save. Please run estimate_bs() first.")
 
-        # Create results directory if it does not exist
-        results_dir = f"results_{self.name}"
-        os.makedirs(results_dir, exist_ok=True)
-        real_filename = os.path.join(results_dir, filename)
+        full_folder = resolve_folder(self.save_to)
+        file_name = generate_filename('basin_stability_results', 'json')
+        full_path = os.path.join(full_folder, file_name)
+
+        def format_ode_system(ode_str: str) -> list:
+            lines = ode_str.strip().split('\n')
+            formatted_lines = [' '.join(line.split()) for line in lines]
+            return formatted_lines
+
+        region_of_interest = " X ".join(
+            [f"[{min_val}, {max_val}]" for min_val, max_val in zip(
+                self.sampler.min_limits, self.sampler.max_limits)]
+        )
 
         results = {
-            "assignments": [sol.label for sol in self.solution],
-            "bs_vals": self.bs_vals,
-            "Y0": self.Y0,
-            "features_array": np.vstack([sol.features for sol in self.solution]),
-            "solutions": self.solution,
-            "N": self.N,
-            "steady_state_time": self.feature_extractor.time_steady,
+            "basin_of_attractions": self.bs_vals,
+            "region_of_interest": region_of_interest,
+            "sampling_points": self.N,
+            "sampling_method": self.sampler.__class__.__name__,
+            "solver": self.solver.__class__.__name__,
+            "cluster_classifier": self.cluster_classifier.__class__.__name__,
+            "ode_system": format_ode_system(self.ode_system.get_str()),
         }
 
-        # Ensure the filename ends with .json
-        if not real_filename.endswith('.json'):
-            real_filename += '.json'
-
-        with open(real_filename, 'w') as f:
+        with open(full_path, 'w') as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
-        print(f"Results saved to {real_filename}")
+        print(f"Results saved to {full_path}")

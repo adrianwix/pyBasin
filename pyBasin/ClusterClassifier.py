@@ -33,7 +33,7 @@ class ClusterClassifier(ABC):
         self.ode_params = deepcopy(ode_params)
 
     @abstractmethod
-    def get_labels(self, features: np.ndarray) -> np.ndarray:
+    def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """
         Compute labels for each feature vector.
 
@@ -111,7 +111,7 @@ class KNNCluster(ClusterClassifier):
     def type(self) -> Literal['supervised', 'unsupervised']:
         return 'supervised'
 
-    def get_labels(self, features: np.ndarray) -> np.ndarray:
+    def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """
         Predict labels for the given features using the trained k-NN classifier.
 
@@ -157,7 +157,7 @@ class DBSCANCluster(ClusterClassifier):
     def type(self) -> Literal['supervised', 'unsupervised']:
         return 'unsupervised'
 
-    def get_labels(self, features: np.ndarray) -> np.ndarray:
+    def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """
         Predict cluster labels using the classifier's fit_predict method.
 
