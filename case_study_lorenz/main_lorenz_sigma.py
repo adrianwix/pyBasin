@@ -1,6 +1,7 @@
 import numpy as np
 from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
+from pybasin.ASPlotter import ASPlotter
 
 
 def main():
@@ -25,7 +26,8 @@ def main():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
-        as_params=as_params
+        as_params=as_params,
+        save_to='results_sigma'
     )
 
     print("Estimating Basin Stability...")
@@ -36,9 +38,11 @@ def main():
         print(
             f"Parameter value: {param_values[i]}, Basin Stability: {basin_stabilities[i]}")
 
-    bse.plot_basin_stability_variation()
+    plotter = ASPlotter(bse)
 
-    bse.plots()
+    plotter.plot_basin_stability_variation()
+
+    bse.save()
 
 
 if __name__ == "__main__":
