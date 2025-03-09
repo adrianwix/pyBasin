@@ -1,42 +1,38 @@
-import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.Plotter import Plotter
 from pybasin.utils import time_execution
+
+from sklearn.neighbors import KNeighborsClassifier
+from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
 import torch
 
 
 def main():
     # Preview templates first
-    preview_plot_templates()
-    exit(1)
+    # preview_plot_templates()
 
     props = setup_lorenz_system()
-    N = props["N"]
-    ode_system = props["ode_system"]
-    sampler = props["sampler"]
-    solver = props["solver"]
-    feature_extractor = props["feature_extractor"]
-    knn_cluster = props["cluster_classifier"]
 
     bse = BasinStabilityEstimator(
         name="lorenz_case1",
-        N=N,
-        ode_system=ode_system,
-        sampler=sampler,
-        solver=solver,
-        feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster
+        N=props["N"],
+        ode_system=props["ode_system"],
+        sampler=props["sampler"],
+        solver=props["solver"],
+        feature_extractor=props["feature_extractor"],
+        cluster_classifier=props["cluster_classifier"],
+        save_to="results_case1"
     )
 
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    plt = Plotter(bse=bse)
+    plotter = Plotter(bse=bse)
 
-    plt.plot_bse_results()
+    plotter.plot_bse_results()
+
+    bse.save()
 
 
 def preview_plot_templates():
@@ -79,17 +75,17 @@ def preview_plot_templates():
         save_to="results"
     )
 
-    plt = Plotter(bse=bse)
+    plotter = Plotter(bse=bse)
 
     print("Generating template trajectories...")
 
     # Plot the first state variable (x) trajectories
-    plt.plot_templates(
+    plotter.plot_templates(
         plotted_var=1,
         time_span=(0, 200)
     )
 
-    plt.plot_phase(x_var=1, y_var=2)
+    plotter.plot_phase(x_var=1, y_var=2)
 
 
 if __name__ == "__main__":

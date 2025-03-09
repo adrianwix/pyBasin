@@ -144,6 +144,10 @@ class BasinStabilityEstimator:
             raise ValueError(
                 "No results to save. Please run estimate_bs() first.")
 
+        if self.save_to is None:
+            raise ValueError(
+                "save_to is not defined.")
+
         full_folder = resolve_folder(self.save_to)
         file_name = generate_filename('basin_stability_results', 'json')
         full_path = os.path.join(full_folder, file_name)

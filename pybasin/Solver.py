@@ -35,7 +35,7 @@ class Solver(ABC):
         self.fs = fs
         self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
         self.params = kwargs  # Additional solver parameters
-        self._cache = {}      # In-memory cache dictionary
+        # self._cache = {}      # In-memory cache dictionary
         self._cache_dir = resolve_folder("cache")  # Persistent cache folder
 
     def _build_cache_key(self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor) -> str:
@@ -72,10 +72,10 @@ class Solver(ABC):
         cache_file = os.path.join(self._cache_dir, f"{cache_key}.pkl")
 
         # Check in-memory cache.
-        if cache_key in self._cache:
-            print(
-                f"[{self.__class__.__name__}] Returning in-memory cached integration result.")
-            return self._cache[cache_key]
+        # if cache_key in self._cache:
+        #     print(
+        #         f"[{self.__class__.__name__}] Returning in-memory cached integration result.")
+        #     return self._cache[cache_key]
 
         # Check persistent cache on disk.
         if os.path.exists(cache_file):
@@ -83,13 +83,13 @@ class Solver(ABC):
                 f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
             with open(cache_file, "rb") as f:
                 result = pickle.load(f)
-            self._cache[cache_key] = result
+            # self._cache[cache_key] = result
             return result
 
         # Compute the integration if not cached.
         print(f"[{self.__class__.__name__}] Cache miss. Integrating...")
         result = self._integrate(ode_system, y0, t_eval)
-        self._cache[cache_key] = result
+        # self._cache[cache_key] = result
 
         # Check available disk space (in GB)
         usage = shutil.disk_usage(os.path.dirname(cache_file))
