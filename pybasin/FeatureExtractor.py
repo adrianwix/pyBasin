@@ -43,22 +43,6 @@ class FeatureExtractor(ABC):
 LorenzOHE = {"S1": [1, 0], "S2": [0, 1]}
 
 
-class DuffingFeatureExtractor(FeatureExtractor):
-    """
-    Feature extractor for the Duffing oscillator.
-    Extracts two features from the first state variable:
-    1. Maximum value
-    2. Standard deviation
-    """
-
-    def extract_features(self, solution: Solution):
-        y_filtered = self.filter_time(solution)
-        # Index 0 corresponds to the first state variable
-        max_val = torch.max(y_filtered[..., 0])
-        std_val = torch.std(y_filtered[..., 0])
-        return torch.tensor([max_val, std_val], dtype=torch.float64)
-
-
 class LorenzFeatureExtractor(FeatureExtractor):
     """
     Feature extractor for the Lorenz system.
