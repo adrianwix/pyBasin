@@ -15,10 +15,11 @@ def main():
 
     as_params = AdaptiveStudyParams(
         # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
-        adaptative_parameter_values=np.arange(0.12, 0.1825, 0.0025),
-        adaptative_parameter_name='ode_system.params["sigma"]')
+        adaptative_parameter_values=2 * np.logspace(2, 4, 50, dtype=np.int64),
+        adaptative_parameter_name='N')
 
     bse = ASBasinStabilityEstimator(
+        # TODO:Is name still used?
         name="pendulum_case2",
         N=N,
         ode_system=ode_system,
@@ -27,7 +28,7 @@ def main():
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
         as_params=as_params,
-        save_to='results_sigma'
+        save_to='results_hyperpN'
     )
 
     print("Estimating Basin Stability...")
@@ -35,7 +36,7 @@ def main():
 
     plotter = ASPlotter(bse)
 
-    plotter.plot_basin_stability_variation()
+    plotter.plot_basin_stability_variation(interval="log")
 
     bse.save()
 

@@ -47,8 +47,14 @@ class ASPlotter:
         print("Saving plots to: ", full_path)
         plt.savefig(full_path, dpi=300)
 
-    def plot_basin_stability_variation(self):
-        """Plot all basin stability values against parameter variation in a single plot"""
+    def plot_basin_stability_variation(self, interval: Literal['linear', 'log'] = 'linear'):
+        """
+        Plot all basin stability values against parameter variation in a single plot.
+
+        :param interval: Indicates whether the x-axis should use a linear or logarithmic scale.
+                         - 'linear': Default linear scale.
+                         - 'log':    Logarithmic scale, e.g., when using 2 * np.logspace(...).
+        """
         if not self.as_bse.parameter_values or not self.as_bse.basin_stabilities:
             raise ValueError("No results available. Run estimate_as_bs first.")
 
@@ -70,6 +76,10 @@ class ASPlotter:
         # Create single plot with all labels
         plt.figure(figsize=(10, 6))
 
+        # Set x-axis scale if needed
+        if interval == 'log':
+            plt.xscale('log')
+
         # Plot each label's data
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c',
                   '#d62728', '#9467bd']  # Different colors
@@ -83,8 +93,8 @@ class ASPlotter:
                      linewidth=2,
                      alpha=0.8)
 
-        plt.xlabel(self.as_bse.as_params['adaptative_parameter_name'].split(
-            '.')[-1])  # Use last part of parameter name
+        plt.xlabel(
+            self.as_bse.as_params['adaptative_parameter_name'].split('.')[-1])
         plt.ylabel('Basin Stability')
         plt.title('Basin Stability vs Parameter Variation')
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -92,7 +102,7 @@ class ASPlotter:
         plt.tight_layout()
 
         # Save plot
-        if (self.as_bse.save_to):
+        if self.as_bse.save_to:
             self.save_plot('basin_stability_variation')
 
         plt.show()

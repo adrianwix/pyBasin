@@ -81,10 +81,15 @@ class Solver(ABC):
         if os.path.exists(cache_file):
             print(
                 f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
-            with open(cache_file, "rb") as f:
-                result = pickle.load(f)
-            # self._cache[cache_key] = result
-            return result
+            try:
+                with open(cache_file, "rb") as f:
+                    result = pickle.load(f)
+                # self._cache[cache_key] = result
+                return result
+            except EOFError:
+                print(
+                    "EOFError: The cache file may be corrupted. Deleting it and proceeding without cache.")
+                os.remove(cache_file)
 
         # Compute the integration if not cached.
         print(f"[{self.__class__.__name__}] Cache miss. Integrating...")

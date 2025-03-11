@@ -85,26 +85,32 @@ class ASBasinStabilityEstimator:
             assignment = f"{self.as_params['adaptative_parameter_name']} = {
                 param_value}"
 
-            eval(compile(assignment, '<string>', 'exec'), {
+            context = {
+                "N": self.N,
                 "ode_system": self.ode_system,
                 "sampler": self.sampler,
                 "solver": self.solver,
                 "feature_extractor": self.feature_extractor,
-                "cluster_classifier": self.cluster_classifier,
-            })
+                "cluster_classifier": self.cluster_classifier
+            }
 
-            print(
-                f"\nCurrent {self.as_params['adaptative_parameter_name']} value: {param_value}")
+            eval(compile(assignment, '<string>', 'exec'), context, context)
+
+            # Evaluate the same variable/expression to get its current value
+            variable_name = self.as_params['adaptative_parameter_name']
+            updated_value = eval(variable_name, context, context)
+
+            print(f"\nCurrent {variable_name} value: {updated_value}")
 
             bse = BasinStabilityEstimator(
                 # Add parameter value to name
                 name=f"{self.name}_{param_value}",
-                N=self.N,
-                ode_system=self.ode_system,
-                sampler=self.sampler,
-                solver=self.solver,
-                feature_extractor=self.feature_extractor,
-                cluster_classifier=self.cluster_classifier
+                N=context["N"],
+                ode_system=context["ode_system"],
+                sampler=context["sampler"],
+                solver=context["solver"],
+                feature_extractor=context["feature_extractor"],
+                cluster_classifier=context["cluster_classifier"]
             )
 
             basin_stability = bse.estimate_bs()
