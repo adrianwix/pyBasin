@@ -11,7 +11,7 @@ from pybasin.Solution import Solution
 from pybasin.Sampler import Sampler
 from pybasin.ODESystem import ODESystem
 from pybasin.FeatureExtractor import FeatureExtractor
-from pybasin.ClusterClassifier import ClusterClassifier
+from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 matplotlib.use('TkAgg')
@@ -109,7 +109,7 @@ class BasinStabilityEstimator:
         print(f"   Features shape: {features.shape}")
 
         print("\n5. Performing classification...")
-        if self.cluster_classifier.type == 'supervised':
+        if isinstance(self.cluster_classifier, SupervisedClassifier):
             print("   Fitting classifier with template data...")
             self.cluster_classifier.fit(
                 solver=self.solver,
@@ -121,9 +121,11 @@ class BasinStabilityEstimator:
         print("   Classification complete")
 
         print("\n6. Computing basin stability values...")
-        self.bs_vals = {
-            str(label): 0.0 for label in self.cluster_classifier.labels}
         unique_labels, counts = np.unique(labels, return_counts=True)
+
+        self.bs_vals = {
+            str(label): 0.0 for label in unique_labels}
+
         fractions = counts / float(self.N)
 
         for label, fraction in zip(unique_labels, fractions):

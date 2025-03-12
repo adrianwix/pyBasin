@@ -13,6 +13,8 @@ from case_study_duffing_oscillator.DuffingFeatureExtractor import DuffingFeature
 
 
 def setup_duffing_oscillator_system() -> SetupProperties:
+    N = 10000
+
     # Create ODE system instance
     params: DuffingParams = {"delta": 0.08, "k3": 1, "A": 0.2}
     ode_system = DuffingODE(params)
@@ -48,6 +50,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
 
     return {
         "name": "duffing_oscillator",
+        "N": N,
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,

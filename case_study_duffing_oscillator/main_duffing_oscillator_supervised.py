@@ -3,14 +3,12 @@ from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from case_study_duffing_oscillator.setup_duffing_oscillator_system import setup_duffing_oscillator_system
 
 if __name__ == "__main__":
-    N = 5000
-
     # Use the setup function to get all system components
     setup = setup_duffing_oscillator_system()
 
     bse = BasinStabilityEstimator(
         name=setup["name"],
-        N=N,
+        N=setup["N"],
         ode_system=setup["ode_system"],
         sampler=setup["sampler"],
         solver=setup["solver"],
