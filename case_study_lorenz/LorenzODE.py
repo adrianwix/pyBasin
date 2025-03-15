@@ -60,12 +60,6 @@ class LorenzODE(ODESystem[LorenzParams]):
         # Return the dynamics modified by the mask so that terminated samples evolve with zero derivative.
         return dydt * mask
 
-    def symbolic_ode(self) -> None:
-        """Display the symbolic form of the Lorenz system."""
-        print("dx/dt = sigma * (y - x)")
-        print("dy/dt = r*x - x*z - y")
-        print("dz/dt = x*y - b*z")
-
     def get_str(self) -> str:
         """
         Returns a string representation of the ODE system with its parameters.

@@ -31,13 +31,6 @@ class PendulumODE(ODESystem[PendulumParams]):
 
         return torch.stack([dtheta_dt, dtheta_dot_dt], dim=1)
 
-    def symbolic_ode(self) -> None:
-        """
-        Optional method to display the symbolic form of the ODE.
-        """
-        print("dtheta/dt = theta_dot")
-        print("dtheta_dot/dt = -alpha * theta_dot + T - K * sin(theta)")
-
     def get_str(self) -> str:
         """
         Returns a string representation of the ODE system with its parameters.

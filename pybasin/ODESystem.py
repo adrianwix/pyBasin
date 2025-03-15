@@ -48,11 +48,3 @@ class ODESystem(ABC, Generic[P], nn.Module):
         Calls the ODE function in a manner consistent with nn.Module.
         """
         return self.ode(t, y)
-
-    def symbolic_ode(self) -> None:
-        """
-        Optional method to display the symbolic form of the ODE.
-        """
-        pass
-
-

@@ -38,13 +38,6 @@ class DuffingODE(ODESystem[DuffingParams]):
 
         return torch.stack([dx_dt, dx_dot_dt], dim=1)
 
-    def symbolic_ode(self) -> None:
-        """
-        Display the symbolic form of the Duffing oscillator ODE.
-        """
-        print("dx/dt = x_dot")
-        print("dx_dot/dt = -delta * x_dot - k3 * x^3 + A * cos(t)")
-
     def get_str(self) -> str:
         delta = self.params["delta"]
         k3 = self.params["k3"]
