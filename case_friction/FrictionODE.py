@@ -26,13 +26,6 @@ class FrictionODE(ODESystem[FrictionParams]):
         super().__init__(params)
 
     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """
-        Vectorized right-hand side (RHS) for the friction system using PyTorch.
-
-        y shape: (..., 2) where the last dimension is [disp, vel]
-        returns: tensor with the same shape as y.
-        """
-        # Extract parameters
         v_d = self.params["v_d"]
         xi = self.params["xi"]
         musd = self.params["musd"]
@@ -40,51 +33,35 @@ class FrictionODE(ODESystem[FrictionParams]):
         muv = self.params["muv"]
         v0 = self.params["v0"]
 
-        # Unpack states
         disp = y[..., 0]
         vel = y[..., 1]
 
-        # Relative velocity and small threshold
         vrel = vel - v_d
         eta = 1e-4
+        k_smooth = 50  # Controls transition smoothness
 
-        # Friction force
-        Ffric = self._friction_law(vrel, mud, musd, muv, v0)
+        # Inlined friction force calculation
+        Ffric = (mud
+                 + mud * (musd - 1.0) * torch.exp(-torch.abs(vrel) / v0)
+                 + muv * torch.abs(vrel) / v0)
 
-        # Compute conditions
         slip_condition = torch.abs(vrel) > eta
         trans_condition = torch.abs(disp + 2 * xi * vel) > mud * musd
 
-        # Vectorized computation of derivatives
-        dydt = torch.zeros_like(y)
+        smooth_sign_vrel = torch.tanh(k_smooth * vrel)
+        smooth_sign_Ffric = torch.tanh(k_smooth * Ffric)
 
-        # First component (displacement)
-        dydt[..., 0] = torch.where(
-            slip_condition | trans_condition,
-            vel,
-            torch.full_like(vel, v_d)
-        )
-
-        # Second component (velocity)
-        slip_vel = -disp - 2 * xi * vel - torch.sign(vrel) * Ffric
-        trans_vel = -disp - 2 * xi * vel + mud * musd * torch.sign(Ffric)
+        slip_vel = -disp - 2 * xi * vel - smooth_sign_vrel * Ffric
+        trans_vel = -disp - 2 * xi * vel + mud * musd * smooth_sign_Ffric
         stick_vel = -(vel - v_d)
 
-        dydt[..., 1] = torch.where(
-            slip_condition,
-            slip_vel,
-            torch.where(trans_condition, trans_vel, stick_vel)
-        )
+        dydt = torch.stack([
+            torch.where(slip_condition | trans_condition, vel, v_d),
+            torch.where(slip_condition, slip_vel, torch.where(
+                trans_condition, trans_vel, stick_vel))
+        ], dim=-1)
 
         return dydt
-
-    def _friction_law(self, vrel: torch.Tensor, mud: float, musd: float, muv: float, v0: float) -> torch.Tensor:
-        """
-        Exponentially decaying friction plus linear strengthening term.
-        """
-        return (mud
-                + mud * (musd - 1.0) * torch.exp(-torch.abs(vrel) / v0)
-                + muv * torch.abs(vrel) / v0)
 
     def get_str(self) -> str:
         """

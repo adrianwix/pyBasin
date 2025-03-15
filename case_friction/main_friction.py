@@ -34,4 +34,4 @@ def main():
 
 
 if __name__ == "__main__":
-    time_execution("main_lorenz.py", main)
+    time_execution("main_friction.py", main)
