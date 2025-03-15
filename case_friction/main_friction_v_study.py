@@ -1,11 +1,12 @@
 import numpy as np
-from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
+from case_friction.setup_friction_system import setup_friction_system
 from pybasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
 from pybasin.ASPlotter import ASPlotter
+from pybasin.utils import time_execution
 
 
 def main():
-    props = setup_lorenz_system()
+    props = setup_friction_system()
     N = props["N"]
     ode_system = props["ode_system"]
     sampler = props["sampler"]
@@ -14,12 +15,11 @@ def main():
     knn_cluster = props["cluster_classifier"]
 
     as_params = AdaptiveStudyParams(
-        # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
-        adaptative_parameter_values=np.arange(0.12, 0.1825, 0.0025),
-        adaptative_parameter_name='ode_system.params["sigma"]')
+        adaptative_parameter_values=np.arange(0.5, 2.3, step=0.1),
+        adaptative_parameter_name='ode_system.params["v_d"]')
 
     bse = ASBasinStabilityEstimator(
-        name="pendulum_case2",
+        name="friction_vd_study",
         N=N,
         ode_system=ode_system,
         sampler=sampler,
@@ -27,7 +27,7 @@ def main():
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
         as_params=as_params,
-        save_to='results_sigma'
+        save_to='results_friction_vd_study'
     )
 
     print("Estimating Basin Stability...")
@@ -41,5 +41,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # time_execution("main_lorenz.py", main)
+    time_execution("main_friction_v_study.py", main)
     main()
