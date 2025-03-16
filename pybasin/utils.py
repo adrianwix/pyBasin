@@ -1,3 +1,4 @@
+import torch
 import inspect
 from json import JSONEncoder
 import os
@@ -82,3 +83,23 @@ class NumpyEncoder(JSONEncoder):
                 "label": obj.label
             }
         return super(NumpyEncoder, self).default(obj)
+
+
+def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    """
+    Extract amplitudes by taking the maximum absolute value along the time dimension.
+
+    Args:
+        t: Time points tensor (shape: (N,))
+        y: Input tensor (shape: (N, B, S)) where:
+           N = number of time steps
+           B = batch size
+           S = number of states
+        props: Optional properties dictionary
+
+    Returns:
+        amps: Tensor containing maximum absolute values (shape: (B, S))
+    """
+    # Take absolute value and maximum along time dimension (dim=0)
+    amps = torch.max(torch.abs(y), dim=0)[0]
+    return amps

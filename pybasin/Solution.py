@@ -62,6 +62,7 @@ class Solution:
         self.features = features if features is not None else None
         self.labels = labels
         self.model_params = model_params
+        self.bifurcation_amplitudes = None
 
     def set_labels(self, labels: np.ndarray):
         """

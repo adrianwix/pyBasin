@@ -15,7 +15,7 @@ def main():
     knn_cluster = props["cluster_classifier"]
 
     as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=np.arange(0.5, 2.3, step=0.1),
+        adaptative_parameter_values=np.arange(0.85, 2.01, step=0.05),
         adaptative_parameter_name='ode_system.params["v_d"]')
 
     bse = ASBasinStabilityEstimator(
@@ -35,11 +35,12 @@ def main():
 
     plotter = ASPlotter(bse)
 
-    plotter.plot_basin_stability_variation()
+    # plotter.plot_basin_stability_variation()
+
+    plotter.plot_bifurcation_diagram()
 
     bse.save()
 
 
 if __name__ == "__main__":
     time_execution("main_friction_v_study.py", main)
-    main()

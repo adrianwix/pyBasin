@@ -12,7 +12,7 @@ from pybasin.Sampler import Sampler
 from pybasin.ODESystem import ODESystem
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
-from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
+from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
 
 matplotlib.use('TkAgg')
 
@@ -69,6 +69,7 @@ class BasinStabilityEstimator:
         self.bs_vals: Optional[Dict[int, float]] = None
         self.Y0 = None
         self.solution = None
+        self.amplitude_extractor = None
 
     def estimate_bs(self) -> Dict[int, float]:
         """
@@ -102,6 +103,9 @@ class BasinStabilityEstimator:
             time=t,
             y=y
         )
+
+        if self.amplitude_extractor is None:
+            self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
 
         print("\n4. Extracting features...")
         features = self.feature_extractor.extract_features(self.solution)

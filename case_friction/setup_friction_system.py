@@ -11,7 +11,7 @@ from case_friction.FrictionFeatureExtractor import FrictionFeatureExtractor
 
 
 def setup_friction_system() -> SetupProperties:
-    N = 5 * 10**3  # Number of samples as in setup_friction.m
+    N = 1 * 10**3  # Number of samples as in setup_friction.m
 
     # Parameters from setup_friction.m
     params: FrictionParams = {
@@ -26,9 +26,14 @@ def setup_friction_system() -> SetupProperties:
     ode_system = FrictionODE(params)
 
     # Sampling limits from setup_friction.m
+    # sampler = UniformRandomSampler(
+    #     min_limits=[-2.0, 0.0],    # [disp, vel]
+    #     max_limits=[2.0, 2.0]      # [disp, vel]
+    # )
+
     sampler = UniformRandomSampler(
-        min_limits=[-2.0, 0.0],    # [disp, vel]
-        max_limits=[2.0, 2.0]      # [disp, vel]
+        min_limits=[0.5, -2.0],    # [disp, vel]
+        max_limits=[2.5, 0.0]      # [disp, vel]
     )
 
     # Time integration parameters from setup_friction.m

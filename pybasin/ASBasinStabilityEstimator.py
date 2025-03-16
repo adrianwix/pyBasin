@@ -68,6 +68,7 @@ class ASBasinStabilityEstimator:
         # Add storage for parameter study results
         self.parameter_values = []
         self.basin_stabilities = []
+        self.results = []
 
     def estimate_as_bs(self) -> Dict[int, float]:
         """Returns list of basin stability values for each parameter value"""
@@ -118,11 +119,14 @@ class ASBasinStabilityEstimator:
             # Store results
             self.parameter_values.append(param_value)
             self.basin_stabilities.append(basin_stability)
+            self.results.append({"param_value": param_value,
+                                 "basin_stability": basin_stability,
+                                 "solution": bse.solution})
 
             print(f"Basin Stability: {
                   basin_stability} for parameter value {param_value}")
 
-        return self.parameter_values, self.basin_stabilities
+        return self.parameter_values, self.basin_stabilities, self.results
 
     def save(self):
         """

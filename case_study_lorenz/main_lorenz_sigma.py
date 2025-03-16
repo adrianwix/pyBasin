@@ -35,7 +35,9 @@ def main():
 
     plotter = ASPlotter(bse)
 
-    plotter.plot_basin_stability_variation()
+    # plotter.plot_basin_stability_variation()
+
+    plotter.plot_bifurcation_diagram(dof=[0, 1, 2])
 
     bse.save()
 
