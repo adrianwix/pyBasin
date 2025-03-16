@@ -1,6 +1,7 @@
 import numpy as np
 from case_study_pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
+from pybasin.ASPlotter import ASPlotter
 from pybasin.utils import time_execution  # Import the utility function
 
 
@@ -29,14 +30,12 @@ def main():
         save_to="results_case2"
     )
 
-    param_values, basin_stabilities = bse.estimate_as_bs()
+    bse.estimate_as_bs()
 
-    # Improved readability for the print statement
-    for i in range(len(param_values)):
-        print(
-            f"Parameter value: {param_values[i]}, Basin Stability: {basin_stabilities[i]}")
+    plotter = ASPlotter(bse)
 
-    bse.plot_basin_stability_variation()
+    plotter.plot_basin_stability_variation()
+    plotter.plot_bifurcation_diagram(dof=[0, 1])
 
     bse.save()
 
