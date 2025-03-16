@@ -184,6 +184,10 @@ class ASPlotter:
         if n_dofs == 1:
             axes = [axes]
 
+        # Set of colors for clusters; extend the list if needed.
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                  '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
         # Plot the cluster centers vs parameter value for each DOF
         for j in range(n_dofs):
             ax = axes[j]
@@ -191,13 +195,16 @@ class ASPlotter:
                 ax.plot(
                     self.as_bse.parameter_values,
                     amplitudes[i, j, :],
-                    'k.',
-                    markersize=8
+                    'o-',                     # marker plus line
+                    markersize=8,
+                    color=colors[i % len(colors)],
+                    label=f'Cluster {i+1}'
                 )
             ax.set_xlabel(
                 self.as_bse.as_params['adaptative_parameter_name'].split('.')[-1])
             ax.set_ylabel(f'Amplitude state {dof[j]}')
             ax.grid(True, linestyle='--', alpha=0.7)
+            ax.legend()  # Display legend for each subplot
 
         # Link y-axis limits across subplots
         y_min = min(ax.get_ylim()[0] for ax in axes)
