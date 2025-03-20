@@ -19,8 +19,6 @@ def main():
         adaptative_parameter_name='N')
 
     bse = ASBasinStabilityEstimator(
-        # TODO:Is name still used?
-        name="pendulum_case2",
         N=N,
         ode_system=ode_system,
         sampler=sampler,

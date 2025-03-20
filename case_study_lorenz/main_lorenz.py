@@ -15,7 +15,6 @@ def main():
     props = setup_lorenz_system()
 
     bse = BasinStabilityEstimator(
-        name="lorenz_case1",
         N=props["N"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],
@@ -31,6 +30,7 @@ def main():
     plotter = Plotter(bse=bse)
 
     plotter.plot_bse_results()
+    plotter.plot_phase(x_var=1, y_var=2)
 
     bse.save()
 
@@ -65,7 +65,6 @@ def preview_plot_templates():
     )
 
     bse = BasinStabilityEstimator(
-        name="lorenz_templates",
         N=N,
         ode_system=ode_system,
         sampler=sampler,

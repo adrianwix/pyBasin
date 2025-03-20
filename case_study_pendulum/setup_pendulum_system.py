@@ -1,5 +1,5 @@
 from pybasin.ClusterClassifier import KNNCluster
-from pybasin.Sampler import UniformRandomSampler
+from pybasin.Sampler import GridSampler
 from pybasin.Solver import TorchDiffEqSolver
 from pybasin.types import SetupProperties
 
@@ -14,7 +14,7 @@ import torch
 
 
 def setup_pendulum_system() -> SetupProperties:
-    N = 1000
+    N = 10000
 
     # Define the parameters of the pendulum
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
@@ -24,7 +24,7 @@ def setup_pendulum_system() -> SetupProperties:
 
     # Define sampling limits based on the pendulum parameters.
     # Here the angular limits for theta are adjusted using arcsin(T/K).
-    sampler = UniformRandomSampler(
+    sampler = GridSampler(
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
         max_limits=(np.pi + np.arcsin(params["T"] / params["K"]), 10.0)
     )

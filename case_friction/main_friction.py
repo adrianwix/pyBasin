@@ -8,7 +8,6 @@ def main():
     props = setup_friction_system()
 
     bse = BasinStabilityEstimator(
-        name="friction",
         N=props["N"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],

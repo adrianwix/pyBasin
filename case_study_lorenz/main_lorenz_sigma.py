@@ -19,7 +19,6 @@ def main():
         adaptative_parameter_name='ode_system.params["sigma"]')
 
     bse = ASBasinStabilityEstimator(
-        name="pendulum_case2",
         N=N,
         ode_system=ode_system,
         sampler=sampler,

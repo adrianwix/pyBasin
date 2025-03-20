@@ -56,7 +56,8 @@ class GridSampler(Sampler):
                        for min_val, max_val in zip(self.min_limits, self.max_limits)]
 
         grid_matrices = torch.meshgrid(*grid_points, indexing='ij')
-        points = torch.stack([grid.flatten() for grid in grid_matrices], dim=1)
+        points = torch.stack([grid.t().flatten()
+                             for grid in grid_matrices], dim=1)
 
         print(
             f"Created grid with {len(points)} points ({n_per_dim} points per dimension)")

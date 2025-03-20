@@ -37,14 +37,14 @@ class Plotter:
                 "No solutions available. Please run estimate_bs() before plotting.")
 
         # Extract data from each Solution instance.
-        initial_conditions = self.bse.solution.initial_condition.cpu().numpy()
+        initial_conditions = self.bse.Y0.cpu().numpy()
 
         features_array = self.bse.solution.features.cpu().numpy()
 
         # ['LC' 'LC' 'FP' 'LC' 'LC' ... ]
         labels = np.array(self.bse.solution.labels)
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(10, 10))
 
         # 1) Bar plot for basin stability values.
         plt.subplot(2, 2, 1)

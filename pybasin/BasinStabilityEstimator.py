@@ -5,6 +5,8 @@ from typing import Optional, Dict
 import os
 import numpy as np
 import matplotlib
+import pandas as pd
+
 
 from pybasin.Solver import Solver
 from pybasin.Solution import Solution
@@ -35,7 +37,6 @@ class BasinStabilityEstimator:
 
     def __init__(
         self,
-        name: str,
         N: int,
         ode_system: ODESystem,
         sampler: Sampler,
@@ -47,7 +48,6 @@ class BasinStabilityEstimator:
         """
         Initialize the BasinStabilityEstimator.
 
-        :param name: Name of the case study. Used for saving results.
         :param N: Number of initial conditions (samples) to generate.
         :param steady_state_time: Time after which steady-state features are extracted.
         :param ode_system: The ODE system model.
@@ -56,7 +56,6 @@ class BasinStabilityEstimator:
         :param cluster_classifier: The ClusterClassifier object to assign labels.
         :param save_to: Optional file path to save results.
         """
-        self.name = name
         self.N = N
         self.ode_system = ode_system
         self.sampler = sampler
@@ -182,3 +181,26 @@ class BasinStabilityEstimator:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
         print(f"Results saved to {full_path}")
+
+    def save_to_excel(self):
+        if self.bs_vals is None:
+            raise ValueError(
+                "No results to save. Please run estimate_bs() first.")
+
+        if self.save_to is None:
+            raise ValueError(
+                "save_to is not defined.")
+
+        full_folder = resolve_folder(self.save_to)
+        file_name = generate_filename('basin_stability_results', 'xlsx')
+        full_path = os.path.join(full_folder, file_name)
+
+        df = pd.DataFrame({
+            'Grid Sample': [(x, y) for x, y in self.Y0.tolist()],
+            'Labels': self.solution.labels,
+            'Bifurcation Amplitudes': [
+                (theta, theta_dot)
+                for theta, theta_dot in self.solution.bifurcation_amplitudes.tolist()]
+        })
+
+        df.to_excel(full_path)

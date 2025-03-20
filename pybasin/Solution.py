@@ -98,6 +98,3 @@ class Solution:
             "label": self.label,
             "model_params": self.model_params,
         }
-
-    def __repr__(self) -> str:
-        return f"Solution(IC={self.initial_condition}, Label={self.label}, Features={self.features})"

@@ -19,8 +19,6 @@ matplotlib.use('TkAgg')
 
 
 class AdaptiveStudyParams(TypedDict):
-    # TODO: Delete mode
-    mode: Literal['hyper_parameter', 'model_parameter']
     adaptative_parameter_values: list
     adaptative_parameter_name: str
 
@@ -32,7 +30,6 @@ class ASBasinStabilityEstimator:
 
     def __init__(
         self,
-        name: str,
         N: int,
         ode_system: ODESystem,
         sampler: Sampler,
@@ -45,7 +42,6 @@ class ASBasinStabilityEstimator:
         """
         Initialize the BasinStabilityEstimator.
 
-        :param name: Name of the case study. Used for saving results.
         :param N: Number of initial conditions (samples) to generate.
         :param steady_state_time: Time after which steady-state features are extracted.
         :param ode_system: The ODE system model.
@@ -55,7 +51,6 @@ class ASBasinStabilityEstimator:
         :param as_params: The AdaptiveStudyParams object to vary the parameter.
         :param save_to: The folder where results will be saved.
         """
-        self.name = name
         self.N = N
         self.ode_system = ode_system
         self.sampler = sampler
@@ -104,8 +99,6 @@ class ASBasinStabilityEstimator:
             print(f"\nCurrent {variable_name} value: {updated_value}")
 
             bse = BasinStabilityEstimator(
-                # Add parameter value to name
-                name=f"{self.name}_{param_value}",
                 N=context["N"],
                 ode_system=context["ode_system"],
                 sampler=context["sampler"],

@@ -15,11 +15,12 @@ def main():
     knn_cluster = props["cluster_classifier"]
 
     as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
-        adaptative_parameter_name='ode_system.params["T"]')
+        # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
+        adaptative_parameter_values=np.arange(0.1, 1.00, 0.2),
+        adaptative_parameter_name='ode_system.params["T"]',
+    )
 
     bse = ASBasinStabilityEstimator(
-        name="pendulum_case2",
         N=N,
         ode_system=ode_system,
         sampler=sampler,
@@ -35,7 +36,7 @@ def main():
     plotter = ASPlotter(bse)
 
     plotter.plot_basin_stability_variation()
-    plotter.plot_bifurcation_diagram(dof=[0, 1])
+    plotter.plot_bifurcation_diagram(dof=[1])
 
     bse.save()
 

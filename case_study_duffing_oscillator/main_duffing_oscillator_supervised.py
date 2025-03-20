@@ -7,7 +7,6 @@ if __name__ == "__main__":
     setup = setup_duffing_oscillator_system()
 
     bse = BasinStabilityEstimator(
-        name=setup["name"],
         N=setup["N"],
         ode_system=setup["ode_system"],
         sampler=setup["sampler"],

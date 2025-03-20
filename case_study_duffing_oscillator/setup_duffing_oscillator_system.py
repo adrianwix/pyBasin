@@ -49,7 +49,6 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     )
 
     return {
-        "name": "duffing_oscillator",
         "N": N,
         "ode_system": ode_system,
         "sampler": sampler,

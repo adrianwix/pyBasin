@@ -19,7 +19,6 @@ def main():
         adaptative_parameter_name='ode_system.params["v_d"]')
 
     bse = ASBasinStabilityEstimator(
-        name="friction_vd_study",
         N=N,
         ode_system=ode_system,
         sampler=sampler,
