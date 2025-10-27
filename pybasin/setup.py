@@ -5,6 +5,9 @@ setup(
     description="Basin stability estimation for dynamical systems",
     version="0.1",
     packages=find_packages(),
+    package_data={
+        "pybasin": ["py.typed"],
+    },
     install_requires=[
         # List your dependencies here
         "numpy",
@@ -14,4 +17,5 @@ setup(
         "torchdiffeq",
         # Add other dependencies as needed
     ],
+    zip_safe=False,
 )
