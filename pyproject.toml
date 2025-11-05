@@ -1,0 +1,88 @@
+[project]
+name = "pybasin"
+version = "0.1.0"
+description = "Basin stability estimation for dynamical systems"
+authors = [
+    {name = "Adrian Wix", email = "your.email@example.com"}
+]
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+requires-python = ">=3.11"
+keywords = ["dynamical systems", "basin stability", "nonlinear dynamics", "attractors"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "scikit-learn>=1.3.0",
+    "torch>=2.0.0",
+    "torchdiffeq>=0.2.0",
+    "pandas>=2.0.0",
+    "packaging>=23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.5.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+]
+docs = [
+    "mkdocs-material>=9.4.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-jupyter>=0.24.0",
+]
+case-studies = [
+    "jupyter>=1.0.0",
+    "openpyxl>=3.1.0",
+    "notebook>=7.0.0",
+]
+all = [
+    "pybasin[dev,docs,case-studies]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pybasin"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]  # Line length handled by formatter
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

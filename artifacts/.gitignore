@@ -1,0 +1,11 @@
+# Generated artifacts (figures, results, reports)
+# These can be regenerated from case studies
+*.png
+*.jpg
+*.pdf
+*.json
+*.csv
+*.xlsx
+
+# But keep the directory structure
+!.gitkeep

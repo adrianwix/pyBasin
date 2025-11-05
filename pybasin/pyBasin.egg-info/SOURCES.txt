@@ -1,6 +1,0 @@
-setup.py
-pybasin.egg-info/PKG-INFO
-pybasin.egg-info/SOURCES.txt
-pybasin.egg-info/dependency_links.txt
-pybasin.egg-info/requires.txt
-pybasin.egg-info/top_level.txt
