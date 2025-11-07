@@ -119,7 +119,10 @@ class BasinStabilityEstimator:
 
         self.bs_vals = {str(label): 0.0 for label in unique_labels}
 
-        fractions = counts / float(self.n)
+        # Use the actual number of samples generated, not the requested n
+        # This is important because GridSampler may generate more points than requested
+        actual_n = len(labels)
+        fractions = counts / float(actual_n)
 
         for label, fraction in zip(unique_labels, fractions, strict=True):
             self.bs_vals[str(label)] = fraction

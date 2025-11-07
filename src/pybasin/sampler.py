@@ -53,7 +53,9 @@ class GridSampler(Sampler):
     """Generates evenly spaced samples in a grid pattern within the specified range."""
 
     def sample(self, n: int) -> torch.Tensor:
-        n_per_dim = int(np.floor(n ** (1 / self.state_dim)))
+        # Use ceiling to match MATLAB implementation
+        # This ensures we get at least N points (actually N_per_dim^state_dim points)
+        n_per_dim = int(np.ceil(n ** (1 / self.state_dim)))
 
         grid_points = [
             torch.linspace(min_val, max_val, n_per_dim)
