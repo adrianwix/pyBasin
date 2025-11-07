@@ -20,18 +20,15 @@ class LorenzFeatureExtractor(FeatureExtractor):
         y_filtered = self.filter_time(solution)  # shape: (N_after, B, S)
 
         # Check for unbounded solutions first
-        max_abs_vals = torch.max(torch.abs(y_filtered), dim=0)[
-            0]  # shape: (B, S)
+        max_abs_vals = torch.max(torch.abs(y_filtered), dim=0)[0]  # shape: (B, S)
         unbounded = torch.any(max_abs_vals > 195, dim=1)  # shape: (B,)
 
         # Calculate mean x-coordinate (first state variable)
         x_mean = y_filtered[..., 0].mean(dim=0)  # shape: (B,)
         positive_regime = x_mean > 0
 
-        s1_tensor = torch.tensor(
-            LorenzOHE["S1"], dtype=torch.float64)  # [1, 0]
-        s2_tensor = torch.tensor(
-            LorenzOHE["S2"], dtype=torch.float64)  # [0, 1]
+        s1_tensor = torch.tensor(LorenzOHE["S1"], dtype=torch.float64)  # [1, 0]
+        s2_tensor = torch.tensor(LorenzOHE["S2"], dtype=torch.float64)  # [0, 1]
 
         # Initialize output tensor
         out = torch.empty((y_filtered.shape[1], 2), dtype=torch.float64)

@@ -1,7 +1,8 @@
 import os
 from typing import Optional
 import matplotlib
-matplotlib.use('Agg')  # Set backend before importing pyplot
+
+matplotlib.use("Agg")  # Set backend before importing pyplot
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -20,7 +21,7 @@ class Plotter:
 
     def save_plot(self, plot_name: str):
         full_folder = resolve_folder(self.bse.save_to)
-        file_name = generate_filename(plot_name, 'png')
+        file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
 
         print("Saving plots to: ", full_path)
@@ -35,8 +36,7 @@ class Plotter:
             4. A placeholder plot for future use.
         """
         if self.bse.solution is None:
-            raise ValueError(
-                "No solutions available. Please run estimate_bs() before plotting.")
+            raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
 
         # Extract data from each Solution instance.
         initial_conditions = self.bse.Y0.cpu().numpy()
@@ -62,11 +62,7 @@ class Plotter:
         for label in unique_labels:
             idx = np.where(labels == label)
             plt.scatter(
-                initial_conditions[idx, 0],
-                initial_conditions[idx, 1],
-                s=4,
-                alpha=0.5,
-                label=label
+                initial_conditions[idx, 0], initial_conditions[idx, 1], s=4, alpha=0.5, label=label
             )
         plt.title("Initial Conditions in State Space")
         # TODO: Have custom labels per case
@@ -79,13 +75,7 @@ class Plotter:
         for label in unique_labels:
             idx = np.where(labels == label)
             # Map labels to class names if desired (example mapping below)
-            plt.scatter(
-                features_array[idx, 0],
-                features_array[idx, 1],
-                s=5,
-                alpha=0.5,
-                label=label
-            )
+            plt.scatter(features_array[idx, 0], features_array[idx, 1], s=5, alpha=0.5, label=label)
         plt.title("Feature Space with Classifier Results")
         plt.xlabel("Feature 1")
         plt.ylabel("Feature 2")
@@ -99,8 +89,8 @@ class Plotter:
 
         # Save the figure
         # Create results directory if it does not exist
-        if (self.bse.save_to):
-            self.save_plot('bse_results_plot')
+        if self.bse.save_to:
+            self.save_plot("bse_results_plot")
 
         plt.show()
 
@@ -118,26 +108,29 @@ class Plotter:
         fig = plt.figure(figsize=(8, 6))
         if z_var is None:
             ax = fig.add_subplot(111)
-            for i, (label, traj) in enumerate(zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))):
+            for i, (label, traj) in enumerate(
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))
+            ):
                 ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))
-            ax.set_xlabel(f'State {x_var}')
-            ax.set_ylabel(f'State {y_var}')
-            ax.set_title('2D Phase Plot')
+            ax.set_xlabel(f"State {x_var}")
+            ax.set_ylabel(f"State {y_var}")
+            ax.set_title("2D Phase Plot")
         else:
-            ax = fig.add_subplot(111, projection='3d')
-            for i, (label, traj) in enumerate(zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))):
-                ax.plot(traj[:, x_var], traj[:, y_var],
-                        traj[:, z_var], label=str(label))
-            ax.set_xlabel(f'State {x_var}')
-            ax.set_ylabel(f'State {y_var}')
-            ax.set_zlabel(f'State {z_var}')
-            ax.set_title('3D Phase Plot')
+            ax = fig.add_subplot(111, projection="3d")
+            for i, (label, traj) in enumerate(
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))
+            ):
+                ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))
+            ax.set_xlabel(f"State {x_var}")
+            ax.set_ylabel(f"State {y_var}")
+            ax.set_zlabel(f"State {z_var}")
+            ax.set_title("3D Phase Plot")
 
         plt.legend()
         plt.tight_layout()
 
-        if (self.bse.save_to):
-            self.save_plot('phase_plot')
+        if self.bse.save_to:
+            self.save_plot("phase_plot")
 
         plt.show()
 
@@ -154,7 +147,8 @@ class Plotter:
 
         # Get trajectories for template initial conditions
         t, y = self.bse.solver.integrate(
-            self.bse.ode_system, self.bse.cluster_classifier.initial_conditions)
+            self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
+        )
 
         plt.figure(figsize=(8, 6))
 
@@ -166,17 +160,19 @@ class Plotter:
 
         # Plot each trajectory
         # Use permute instead of transpose for 3D tensors
-        for i, (label, traj) in enumerate(zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2))):
-            plt.plot(t[idx], traj[idx, plotted_var], label=f'{label}')
+        for i, (label, traj) in enumerate(
+            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2))
+        ):
+            plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")
 
-        plt.xlabel('Time')
-        plt.ylabel(f'State {plotted_var}')
-        plt.title('Template Trajectories')
+        plt.xlabel("Time")
+        plt.ylabel(f"State {plotted_var}")
+        plt.title("Template Trajectories")
         plt.legend()
         plt.grid(True)
 
         # Save plot
-        if (self.bse.save_to):
-            self.save_plot('template_trajectories_plot')
+        if self.bse.save_to:
+            self.save_plot("template_trajectories_plot")
 
         plt.show()

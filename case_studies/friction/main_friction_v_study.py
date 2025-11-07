@@ -16,7 +16,8 @@ def main():
 
     as_params = AdaptiveStudyParams(
         adaptative_parameter_values=np.arange(0.85, 2.01, step=0.05),
-        adaptative_parameter_name='ode_system.params["v_d"]')
+        adaptative_parameter_name='ode_system.params["v_d"]',
+    )
 
     bse = ASBasinStabilityEstimator(
         N=N,
@@ -26,7 +27,7 @@ def main():
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
         as_params=as_params,
-        save_to='results_friction_vd_study'
+        save_to="results_friction_vd_study",
     )
 
     print("Estimating Basin Stability...")

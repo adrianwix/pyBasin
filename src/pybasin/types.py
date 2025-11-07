@@ -1,5 +1,5 @@
 from typing import TypedDict
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.Sampler import UniformRandomSampler

@@ -28,7 +28,7 @@ def main():
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
         as_params=as_params,
-        save_to="results_case2"
+        save_to="results_case2",
     )
 
     bse.estimate_as_bs()

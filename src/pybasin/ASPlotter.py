@@ -7,7 +7,7 @@ from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 from pybasin.Solver import Solver
 from pybasin.Sampler import Sampler
 from typing import Dict, Optional
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
@@ -17,12 +17,13 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 
 
 class AdaptiveStudyParams(TypedDict):
     # TODO: Delete mode
-    mode: Literal['hyper_parameter', 'model_parameter']
+    mode: Literal["hyper_parameter", "model_parameter"]
     adaptative_parameter_values: list
     adaptative_parameter_name: str
 
@@ -42,13 +43,13 @@ class ASPlotter:
 
     def save_plot(self, plot_name: str):
         full_folder = resolve_folder(self.as_bse.save_to)
-        file_name = generate_filename(plot_name, 'png')
+        file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
 
         print("Saving plots to: ", full_path)
         plt.savefig(full_path, dpi=300)
 
-    def plot_basin_stability_variation(self, interval: Literal['linear', 'log'] = 'linear'):
+    def plot_basin_stability_variation(self, interval: Literal["linear", "log"] = "linear"):
         """
         Plot all basin stability values against parameter variation in a single plot.
 
@@ -78,40 +79,41 @@ class ASPlotter:
         plt.figure(figsize=(10, 6))
 
         # Set x-axis scale if needed
-        if interval == 'log':
-            plt.xscale('log')
+        if interval == "log":
+            plt.xscale("log")
 
         # Plot each label's data
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c',
-                  '#d62728', '#9467bd']  # Different colors
+        colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # Different colors
 
         for i, label in enumerate(labels):
-            plt.plot(self.as_bse.parameter_values, bs_values[label],
-                     'o-',  # Use consistent marker 'o' for all
-                     color=colors[i % len(colors)],
-                     label=f'State {label}',
-                     markersize=8,
-                     linewidth=2,
-                     alpha=0.8)
+            plt.plot(
+                self.as_bse.parameter_values,
+                bs_values[label],
+                "o-",  # Use consistent marker 'o' for all
+                color=colors[i % len(colors)],
+                label=f"State {label}",
+                markersize=8,
+                linewidth=2,
+                alpha=0.8,
+            )
 
-        plt.xlabel(
-            self.as_bse.as_params['adaptative_parameter_name'].split('.')[-1])
-        plt.ylabel('Basin Stability')
-        plt.title('Basin Stability vs Parameter Variation')
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.xlabel(self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1])
+        plt.ylabel("Basin Stability")
+        plt.title("Basin Stability vs Parameter Variation")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.grid(True, linestyle="--", alpha=0.7)
         plt.tight_layout()
 
         # Save plot
         if self.as_bse.save_to:
-            self.save_plot('basin_stability_variation')
+            self.save_plot("basin_stability_variation")
 
         plt.show()
 
     def get_amplitudes(self, solution, dof, n_clusters):
         """
         Extract amplitudes and compute differences via k-means clustering.
-        Assumes solution.bifurcation_amplitudes has been extracted using 
+        Assumes solution.bifurcation_amplitudes has been extracted using
         extract_amplitudes (from utils.py) and might be a torch.Tensor.
 
         Args:
@@ -127,7 +129,7 @@ class ASPlotter:
         temp = solution.bifurcation_amplitudes[:, dof]
 
         # If temp is a torch.Tensor, convert it to a NumPy array.
-        if hasattr(temp, 'detach'):
+        if hasattr(temp, "detach"):
             temp = temp.detach().cpu().numpy()
         else:
             temp = np.asarray(temp)
@@ -142,8 +144,7 @@ class ASPlotter:
         for i in range(n_clusters):
             for j in range(n_dofs):
                 if np.any(labels == i):
-                    diffs[i, j] = np.mean(
-                        np.abs(temp[labels == i, j] - centers[i, j]))
+                    diffs[i, j] = np.mean(np.abs(temp[labels == i, j] - centers[i, j]))
                 else:
                     diffs[i, j] = 0
         return centers, diffs
@@ -152,9 +153,9 @@ class ASPlotter:
         """
         Plot bifurcation diagram showing attractor locations over parameter variation.
 
-        For each parameter value, the method extracts the bifurcation amplitudes 
-        (i.e. solution.bifurcation_amplitudes), selects the desired DOFs, applies 
-        k-means clustering and then plots the cluster centers as a function of 
+        For each parameter value, the method extracts the bifurcation amplitudes
+        (i.e. solution.bifurcation_amplitudes), selects the desired DOFs, applies
+        k-means clustering and then plots the cluster centers as a function of
         the parameter.
 
         Args:
@@ -174,7 +175,7 @@ class ASPlotter:
 
         # Process each parameter variation
         for idx, result in enumerate(self.as_bse.results):
-            solution = result['solution']
+            solution = result["solution"]
             centers, diffs = self.get_amplitudes(solution, dof, n_clusters)
             amplitudes[:, :, idx] = centers
             errors[:, :, idx] = diffs
@@ -185,8 +186,18 @@ class ASPlotter:
             axes = [axes]
 
         # Set of colors for clusters; extend the list if needed.
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-                  '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+        colors = [
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22",
+            "#17becf",
+        ]
 
         # Plot the cluster centers vs parameter value for each DOF
         for j in range(n_dofs):
@@ -195,15 +206,14 @@ class ASPlotter:
                 ax.plot(
                     self.as_bse.parameter_values,
                     amplitudes[i, j, :],
-                    'o-',                     # marker plus line
+                    "o-",  # marker plus line
                     markersize=8,
                     color=colors[i % len(colors)],
-                    label=f'Cluster {i+1}'
+                    label=f"Cluster {i + 1}",
                 )
-            ax.set_xlabel(
-                self.as_bse.as_params['adaptative_parameter_name'].split('.')[-1])
-            ax.set_ylabel(f'Amplitude state {dof[j]}')
-            ax.grid(True, linestyle='--', alpha=0.7)
+            ax.set_xlabel(self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1])
+            ax.set_ylabel(f"Amplitude state {dof[j]}")
+            ax.grid(True, linestyle="--", alpha=0.7)
             ax.legend()  # Display legend for each subplot
 
         # Link y-axis limits across subplots
@@ -212,12 +222,12 @@ class ASPlotter:
         for ax in axes:
             ax.set_ylim(y_min, y_max)
 
-        plt.suptitle('Bifurcation Diagram')
+        plt.suptitle("Bifurcation Diagram")
         plt.tight_layout()
 
         # Save plot if a save path is set
         if self.as_bse.save_to:
-            self.save_plot('bifurcation_diagram')
+            self.save_plot("bifurcation_diagram")
 
         plt.show()
 
@@ -226,7 +236,7 @@ class ASPlotter:
         Plot bifurcation diagram showing attractor locations over parameter variation.
 
         Creates a subplot for each state variable, showing how the steady states
-        change as the parameter varies. Uses k-means clustering to identify distinct 
+        change as the parameter varies. Uses k-means clustering to identify distinct
         attractors at each parameter value.
         """
         if not self.as_bse.parameter_values or not self.as_bse.basin_stabilities:
@@ -237,14 +247,14 @@ class ASPlotter:
         n_clusters = len(self.as_bse.basin_stabilities[0])
 
         # Create subplots for each state
-        fig, axes = plt.subplots(1, n_states, figsize=(5*n_states, 4))
+        fig, axes = plt.subplots(1, n_states, figsize=(5 * n_states, 4))
         if n_states == 1:
             axes = [axes]
 
         # For each result entry
         for result in self.as_bse.results:
-            param_value = result['param_value']
-            solution = result['solution']
+            param_value = result["param_value"]
+            solution = result["solution"]
 
             # Extract final states
             final_states = solution.y[:, -1, :]
@@ -259,14 +269,15 @@ class ASPlotter:
                 axes[state_idx].plot(
                     [param_value] * len(centers),
                     centers[:, state_idx],
-                    'k.',  # Black dots
-                    markersize=8
+                    "k.",  # Black dots
+                    markersize=8,
                 )
 
                 axes[state_idx].set_xlabel(
-                    self.as_bse.as_params['adaptative_parameter_name'].split('.')[-1])
-                axes[state_idx].set_ylabel(f'State {state_idx + 1}')
-                axes[state_idx].grid(True, linestyle='--', alpha=0.7)
+                    self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1]
+                )
+                axes[state_idx].set_ylabel(f"State {state_idx + 1}")
+                axes[state_idx].grid(True, linestyle="--", alpha=0.7)
 
         # Link x-axis scales across subplots
         x_min = min(ax.get_xlim()[0] for ax in axes)
@@ -274,11 +285,11 @@ class ASPlotter:
         for ax in axes:
             ax.set_xlim(x_min, x_max)
 
-        plt.suptitle('Bifurcation Diagram')
+        plt.suptitle("Bifurcation Diagram")
         plt.tight_layout()
 
         # Save plot
         if self.as_bse.save_to:
-            self.save_plot('bifurcation_diagram')
+            self.save_plot("bifurcation_diagram")
 
         plt.show()

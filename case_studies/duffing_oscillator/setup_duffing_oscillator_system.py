@@ -24,20 +24,24 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
     feature_extractor = DuffingFeatureExtractor(time_steady=950)
 
-    classifier_initial_conditions = torch.tensor([
-        [-0.21, 0.02],
-        [1.05, 0.77],
-        [-0.67, 0.02],
-        [-0.46, 0.30],
-        [-0.43, 0.12],
-    ], dtype=torch.float32)
+    classifier_initial_conditions = torch.tensor(
+        [
+            [-0.21, 0.02],
+            [1.05, 0.77],
+            [-0.67, 0.02],
+            [-0.46, 0.30],
+            [-0.43, 0.12],
+        ],
+        dtype=torch.float32,
+    )
 
     classifier_labels = [
-        'y1: small n=1 cycle',
-        'y2: large n=1 cycle',
-        'y3: first n=2 cycle',
-        'y4: second n=2 cycle',
-        'y5: n=3 cycle']
+        "y1: small n=1 cycle",
+        "y2: large n=1 cycle",
+        "y3: first n=2 cycle",
+        "y4: second n=2 cycle",
+        "y5: n=3 cycle",
+    ]
 
     knn = KNeighborsClassifier(n_neighbors=1)
 
@@ -45,7 +49,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
         labels=classifier_labels,
-        ode_params=params
+        ode_params=params,
     )
 
     return {
@@ -54,5 +58,5 @@ def setup_duffing_oscillator_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster
+        "cluster_classifier": knn_cluster,
     }

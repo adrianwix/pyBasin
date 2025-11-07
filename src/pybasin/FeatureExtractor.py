@@ -4,7 +4,6 @@ from pybasin.Solution import Solution
 
 
 class FeatureExtractor(ABC):
-
     def __init__(self, time_steady: float, exclude_states=None):
         self.exclude_states = exclude_states
         # defaults to zero - extract feature from complete time series. Recommended

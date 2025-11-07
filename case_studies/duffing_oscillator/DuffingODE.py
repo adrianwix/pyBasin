@@ -1,13 +1,13 @@
 from typing import TypedDict
 
 import torch
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 
 
 class DuffingParams(TypedDict):
     delta: float  # Damping coefficient
-    k3: float    # Cubic stiffness
-    A: float     # Forcing amplitude
+    k3: float  # Cubic stiffness
+    A: float  # Forcing amplitude
 
 
 class DuffingODE(ODESystem[DuffingParams]):
@@ -43,7 +43,6 @@ class DuffingODE(ODESystem[DuffingParams]):
         k3 = self.params["k3"]
         A = self.params["A"]
         description = (
-            f"  dx/dt       = x_dot\n"
-            f"  dx_dot/dt   = -({delta})*x_dot - ({k3})*x^3 + ({A})*cos(t)\n"
+            f"  dx/dt       = x_dot\n  dx_dot/dt   = -({delta})*x_dot - ({k3})*x^3 + ({A})*cos(t)\n"
         )
         return description

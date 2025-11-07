@@ -16,7 +16,8 @@ def main():
     as_params = AdaptiveStudyParams(
         # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
         adaptative_parameter_values=np.arange(0.12, 0.1825, 0.0025),
-        adaptative_parameter_name='ode_system.params["sigma"]')
+        adaptative_parameter_name='ode_system.params["sigma"]',
+    )
 
     bse = ASBasinStabilityEstimator(
         N=N,
@@ -26,7 +27,7 @@ def main():
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
         as_params=as_params,
-        save_to='results_sigma'
+        save_to="results_sigma",
     )
 
     print("Estimating Basin Stability...")

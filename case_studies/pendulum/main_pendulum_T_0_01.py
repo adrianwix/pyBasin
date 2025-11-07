@@ -15,8 +15,8 @@ def main():
     props["ode_system"].params["T"] = 0.01
     props["N"] = 10000
     props["sampler"] = GridSampler(
-        min_limits=props["sampler"].min_limits,
-        max_limits=props["sampler"].max_limits)
+        min_limits=props["sampler"].min_limits, max_limits=props["sampler"].max_limits
+    )
 
     bse = BasinStabilityEstimator(
         name="main_pendulum_T_0_01",
@@ -26,7 +26,7 @@ def main():
         solver=props["solver"],
         feature_extractor=props["feature_extractor"],
         cluster_classifier=props["cluster_classifier"],
-        save_to="main_pendulum_T_0_01"
+        save_to="main_pendulum_T_0_01",
     )
 
     basin_stability = bse.estimate_bs()

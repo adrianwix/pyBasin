@@ -26,7 +26,7 @@ def setup_pendulum_system() -> SetupProperties:
     # Here the angular limits for theta are adjusted using arcsin(T/K).
     sampler = GridSampler(
         min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
-        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]), 10.0)
+        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]), 10.0),
     )
 
     # Create the solver with specified integration time and frequency.
@@ -36,11 +36,14 @@ def setup_pendulum_system() -> SetupProperties:
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
-    classifier_initial_conditions = torch.tensor([
-        [0.5, 0.0],    # FP: fixed point
-        [2.7, 0.0]     # LC: limit cycle
-    ], dtype=torch.float32)
-    classifier_labels = ['FP', 'LC']
+    classifier_initial_conditions = torch.tensor(
+        [
+            [0.5, 0.0],  # FP: fixed point
+            [2.7, 0.0],  # LC: limit cycle
+        ],
+        dtype=torch.float32,
+    )
+    classifier_labels = ["FP", "LC"]
 
     # Create a KNeighborsClassifier with k=1.
     knn = KNeighborsClassifier(n_neighbors=1)
@@ -50,7 +53,7 @@ def setup_pendulum_system() -> SetupProperties:
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
         labels=classifier_labels,
-        ode_params=params
+        ode_params=params,
     )
 
     return {
@@ -59,5 +62,5 @@ def setup_pendulum_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster
+        "cluster_classifier": knn_cluster,
     }

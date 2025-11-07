@@ -13,7 +13,7 @@ import sys
 def check_directory_structure():
     """Check if all expected directories exist."""
     project_root = Path(__file__).parent.parent
-    
+
     expected_dirs = [
         "src/pybasin",
         "case_studies/duffing_oscillator",
@@ -33,7 +33,7 @@ def check_directory_structure():
         "scripts",
         "notebooks/examples",
     ]
-    
+
     print("📁 Checking directory structure...")
     missing = []
     for dir_path in expected_dirs:
@@ -43,14 +43,14 @@ def check_directory_structure():
         else:
             print(f"  ❌ {dir_path} (MISSING)")
             missing.append(dir_path)
-    
+
     return len(missing) == 0
 
 
 def check_key_files():
     """Check if key files exist."""
     project_root = Path(__file__).parent.parent
-    
+
     key_files = [
         "pyproject.toml",
         "README.md",
@@ -61,7 +61,7 @@ def check_key_files():
         "tests/conftest.py",
         "docs/index.md",
     ]
-    
+
     print("\n📄 Checking key files...")
     missing = []
     for file_path in key_files:
@@ -71,7 +71,7 @@ def check_key_files():
         else:
             print(f"  ❌ {file_path} (MISSING)")
             missing.append(file_path)
-    
+
     return len(missing) == 0
 
 
@@ -79,7 +79,7 @@ def check_library_modules():
     """Check if library modules exist in src/pybasin."""
     project_root = Path(__file__).parent.parent
     src_pybasin = project_root / "src" / "pybasin"
-    
+
     expected_modules = [
         "ASBasinStabilityEstimator.py",
         "ASPlotter.py",
@@ -95,7 +95,7 @@ def check_library_modules():
         "utils.py",
         "py.typed",
     ]
-    
+
     print("\n📦 Checking library modules in src/pybasin/...")
     missing = []
     for module in expected_modules:
@@ -105,7 +105,7 @@ def check_library_modules():
         else:
             print(f"  ❌ {module} (MISSING)")
             missing.append(module)
-    
+
     return len(missing) == 0
 
 
@@ -114,6 +114,7 @@ def check_installation():
     print("\n📦 Checking package installation...")
     try:
         import pybasin
+
         print(f"  ✅ pybasin is installed (version: {getattr(pybasin, '__version__', 'unknown')})")
         return True
     except ImportError:
@@ -124,7 +125,7 @@ def check_installation():
 
 def print_summary(checks_passed):
     """Print final summary."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     if all(checks_passed):
         print("✨ Migration completed successfully! ✨")
         print("\nNext steps:")
@@ -135,23 +136,23 @@ def print_summary(checks_passed):
     else:
         print("⚠️  Migration incomplete - some checks failed")
         print("\nPlease review the missing items above.")
-    print("="*60)
+    print("=" * 60)
 
 
 def main():
     """Run all checks."""
     print("🔍 pyBasin Project Structure Verification")
-    print("="*60)
-    
+    print("=" * 60)
+
     checks = [
         check_directory_structure(),
         check_key_files(),
         check_library_modules(),
         check_installation(),
     ]
-    
+
     print_summary(checks)
-    
+
     return 0 if all(checks) else 1
 
 

@@ -1,6 +1,6 @@
 import torch
 from typing import TypedDict
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 
 
 class FrictionParams(TypedDict):
@@ -8,12 +8,13 @@ class FrictionParams(TypedDict):
     Parameters for the friction ODE system.
     Adjust them as needed to match your scenario.
     """
-    v_d: float     # Driving velocity
-    xi: float      # Damping ratio
-    musd: float    # Ratio of static to dynamic friction coefficient
-    mud: float     # Dynamic friction coefficient
-    muv: float     # Linear strengthening parameter
-    v0: float      # Reference velocity for exponential decay
+
+    v_d: float  # Driving velocity
+    xi: float  # Damping ratio
+    musd: float  # Ratio of static to dynamic friction coefficient
+    mud: float  # Dynamic friction coefficient
+    muv: float  # Linear strengthening parameter
+    v0: float  # Reference velocity for exponential decay
 
 
 class FrictionODE(ODESystem[FrictionParams]):
@@ -41,9 +42,9 @@ class FrictionODE(ODESystem[FrictionParams]):
         k_smooth = 50  # Controls transition smoothness
 
         # Inlined friction force calculation
-        Ffric = (mud
-                 + mud * (musd - 1.0) * torch.exp(-torch.abs(vrel) / v0)
-                 + muv * torch.abs(vrel) / v0)
+        Ffric = (
+            mud + mud * (musd - 1.0) * torch.exp(-torch.abs(vrel) / v0) + muv * torch.abs(vrel) / v0
+        )
 
         slip_condition = torch.abs(vrel) > eta
         trans_condition = torch.abs(disp + 2 * xi * vel) > mud * musd
@@ -55,11 +56,15 @@ class FrictionODE(ODESystem[FrictionParams]):
         trans_vel = -disp - 2 * xi * vel + mud * musd * smooth_sign_Ffric
         stick_vel = -(vel - v_d)
 
-        dydt = torch.stack([
-            torch.where(slip_condition | trans_condition, vel, v_d),
-            torch.where(slip_condition, slip_vel, torch.where(
-                trans_condition, trans_vel, stick_vel))
-        ], dim=-1)
+        dydt = torch.stack(
+            [
+                torch.where(slip_condition | trans_condition, vel, v_d),
+                torch.where(
+                    slip_condition, slip_vel, torch.where(trans_condition, trans_vel, stick_vel)
+                ),
+            ],
+            dim=-1,
+        )
 
         return dydt
 

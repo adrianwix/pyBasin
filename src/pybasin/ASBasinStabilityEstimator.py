@@ -5,7 +5,7 @@ from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 from pybasin.Solver import Solver
 from pybasin.Sampler import Sampler
 from typing import Dict, Optional
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ClusterClassifier import ClusterClassifier
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
@@ -34,7 +34,7 @@ class ASBasinStabilityEstimator:
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
         as_params: AdaptiveStudyParams,
-        save_to: Optional[str] = "results"
+        save_to: Optional[str] = "results",
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -68,15 +68,14 @@ class ASBasinStabilityEstimator:
         self.basin_stabilities = []
 
         print(
-            f"\nEstimating Basin Stability for parameter: {self.as_params['adaptative_parameter_name']}")
+            f"\nEstimating Basin Stability for parameter: {self.as_params['adaptative_parameter_name']}"
+        )
 
-        print(
-            f"\nParameter values: {self.as_params['adaptative_parameter_values']}")
+        print(f"\nParameter values: {self.as_params['adaptative_parameter_values']}")
 
         for param_value in self.as_params["adaptative_parameter_values"]:
             # Update parameter using eval
-            assignment = f"{self.as_params['adaptative_parameter_name']} = {
-                param_value}"
+            assignment = f"{self.as_params['adaptative_parameter_name']} = {param_value}"
 
             context = {
                 "N": self.N,
@@ -84,13 +83,13 @@ class ASBasinStabilityEstimator:
                 "sampler": self.sampler,
                 "solver": self.solver,
                 "feature_extractor": self.feature_extractor,
-                "cluster_classifier": self.cluster_classifier
+                "cluster_classifier": self.cluster_classifier,
             }
 
-            eval(compile(assignment, '<string>', 'exec'), context, context)
+            eval(compile(assignment, "<string>", "exec"), context, context)
 
             # Evaluate the same variable/expression to get its current value
-            variable_name = self.as_params['adaptative_parameter_name']
+            variable_name = self.as_params["adaptative_parameter_name"]
             updated_value = eval(variable_name, context, context)
 
             print(f"\nCurrent {variable_name} value: {updated_value}")
@@ -101,7 +100,7 @@ class ASBasinStabilityEstimator:
                 sampler=context["sampler"],
                 solver=context["solver"],
                 feature_extractor=context["feature_extractor"],
-                cluster_classifier=context["cluster_classifier"]
+                cluster_classifier=context["cluster_classifier"],
             )
 
             basin_stability = bse.estimate_bs()
@@ -109,12 +108,15 @@ class ASBasinStabilityEstimator:
             # Store results
             self.parameter_values.append(param_value)
             self.basin_stabilities.append(basin_stability)
-            self.results.append({"param_value": param_value,
-                                 "basin_stability": basin_stability,
-                                 "solution": bse.solution})
+            self.results.append(
+                {
+                    "param_value": param_value,
+                    "basin_stability": basin_stability,
+                    "solution": bse.solution,
+                }
+            )
 
-            print(f"Basin Stability: {
-                  basin_stability} for parameter value {param_value}")
+            print(f"Basin Stability: {basin_stability} for parameter value {param_value}")
 
         return self.parameter_values, self.basin_stabilities, self.results
 
@@ -124,34 +126,34 @@ class ASBasinStabilityEstimator:
         Handles numpy arrays and Solution objects by converting them to standard Python types.
         """
         if self.basin_stabilities is None:
-            raise ValueError(
-                "No results to save. Please run estimate_as_bs() first.")
+            raise ValueError("No results to save. Please run estimate_as_bs() first.")
 
         if self.save_to is None:
-            raise ValueError(
-                "No path to save the results was specified.")
+            raise ValueError("No path to save the results was specified.")
 
         full_folder = resolve_folder(self.save_to)
-        file_name = generate_filename(
-            'adaptative_params_basin_stability_results', 'json')
+        file_name = generate_filename("adaptative_params_basin_stability_results", "json")
         full_path = os.path.join(full_folder, file_name)
 
         def format_ode_system(ode_str: str) -> list:
-            lines = ode_str.strip().split('\n')
-            formatted_lines = [' '.join(line.split()) for line in lines]
+            lines = ode_str.strip().split("\n")
+            formatted_lines = [" ".join(line.split()) for line in lines]
             return formatted_lines
 
         region_of_interest = " X ".join(
-            [f"[{min_val}, {max_val}]" for min_val, max_val in zip(
-                self.sampler.min_limits, self.sampler.max_limits)]
+            [
+                f"[{min_val}, {max_val}]"
+                for min_val, max_val in zip(self.sampler.min_limits, self.sampler.max_limits)
+            ]
         )
 
         adaptative_parameter_study = [
             {"param_value": param_value, "basin_of_attraction": bs}
-            for param_value, bs in zip(self.parameter_values, self.basin_stabilities)]
+            for param_value, bs in zip(self.parameter_values, self.basin_stabilities)
+        ]
 
         results = {
-            "studied_parameters": self.as_params['adaptative_parameter_name'],
+            "studied_parameters": self.as_params["adaptative_parameter_name"],
             "adaptative_parameter_study": adaptative_parameter_study,
             "region_of_interest": region_of_interest,
             "sampling_points": self.N,
@@ -161,7 +163,7 @@ class ASBasinStabilityEstimator:
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }
 
-        with open(full_path, 'w') as f:
+        with open(full_path, "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
         print(f"Results saved to {full_path}")

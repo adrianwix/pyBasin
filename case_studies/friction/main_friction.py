@@ -14,7 +14,7 @@ def main():
         solver=props["solver"],
         feature_extractor=props["feature_extractor"],
         cluster_classifier=props["cluster_classifier"],
-        save_to="results_friction"
+        save_to="results_friction",
     )
 
     basin_stability = bse.estimate_bs()
@@ -23,10 +23,7 @@ def main():
     plotter = Plotter(bse=bse)
 
     plotter.plot_bse_results()
-    plotter.plot_templates(
-        plotted_var=1,
-        time_span=(0, 200)
-    )
+    plotter.plot_templates(plotted_var=1, time_span=(0, 200))
     plotter.plot_phase(x_var=0, y_var=1)
 
     bse.save()

@@ -6,12 +6,12 @@ from torchdiffeq import odeint
 # --- Paste your PendulumODE code here ---
 from typing import TypedDict
 from case_study_pendulum.PendulumODE import PendulumODE
-from pybasin.ODESystem import ODESystem  # Ensure pybasin is installed
+from pybasin.ode_system import ODESystem  # Ensure pybasin is installed
 
 
 # Simulation parameters
-alpha = 0.1          # damping coefficient
-K = 1.0              # coupling strength
+alpha = 0.1  # damping coefficient
+K = 1.0  # coupling strength
 T_values = np.arange(0.01, 1.05, 0.05)  # Forcing values to sweep
 
 dt = 0.01
@@ -45,8 +45,7 @@ for T in T_values:
 bifurcation_data = np.array(bifurcation_data)
 
 plt.figure(figsize=(10, 6))
-plt.scatter(bifurcation_data[:, 0],
-            bifurcation_data[:, 1], s=0.1, color='black')
+plt.scatter(bifurcation_data[:, 0], bifurcation_data[:, 1], s=0.1, color="black")
 plt.xlabel("T (forcing)")
 plt.ylabel("θ (mod 2π)")
 plt.title("Bifurcation Diagram for the Pendulum ODE using torchdiffeq")

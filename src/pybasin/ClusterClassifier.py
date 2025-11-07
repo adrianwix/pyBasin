@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
 from torch import tensor
 from pybasin.FeatureExtractor import FeatureExtractor
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.Solution import Solution
 from pybasin.Solver import Solver
 
@@ -14,7 +14,6 @@ from pybasin.Solver import Solver
 
 
 class ClusterClassifier(ABC):
-
     @abstractmethod
     def predict_labels(self, features: np.ndarray) -> np.ndarray:
         pass
@@ -29,25 +28,20 @@ class SupervisedClassifier(ClusterClassifier):
         self.initial_conditions = initial_conditions
         self.ode_params = deepcopy(ode_params)
 
-    def fit(self, solver: Solver, ode_system: ODESystem, feature_extractor: FeatureExtractor) -> None:
+    def fit(
+        self, solver: Solver, ode_system: ODESystem, feature_extractor: FeatureExtractor
+    ) -> None:
         # Generate features for each template initial condition
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
 
-        print("classifier.fit - ode_system.params: ",
-              classifier_ode_system.params)
-        print("classifier.fit - self.initial_conditions: ",
-              self.initial_conditions)
+        print("classifier.fit - ode_system.params: ", classifier_ode_system.params)
+        print("classifier.fit - self.initial_conditions: ", self.initial_conditions)
         print("classifier.fit - self.labels: ", self.labels)
 
-        t, y = solver.integrate(
-            classifier_ode_system, self.initial_conditions)
+        t, y = solver.integrate(classifier_ode_system, self.initial_conditions)
 
-        self.solution = Solution(
-            initial_condition=self.initial_conditions,
-            time=t,
-            y=y
-        )
+        self.solution = Solution(initial_condition=self.initial_conditions, time=t, y=y)
 
         # Build the features array from the Solution instances.
         features = feature_extractor.extract_features(self.solution)
@@ -61,9 +55,14 @@ class SupervisedClassifier(ClusterClassifier):
 
 
 class KNNCluster(SupervisedClassifier):
-
     # TODO: Group initiial_conditions, labels, and ode_params into a single argument
-    def __init__(self, classifier: KNeighborsClassifier, initial_conditions: tensor, labels: np.ndarray, ode_params: Dict):
+    def __init__(
+        self,
+        classifier: KNeighborsClassifier,
+        initial_conditions: tensor,
+        labels: np.ndarray,
+        ode_params: Dict,
+    ):
         if classifier is None:
             classifier = KNeighborsClassifier(**kwargs)
         self.classifier = classifier
@@ -80,7 +79,6 @@ class UnsupervisedClassifier(ClusterClassifier):
 
 class DBSCANCluster(UnsupervisedClassifier):
     def __init__(self, classifier: DBSCAN = None, **kwargs):
-
         if classifier is None:
             classifier = DBSCAN(**kwargs)
         self.classifier = classifier

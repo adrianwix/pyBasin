@@ -21,7 +21,7 @@ def main():
         solver=props["solver"],
         feature_extractor=props["feature_extractor"],
         cluster_classifier=props["cluster_classifier"],
-        save_to="results_case1"
+        save_to="results_case1",
     )
 
     basin_stability = bse.estimate_bs()
@@ -47,11 +47,14 @@ def preview_plot_templates():
 
     # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
 
-    classifier_initial_conditions = torch.tensor([
-        [0.8, -3.0, 0.0],    # butterfly1
-        [-0.8, 3.0, 0.0],    # butterfly2
-    ], dtype=torch.float32)
-    classifier_labels = ['butterfly1', 'butterfly2']
+    classifier_initial_conditions = torch.tensor(
+        [
+            [0.8, -3.0, 0.0],  # butterfly1
+            [-0.8, 3.0, 0.0],  # butterfly2
+        ],
+        dtype=torch.float32,
+    )
+    classifier_labels = ["butterfly1", "butterfly2"]
 
     # Create a KNeighborsClassifier with k=1
     knn = KNeighborsClassifier(n_neighbors=1)
@@ -61,7 +64,7 @@ def preview_plot_templates():
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
         labels=classifier_labels,
-        ode_params=params
+        ode_params=params,
     )
 
     bse = BasinStabilityEstimator(
@@ -71,7 +74,7 @@ def preview_plot_templates():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=knn_cluster,
-        save_to="results"
+        save_to="results",
     )
 
     plotter = Plotter(bse=bse)
@@ -79,10 +82,7 @@ def preview_plot_templates():
     print("Generating template trajectories...")
 
     # Plot the first state variable (x) trajectories
-    plotter.plot_templates(
-        plotted_var=1,
-        time_span=(0, 200)
-    )
+    plotter.plot_templates(plotted_var=1, time_span=(0, 200))
 
     plotter.plot_phase(x_var=1, y_var=2)
 

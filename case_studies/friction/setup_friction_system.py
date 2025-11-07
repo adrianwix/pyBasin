@@ -15,12 +15,12 @@ def setup_friction_system() -> SetupProperties:
 
     # Parameters from setup_friction.m
     params: FrictionParams = {
-        "v_d": 1.5,     # Driving velocity
-        "xi": 0.05,     # Damping ratio
-        "musd": 2.0,    # Ratio static to dynamic friction coefficient
-        "mud": 0.5,     # Dynamic coefficient of friction
-        "muv": 0.0,     # Linear strengthening parameter
-        "v0": 0.5,      # Reference velocity for exponential decay
+        "v_d": 1.5,  # Driving velocity
+        "xi": 0.05,  # Damping ratio
+        "musd": 2.0,  # Ratio static to dynamic friction coefficient
+        "mud": 0.5,  # Dynamic coefficient of friction
+        "muv": 0.0,  # Linear strengthening parameter
+        "v0": 0.5,  # Reference velocity for exponential decay
     }
 
     ode_system = FrictionODE(params)
@@ -32,26 +32,29 @@ def setup_friction_system() -> SetupProperties:
     # )
 
     sampler = UniformRandomSampler(
-        min_limits=[0.5, -2.0],    # [disp, vel]
-        max_limits=[2.5, 0.0]      # [disp, vel]
+        min_limits=[0.5, -2.0],  # [disp, vel]
+        max_limits=[2.5, 0.0],  # [disp, vel]
     )
 
     # Time integration parameters from setup_friction.m
     solver = TorchDiffEqSolver(
         time_span=(0, 500),  # tSpan
-        fs=100               # Sampling frequency
+        fs=100,  # Sampling frequency
     )
 
     # Feature extraction (using last 100 time units as in setup_friction.m)
     feature_extractor = FrictionFeatureExtractor(time_steady=400)
 
     # Template initial conditions for classification from setup_friction.m
-    classifier_initial_conditions = torch.tensor([
-        [0.1, 0.1],   # Fixed point (FP)
-        [2.0, 2.0],   # Limit cycle (LC)
-    ], dtype=torch.float64)
+    classifier_initial_conditions = torch.tensor(
+        [
+            [0.1, 0.1],  # Fixed point (FP)
+            [2.0, 2.0],  # Limit cycle (LC)
+        ],
+        dtype=torch.float64,
+    )
 
-    classifier_labels = ['FP', 'LC']
+    classifier_labels = ["FP", "LC"]
 
     # KNN classifier as specified in setup_friction.m
     knn = KNeighborsClassifier(n_neighbors=1)
@@ -60,7 +63,7 @@ def setup_friction_system() -> SetupProperties:
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
         labels=classifier_labels,
-        ode_params=params
+        ode_params=params,
     )
 
     return {
@@ -69,5 +72,5 @@ def setup_friction_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster
+        "cluster_classifier": knn_cluster,
     }

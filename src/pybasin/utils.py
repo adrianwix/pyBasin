@@ -30,7 +30,7 @@ def generate_filename(name: str, file_extension: str):
     """
     Generates a unique filename using either a timestamp or a UUID.
     """
-    date = datetime.now().strftime('%Y%m%d_%H%M%S')
+    date = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"{date}_{name}.{file_extension}"
 
 
@@ -45,7 +45,7 @@ def _get_caller_dir():
     library_dir = os.path.abspath(os.path.dirname(__file__))
 
     for frame in inspect.stack():
-        caller_file = frame.frame.f_globals.get('__file__')
+        caller_file = frame.frame.f_globals.get("__file__")
         if caller_file:
             abs_caller_file = os.path.abspath(caller_file)
             # Check if the caller file is outside of the pybasin module directory.
@@ -80,7 +80,7 @@ class NumpyEncoder(JSONEncoder):
                 "time": obj.time.tolist(),
                 "trajectory": obj.trajectory.tolist(),
                 "features": obj.features.tolist() if obj.features is not None else None,
-                "label": obj.label
+                "label": obj.label,
             }
         return super(NumpyEncoder, self).default(obj)
 

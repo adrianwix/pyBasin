@@ -1,4 +1,5 @@
 """Test configuration and fixtures for pybasin tests."""
+
 import pytest
 import numpy as np
 from pathlib import Path
@@ -42,9 +43,10 @@ def random_seed():
 @pytest.fixture
 def sample_initial_conditions():
     """Generate sample initial conditions for testing."""
+
     def _generator(bounds, n_samples=100, seed=42):
         """Generate random initial conditions within bounds.
-        
+
         Args:
             bounds: List of (min, max) tuples for each dimension
             n_samples: Number of samples to generate
@@ -56,4 +58,5 @@ def sample_initial_conditions():
         for i, (min_val, max_val) in enumerate(bounds):
             samples[:, i] = np.random.uniform(min_val, max_val, n_samples)
         return samples
+
     return _generator

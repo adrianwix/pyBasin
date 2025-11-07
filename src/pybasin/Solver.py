@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torchdiffeq import odeint
 
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.utils import resolve_folder
 
 
@@ -37,7 +37,9 @@ class Solver(ABC):
         self.params = kwargs  # Additional solver parameters
         self._cache_dir = resolve_folder("cache")  # Persistent cache folder
 
-    def _build_cache_key(self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor) -> str:
+    def _build_cache_key(
+        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+    ) -> str:
         """
         Build a unique cache key based on:
           - The solver type,
@@ -48,12 +50,14 @@ class Solver(ABC):
             self.__class__.__name__,
             ode_system.get_str(),  # String representation of the ODE system
             y0.detach().cpu().numpy().tobytes(),
-            t_eval.detach().cpu().numpy().tobytes()
+            t_eval.detach().cpu().numpy().tobytes(),
         )
         key_bytes = pickle.dumps(key_data)
         return hashlib.md5(key_bytes).hexdigest()
 
-    def integrate(self, ode_system: ODESystem, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def integrate(
+        self, ode_system: ODESystem, y0: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Solve the ODE system and return the evaluation time points and solution.
         Uses caching to avoid recomputation if the same problem was solved before.
@@ -63,8 +67,7 @@ class Solver(ABC):
         :return: Tuple (t_eval, y_values) where y_values is the solution.
         """
         t_start, t_end = self.time_span
-        t_eval = torch.linspace(
-            t_start, t_end, self.n_steps, dtype=torch.float64)
+        t_eval = torch.linspace(t_start, t_end, self.n_steps, dtype=torch.float64)
 
         # Build the unique cache key.
         cache_key = self._build_cache_key(ode_system, y0, t_eval)
@@ -72,15 +75,15 @@ class Solver(ABC):
 
         # Check persistent cache on disk.
         if os.path.exists(cache_file):
-            print(
-                f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
+            print(f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
             try:
                 with open(cache_file, "rb") as f:
                     result = pickle.load(f)
                 return result
             except EOFError:
                 print(
-                    "EOFError: The cache file may be corrupted. Deleting it and proceeding without cache.")
+                    "EOFError: The cache file may be corrupted. Deleting it and proceeding without cache."
+                )
                 os.remove(cache_file)
 
         # Compute the integration if not cached.
@@ -100,12 +103,13 @@ class Solver(ABC):
             print(f"Error during pickle.dump: {e}")
             raise
 
-        print(
-            f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
+        print(f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
         return result
 
     @abstractmethod
-    def _integrate(self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def _integrate(
+        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Perform the actual integration using the given solver.
         This method is implemented by subclasses.
@@ -127,15 +131,11 @@ class TorchDiffEqSolver(Solver):
     def __init__(self, time_span, fs, **kwargs):
         super().__init__(time_span, fs, **kwargs)
 
-    def _integrate(self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def _integrate(
+        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         try:
-            y_torch = odeint(
-                ode_system,
-                y0,
-                t_eval,
-                rtol=1e-8,
-                atol=1e-6
-            )
+            y_torch = odeint(ode_system, y0, t_eval, rtol=1e-8, atol=1e-6)
         except RuntimeError as e:
             raise e
         return t_eval, y_torch

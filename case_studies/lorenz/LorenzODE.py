@@ -1,12 +1,12 @@
 from typing import TypedDict
 import torch
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 
 
 class LorenzParams(TypedDict):
     sigma: float  # Prandtl number
-    r: float     # Rayleigh number
-    b: float     # Physical dimension parameter
+    r: float  # Rayleigh number
+    b: float  # Physical dimension parameter
 
 
 class LorenzODE(ODESystem[LorenzParams]):

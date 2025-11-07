@@ -18,16 +18,14 @@ def main():
         solver=props["solver"],
         feature_extractor=props["feature_extractor"],
         cluster_classifier=props["cluster_classifier"],
-        save_to="results_case1"
+        save_to="results_case1",
     )
 
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
     plotter = Plotter(bse=bse)
-    plotter.plot_templates(
-        plotted_var=1,
-        time_span=(0, 100))
+    plotter.plot_templates(plotted_var=1, time_span=(0, 100))
     plotter.plot_bse_results()
 
     bse.save()

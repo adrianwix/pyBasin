@@ -1,7 +1,6 @@
-
 from typing import TypedDict
 import torch
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 
 
 class PendulumParams(TypedDict):

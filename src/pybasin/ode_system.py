@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import TypedDict, Dict, TypeVar, Generic
+from typing import Generic, TypeVar
+
 import torch
 import torch.nn as nn
 
-P = TypeVar('P', bound=Dict[str, float])
+P = TypeVar("P", bound=dict[str, float])
 
 
 class ODESystem(ABC, Generic[P], nn.Module):
@@ -12,7 +13,8 @@ class ODESystem(ABC, Generic[P], nn.Module):
     """
 
     def __init__(self, params: P):
-        super(ODESystem, self).__init__()  # Initialize nn.Module
+        # Initialize nn.Module
+        super().__init__()  # type: ignore
         self.params = params
 
     @abstractmethod

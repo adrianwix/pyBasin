@@ -1,4 +1,3 @@
-
 import json
 from typing import Dict, Optional
 from typing import Optional, Dict
@@ -10,7 +9,7 @@ import pandas as pd
 from pybasin.Solver import Solver
 from pybasin.Solution import Solution
 from pybasin.Sampler import Sampler
-from pybasin.ODESystem import ODESystem
+from pybasin.ode_system import ODESystem
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
 from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
@@ -28,6 +27,7 @@ class BasinStabilityEstimator:
         Y0 (np.ndarray): Array of initial conditions.
         solution (Solution): Solution instance.
     """
+
     solution: Solution
     bs_vals: Optional[Dict[int, float]]
 
@@ -93,11 +93,7 @@ class BasinStabilityEstimator:
         print(f"   Integration complete - trajectory shape: {y.shape}")
 
         print("\n3. Creating Solution object...")
-        self.solution = Solution(
-            initial_condition=self.Y0,
-            time=t,
-            y=y
-        )
+        self.solution = Solution(initial_condition=self.Y0, time=t, y=y)
 
         if self.amplitude_extractor is None:
             self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
@@ -113,7 +109,8 @@ class BasinStabilityEstimator:
             self.cluster_classifier.fit(
                 solver=self.solver,
                 ode_system=self.ode_system,
-                feature_extractor=self.feature_extractor)
+                feature_extractor=self.feature_extractor,
+            )
 
         labels = self.cluster_classifier.predict_labels(features)
         self.solution.set_labels(labels)
@@ -122,8 +119,7 @@ class BasinStabilityEstimator:
         print("\n6. Computing basin stability values...")
         unique_labels, counts = np.unique(labels, return_counts=True)
 
-        self.bs_vals = {
-            str(label): 0.0 for label in unique_labels}
+        self.bs_vals = {str(label): 0.0 for label in unique_labels}
 
         fractions = counts / float(self.N)
 
@@ -142,25 +138,25 @@ class BasinStabilityEstimator:
         :param filename: The file path where results will be saved.
         """
         if self.bs_vals is None:
-            raise ValueError(
-                "No results to save. Please run estimate_bs() first.")
+            raise ValueError("No results to save. Please run estimate_bs() first.")
 
         if self.save_to is None:
-            raise ValueError(
-                "save_to is not defined.")
+            raise ValueError("save_to is not defined.")
 
         full_folder = resolve_folder(self.save_to)
-        file_name = generate_filename('basin_stability_results', 'json')
+        file_name = generate_filename("basin_stability_results", "json")
         full_path = os.path.join(full_folder, file_name)
 
         def format_ode_system(ode_str: str) -> list:
-            lines = ode_str.strip().split('\n')
-            formatted_lines = [' '.join(line.split()) for line in lines]
+            lines = ode_str.strip().split("\n")
+            formatted_lines = [" ".join(line.split()) for line in lines]
             return formatted_lines
 
         region_of_interest = " X ".join(
-            [f"[{min_val}, {max_val}]" for min_val, max_val in zip(
-                self.sampler.min_limits, self.sampler.max_limits)]
+            [
+                f"[{min_val}, {max_val}]"
+                for min_val, max_val in zip(self.sampler.min_limits, self.sampler.max_limits)
+            ]
         )
 
         results = {
@@ -173,30 +169,31 @@ class BasinStabilityEstimator:
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }
 
-        with open(full_path, 'w') as f:
+        with open(full_path, "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
         print(f"Results saved to {full_path}")
 
     def save_to_excel(self):
         if self.bs_vals is None:
-            raise ValueError(
-                "No results to save. Please run estimate_bs() first.")
+            raise ValueError("No results to save. Please run estimate_bs() first.")
 
         if self.save_to is None:
-            raise ValueError(
-                "save_to is not defined.")
+            raise ValueError("save_to is not defined.")
 
         full_folder = resolve_folder(self.save_to)
-        file_name = generate_filename('basin_stability_results', 'xlsx')
+        file_name = generate_filename("basin_stability_results", "xlsx")
         full_path = os.path.join(full_folder, file_name)
 
-        df = pd.DataFrame({
-            'Grid Sample': [(x, y) for x, y in self.Y0.tolist()],
-            'Labels': self.solution.labels,
-            'Bifurcation Amplitudes': [
-                (theta, theta_dot)
-                for theta, theta_dot in self.solution.bifurcation_amplitudes.tolist()]
-        })
+        df = pd.DataFrame(
+            {
+                "Grid Sample": [(x, y) for x, y in self.Y0.tolist()],
+                "Labels": self.solution.labels,
+                "Bifurcation Amplitudes": [
+                    (theta, theta_dot)
+                    for theta, theta_dot in self.solution.bifurcation_amplitudes.tolist()
+                ],
+            }
+        )
 
         df.to_excel(full_path)
