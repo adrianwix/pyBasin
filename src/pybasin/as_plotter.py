@@ -168,7 +168,19 @@ class ASPlotter:
 
         # Process each parameter variation
         for idx, result in enumerate(self.as_bse.results):
-            solution = result["solution"]
+            # Get bifurcation amplitudes directly from result dict
+            bifurcation_amplitudes = result["bifurcation_amplitudes"]
+            if bifurcation_amplitudes is None:
+                raise ValueError(
+                    f"No bifurcation amplitudes found for parameter value {result['param_value']}"
+                )
+
+            # Create a temporary object to hold the amplitudes
+            class TempSolution:
+                def __init__(self, amps):
+                    self.bifurcation_amplitudes = amps
+
+            solution = TempSolution(bifurcation_amplitudes)
             centers, diffs = self.get_amplitudes(solution, dof, n_clusters)
             amplitudes[:, :, idx] = centers
             errors[:, :, idx] = diffs
@@ -219,69 +231,6 @@ class ASPlotter:
         plt.tight_layout()
 
         # Save plot if a save path is set
-        if self.as_bse.save_to:
-            self.save_plot("bifurcation_diagram")
-
-        plt.show()
-
-    def plot_bifurcation_diagram_old(self):
-        """
-        Plot bifurcation diagram showing attractor locations over parameter variation.
-
-        Creates a subplot for each state variable, showing how the steady states
-        change as the parameter varies. Uses k-means clustering to identify distinct
-        attractors at each parameter value.
-        """
-        if not self.as_bse.parameter_values or not self.as_bse.basin_stabilities:
-            raise ValueError("No results available. Run estimate_as_bs first.")
-
-        # Get number of states and clusters
-        n_states = self.as_bse.sampler.state_dim
-        n_clusters = len(self.as_bse.basin_stabilities[0])
-
-        # Create subplots for each state
-        fig, axes = plt.subplots(1, n_states, figsize=(5 * n_states, 4))
-        if n_states == 1:
-            axes = [axes]
-
-        # For each result entry
-        for result in self.as_bse.results:
-            param_value = result["param_value"]
-            solution = result["solution"]
-
-            # Extract final states
-            final_states = solution.y[:, -1, :]
-
-            # Use k-means to cluster the final states
-            kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-            kmeans.fit(final_states)
-            centers = kmeans.cluster_centers_
-
-            # Plot cluster centers for each state
-            for state_idx in range(n_states):
-                axes[state_idx].plot(
-                    [param_value] * len(centers),
-                    centers[:, state_idx],
-                    "k.",  # Black dots
-                    markersize=8,
-                )
-
-                axes[state_idx].set_xlabel(
-                    self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1]
-                )
-                axes[state_idx].set_ylabel(f"State {state_idx + 1}")
-                axes[state_idx].grid(True, linestyle="--", alpha=0.7)
-
-        # Link x-axis scales across subplots
-        x_min = min(ax.get_xlim()[0] for ax in axes)
-        x_max = max(ax.get_xlim()[1] for ax in axes)
-        for ax in axes:
-            ax.set_xlim(x_min, x_max)
-
-        plt.suptitle("Bifurcation Diagram")
-        plt.tight_layout()
-
-        # Save plot
         if self.as_bse.save_to:
             self.save_plot("bifurcation_diagram")
 

@@ -1,10 +1,12 @@
 """Adaptive Study Basin Stability Estimator."""
 
+import gc
 import json
 import os
 from typing import Any, TypedDict
 
 import numpy as np
+import torch
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import ClusterClassifier
@@ -113,18 +115,40 @@ class ASBasinStabilityEstimator:
 
             basin_stability = bse.estimate_bs()
 
-            # Store results
+            # Store only essential results (not the full solution to save memory)
             self.parameter_values.append(param_value)
             self.basin_stabilities.append(basin_stability)
-            self.results.append(
-                {
+
+            # Extract only necessary data from solution before storing
+            if bse.solution is not None:
+                solution_summary = {
                     "param_value": param_value,
                     "basin_stability": basin_stability,
-                    "solution": bse.solution,
+                    "labels": bse.solution.labels.copy()
+                    if bse.solution.labels is not None
+                    else None,
+                    "bifurcation_amplitudes": (
+                        bse.solution.bifurcation_amplitudes.detach().cpu().clone()
+                        if bse.solution.bifurcation_amplitudes is not None
+                        else None
+                    ),
                 }
-            )
+            else:
+                solution_summary = {
+                    "param_value": param_value,
+                    "basin_stability": basin_stability,
+                    "labels": None,
+                    "bifurcation_amplitudes": None,
+                }
+
+            self.results.append(solution_summary)
 
             print(f"Basin Stability: {basin_stability} for parameter value {param_value}")
+
+            # Explicitly free memory after each iteration
+            del bse
+            gc.collect()
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
         return self.parameter_values, self.basin_stabilities, self.results
 
