@@ -1,13 +1,10 @@
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-from torchdiffeq import odeint
-
 # --- Paste your PendulumODE code here ---
-from typing import TypedDict
-from case_study_pendulum.PendulumODE import PendulumODE
-from pybasin.ode_system import ODESystem  # Ensure pybasin is installed
 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from case_study_pendulum.PendulumODE import PendulumODE
+from torchdiffeq import odeint
 
 # Simulation parameters
 alpha = 0.1  # damping coefficient

@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
-import torch
+
 import numpy as np
+import torch
 
 
 class Sampler(ABC):
     """Abstract base class for sampling initial conditions using PyTorch."""
 
-    def __init__(self, min_limits: List[float], max_limits: List[float]):
+    def __init__(self, min_limits: list[float], max_limits: list[float]):
         """
         Initialize the sampler.
 
@@ -39,7 +39,7 @@ class Sampler(ABC):
 class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
-    def sample(self, N: int, seed: Optional[int] = 299792458) -> torch.Tensor:
+    def sample(self, N: int, seed: int | None = 299792458) -> torch.Tensor:
         generator = torch.Generator()
         if seed is not None:
             generator.manual_seed(seed)
@@ -70,7 +70,7 @@ class GridSampler(Sampler):
 class GaussianSampler(Sampler):
     """Generates samples using a Gaussian distribution around the midpoint."""
 
-    def __init__(self, min_limits: List[float], max_limits: List[float], std_factor: float = 0.2):
+    def __init__(self, min_limits: list[float], max_limits: list[float], std_factor: float = 0.2):
         super().__init__(min_limits, max_limits)
         self.std_factor = std_factor
 

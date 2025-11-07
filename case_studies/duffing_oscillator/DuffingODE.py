@@ -1,6 +1,7 @@
 from typing import TypedDict
 
 import torch
+
 from pybasin.ode_system import ODESystem
 
 

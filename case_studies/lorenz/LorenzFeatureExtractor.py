@@ -1,4 +1,5 @@
 import torch
+
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.Solution import Solution
 

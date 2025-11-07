@@ -7,15 +7,12 @@ This module provides common functionality for:
 - Data formatting
 """
 
-import os
 from pathlib import Path
-from typing import Union
 
 # Configure matplotlib to use non-GUI backend for case studies
 import matplotlib
 
 matplotlib.use("Agg")  # Use non-interactive backend
-import matplotlib.pyplot as plt
 
 
 def get_project_root() -> Path:

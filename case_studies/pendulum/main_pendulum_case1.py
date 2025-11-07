@@ -1,11 +1,10 @@
 # Pybasin Imports
+# Third Parties
 from setup_pendulum_system import setup_pendulum_system
+
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from pybasin.Plotter import Plotter
 from pybasin.utils import time_execution
-
-# Third Parties
-import numpy as np
 
 
 def main():

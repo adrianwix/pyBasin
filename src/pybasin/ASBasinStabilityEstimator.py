@@ -1,18 +1,16 @@
 """Adaptive Study Basin Stability Estimator."""
 
 import json
-from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
-from pybasin.Solver import Solver
-from pybasin.Sampler import Sampler
-from typing import Dict, Optional
-from pybasin.ode_system import ODESystem
-from pybasin.FeatureExtractor import FeatureExtractor
-from pybasin.ClusterClassifier import ClusterClassifier
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from sklearn.cluster import KMeans
-from typing import Literal, Dict, TypedDict, Union
 import os
-import numpy as np
+from typing import TypedDict
+
+from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
+from pybasin.ClusterClassifier import ClusterClassifier
+from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.ode_system import ODESystem
+from pybasin.Sampler import Sampler
+from pybasin.Solver import Solver
+from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 
 class AdaptiveStudyParams(TypedDict):
@@ -34,7 +32,7 @@ class ASBasinStabilityEstimator:
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
         as_params: AdaptiveStudyParams,
-        save_to: Optional[str] = "results",
+        save_to: str | None = "results",
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -62,7 +60,7 @@ class ASBasinStabilityEstimator:
         self.basin_stabilities = []
         self.results = []
 
-    def estimate_as_bs(self) -> Dict[int, float]:
+    def estimate_as_bs(self) -> dict[int, float]:
         """Returns list of basin stability values for each parameter value"""
         self.parameter_values = []
         self.basin_stabilities = []

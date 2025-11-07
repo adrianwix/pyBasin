@@ -1,7 +1,6 @@
 """Unit tests for BasinStabilityEstimator."""
 
 import pytest
-import numpy as np
 
 
 class TestBasinStabilityEstimator:

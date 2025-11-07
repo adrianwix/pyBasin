@@ -6,8 +6,8 @@ This script helps verify the migration to the new project structure.
 Run this after migration to ensure everything is in place.
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def check_directory_structure():

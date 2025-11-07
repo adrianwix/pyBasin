@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from pybasin.Sampler import GridSampler
 
+from pybasin.Sampler import GridSampler
 
 sampler = GridSampler(
     min_limits=(-np.pi + np.arcsin(0.5 / 1.0), -10.0),

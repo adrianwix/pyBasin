@@ -1,17 +1,15 @@
 import json
-from typing import Dict, Optional
-from typing import Optional, Dict
 import os
+
 import numpy as np
 import pandas as pd
 
-
-from pybasin.Solver import Solver
-from pybasin.Solution import Solution
-from pybasin.Sampler import Sampler
-from pybasin.ode_system import ODESystem
-from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
+from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.ode_system import ODESystem
+from pybasin.Sampler import Sampler
+from pybasin.Solution import Solution
+from pybasin.Solver import Solver
 from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
 
 
@@ -29,7 +27,7 @@ class BasinStabilityEstimator:
     """
 
     solution: Solution
-    bs_vals: Optional[Dict[int, float]]
+    bs_vals: dict[int, float] | None
 
     def __init__(
         self,
@@ -39,7 +37,7 @@ class BasinStabilityEstimator:
         solver: Solver,
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
-        save_to: Optional[str] = None,
+        save_to: str | None = None,
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -61,12 +59,12 @@ class BasinStabilityEstimator:
         self.save_to = save_to
 
         # Attributes to be populated during estimation
-        self.bs_vals: Optional[Dict[int, float]] = None
+        self.bs_vals: dict[int, float] | None = None
         self.Y0 = None
         self.solution = None
         self.amplitude_extractor = None
 
-    def estimate_bs(self) -> Dict[int, float]:
+    def estimate_bs(self) -> dict[int, float]:
         """
         Estimate basin stability by:
             1. Generating initial conditions using the sampler.

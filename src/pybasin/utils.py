@@ -1,11 +1,11 @@
-import torch
 import inspect
-from json import JSONEncoder
 import os
 import time
 from datetime import datetime
+from json import JSONEncoder
 
 import numpy as np
+import torch
 
 from pybasin.Solution import Solution
 

@@ -1,6 +1,7 @@
 import numpy as np
 from case_friction.setup_friction_system import setup_friction_system
-from pybasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator, AdaptiveStudyParams
+
+from pybasin.ASBasinStabilityEstimator import AdaptiveStudyParams, ASBasinStabilityEstimator
 from pybasin.ASPlotter import ASPlotter
 from pybasin.utils import time_execution
 

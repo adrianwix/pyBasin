@@ -1,7 +1,8 @@
 from typing import TypedDict
-from pybasin.ode_system import ODESystem
+
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.ode_system import ODESystem
 from pybasin.Sampler import UniformRandomSampler
 from pybasin.Solver import TorchDiffEqSolver
 

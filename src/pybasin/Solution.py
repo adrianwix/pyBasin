@@ -1,6 +1,7 @@
+from typing import Any
+
 import numpy as np
 import torch
-from typing import Optional, Dict, Any
 
 
 class Solution:
@@ -28,9 +29,9 @@ class Solution:
         initial_condition: torch.Tensor,
         time: torch.Tensor,
         y: torch.Tensor,
-        features: Optional[torch.Tensor] = None,
-        labels: Optional[np.ndarray] = None,
-        model_params: Optional[Dict[str, float]] = None,
+        features: torch.Tensor | None = None,
+        labels: np.ndarray | None = None,
+        model_params: dict[str, float] | None = None,
     ):
         """
         Initialize the Solution object.
@@ -84,7 +85,7 @@ class Solution:
         """
         self.features = features
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Return a summary of the solution.
 

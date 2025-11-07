@@ -1,13 +1,12 @@
-from pybasin.types import SetupProperties
+import torch
+from case_study_lorenz.LorenzFeatureExtractor import LorenzFeatureExtractor
+from case_study_lorenz.LorenzODE import LorenzODE, LorenzParams
+from sklearn.neighbors import KNeighborsClassifier
+
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.Sampler import UniformRandomSampler
 from pybasin.Solver import TorchDiffEqSolver
-
-from sklearn.neighbors import KNeighborsClassifier
-import torch
-
-from case_study_lorenz.LorenzODE import LorenzODE, LorenzParams
-from case_study_lorenz.LorenzFeatureExtractor import LorenzFeatureExtractor
+from pybasin.types import SetupProperties
 
 
 def setup_lorenz_system() -> SetupProperties:

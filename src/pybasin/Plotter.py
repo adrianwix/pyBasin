@@ -1,10 +1,10 @@
 import os
-from typing import Optional
+
 import matplotlib
 
 matplotlib.use("Agg")  # Set backend before importing pyplot
-from matplotlib import pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
 
 from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
@@ -94,7 +94,7 @@ class Plotter:
 
         plt.show()
 
-    def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: Optional[int] = None):
+    def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
@@ -134,7 +134,7 @@ class Plotter:
 
         plt.show()
 
-    def plot_templates(self, plotted_var: int, time_span: Optional[tuple] = None):
+    def plot_templates(self, plotted_var: int, time_span: tuple | None = None):
         """
         Plot trajectories for the template initial conditions.
 

@@ -1,8 +1,9 @@
 """Test configuration and fixtures for pybasin tests."""
 
-import pytest
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pytest
 
 
 @pytest.fixture

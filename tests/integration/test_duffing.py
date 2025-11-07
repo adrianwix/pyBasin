@@ -3,9 +3,8 @@
 This test validates the pybasin implementation against the MATLAB bSTAB results.
 """
 
+
 import pytest
-import numpy as np
-from pathlib import Path
 
 
 class TestDuffingOscillator:

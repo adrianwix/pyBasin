@@ -1,15 +1,16 @@
 import torch
-from pybasin.types import SetupProperties
-from pybasin.Sampler import GridSampler
-from pybasin.Solver import TorchDiffEqSolver
-from pybasin.ClusterClassifier import KNNCluster
+from case_study_duffing_oscillator.DuffingFeatureExtractor import DuffingFeatureExtractor
+
+# Local imports
+from case_study_duffing_oscillator.DuffingODE import DuffingODE, DuffingParams
 
 # External imports
 from sklearn.neighbors import KNeighborsClassifier
 
-# Local imports
-from case_study_duffing_oscillator.DuffingODE import DuffingODE, DuffingParams
-from case_study_duffing_oscillator.DuffingFeatureExtractor import DuffingFeatureExtractor
+from pybasin.ClusterClassifier import KNNCluster
+from pybasin.Sampler import GridSampler
+from pybasin.Solver import TorchDiffEqSolver
+from pybasin.types import SetupProperties
 
 
 def setup_duffing_oscillator_system() -> SetupProperties:

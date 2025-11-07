@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+
 import numpy as np
-from typing import Dict, Literal
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import DBSCAN
+from sklearn.neighbors import KNeighborsClassifier
 from torch import tensor
+
 from pybasin.FeatureExtractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
 from pybasin.Solution import Solution
@@ -23,7 +24,7 @@ class SupervisedClassifier(ClusterClassifier):
     labels: np.ndarray
     initial_conditions: tensor
 
-    def __init__(self, initial_conditions: tensor, labels: np.ndarray, ode_params: Dict):
+    def __init__(self, initial_conditions: tensor, labels: np.ndarray, ode_params: dict):
         self.labels = labels
         self.initial_conditions = initial_conditions
         self.ode_params = deepcopy(ode_params)
@@ -61,7 +62,7 @@ class KNNCluster(SupervisedClassifier):
         classifier: KNeighborsClassifier,
         initial_conditions: tensor,
         labels: np.ndarray,
-        ode_params: Dict,
+        ode_params: dict,
     ):
         if classifier is None:
             classifier = KNeighborsClassifier(**kwargs)
@@ -73,7 +74,7 @@ class KNNCluster(SupervisedClassifier):
 
 
 class UnsupervisedClassifier(ClusterClassifier):
-    def __init__(self, initial_conditions: tensor, ode_params: Dict):
+    def __init__(self, initial_conditions: tensor, ode_params: dict):
         super().__init__(initial_conditions, ode_params)
 
 

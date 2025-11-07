@@ -1,13 +1,12 @@
-from pybasin.types import SetupProperties
+import torch
+from case_friction.FrictionFeatureExtractor import FrictionFeatureExtractor
+from case_friction.FrictionODE import FrictionODE, FrictionParams
+from sklearn.neighbors import KNeighborsClassifier
+
 from pybasin.ClusterClassifier import KNNCluster
 from pybasin.Sampler import UniformRandomSampler
 from pybasin.Solver import TorchDiffEqSolver
-
-from sklearn.neighbors import KNeighborsClassifier
-import torch
-
-from case_friction.FrictionODE import FrictionODE, FrictionParams
-from case_friction.FrictionFeatureExtractor import FrictionFeatureExtractor
+from pybasin.types import SetupProperties
 
 
 def setup_friction_system() -> SetupProperties:
