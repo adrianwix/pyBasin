@@ -93,10 +93,3 @@ ignore = ["E501"]  # Line length handled by formatter
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-ignore_missing_imports = true

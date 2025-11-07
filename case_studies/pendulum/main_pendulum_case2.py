@@ -10,7 +10,7 @@ def main():
     props = setup_pendulum_system()
 
     as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
+        adaptative_parameter_values=np.arange(0.01, 0.97, 0.05),
         # adaptative_parameter_values=np.arange(0.1, 1.00, 0.2),
         adaptative_parameter_name='ode_system.params["T"]',
     )
