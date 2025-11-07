@@ -7,9 +7,9 @@ from case_study_duffing_oscillator.DuffingODE import DuffingODE, DuffingParams
 # External imports
 from sklearn.neighbors import KNeighborsClassifier
 
-from pybasin.ClusterClassifier import KNNCluster
-from pybasin.Sampler import GridSampler
-from pybasin.Solver import TorchDiffEqSolver
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.sampler import GridSampler
+from pybasin.solver import TorchDiffEqSolver
 from pybasin.types import SetupProperties
 
 

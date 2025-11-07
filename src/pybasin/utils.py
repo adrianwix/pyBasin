@@ -7,7 +7,7 @@ from json import JSONEncoder
 import numpy as np
 import torch
 
-from pybasin.Solution import Solution
+from pybasin.solution import Solution
 
 
 def time_execution(script_name, func, *args, **kwargs):

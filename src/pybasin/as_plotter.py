@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 
-from pybasin.ASBasinStabilityEstimator import ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
 
 matplotlib.use("Agg")

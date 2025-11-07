@@ -1,7 +1,7 @@
 import torch
 
-from pybasin.FeatureExtractor import FeatureExtractor
-from pybasin.Solution import Solution
+from pybasin.feature_extractor import FeatureExtractor
+from pybasin.solution import Solution
 
 # One-hot encoding for Lorenz attractor states
 # S1: positive x-mean, S2: negative x-mean

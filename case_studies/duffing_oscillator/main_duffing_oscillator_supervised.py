@@ -2,8 +2,8 @@ from case_study_duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pybasin.Plotter import Plotter
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotter import Plotter
 
 if __name__ == "__main__":
     # Use the setup function to get all system components

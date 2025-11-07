@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import torch
 
-from pybasin.Solution import Solution
+from pybasin.solution import Solution
 
 
 class FeatureExtractor(ABC):

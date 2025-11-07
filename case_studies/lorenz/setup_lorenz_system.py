@@ -3,9 +3,9 @@ from case_study_lorenz.LorenzFeatureExtractor import LorenzFeatureExtractor
 from case_study_lorenz.LorenzODE import LorenzODE, LorenzParams
 from sklearn.neighbors import KNeighborsClassifier
 
-from pybasin.ClusterClassifier import KNNCluster
-from pybasin.Sampler import UniformRandomSampler
-from pybasin.Solver import TorchDiffEqSolver
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.sampler import UniformRandomSampler
+from pybasin.solver import TorchDiffEqSolver
 from pybasin.types import SetupProperties
 
 

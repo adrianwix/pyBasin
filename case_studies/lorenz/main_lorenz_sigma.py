@@ -1,8 +1,8 @@
 import numpy as np
-from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
+from setup_lorenz_system import setup_lorenz_system
 
-from pybasin.ASBasinStabilityEstimator import AdaptiveStudyParams, ASBasinStabilityEstimator
-from pybasin.ASPlotter import ASPlotter
+from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_plotter import ASPlotter
 
 
 def main():

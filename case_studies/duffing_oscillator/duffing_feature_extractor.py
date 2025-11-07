@@ -1,7 +1,7 @@
 import torch
 
-from pybasin.FeatureExtractor import FeatureExtractor
-from pybasin.Solution import Solution
+from pybasin.feature_extractor import FeatureExtractor
+from pybasin.solution import Solution
 
 
 class DuffingFeatureExtractor(FeatureExtractor):

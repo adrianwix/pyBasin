@@ -1,10 +1,10 @@
 from typing import TypedDict
 
-from pybasin.ClusterClassifier import KNNCluster
-from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
-from pybasin.Sampler import UniformRandomSampler
-from pybasin.Solver import TorchDiffEqSolver
+from pybasin.sampler import UniformRandomSampler
+from pybasin.solver import TorchDiffEqSolver
 
 
 class SetupProperties(TypedDict):

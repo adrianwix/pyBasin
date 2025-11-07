@@ -4,12 +4,12 @@ import os
 import numpy as np
 import pandas as pd
 
-from pybasin.ClusterClassifier import ClusterClassifier, SupervisedClassifier
-from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.cluster_classifier import ClusterClassifier, SupervisedClassifier
+from pybasin.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
-from pybasin.Sampler import Sampler
-from pybasin.Solution import Solution
-from pybasin.Solver import Solver
+from pybasin.sampler import Sampler
+from pybasin.solution import Solution
+from pybasin.solver import Solver
 from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
 
 

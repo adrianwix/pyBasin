@@ -1,15 +1,15 @@
 # Third Parties
 import numpy as np
 import torch
-from PendulumFeatureExtractor import PendulumFeatureExtractor
+from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 
 # Case Study classes
-from PendulumODE import PendulumODE, PendulumParams
+from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from sklearn.neighbors import KNeighborsClassifier
 
-from pybasin.ClusterClassifier import KNNCluster
-from pybasin.Sampler import GridSampler
-from pybasin.Solver import TorchDiffEqSolver
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.sampler import GridSampler
+from pybasin.solver import TorchDiffEqSolver
 from pybasin.types import SetupProperties
 
 

@@ -4,12 +4,12 @@ import json
 import os
 from typing import TypedDict
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pybasin.ClusterClassifier import ClusterClassifier
-from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.cluster_classifier import ClusterClassifier
+from pybasin.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
-from pybasin.Sampler import Sampler
-from pybasin.Solver import Solver
+from pybasin.sampler import Sampler
+from pybasin.solver import Solver
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 

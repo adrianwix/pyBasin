@@ -2,8 +2,8 @@
 # Third Parties
 from case_study_pendulum.setup_pendulum_system import setup_pendulum_system
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pybasin.Sampler import GridSampler
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.sampler import GridSampler
 from pybasin.utils import time_execution
 
 

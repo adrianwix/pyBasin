@@ -1,7 +1,7 @@
 from case_friction.setup_friction_system import setup_friction_system
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pybasin.Plotter import Plotter
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotter import Plotter
 from pybasin.utils import time_execution
 
 

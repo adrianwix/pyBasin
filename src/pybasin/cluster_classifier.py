@@ -6,10 +6,10 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 from torch import tensor
 
-from pybasin.FeatureExtractor import FeatureExtractor
+from pybasin.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
-from pybasin.Solution import Solution
-from pybasin.Solver import Solver
+from pybasin.solution import Solution
+from pybasin.solver import Solver
 
 # TODO: Fix namings
 

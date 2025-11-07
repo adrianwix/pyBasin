@@ -2,9 +2,9 @@ import torch
 from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
 from sklearn.neighbors import KNeighborsClassifier
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
-from pybasin.ClusterClassifier import KNNCluster
-from pybasin.Plotter import Plotter
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.plotter import Plotter
 from pybasin.utils import time_execution
 
 

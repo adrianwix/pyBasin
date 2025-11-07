@@ -6,7 +6,7 @@ matplotlib.use("Agg")  # Set backend before importing pyplot
 import numpy as np
 from matplotlib import pyplot as plt
 
-from pybasin.BasinStabilityEstimator import BasinStabilityEstimator
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
 
 
