@@ -1,5 +1,5 @@
 import torch
-from case_study_lorenz.setup_lorenz_system import setup_lorenz_system
+from setup_lorenz_system import setup_lorenz_system
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
@@ -15,7 +15,7 @@ def main():
     props = setup_lorenz_system()
 
     bse = BasinStabilityEstimator(
-        N=props["N"],
+        n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],
         solver=props["solver"],
@@ -35,15 +35,17 @@ def main():
     bse.save()
 
 
+# TODO: Having example trajectories and previewing them before running the full analysis
+# seem like a useful feature to have in other case studies as well, and part of the library
 def preview_plot_templates():
     """Preview the template trajectories before running the full analysis"""
     props = setup_lorenz_system()
-    N = props["N"]
+    n = props["n"]
     ode_system = props["ode_system"]
     sampler = props["sampler"]
     solver = props["solver"]
     feature_extractor = props["feature_extractor"]
-    params = props["cluster_classifier"].ode_params
+    params = props["cluster_classifier"].ode_params # pyright: ignore[reportAttributeAccessIssue]
 
     # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
 
@@ -68,7 +70,7 @@ def preview_plot_templates():
     )
 
     bse = BasinStabilityEstimator(
-        N=N,
+        n=n,
         ode_system=ode_system,
         sampler=sampler,
         solver=solver,

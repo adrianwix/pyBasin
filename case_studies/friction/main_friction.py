@@ -1,4 +1,4 @@
-from case_friction.setup_friction_system import setup_friction_system
+from setup_friction_system import setup_friction_system
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotter import Plotter
@@ -9,7 +9,7 @@ def main():
     props = setup_friction_system()
 
     bse = BasinStabilityEstimator(
-        N=props["N"],
+        n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],
         solver=props["solver"],

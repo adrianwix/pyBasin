@@ -4,15 +4,39 @@ from typing import Generic, TypeVar
 import torch
 import torch.nn as nn
 
-P = TypeVar("P", bound=dict[str, float])
+# TypeVar for parameter dictionaries
+# Using bound=dict to allow both dict and TypedDict instances
+P = TypeVar("P")
 
 
 class ODESystem(ABC, Generic[P], nn.Module):
     """
     Abstract base class for defining an ODE system.
+
+    Type Parameters
+    ---------------
+    P : dict or TypedDict
+        The parameter dictionary type for this ODE system.
+        Should be a TypedDict subclass for best type checking.
+
+    Examples
+    --------
+    >>> from typing import TypedDict
+    >>> class MyParams(TypedDict):
+    ...     alpha: float
+    ...     beta: float
+    >>>
+    >>> class MyODE(ODESystem[MyParams]):
+    ...     def __init__(self, params: MyParams):
+    ...         super().__init__(params)
+    ...
+    ...     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    ...         # self.params is typed as MyParams
+    ...         alpha = self.params["alpha"]  # type checker knows this exists
+    ...         return torch.zeros_like(y)
     """
 
-    def __init__(self, params: P):
+    def __init__(self, params: P) -> None:
         # Initialize nn.Module
         super().__init__()  # type: ignore
         self.params = params

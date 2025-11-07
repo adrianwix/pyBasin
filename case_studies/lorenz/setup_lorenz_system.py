@@ -1,6 +1,6 @@
 import torch
-from case_study_lorenz.LorenzFeatureExtractor import LorenzFeatureExtractor
-from case_study_lorenz.LorenzODE import LorenzODE, LorenzParams
+from lorenz_feature_extractor import LorenzFeatureExtractor
+from lorenz_ode import LorenzODE, LorenzParams
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.cluster_classifier import KNNCluster
@@ -11,7 +11,7 @@ from pybasin.types import SetupProperties
 
 def setup_lorenz_system() -> SetupProperties:
     # TODO: Change back to 1 * 10**4
-    N = 1 * 10**3
+    n = 1 * 10**3
 
     # Parameters for broken butterfly system
     params: LorenzParams = {"sigma": 0.12, "r": 0.0, "b": -0.6}
@@ -45,7 +45,7 @@ def setup_lorenz_system() -> SetupProperties:
     )
 
     return {
-        "N": N,
+        "n": n,
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,

@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.cluster_classifier import SupervisedClassifier
 from pybasin.utils import generate_filename, resolve_folder
 
 
@@ -20,6 +21,8 @@ class Plotter:
         self.bse = bse
 
     def save_plot(self, plot_name: str):
+        if self.bse.save_to is None:
+            raise ValueError("save_to is not defined.")
         full_folder = resolve_folder(self.bse.save_to)
         file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
@@ -38,8 +41,20 @@ class Plotter:
         if self.bse.solution is None:
             raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
 
+        if self.bse.y0 is None:
+            raise ValueError("No initial conditions available. Please run estimate_bs() before plotting.")
+
+        if self.bse.solution.features is None:
+            raise ValueError("No features available. Please run estimate_bs() before plotting.")
+
+        if self.bse.solution.labels is None:
+            raise ValueError("No labels available. Please run estimate_bs() before plotting.")
+
+        if self.bse.bs_vals is None:
+            raise ValueError("No basin stability values available. Please run estimate_bs() before plotting.")
+
         # Extract data from each Solution instance.
-        initial_conditions = self.bse.Y0.cpu().numpy()
+        initial_conditions = self.bse.y0.cpu().numpy()
 
         features_array = self.bse.solution.features.cpu().numpy()
 
@@ -50,7 +65,7 @@ class Plotter:
 
         # 1) Bar plot for basin stability values.
         plt.subplot(2, 2, 1)
-        bar_labels, values = zip(*self.bse.bs_vals.items())
+        bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
         plt.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])
         plt.xticks(bar_labels)
         plt.ylabel("Fraction of samples")
@@ -98,8 +113,8 @@ class Plotter:
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
-        if self.bse.cluster_classifier.initial_conditions is None:
-            raise ValueError("No template solutions available.")
+        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+            raise ValueError("plot_phase requires a SupervisedClassifier with template initial conditions.")
 
         t, trajectories = self.bse.solver.integrate(
             self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
@@ -108,8 +123,8 @@ class Plotter:
         fig = plt.figure(figsize=(8, 6))
         if z_var is None:
             ax = fig.add_subplot(111)
-            for i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))
+            for _i, (label, traj) in enumerate(
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)
             ):
                 ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))
             ax.set_xlabel(f"State {x_var}")
@@ -117,8 +132,8 @@ class Plotter:
             ax.set_title("2D Phase Plot")
         else:
             ax = fig.add_subplot(111, projection="3d")
-            for i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2))
+            for _i, (label, traj) in enumerate(
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)
             ):
                 ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))
             ax.set_xlabel(f"State {x_var}")
@@ -134,7 +149,7 @@ class Plotter:
 
         plt.show()
 
-    def plot_templates(self, plotted_var: int, time_span: tuple | None = None):
+    def plot_templates(self, plotted_var: int, time_span: tuple[float, float] | None = None):
         """
         Plot trajectories for the template initial conditions.
 
@@ -142,8 +157,8 @@ class Plotter:
             plotted_var (int): Index of the variable to plot
             time_span (tuple, optional): Time range to plot (t_start, t_end)
         """
-        if self.bse.cluster_classifier.initial_conditions is None:
-            raise ValueError("No template solutions available.")
+        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+            raise ValueError("plot_templates requires a SupervisedClassifier with template initial conditions.")
 
         # Get trajectories for template initial conditions
         t, y = self.bse.solver.integrate(
@@ -153,15 +168,12 @@ class Plotter:
         plt.figure(figsize=(8, 6))
 
         # Filter time if specified
-        if time_span is not None:
-            idx = (t >= time_span[0]) & (t <= time_span[1])
-        else:
-            idx = slice(None)
+        idx = (t >= time_span[0]) & (t <= time_span[1]) if time_span is not None else slice(None)
 
         # Plot each trajectory
         # Use permute instead of transpose for 3D tensors
-        for i, (label, traj) in enumerate(
-            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2))
+        for _i, (label, traj) in enumerate(
+            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2), strict=True)
         ):
             plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")
 

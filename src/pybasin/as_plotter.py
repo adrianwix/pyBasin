@@ -28,13 +28,16 @@ class ASPlotter:
 
     def __init__(self, as_bse: ASBasinStabilityEstimator):
         """
-        Initialize the Plotter with a BasinStabilityEstimator instance.
+        Initialize the Plotter with a ASBasinStabilityEstimator instance.
 
-        :param bse: An instance of BasinStabilityEstimator.
+        :param bse: An instance of ASBasinStabilityEstimator.
         """
         self.as_bse = as_bse
 
     def save_plot(self, plot_name: str):
+        if self.as_bse.save_to is None:
+            raise ValueError("save_to is not defined.")
+
         full_folder = resolve_folder(self.as_bse.save_to)
         file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
@@ -122,10 +125,7 @@ class ASPlotter:
         temp = solution.bifurcation_amplitudes[:, dof]
 
         # If temp is a torch.Tensor, convert it to a NumPy array.
-        if hasattr(temp, "detach"):
-            temp = temp.detach().cpu().numpy()
-        else:
-            temp = np.asarray(temp)
+        temp = temp.detach().cpu().numpy() if hasattr(temp, "detach") else np.asarray(temp)
 
         # k-means clustering
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)

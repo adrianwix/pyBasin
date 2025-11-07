@@ -2314,7 +2314,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "jupyter", marker = "extra == 'case-studies'", specifier = ">=1.0.0" },
-    { name = "matplotlib", specifier = ">=3.7.0" },
+    { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "mkdocs-jupyter", marker = "extra == 'docs'", specifier = ">=0.24.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.4.0" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.24.0" },

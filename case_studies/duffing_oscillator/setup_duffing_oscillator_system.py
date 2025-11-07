@@ -1,10 +1,6 @@
 import torch
-from case_study_duffing_oscillator.DuffingFeatureExtractor import DuffingFeatureExtractor
-
-# Local imports
-from case_study_duffing_oscillator.DuffingODE import DuffingODE, DuffingParams
-
-# External imports
+from duffing_feature_extractor import DuffingFeatureExtractor
+from duffing_ode import DuffingODE, DuffingParams
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.cluster_classifier import KNNCluster
@@ -14,14 +10,14 @@ from pybasin.types import SetupProperties
 
 
 def setup_duffing_oscillator_system() -> SetupProperties:
-    N = 10000
+    n = 10000
 
     # Create ODE system instance
     params: DuffingParams = {"delta": 0.08, "k3": 1, "A": 0.2}
     ode_system = DuffingODE(params)
 
     # Instantiate sampler, solver, feature extractor, and cluster classifier
-    sampler = GridSampler(min_limits=(-1, -0.5), max_limits=(1, 1))
+    sampler = GridSampler(min_limits=[-1, -0.5], max_limits=[1, 1])
     solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
     feature_extractor = DuffingFeatureExtractor(time_steady=950)
 
@@ -54,7 +50,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     )
 
     return {
-        "N": N,
+        "n": n,
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,

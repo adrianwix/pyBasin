@@ -12,16 +12,18 @@ class Solution:
         - The initial condition used for integration.
         - The time series result from integration.
         - Features extracted from the trajectory.
-        - An optional label/classification.
+        - Optional labels/classification for each trajectory.
         - Optional model parameters that were used in the integration.
+        - Optional bifurcation amplitudes extracted from the trajectory.
 
     Attributes:
-        initial_condition (torch.Tensor): The initial condition used for integration.
-        time (np.ndarray): Time points of the solution.
-        y (torch.Tensor): State values over time (shape: (len(time), len(initial_conditions), num_states)).
-        features (Optional[np.ndarray]): Extracted features (e.g., steady-state properties).
-        label (Optional[Any]): A label assigned to the solution (e.g., classification result).
-        model_params (Optional[Dict[str, Any]]): Parameters of the ODE model.
+        initial_condition (torch.Tensor): The initial condition used for integration (shape: B, S).
+        time (torch.Tensor): Time points of the solution (shape: N).
+        y (torch.Tensor): State values over time (shape: N, B, S).
+        features (torch.Tensor | None): Extracted features (e.g., steady-state properties).
+        labels (np.ndarray | None): Labels assigned to each solution in the batch.
+        model_params (dict[str, float] | None): Parameters of the ODE model.
+        bifurcation_amplitudes (torch.Tensor | None): Maximum absolute values along time dimension.
     """
 
     def __init__(
@@ -40,7 +42,7 @@ class Solution:
         :param time: shape: (N,) => N time points
         :param y: shape: (N, B, S) => N time points, B batches, S state variables
         :param features: Optional features describing the trajectory.
-        :param label: Optional classification label for the solution.
+        :param labels: Optional classification labels for the solutions.
         :param model_params: Optional dictionary of model parameters used in the simulation.
         """
         # Assertions for shape checks
@@ -63,7 +65,7 @@ class Solution:
         self.features = features if features is not None else None
         self.labels = labels
         self.model_params = model_params
-        self.bifurcation_amplitudes = None
+        self.bifurcation_amplitudes: torch.Tensor | None = None
 
     def set_labels(self, labels: np.ndarray):
         """
@@ -91,11 +93,19 @@ class Solution:
 
         :return: Dictionary with key information about the solution.
         """
+        initial_condition_list: list[list[float]] = self.initial_condition.tolist()
+        features_list: list[list[float]] | None = None
+        if self.features is not None:
+            features_list = self.features.tolist()
+        labels_list: list[int] | None = (
+            self.labels.tolist() if self.labels is not None else None
+        )
+
         return {
-            "initial_condition": self.initial_condition.tolist(),
+            "initial_condition": initial_condition_list,
             "num_time_steps": len(self.time),
-            "trajectory_shape": self.y.shape,  # Updated to use self.y
-            "features": self.features.tolist() if self.features is not None else None,
-            "label": self.label,
+            "trajectory_shape": self.y.shape,
+            "features": features_list,
+            "labels": labels_list,
             "model_params": self.model_params,
         }

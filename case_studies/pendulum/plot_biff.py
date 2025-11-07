@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from case_study_pendulum.PendulumODE import PendulumODE
+from pendulum_ode import PendulumODE, PendulumParams
 from torchdiffeq import odeint
 
 # Simulation parameters
@@ -21,12 +21,12 @@ bifurcation_data = []
 # Sweep over the forcing parameter T
 for T in T_values:
     print(f"Solving with T={T}")
-    params = {"alpha": alpha, "T": T, "K": K}
+    params: PendulumParams = {"alpha": alpha, "T": float(T), "K": K}
     ode_system = PendulumODE(params)
     y0 = torch.tensor([[0.5, 0.0]])  # Now shape is (1, 2)
 
     # Solve the ODE using torchdiffeq's odeint
-    sol = odeint(ode_system.ode, y0, t)
+    sol: torch.Tensor = odeint(ode_system.ode, y0, t)  # type: ignore
     sol_np = sol.detach().numpy()  # shape: (num_steps, 2)
     theta_series = sol_np[transient_index:, 0, 0]
 

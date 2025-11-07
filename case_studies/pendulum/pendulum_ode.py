@@ -6,9 +6,11 @@ from pybasin.ode_system import ODESystem
 
 
 class PendulumParams(TypedDict):
-    alpha: float
-    T: float
-    K: float
+    """Parameters for the pendulum ODE system."""
+
+    alpha: float  # damping coefficient
+    T: float  # external torque
+    K: float  # stiffness coefficient
 
 
 class PendulumODE(ODESystem[PendulumParams]):
@@ -21,14 +23,14 @@ class PendulumODE(ODESystem[PendulumParams]):
         Vectorized right-hand side (RHS) for the pendulum ODE using PyTorch.
         """
         alpha = self.params["alpha"]
-        T = self.params["T"]
-        K = self.params["K"]
+        torque = self.params["T"]
+        k = self.params["K"]
 
         theta = y[..., 0]
         theta_dot = y[..., 1]
 
         dtheta_dt = theta_dot
-        dtheta_dot_dt = -alpha * theta_dot + T - K * torch.sin(theta)
+        dtheta_dot_dt = -alpha * theta_dot + torque - k * torch.sin(theta)
 
         return torch.stack([dtheta_dt, dtheta_dot_dt], dim=1)
 
@@ -39,10 +41,10 @@ class PendulumODE(ODESystem[PendulumParams]):
         The string is constructed using multiple line f-string interpolation.
         """
         alpha = self.params["alpha"]
-        T = self.params["T"]
-        K = self.params["K"]
+        torque = self.params["T"]
+        k = self.params["K"]
         description = (
             f"  dtheta/dt      = theta_dot\n"
-            f"  dtheta_dot/dt  = -({alpha}) * theta_dot + ({T}) - ({K}) * sin(theta)\n"
+            f"  dtheta_dot/dt  = -({alpha}) * theta_dot + ({torque}) - ({k}) * sin(theta)\n"
         )
         return description

@@ -1,0 +1,20 @@
+[
+    {
+        "label": "FP",
+        "basinStability": 0.152,
+        "absNumMembers": 1520,
+        "standardError": 0.0035902089075707
+    },
+    {
+        "label": "LC",
+        "basinStability": 0.848,
+        "absNumMembers": 8480,
+        "standardError": 0.0035902089075707006
+    },
+    {
+        "label": "NaN",
+        "basinStability": 0,
+        "absNumMembers": 0,
+        "standardError": 0
+    }
+]

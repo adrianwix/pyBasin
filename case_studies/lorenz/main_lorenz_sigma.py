@@ -7,12 +7,6 @@ from pybasin.as_plotter import ASPlotter
 
 def main():
     props = setup_lorenz_system()
-    N = props["N"]
-    ode_system = props["ode_system"]
-    sampler = props["sampler"]
-    solver = props["solver"]
-    feature_extractor = props["feature_extractor"]
-    knn_cluster = props["cluster_classifier"]
 
     as_params = AdaptiveStudyParams(
         # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
@@ -21,12 +15,12 @@ def main():
     )
 
     bse = ASBasinStabilityEstimator(
-        N=N,
-        ode_system=ode_system,
-        sampler=sampler,
-        solver=solver,
-        feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster,
+        n=props["n"],
+        ode_system=props["ode_system"],
+        sampler=props["sampler"],
+        solver=props["solver"],
+        feature_extractor=props["feature_extractor"],
+        cluster_classifier=props["cluster_classifier"],
         as_params=as_params,
         save_to="results_sigma",
     )

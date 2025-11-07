@@ -22,12 +22,12 @@ class Sampler(ABC):
         self.state_dim = len(min_limits)
 
     @abstractmethod
-    def sample(self, N: int) -> torch.Tensor:
+    def sample(self, n: int) -> torch.Tensor:
         """
-        Generate N samples for the initial conditions.
+        Generate n samples for the initial conditions.
 
-        :param N: Number of samples.
-        :return: Sampled initial conditions as a tensor of shape (N, state_dim).
+        :param n: Number of samples.
+        :return: Sampled initial conditions as a tensor of shape (n, state_dim).
         """
         pass
 
@@ -39,12 +39,12 @@ class Sampler(ABC):
 class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
-    def sample(self, N: int, seed: int | None = 299792458) -> torch.Tensor:
+    def sample(self, n: int, seed: int | None = 299792458) -> torch.Tensor:
         generator = torch.Generator()
         if seed is not None:
             generator.manual_seed(seed)
         return (
-            torch.rand(N, self.state_dim, generator=generator) * (self.max_limits - self.min_limits)
+            torch.rand(n, self.state_dim, generator=generator) * (self.max_limits - self.min_limits)
             + self.min_limits
         )
 
@@ -52,12 +52,12 @@ class UniformRandomSampler(Sampler):
 class GridSampler(Sampler):
     """Generates evenly spaced samples in a grid pattern within the specified range."""
 
-    def sample(self, N: int) -> torch.Tensor:
-        n_per_dim = int(np.floor(N ** (1 / self.state_dim)))
+    def sample(self, n: int) -> torch.Tensor:
+        n_per_dim = int(np.floor(n ** (1 / self.state_dim)))
 
         grid_points = [
             torch.linspace(min_val, max_val, n_per_dim)
-            for min_val, max_val in zip(self.min_limits, self.max_limits)
+            for min_val, max_val in zip(self.min_limits, self.max_limits, strict=True)
         ]
 
         grid_matrices = torch.meshgrid(*grid_points, indexing="ij")
@@ -74,10 +74,10 @@ class GaussianSampler(Sampler):
         super().__init__(min_limits, max_limits)
         self.std_factor = std_factor
 
-    def sample(self, N: int) -> torch.Tensor:
+    def sample(self, n: int) -> torch.Tensor:
         mean = (self.min_limits + self.max_limits) / 2
         std = self.std_factor * (self.max_limits - self.min_limits)
 
-        samples = torch.normal(mean.repeat(N, 1), std.repeat(N, 1))
+        samples = torch.normal(mean.repeat(n, 1), std.repeat(n, 1))
 
         return torch.clamp(samples, self.min_limits, self.max_limits)

@@ -82,7 +82,7 @@ class NumpyEncoder(JSONEncoder):
                 "features": obj.features.tolist() if obj.features is not None else None,
                 "label": obj.label,
             }
-        return super(NumpyEncoder, self).default(obj)
+        return super().default(obj)
 
 
 def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

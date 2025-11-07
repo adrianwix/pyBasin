@@ -1,12 +1,9 @@
-# Third Parties
 import numpy as np
 import torch
-from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
-
-# Case Study classes
-from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
+from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import GridSampler
 from pybasin.solver import TorchDiffEqSolver
@@ -14,7 +11,7 @@ from pybasin.types import SetupProperties
 
 
 def setup_pendulum_system() -> SetupProperties:
-    N = 10000
+    n = 10000
 
     # Define the parameters of the pendulum
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
@@ -25,8 +22,8 @@ def setup_pendulum_system() -> SetupProperties:
     # Define sampling limits based on the pendulum parameters.
     # Here the angular limits for theta are adjusted using arcsin(T/K).
     sampler = GridSampler(
-        min_limits=(-np.pi + np.arcsin(params["T"] / params["K"]), -10.0),
-        max_limits=(np.pi + np.arcsin(params["T"] / params["K"]), 10.0),
+        min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
+        max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
     )
 
     # Create the solver with specified integration time and frequency.
@@ -57,7 +54,7 @@ def setup_pendulum_system() -> SetupProperties:
     )
 
     return {
-        "N": N,
+        "n": n,
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,

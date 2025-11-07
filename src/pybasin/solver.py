@@ -134,7 +134,9 @@ class TorchDiffEqSolver(Solver):
         self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         try:
-            y_torch = odeint(ode_system, y0, t_eval, rtol=1e-8, atol=1e-6)
+            # odeint returns a torch.Tensor of shape (len(t_eval), len(y0))
+            # Type checker incorrectly infers tuple return type, but runtime is torch.Tensor
+            y_torch: torch.Tensor = odeint(ode_system, y0, t_eval, rtol=1e-8, atol=1e-6)  # type: ignore
         except RuntimeError as e:
             raise e
         return t_eval, y_torch

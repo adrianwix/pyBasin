@@ -11,7 +11,7 @@ def main():
     props = setup_pendulum_system()
 
     bse = BasinStabilityEstimator(
-        N=props["N"],
+        n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],
         solver=props["solver"],

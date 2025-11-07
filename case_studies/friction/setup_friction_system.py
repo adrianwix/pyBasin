@@ -1,6 +1,6 @@
 import torch
-from case_friction.FrictionFeatureExtractor import FrictionFeatureExtractor
-from case_friction.FrictionODE import FrictionODE, FrictionParams
+from friction_feature_extractor import FrictionFeatureExtractor
+from friction_ode import FrictionODE, FrictionParams
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.cluster_classifier import KNNCluster
@@ -10,7 +10,7 @@ from pybasin.types import SetupProperties
 
 
 def setup_friction_system() -> SetupProperties:
-    N = 1 * 10**3  # Number of samples as in setup_friction.m
+    n = 1 * 10**3  # Number of samples as in setup_friction.m
 
     # Parameters from setup_friction.m
     params: FrictionParams = {
@@ -66,7 +66,7 @@ def setup_friction_system() -> SetupProperties:
     )
 
     return {
-        "N": N,
+        "n": n,
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,

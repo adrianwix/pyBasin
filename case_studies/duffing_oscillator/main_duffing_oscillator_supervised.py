@@ -1,4 +1,4 @@
-from case_study_duffing_oscillator.setup_duffing_oscillator_system import (
+from setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     setup = setup_duffing_oscillator_system()
 
     bse = BasinStabilityEstimator(
-        N=setup["N"],
+        n=setup["n"],
         ode_system=setup["ode_system"],
         sampler=setup["sampler"],
         solver=setup["solver"],

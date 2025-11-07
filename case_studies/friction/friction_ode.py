@@ -44,7 +44,7 @@ class FrictionODE(ODESystem[FrictionParams]):
         k_smooth = 50  # Controls transition smoothness
 
         # Inlined friction force calculation
-        Ffric = (
+        f_fric = (
             mud + mud * (musd - 1.0) * torch.exp(-torch.abs(vrel) / v0) + muv * torch.abs(vrel) / v0
         )
 
@@ -52,10 +52,10 @@ class FrictionODE(ODESystem[FrictionParams]):
         trans_condition = torch.abs(disp + 2 * xi * vel) > mud * musd
 
         smooth_sign_vrel = torch.tanh(k_smooth * vrel)
-        smooth_sign_Ffric = torch.tanh(k_smooth * Ffric)
+        smooth_sign_ffric = torch.tanh(k_smooth * f_fric)
 
-        slip_vel = -disp - 2 * xi * vel - smooth_sign_vrel * Ffric
-        trans_vel = -disp - 2 * xi * vel + mud * musd * smooth_sign_Ffric
+        slip_vel = -disp - 2 * xi * vel - smooth_sign_vrel * f_fric
+        trans_vel = -disp - 2 * xi * vel + mud * musd * smooth_sign_ffric
         stick_vel = -(vel - v_d)
 
         dydt = torch.stack(
