@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import numpy as np
@@ -62,7 +64,7 @@ class BasinStabilityEstimator:
         self.y0: torch.Tensor | None = None
         self.solution: Solution | None = None
 
-    def estimate_bs(self) -> dict[str, float]:
+    def estimate_bs(self, parallel_integration: bool = True) -> dict[str, float]:
         """
         Estimate basin stability by:
             1. Generating initial conditions using the sampler.
@@ -76,45 +78,98 @@ class BasinStabilityEstimator:
             - self.solution
             - self.bs_vals
 
+        :param parallel_integration: If True and using SupervisedClassifier, run main integration
+                                     and template integration in parallel (default: True).
         :return: A dictionary of basin stability values per class.
         """
         print("\nStarting Basin Stability Estimation...")
+        total_start = time.perf_counter()
 
         print("\n1. Generating initial conditions...")
+        t1 = time.perf_counter()
         self.y0 = self.sampler.sample(self.n)
-        print(f"   Generated {self.n} initial conditions")
+        t1_elapsed = time.perf_counter() - t1
+        print(f"   Generated {self.n} initial conditions ({t1_elapsed:.4f}s)")
 
-        print("\n2. Integrating ODE system...")
-        t, y = self.solver.integrate(self.ode_system, self.y0)
-        print(f"   Integration complete - trajectory shape: {y.shape}")
+        # Step 2: Integration (possibly parallel with classifier fitting)
+        if parallel_integration and isinstance(self.cluster_classifier, SupervisedClassifier):
+            print("\n2. Integrating ODE system AND fitting classifier in parallel...")
+            t2 = time.perf_counter()
+
+            # Run both integrations in parallel using threads
+            # Threads work for GPU operations because PyTorch releases the GIL during CUDA kernels
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                # Submit main integration
+                main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)
+
+                # Submit classifier fitting (which does its own integration)
+                classifier_future = executor.submit(
+                    self.cluster_classifier.fit,
+                    self.solver,
+                    self.ode_system,
+                    self.feature_extractor,
+                )
+
+                # Wait for both to complete
+                t, y = main_future.result()
+                classifier_future.result()  # Just wait for completion
+
+            t2_elapsed = time.perf_counter() - t2
+            print(
+                f"   Both integrations complete - trajectory shape: {y.shape} ({t2_elapsed:.4f}s)"
+            )
+        else:
+            # Sequential execution (original behavior)
+            if isinstance(self.cluster_classifier, SupervisedClassifier):
+                print("\n2a. Fitting classifier with template data...")
+                t2a = time.perf_counter()
+                self.cluster_classifier.fit(
+                    solver=self.solver,
+                    ode_system=self.ode_system,
+                    feature_extractor=self.feature_extractor,
+                )
+                t2a_elapsed = time.perf_counter() - t2a
+                print(f"    Classifier fitted ({t2a_elapsed:.4f}s)")
+
+            print("\n2b. Integrating ODE system...")
+            t2 = time.perf_counter()
+            t, y = self.solver.integrate(self.ode_system, self.y0)
+            t2_elapsed = time.perf_counter() - t2
+            print(f"    Integration complete - trajectory shape: {y.shape} ({t2_elapsed:.4f}s)")
 
         print("\n3. Creating Solution object...")
+        t3 = time.perf_counter()
         self.solution = Solution(initial_condition=self.y0, time=t, y=y)
 
         # Always compute bifurcation amplitudes
         self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
+        t3_elapsed = time.perf_counter() - t3
+        print(f"   Solution created ({t3_elapsed:.4f}s)")
 
         print("\n4. Extracting features...")
+        t4 = time.perf_counter()
         features = self.feature_extractor.extract_features(self.solution)
         self.solution.set_features(features)
-        print(f"   Features shape: {features.shape}")
+        t4_elapsed = time.perf_counter() - t4
+        print(f"   Features shape: {features.shape} ({t4_elapsed:.4f}s)")
 
         print("\n5. Performing classification...")
-        if isinstance(self.cluster_classifier, SupervisedClassifier):
-            print("   Fitting classifier with template data...")
-            self.cluster_classifier.fit(
-                solver=self.solver,
-                ode_system=self.ode_system,
-                feature_extractor=self.feature_extractor,
-            )
+        t5 = time.perf_counter()
 
         # Convert features to numpy for classifier
+        t5_pred = time.perf_counter()
         features_np = features.detach().cpu().numpy()
         labels = self.cluster_classifier.predict_labels(features_np)
         self.solution.set_labels(labels)
-        print("   Classification complete")
+        t5_pred_elapsed = time.perf_counter() - t5_pred
+        t5_elapsed = time.perf_counter() - t5
+        print(
+            f"   Classification complete - prediction: {t5_pred_elapsed:.4f}s, total: {t5_elapsed:.4f}s"
+        )
 
         print("\n6. Computing basin stability values...")
+        t6 = time.perf_counter()
         unique_labels, counts = np.unique(labels, return_counts=True)
 
         self.bs_vals = {str(label): 0.0 for label in unique_labels}
@@ -128,7 +183,20 @@ class BasinStabilityEstimator:
             self.bs_vals[str(label)] = fraction
             print(f"   {label}: {fraction:.3f}")
 
-        print("\nBasin Stability Estimation Complete!")
+        t6_elapsed = time.perf_counter() - t6
+        print(f"   BS values computed ({t6_elapsed:.4f}s)")
+
+        total_elapsed = time.perf_counter() - total_start
+        print(f"\nBasin Stability Estimation Complete! Total time: {total_elapsed:.4f}s")
+        print("\n=== TIMING BREAKDOWN ===")
+        print(f"1. Sampling:        {t1_elapsed:8.4f}s ({t1_elapsed / total_elapsed * 100:5.1f}%)")
+        print(f"2. Integration:     {t2_elapsed:8.4f}s ({t2_elapsed / total_elapsed * 100:5.1f}%)")
+        print(f"3. Solution/Amps:   {t3_elapsed:8.4f}s ({t3_elapsed / total_elapsed * 100:5.1f}%)")
+        print(f"4. Features:        {t4_elapsed:8.4f}s ({t4_elapsed / total_elapsed * 100:5.1f}%)")
+        print(f"5. Classification:  {t5_elapsed:8.4f}s ({t5_elapsed / total_elapsed * 100:5.1f}%)")
+        print(f"6. BS computation:  {t6_elapsed:8.4f}s ({t6_elapsed / total_elapsed * 100:5.1f}%)")
+        print("========================")
+
         return self.bs_vals
 
     def save(self) -> None:
