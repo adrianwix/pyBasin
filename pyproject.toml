@@ -2,13 +2,16 @@
 name = "pybasin"
 version = "0.1.0"
 description = "Basin stability estimation for dynamical systems"
-authors = [
-    {name = "Adrian Wix", email = "your.email@example.com"}
-]
+authors = [{ name = "Adrian Wix", email = "your.email@example.com" }]
 readme = "README.md"
-license = {text = "GPL-3.0-or-later"}
+license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.11"
-keywords = ["dynamical systems", "basin stability", "nonlinear dynamics", "attractors"]
+keywords = [
+    "dynamical systems",
+    "basin stability",
+    "nonlinear dynamics",
+    "attractors",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -30,25 +33,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "mypy>=1.5.0",
-    "ruff>=0.1.0",
-]
+dev = ["pytest>=7.4.0", "pytest-cov>=4.1.0", "ruff>=0.1.0"]
 docs = [
     "mkdocs-material>=9.4.0",
     "mkdocstrings[python]>=0.24.0",
     "mkdocs-jupyter>=0.24.0",
 ]
-case-studies = [
-    "jupyter>=1.0.0",
-    "openpyxl>=3.1.0",
-    "notebook>=7.0.0",
-]
-all = [
-    "pybasin[dev,docs,case-studies]",
-]
+case-studies = ["jupyter>=1.0.0", "openpyxl>=3.1.0", "notebook>=7.0.0"]
+all = ["pybasin[dev,docs,case-studies]"]
 
 [build-system]
 requires = ["hatchling"]
@@ -60,11 +52,7 @@ packages = ["src/pybasin"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = [
-    "--strict-markers",
-    "--strict-config",
-    "-ra",
-]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
 
 [tool.ruff]
 line-length = 100
@@ -83,10 +71,10 @@ select = [
     "C4",  # flake8-comprehensions
     "SIM", # flake8-simplify
 ]
-ignore = ["E501"]  # Line length handled by formatter
+ignore = ["E501"] # Line length handled by formatter
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
+"__init__.py" = ["F401"] # Allow unused imports in __init__.py
 
 [tool.ruff.format]
 # Use Ruff's formatter (similar to Black)

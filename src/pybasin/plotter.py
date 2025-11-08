@@ -42,7 +42,9 @@ class Plotter:
             raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
 
         if self.bse.y0 is None:
-            raise ValueError("No initial conditions available. Please run estimate_bs() before plotting.")
+            raise ValueError(
+                "No initial conditions available. Please run estimate_bs() before plotting."
+            )
 
         if self.bse.solution.features is None:
             raise ValueError("No features available. Please run estimate_bs() before plotting.")
@@ -51,7 +53,9 @@ class Plotter:
             raise ValueError("No labels available. Please run estimate_bs() before plotting.")
 
         if self.bse.bs_vals is None:
-            raise ValueError("No basin stability values available. Please run estimate_bs() before plotting.")
+            raise ValueError(
+                "No basin stability values available. Please run estimate_bs() before plotting."
+            )
 
         # Extract data from each Solution instance.
         initial_conditions = self.bse.y0.cpu().numpy()
@@ -114,11 +118,16 @@ class Plotter:
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
         if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
-            raise ValueError("plot_phase requires a SupervisedClassifier with template initial conditions.")
+            raise ValueError(
+                "plot_phase requires a SupervisedClassifier with template initial conditions."
+            )
 
         t, trajectories = self.bse.solver.integrate(
             self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
         )
+
+        # Move tensors to CPU for plotting
+        trajectories = trajectories.cpu()
 
         fig = plt.figure(figsize=(8, 6))
         if z_var is None:
@@ -158,12 +167,18 @@ class Plotter:
             time_span (tuple, optional): Time range to plot (t_start, t_end)
         """
         if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
-            raise ValueError("plot_templates requires a SupervisedClassifier with template initial conditions.")
+            raise ValueError(
+                "plot_templates requires a SupervisedClassifier with template initial conditions."
+            )
 
         # Get trajectories for template initial conditions
         t, y = self.bse.solver.integrate(
             self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
         )
+
+        # Move tensors to CPU for plotting
+        t = t.cpu()
+        y = y.cpu()
 
         plt.figure(figsize=(8, 6))
 

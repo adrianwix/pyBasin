@@ -7,18 +7,27 @@ import torch
 class Sampler(ABC):
     """Abstract base class for sampling initial conditions using PyTorch."""
 
-    def __init__(self, min_limits: list[float], max_limits: list[float]):
+    def __init__(self, min_limits: list[float], max_limits: list[float], device: str | None = None):
         """
         Initialize the sampler.
 
         :param min_limits: List of minimum values for each state.
         :param max_limits: List of maximum values for each state.
+        :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         """
         assert len(min_limits) == len(max_limits), (
             "min_limits and max_limits must have the same length"
         )
-        self.min_limits = torch.tensor(min_limits)
-        self.max_limits = torch.tensor(max_limits)
+
+        # Auto-detect device if not specified
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = torch.device(device)
+
+        # Use float32 for GPU efficiency (5-10x faster than float64)
+        self.min_limits = torch.tensor(min_limits, dtype=torch.float32, device=self.device)
+        self.max_limits = torch.tensor(max_limits, dtype=torch.float32, device=self.device)
         self.state_dim = len(min_limits)
 
     @abstractmethod
@@ -40,11 +49,12 @@ class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
     def sample(self, n: int, seed: int | None = 299792458) -> torch.Tensor:
-        generator = torch.Generator()
+        generator = torch.Generator(device=self.device)
         if seed is not None:
             generator.manual_seed(seed)
         return (
-            torch.rand(n, self.state_dim, generator=generator) * (self.max_limits - self.min_limits)
+            torch.rand(n, self.state_dim, generator=generator, device=self.device)
+            * (self.max_limits - self.min_limits)
             + self.min_limits
         )
 
@@ -58,7 +68,7 @@ class GridSampler(Sampler):
         n_per_dim = int(np.ceil(n ** (1 / self.state_dim)))
 
         grid_points = [
-            torch.linspace(min_val, max_val, n_per_dim)
+            torch.linspace(min_val.item(), max_val.item(), n_per_dim, device=self.device)
             for min_val, max_val in zip(self.min_limits, self.max_limits, strict=True)
         ]
 
@@ -72,8 +82,14 @@ class GridSampler(Sampler):
 class GaussianSampler(Sampler):
     """Generates samples using a Gaussian distribution around the midpoint."""
 
-    def __init__(self, min_limits: list[float], max_limits: list[float], std_factor: float = 0.2):
-        super().__init__(min_limits, max_limits)
+    def __init__(
+        self,
+        min_limits: list[float],
+        max_limits: list[float],
+        std_factor: float = 0.2,
+        device: str | None = None,
+    ):
+        super().__init__(min_limits, max_limits, device)
         self.std_factor = std_factor
 
     def sample(self, n: int) -> torch.Tensor:

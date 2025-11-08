@@ -72,16 +72,22 @@ class ASBasinStabilityEstimator:
         """
         Estimate basin stability for each parameter value.
 
+        Uses GPU acceleration automatically when available for significant performance gains.
+
         :return: Tuple of (parameter_values, basin_stabilities, results)
         """
         self.parameter_values = []
         self.basin_stabilities = []
+        self.results = []
 
         print(
             f"\nEstimating Basin Stability for parameter: {self.as_params['adaptative_parameter_name']}"
         )
+        print(f"Parameter values: {self.as_params['adaptative_parameter_values']}")
 
-        print(f"\nParameter values: {self.as_params['adaptative_parameter_values']}")
+        # Check if GPU is available
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Computing device: {device}")
 
         for param_value in self.as_params["adaptative_parameter_values"]:
             # Update parameter using eval
@@ -148,7 +154,8 @@ class ASBasinStabilityEstimator:
             # Explicitly free memory after each iteration
             del bse
             gc.collect()
-            torch.cuda.empty_cache() if torch.cuda.is_available() else None
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
         return self.parameter_values, self.basin_stabilities, self.results
 
