@@ -13,6 +13,10 @@ from pybasin.types import SetupProperties
 def setup_pendulum_system() -> SetupProperties:
     n = 10000
 
+    # Auto-detect device (use GPU if available)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Setting up pendulum system on device: {device}")
+
     # Define the parameters of the pendulum
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 
@@ -24,10 +28,11 @@ def setup_pendulum_system() -> SetupProperties:
     sampler = GridSampler(
         min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
         max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
+        device=device,
     )
 
     # Create the solver with specified integration time and frequency.
-    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25)
+    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25, device=device)
 
     # Instantiate the feature extractor with a steady state time.
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
@@ -39,6 +44,7 @@ def setup_pendulum_system() -> SetupProperties:
             [2.7, 0.0],  # LC: limit cycle
         ],
         dtype=torch.float32,
+        device=device,
     )
     classifier_labels = ["FP", "LC"]
 

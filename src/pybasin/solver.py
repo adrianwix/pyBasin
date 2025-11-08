@@ -17,24 +17,33 @@ class Solver(ABC):
     The cache is stored both in-memory and on disk.
     The cache key is built using:
       - The solver class name,
-      - The ODE system’s string representation via ode_system.get_str(),
+      - The ODE system's string representation via ode_system.get_str(),
       - The serialized initial conditions (y0),
       - The serialized evaluation time points (t_eval).
     The persistent cache is stored in the folder given by resolve_folder("cache").
     """
 
-    def __init__(self, time_span: tuple[float, float], fs: float, **kwargs):
+    def __init__(
+        self, time_span: tuple[float, float], fs: float, device: str | None = None, **kwargs
+    ):
         """
         Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param fs: Sampling frequency (Hz) – number of samples per time unit.
+        :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         """
         self.time_span = time_span
         self.fs = fs
         self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
         self.params = kwargs  # Additional solver parameters
         self._cache_dir = resolve_folder("cache")  # Persistent cache folder
+
+        # Auto-detect device if not specified
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = torch.device(device)
 
     def _build_cache_key(
         self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
@@ -66,7 +75,21 @@ class Solver(ABC):
         :return: Tuple (t_eval, y_values) where y_values is the solution.
         """
         t_start, t_end = self.time_span
-        t_eval = torch.linspace(t_start, t_end, self.n_steps, dtype=torch.float64)
+        # Use float32 for GPU efficiency (5-10x faster than float64 on consumer GPUs)
+        t_eval = torch.linspace(
+            t_start, t_end, self.n_steps, dtype=torch.float32, device=self.device
+        )
+
+        # Move y0 to the correct device if needed
+        if y0.device != self.device:
+            y0 = y0.to(self.device)
+
+        # Ensure y0 is float32 for GPU efficiency
+        if y0.dtype != torch.float32:
+            y0 = y0.to(torch.float32)
+
+        # Move ODE system to the correct device
+        ode_system = ode_system.to(self.device)
 
         # Build the unique cache key.
         cache_key = self._build_cache_key(ode_system, y0, t_eval)
@@ -77,8 +100,9 @@ class Solver(ABC):
             print(f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
             try:
                 with open(cache_file, "rb") as f:
-                    result = pickle.load(f)
-                return result
+                    t_cached, y_cached = pickle.load(f)
+                    # Move cached results to the correct device
+                    return t_cached.to(self.device), y_cached.to(self.device)
             except EOFError:
                 print(
                     "EOFError: The cache file may be corrupted. Deleting it and proceeding without cache."
@@ -86,8 +110,9 @@ class Solver(ABC):
                 os.remove(cache_file)
 
         # Compute the integration if not cached.
-        print(f"[{self.__class__.__name__}] Cache miss. Integrating...")
+        print(f"[{self.__class__.__name__}] Cache miss. Integrating on {self.device}...")
         result = self._integrate(ode_system, y0, t_eval)
+        print(f"[{self.__class__.__name__}] Integration completed.")
 
         # Check available disk space (in GB)
         usage = shutil.disk_usage(os.path.dirname(cache_file))
@@ -96,13 +121,15 @@ class Solver(ABC):
             print(f"\nWarning: Only {free_gb:.2f}GB free space available.")
 
         try:
+            # Move results to CPU before caching to avoid device issues
+            t_cpu, y_cpu = result[0].cpu(), result[1].cpu()
             with open(cache_file, "wb") as f:
-                pickle.dump(result, f)
+                pickle.dump((t_cpu, y_cpu), f)
         except OSError as e:
             print(f"Error during pickle.dump: {e}")
             raise
 
-        print(f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
+        # print(f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
         return result
 
     @abstractmethod
