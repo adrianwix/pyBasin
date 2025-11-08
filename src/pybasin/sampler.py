@@ -19,11 +19,16 @@ class Sampler(ABC):
             "min_limits and max_limits must have the same length"
         )
 
-        # Auto-detect device if not specified
+        # Auto-detect device if not specified and normalize cuda to cuda:0
         if device is None:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
-            self.device = torch.device(device)
+            # Normalize "cuda" to "cuda:0" for consistency
+            dev = torch.device(device)
+            if dev.type == "cuda" and dev.index is None:
+                self.device = torch.device("cuda:0")
+            else:
+                self.device = dev
 
         # Use float32 for GPU efficiency (5-10x faster than float64)
         self.min_limits = torch.tensor(min_limits, dtype=torch.float32, device=self.device)

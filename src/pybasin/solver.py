@@ -1,12 +1,9 @@
-import hashlib
-import os
-import pickle
-import shutil
 from abc import ABC, abstractmethod
 
 import torch
 from torchdiffeq import odeint
 
+from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
 from pybasin.utils import resolve_folder
 
@@ -37,31 +34,35 @@ class Solver(ABC):
         self.fs = fs
         self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
         self.params = kwargs  # Additional solver parameters
-        self._cache_dir = resolve_folder("cache")  # Persistent cache folder
 
-        # Auto-detect device if not specified
+        # Auto-detect device if not specified and normalize cuda to cuda:0
         if device is None:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
-            self.device = torch.device(device)
+            # Normalize "cuda" to "cuda:0" for consistency
+            dev = torch.device(device)
+            if dev.type == "cuda" and dev.index is None:
+                self.device = torch.device("cuda:0")
+            else:
+                self.device = dev
 
-    def _build_cache_key(
-        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
-    ) -> str:
-        """
-        Build a unique cache key based on:
-          - The solver type,
-          - The string representation of the ODE system,
-          - The contents of y0 and t_eval.
-        """
-        key_data = (
-            self.__class__.__name__,
-            ode_system.get_str(),  # String representation of the ODE system
-            y0.detach().cpu().numpy().tobytes(),
-            t_eval.detach().cpu().numpy().tobytes(),
+        self._cache_manager = CacheManager(resolve_folder("cache"))
+
+    def _prepare_tensors(self, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Prepare time evaluation points and initial conditions with correct device and dtype."""
+        t_start, t_end = self.time_span
+        # Use float32 for GPU efficiency (5-10x faster than float64 on consumer GPUs)
+        t_eval = torch.linspace(
+            t_start, t_end, self.n_steps, dtype=torch.float32, device=self.device
         )
-        key_bytes = pickle.dumps(key_data)
-        return hashlib.md5(key_bytes).hexdigest()
+
+        # Warn if y0 is on wrong device or has wrong dtype
+        if y0.device != self.device:
+            print(f"Warning: y0 is on device {y0.device} but solver expects {self.device}")
+        if y0.dtype != torch.float32:
+            print(f"Warning: y0 has dtype {y0.dtype} but solver expects torch.float32")
+
+        return t_eval, y0
 
     def integrate(
         self, ode_system: ODESystem, y0: torch.Tensor
@@ -74,63 +75,29 @@ class Solver(ABC):
         :param y0: Initial conditions.
         :return: Tuple (t_eval, y_values) where y_values is the solution.
         """
-        t_start, t_end = self.time_span
-        # Use float32 for GPU efficiency (5-10x faster than float64 on consumer GPUs)
-        t_eval = torch.linspace(
-            t_start, t_end, self.n_steps, dtype=torch.float32, device=self.device
-        )
-
-        # Move y0 to the correct device if needed
-        if y0.device != self.device:
-            y0 = y0.to(self.device)
-
-        # Ensure y0 is float32 for GPU efficiency
-        if y0.dtype != torch.float32:
-            y0 = y0.to(torch.float32)
+        # Prepare tensors with correct device and dtype
+        t_eval, y0 = self._prepare_tensors(y0)
 
         # Move ODE system to the correct device
         ode_system = ode_system.to(self.device)
 
-        # Build the unique cache key.
-        cache_key = self._build_cache_key(ode_system, y0, t_eval)
-        cache_file = os.path.join(self._cache_dir, f"{cache_key}.pkl")
+        # Check cache
+        cache_key = self._cache_manager.build_key(self.__class__.__name__, ode_system, y0, t_eval)
+        cached_result = self._cache_manager.load(cache_key, self.device)
 
-        # Check persistent cache on disk.
-        if os.path.exists(cache_file):
-            print(f"[{self.__class__.__name__}] Loading integration result from persistent cache.")
-            try:
-                with open(cache_file, "rb") as f:
-                    t_cached, y_cached = pickle.load(f)
-                    # Move cached results to the correct device
-                    return t_cached.to(self.device), y_cached.to(self.device)
-            except EOFError:
-                print(
-                    "EOFError: The cache file may be corrupted. Deleting it and proceeding without cache."
-                )
-                os.remove(cache_file)
+        if cached_result is not None:
+            print(f"[{self.__class__.__name__}] Loaded result from cache.")
+            return cached_result
 
-        # Compute the integration if not cached.
+        # Compute integration if not cached
         print(f"[{self.__class__.__name__}] Cache miss. Integrating on {self.device}...")
-        result = self._integrate(ode_system, y0, t_eval)
+        t_result, y_result = self._integrate(ode_system, y0, t_eval)
         print(f"[{self.__class__.__name__}] Integration completed.")
 
-        # Check available disk space (in GB)
-        usage = shutil.disk_usage(os.path.dirname(cache_file))
-        free_gb = usage.free / (1024**3)
-        if free_gb < 1:  # set a threshold (e.g., 1GB)
-            print(f"\nWarning: Only {free_gb:.2f}GB free space available.")
+        # Save to cache
+        self._cache_manager.save(cache_key, t_result, y_result)
 
-        try:
-            # Move results to CPU before caching to avoid device issues
-            t_cpu, y_cpu = result[0].cpu(), result[1].cpu()
-            with open(cache_file, "wb") as f:
-                pickle.dump((t_cpu, y_cpu), f)
-        except OSError as e:
-            print(f"Error during pickle.dump: {e}")
-            raise
-
-        # print(f"[{self.__class__.__name__}] Integration result cached to file: {cache_file}")
-        return result
+        return t_result, y_result
 
     @abstractmethod
     def _integrate(
