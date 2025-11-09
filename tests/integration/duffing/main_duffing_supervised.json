@@ -1,0 +1,38 @@
+[
+    {
+        "label": "y1",
+        "basinStability": 0.1908,
+        "absNumMembers": 954,
+        "standardError": 0.0055568940965255043
+    },
+    {
+        "label": "y2",
+        "basinStability": 0.4994,
+        "absNumMembers": 2497,
+        "standardError": 0.0070710627206948167
+    },
+    {
+        "label": "y3",
+        "basinStability": 0.0278,
+        "absNumMembers": 139,
+        "standardError": 0.0023249584942531768
+    },
+    {
+        "label": "y4",
+        "basinStability": 0.022,
+        "absNumMembers": 110,
+        "standardError": 0.0020744155803502822
+    },
+    {
+        "label": "y5",
+        "basinStability": 0.26,
+        "absNumMembers": 1300,
+        "standardError": 0.0062032249677083286
+    },
+    {
+        "label": "NaN",
+        "basinStability": 0,
+        "absNumMembers": 0,
+        "standardError": 0
+    }
+]

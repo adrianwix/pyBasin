@@ -51,7 +51,9 @@ class BasinStabilityEstimator:
         :param cluster_classifier: The ClusterClassifier object to assign labels.
         :param save_to: Optional file path to save results.
         """
-        self.n = n
+        self.n = int(
+            n
+        )  # Ensure n is always an int (handles numpy.float64 from adaptive parameters)
         self.ode_system = ode_system
         self.sampler = sampler
         self.solver = solver

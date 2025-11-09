@@ -1,4 +1,4 @@
-"""Integration tests for the pendulum case study."""
+"""Integration tests for the Lorenz system case study."""
 
 import json
 from pathlib import Path
@@ -6,24 +6,28 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
+from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 
 
-class TestPendulum:
-    """Integration tests for pendulum basin stability estimation."""
+class TestLorenz:
+    """Integration tests for Lorenz system basin stability estimation."""
 
     @pytest.mark.integration
     def test_case1(self, tolerance):
-        """Test pendulum case 1 parameters."""
+        """Test Lorenz system case 1 - broken butterfly attractor parameters.
+
+        Parameters: σ=0.12, r=0.0, b=-0.6
+        Expected attractors: butterfly1, butterfly2, unbounded
+        """
         # Load expected results from JSON
-        json_path = Path(__file__).parent / "main_pendulum.json"
+        json_path = Path(__file__).parent / "main_lorenz_case1.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 
         # Setup system and run estimation
-        props = setup_pendulum_system()
+        props = setup_lorenz_system()
 
         bse = BasinStabilityEstimator(
             n=props["n"],
@@ -45,7 +49,6 @@ class TestPendulum:
             actual_bs = basin_stability.get(label, 0.0)
 
             # Compare with tolerance
-            # Use a slightly larger tolerance for numerical variations
             assert abs(actual_bs - expected_bs) < tolerance, (
                 f"Basin stability for {label}: expected {expected_bs:.4f}, "
                 f"got {actual_bs:.4f}, difference {abs(actual_bs - expected_bs):.4f} "
@@ -63,21 +66,24 @@ class TestPendulum:
 
     @pytest.mark.integration
     def test_case2(self, tolerance):
-        """Test pendulum case 2 parameters - adaptive parameter study."""
+        """Test Lorenz system case 2 - adaptive parameter study varying sigma.
+
+        Studies the effect of varying sigma parameter from 0.12 to 0.18 on basin stability.
+        """
         # Load expected results from JSON
-        json_path = Path(__file__).parent / "main_pendulum_case2.json"
+        json_path = Path(__file__).parent / "main_lorenz_sigma_study.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 
         # Setup system and run adaptive parameter study
-        props = setup_pendulum_system()
+        props = setup_lorenz_system()
 
         # Use the same parameter values as in the expected results
         parameter_values = np.array([result["parameter"] for result in expected_results])
 
         as_params = AdaptiveStudyParams(
             adaptative_parameter_values=parameter_values,
-            adaptative_parameter_name='ode_system.params["T"]',
+            adaptative_parameter_name='ode_system.params["sigma"]',
         )
 
         as_bse = ASBasinStabilityEstimator(
@@ -97,29 +103,38 @@ class TestPendulum:
             param_value = expected["parameter"]
             actual_bs = as_bse.basin_stabilities[i]
 
-            # Check FP basin stability
-            expected_bs_fp = expected["bs_FP"]
-            actual_bs_fp = actual_bs.get("FP", 0.0)
-            assert abs(actual_bs_fp - expected_bs_fp) < tolerance, (
-                f"At parameter {param_value:.3f}, FP basin stability: "
-                f"expected {expected_bs_fp:.4f}, got {actual_bs_fp:.4f}, "
-                f"difference {abs(actual_bs_fp - expected_bs_fp):.4f} exceeds tolerance {tolerance}"
+            # Check butterfly1 basin stability
+            expected_bs_b1 = expected["bs_butterfly1"]
+            actual_bs_b1 = actual_bs.get("butterfly1", 0.0)
+            assert abs(actual_bs_b1 - expected_bs_b1) < tolerance, (
+                f"At parameter {param_value:.4f}, butterfly1 basin stability: "
+                f"expected {expected_bs_b1:.4f}, got {actual_bs_b1:.4f}, "
+                f"difference {abs(actual_bs_b1 - expected_bs_b1):.4f} exceeds tolerance {tolerance}"
             )
 
-            # Check LC basin stability
-            expected_bs_lc = expected["bs_LC"]
-            actual_bs_lc = actual_bs.get("LC", 0.0)
-            assert abs(actual_bs_lc - expected_bs_lc) < tolerance, (
-                f"At parameter {param_value:.3f}, LC basin stability: "
-                f"expected {expected_bs_lc:.4f}, got {actual_bs_lc:.4f}, "
-                f"difference {abs(actual_bs_lc - expected_bs_lc):.4f} exceeds tolerance {tolerance}"
+            # Check butterfly2 basin stability
+            expected_bs_b2 = expected["bs_butterfly2"]
+            actual_bs_b2 = actual_bs.get("butterfly2", 0.0)
+            assert abs(actual_bs_b2 - expected_bs_b2) < tolerance, (
+                f"At parameter {param_value:.4f}, butterfly2 basin stability: "
+                f"expected {expected_bs_b2:.4f}, got {actual_bs_b2:.4f}, "
+                f"difference {abs(actual_bs_b2 - expected_bs_b2):.4f} exceeds tolerance {tolerance}"
+            )
+
+            # Check unbounded basin stability
+            expected_bs_unbounded = expected["bs_unbounded"]
+            actual_bs_unbounded = actual_bs.get("unbounded", 0.0)
+            assert abs(actual_bs_unbounded - expected_bs_unbounded) < tolerance, (
+                f"At parameter {param_value:.4f}, unbounded basin stability: "
+                f"expected {expected_bs_unbounded:.4f}, got {actual_bs_unbounded:.4f}, "
+                f"difference {abs(actual_bs_unbounded - expected_bs_unbounded):.4f} exceeds tolerance {tolerance}"
             )
 
             # Check NaN basin stability (should be 0)
             expected_bs_nan = expected["bs_NaN"]
             actual_bs_nan = actual_bs.get("NaN", 0.0)
             assert abs(actual_bs_nan - expected_bs_nan) < tolerance, (
-                f"At parameter {param_value:.3f}, NaN basin stability: "
+                f"At parameter {param_value:.4f}, NaN basin stability: "
                 f"expected {expected_bs_nan:.4f}, got {actual_bs_nan:.4f}, "
                 f"difference {abs(actual_bs_nan - expected_bs_nan):.4f} exceeds tolerance {tolerance}"
             )
@@ -128,19 +143,19 @@ class TestPendulum:
     def test_hyperparameters(self):
         """Test hyperparameter sensitivity study - varying N (number of samples).
 
-        Uses adaptive tolerance: starts at 20% for small N (high uncertainty),
-        decreases to 2% for large N (low uncertainty). Only stores tolerance
+        Uses adaptive tolerance: starts at higher tolerance for small N (high uncertainty),
+        decreases for large N (low uncertainty). Only stores tolerance
         differences in CSV for convergence analysis.
         """
         import csv
 
         # Load expected results from JSON
-        json_path = Path(__file__).parent / "main_pendulum_hyperparameters.json"
+        json_path = Path(__file__).parent / "main_lorenz_hyperparameters.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 
         # Setup system and run hyperparameter study
-        props = setup_pendulum_system()
+        props = setup_lorenz_system()
 
         # Use the same parameter values as in the expected results
         parameter_values = np.array([result["parameter"] for result in expected_results])
@@ -167,17 +182,18 @@ class TestPendulum:
         csv_headers = [
             "N",
             "actual_grid_points",
-            "tolerance_diff_FP",
-            "tolerance_diff_LC",
+            "tolerance_diff_butterfly1",
+            "tolerance_diff_butterfly2",
+            "tolerance_diff_unbounded",
             "adaptive_tolerance",
             "test_passed",
         ]
 
         # Adaptive tolerance parameters
-        min_n = 50
-        max_n = 5000
-        max_tolerance = 0.73  # 73% for small N (high statistical uncertainty)
-        min_tolerance = 0.10  # 10% for large N (some variance remains)
+        min_n = 200
+        max_n = 20000
+        max_tolerance = 0.65  # 65% for small N (high statistical uncertainty with random sampling)
+        min_tolerance = 0.05  # 5% for large N (some variance remains)
 
         all_tests_passed = True
 
@@ -187,25 +203,33 @@ class TestPendulum:
             actual_bs = as_bse.basin_stabilities[i]
 
             # Get values
-            expected_bs_fp = expected["bs_FP"]
-            actual_bs_fp = actual_bs.get("FP", 0.0)
+            expected_bs_b1 = expected["bs_butterfly1"]
+            actual_bs_b1 = actual_bs.get("butterfly1", 0.0)
 
-            expected_bs_lc = expected["bs_LC"]
-            actual_bs_lc = actual_bs.get("LC", 0.0)
+            expected_bs_b2 = expected["bs_butterfly2"]
+            actual_bs_b2 = actual_bs.get("butterfly2", 0.0)
 
-            # Determine actual grid points
-            actual_grid_points = int(np.ceil(param_value**0.5)) ** 2
+            expected_bs_unbounded = expected["bs_unbounded"]
+            actual_bs_unbounded = actual_bs.get("unbounded", 0.0)
+
+            # Get actual number of samples used (from results)
+            actual_grid_points = as_bse.results[i].get("n_samples", int(param_value))
 
             # Calculate tolerance differences (normalized by expected value to get relative error)
-            tolerance_diff_fp = (
-                abs(actual_bs_fp - expected_bs_fp) / expected_bs_fp
-                if expected_bs_fp > 0
-                else abs(actual_bs_fp - expected_bs_fp)
+            tolerance_diff_b1 = (
+                abs(actual_bs_b1 - expected_bs_b1) / expected_bs_b1
+                if expected_bs_b1 > 0
+                else abs(actual_bs_b1 - expected_bs_b1)
             )
-            tolerance_diff_lc = (
-                abs(actual_bs_lc - expected_bs_lc) / expected_bs_lc
-                if expected_bs_lc > 0
-                else abs(actual_bs_lc - expected_bs_lc)
+            tolerance_diff_b2 = (
+                abs(actual_bs_b2 - expected_bs_b2) / expected_bs_b2
+                if expected_bs_b2 > 0
+                else abs(actual_bs_b2 - expected_bs_b2)
+            )
+            tolerance_diff_unbounded = (
+                abs(actual_bs_unbounded - expected_bs_unbounded) / expected_bs_unbounded
+                if expected_bs_unbounded > 0
+                else abs(actual_bs_unbounded - expected_bs_unbounded)
             )
 
             # Calculate adaptive tolerance using logarithmic scale
@@ -216,9 +240,10 @@ class TestPendulum:
             adaptive_tolerance = max_tolerance - (max_tolerance - min_tolerance) * log_progress
 
             # Test with adaptive tolerance
-            test_passed_fp = tolerance_diff_fp <= adaptive_tolerance
-            test_passed_lc = tolerance_diff_lc <= adaptive_tolerance
-            test_passed = test_passed_fp and test_passed_lc
+            test_passed_b1 = tolerance_diff_b1 <= adaptive_tolerance
+            test_passed_b2 = tolerance_diff_b2 <= adaptive_tolerance
+            test_passed_unbounded = tolerance_diff_unbounded <= adaptive_tolerance
+            test_passed = test_passed_b1 and test_passed_b2 and test_passed_unbounded
 
             if not test_passed:
                 all_tests_passed = False
@@ -228,8 +253,9 @@ class TestPendulum:
                 {
                     "N": param_value,
                     "actual_grid_points": actual_grid_points,
-                    "tolerance_diff_FP": tolerance_diff_fp,
-                    "tolerance_diff_LC": tolerance_diff_lc,
+                    "tolerance_diff_butterfly1": tolerance_diff_b1,
+                    "tolerance_diff_butterfly2": tolerance_diff_b2,
+                    "tolerance_diff_unbounded": tolerance_diff_unbounded,
                     "adaptive_tolerance": adaptive_tolerance,
                     "test_passed": test_passed,
                 }
@@ -255,22 +281,22 @@ class TestPendulum:
         assert all_tests_passed, f"Some hyperparameter tests failed. See {csv_path} for details."
 
     @pytest.mark.integration
-    def test_n50_single_case(self):
-        """Test single case with N=50 to debug grid sampling behavior.
+    def test_n200_single_case(self):
+        """Test single case with N=200 to debug sampling behavior.
 
-        Expected from MATLAB:
-        - N=50 -> ceil(50^0.5) = 8 -> 8x8 = 64 grid points
-        - FP: 0.1000, LC: 0.9000
+        Expected from MATLAB with UniformRandomSampler:
+        - N=200 -> generates exactly 200 random points
+        - butterfly1: 0.1000, butterfly2: 0.0750, unbounded: 0.8250
 
-        Note: With only 64 grid points, there's inherent statistical uncertainty.
-        We use a larger tolerance (10%) to account for this.
+        Note: With only 200 random points, there's inherent statistical uncertainty.
+        We use a larger tolerance (15%) to account for this.
         """
         # Setup system
-        props = setup_pendulum_system()
+        props = setup_lorenz_system()
 
-        # Create BSE with N=50
+        # Create BSE with N=200
         bse = BasinStabilityEstimator(
-            n=50,
+            n=200,
             ode_system=props["ode_system"],
             sampler=props["sampler"],
             solver=props["solver"],
@@ -281,33 +307,40 @@ class TestPendulum:
         basin_stability = bse.estimate_bs()
 
         # Expected values from MATLAB
-        expected_bs_fp = 0.1
-        expected_bs_lc = 0.9
+        expected_bs_b1 = 0.1
+        expected_bs_b2 = 0.075
+        expected_bs_unbounded = 0.825
 
         # Get actual values
-        actual_bs_fp = basin_stability.get("FP", 0.0)
-        actual_bs_lc = basin_stability.get("LC", 0.0)
+        actual_bs_b1 = basin_stability.get("butterfly1", 0.0)
+        actual_bs_b2 = basin_stability.get("butterfly2", 0.0)
+        actual_bs_unbounded = basin_stability.get("unbounded", 0.0)
 
         # Check the actual number of points generated
         if bse.y0 is not None:
             actual_points = len(bse.y0)
-            print(f"\nActual grid points generated: {actual_points}")
-            assert actual_points == 64, f"Expected 64 points (8x8 grid), but got {actual_points}"
+            print(f"\nActual points generated: {actual_points}")
+            assert actual_points == 200, (
+                f"Expected 200 points with UniformRandomSampler, but got {actual_points}"
+            )
 
         # For small N, use a more lenient tolerance due to statistical uncertainty
-        # At N=50 (64 actual points), the expected standard error is ~0.042
-        # Allow up to 3 standard errors
         tolerance_small_n = 0.15
 
         # Compare with tolerance
-        assert abs(actual_bs_fp - expected_bs_fp) < tolerance_small_n, (
-            f"FP basin stability: expected {expected_bs_fp:.4f}, "
-            f"got {actual_bs_fp:.4f}, difference {abs(actual_bs_fp - expected_bs_fp):.4f}"
+        assert abs(actual_bs_b1 - expected_bs_b1) < tolerance_small_n, (
+            f"butterfly1 basin stability: expected {expected_bs_b1:.4f}, "
+            f"got {actual_bs_b1:.4f}, difference {abs(actual_bs_b1 - expected_bs_b1):.4f}"
         )
 
-        assert abs(actual_bs_lc - expected_bs_lc) < tolerance_small_n, (
-            f"LC basin stability: expected {expected_bs_lc:.4f}, "
-            f"got {actual_bs_lc:.4f}, difference {abs(actual_bs_lc - expected_bs_lc):.4f}"
+        assert abs(actual_bs_b2 - expected_bs_b2) < tolerance_small_n, (
+            f"butterfly2 basin stability: expected {expected_bs_b2:.4f}, "
+            f"got {actual_bs_b2:.4f}, difference {abs(actual_bs_b2 - expected_bs_b2):.4f}"
+        )
+
+        assert abs(actual_bs_unbounded - expected_bs_unbounded) < tolerance_small_n, (
+            f"unbounded basin stability: expected {expected_bs_unbounded:.4f}, "
+            f"got {actual_bs_unbounded:.4f}, difference {abs(actual_bs_unbounded - expected_bs_unbounded):.4f}"
         )
 
         # Verify basin stabilities sum to 1.0

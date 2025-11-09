@@ -1,5 +1,4 @@
-from setup_friction_system import setup_friction_system
-
+from case_studies.friction.setup_friction_system import setup_friction_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotter import Plotter
 from pybasin.utils import time_execution

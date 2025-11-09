@@ -28,7 +28,7 @@ class LorenzODE(ODESystem[LorenzParams]):
     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
         Vectorized right-hand side (RHS) for the Lorenz system using PyTorch,
-        modified so that once a sample’s state magnitude exceeds 200, its derivative is set to zero.
+        modified so that once a sample's state magnitude exceeds 200, its derivative is set to zero.
 
         y shape: (..., 3) where the last dimension represents [x, y, z]
         returns: tensor with the same shape as y.

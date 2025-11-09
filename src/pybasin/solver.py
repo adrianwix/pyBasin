@@ -144,8 +144,8 @@ class TorchDiffEqSolver(Solver):
     This class only needs to implement the _integrate method.
     """
 
-    def __init__(self, time_span, fs=None, n_steps=None, **kwargs):
-        super().__init__(time_span, fs=fs, n_steps=n_steps, **kwargs)
+    def __init__(self, time_span, fs=None, n_steps=None, device=None, **kwargs):
+        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device, **kwargs)
 
     def _integrate(
         self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor

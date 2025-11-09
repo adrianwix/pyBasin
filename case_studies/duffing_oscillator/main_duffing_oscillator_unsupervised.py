@@ -1,7 +1,6 @@
-from setup_duffing_oscillator_system import (
+from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
-
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import DBSCANCluster
 from pybasin.plotter import Plotter

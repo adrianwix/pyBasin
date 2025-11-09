@@ -1,0 +1,65 @@
+[
+    {
+        "parameter": 1.85,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 1.875,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 1.9000000000000001,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 1.925,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 1.95,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 1.975,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    },
+    {
+        "parameter": 2,
+        "bs_FP": 1,
+        "bs_LC": 0,
+        "bs_NaN": 0,
+        "err_FP": 0,
+        "err_LC": 0,
+        "err_NaN": 0
+    }
+]

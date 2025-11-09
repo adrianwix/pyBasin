@@ -1,8 +1,8 @@
 import torch
-from friction_feature_extractor import FrictionFeatureExtractor
-from friction_ode import FrictionODE, FrictionParams
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.friction.friction_feature_extractor import FrictionFeatureExtractor
+from case_studies.friction.friction_ode import FrictionODE, FrictionParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solver import TorchDiffEqSolver
@@ -11,6 +11,10 @@ from pybasin.types import SetupProperties
 
 def setup_friction_system() -> SetupProperties:
     n = 1 * 10**3  # Number of samples as in setup_friction.m
+
+    # Auto-detect device (use GPU if available)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Setting up friction system on device: {device}")
 
     # Parameters from setup_friction.m
     params: FrictionParams = {
@@ -33,12 +37,14 @@ def setup_friction_system() -> SetupProperties:
     sampler = UniformRandomSampler(
         min_limits=[0.5, -2.0],  # [disp, vel]
         max_limits=[2.5, 0.0],  # [disp, vel]
+        device=device,
     )
 
     # Time integration parameters from setup_friction.m
     solver = TorchDiffEqSolver(
         time_span=(0, 500),  # tSpan
         fs=100,  # Sampling frequency
+        device=device,
     )
 
     # Feature extraction (using last 100 time units as in setup_friction.m)
@@ -51,6 +57,7 @@ def setup_friction_system() -> SetupProperties:
             [2.0, 2.0],  # Limit cycle (LC)
         ],
         dtype=torch.float64,
+        device=device,
     )
 
     classifier_labels = ["FP", "LC"]

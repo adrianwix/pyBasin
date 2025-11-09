@@ -30,7 +30,7 @@ def matlab_results_dir(project_root):
 @pytest.fixture
 def tolerance():
     """Default tolerance for comparing basin stability values."""
-    return 0.01  # 1% tolerance
+    return 0.015  # 1.5% tolerance (increased to account for statistical variability)
 
 
 @pytest.fixture

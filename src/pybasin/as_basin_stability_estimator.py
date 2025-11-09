@@ -130,6 +130,7 @@ class ASBasinStabilityEstimator:
                 solution_summary = {
                     "param_value": param_value,
                     "basin_stability": basin_stability,
+                    "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
                     "labels": bse.solution.labels.copy()
                     if bse.solution.labels is not None
                     else None,
@@ -143,6 +144,7 @@ class ASBasinStabilityEstimator:
                 solution_summary = {
                     "param_value": param_value,
                     "basin_stability": basin_stability,
+                    "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
                     "labels": None,
                     "bifurcation_amplitudes": None,
                 }

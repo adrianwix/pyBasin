@@ -1,7 +1,7 @@
 import torch
-from setup_lorenz_system import setup_lorenz_system
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.plotter import Plotter
@@ -45,7 +45,7 @@ def preview_plot_templates():
     sampler = props["sampler"]
     solver = props["solver"]
     feature_extractor = props["feature_extractor"]
-    params = props["cluster_classifier"].ode_params # pyright: ignore[reportAttributeAccessIssue]
+    params = props["cluster_classifier"].ode_params  # pyright: ignore[reportAttributeAccessIssue]
 
     # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
 

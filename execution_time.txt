@@ -65,3 +65,5 @@
 2025-11-08 21:44:15 - main_pendulum_case1_sklearn.py: 79.33873867988586 seconds
 2025-11-08 21:58:27 - main_pendulum_case1_sklearn.py: 756.7289237976074 seconds
 2025-11-09 00:14:33 - main_pendulum_case1.py: 57.192633867263794 seconds
+2025-11-09 18:11:05 - main_lorenz.py: 45.809834480285645 seconds
+2025-11-09 18:13:23 - main_lorenz.py: 51.03244948387146 seconds
