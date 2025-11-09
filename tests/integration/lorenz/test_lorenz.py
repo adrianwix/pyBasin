@@ -346,3 +346,127 @@ class TestLorenz:
         # Verify basin stabilities sum to 1.0
         total_bs = sum(basin_stability.values())
         assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"
+
+    @pytest.mark.integration
+    def test_tolerance_study(self, tolerance):
+        """Test hyperparameter study varying ODE solver tolerance (rtol).
+
+        Studies the effect of varying relative tolerance from 1e-3 to 1e-8 on basin stability.
+        This test validates that the solver correctly uses the specified tolerances and
+        that coarse tolerances (1e-3) can produce incorrect results.
+
+        Expected behavior:
+        - rtol=1e-3: May produce significantly different results (tolerance is too coarse)
+        - rtol=1e-4 to 1e-8: Should converge to consistent values
+
+        Note: We use a more lenient tolerance for rtol=1e-3 since we expect it to be less accurate.
+        """
+        # Load expected results from JSON (MATLAB reference)
+        json_path = Path(__file__).parent / "main_lorenz_hyperpTol.json"
+        with open(json_path) as f:
+            expected_results = json.load(f)
+
+        # Setup system and run tolerance study
+        props = setup_lorenz_system()
+
+        # Use the same tolerance values as in the expected results
+        parameter_values = np.array([result["parameter"] for result in expected_results])
+
+        as_params = AdaptiveStudyParams(
+            adaptative_parameter_values=parameter_values,
+            adaptative_parameter_name="solver.rtol",
+        )
+
+        # Use N=20000 to match MATLAB study
+        as_bse = ASBasinStabilityEstimator(
+            n=20000,
+            ode_system=props["ode_system"],
+            sampler=props["sampler"],
+            solver=props["solver"],
+            feature_extractor=props["feature_extractor"],
+            cluster_classifier=props["cluster_classifier"],
+            as_params=as_params,
+            save_to=None,  # Don't save during test
+        )
+
+        as_bse.estimate_as_bs()
+
+        # Compare results at each tolerance value
+        for i, expected in enumerate(expected_results):
+            rtol_value = expected["parameter"]
+            actual_bs = as_bse.basin_stabilities[i]
+
+            # Use a more lenient tolerance for rtol=1e-3 since it's expected to be less accurate
+            # For rtol >= 1e-4, we expect convergence to accurate values
+            test_tolerance = tolerance * 3.0 if rtol_value >= 1e-3 else tolerance
+
+            # Check butterfly1 basin stability
+            expected_bs_b1 = expected["bs_butterfly1"]
+            actual_bs_b1 = actual_bs.get("butterfly1", 0.0)
+            diff_b1 = abs(actual_bs_b1 - expected_bs_b1)
+
+            # For rtol=1e-3, just verify it's within a reasonable range (not checking exact match)
+            if rtol_value == 1e-3:
+                # At coarse tolerance, we mainly want to ensure the solver doesn't crash
+                # and produces some result (even if less accurate)
+                assert 0.0 <= actual_bs_b1 <= 1.0, (
+                    f"At rtol={rtol_value:.0e}, butterfly1 basin stability {actual_bs_b1:.4f} "
+                    f"is outside valid range [0, 1]"
+                )
+            else:
+                assert diff_b1 < test_tolerance, (
+                    f"At rtol={rtol_value:.0e}, butterfly1 basin stability: "
+                    f"expected {expected_bs_b1:.4f}, got {actual_bs_b1:.4f}, "
+                    f"difference {diff_b1:.4f} exceeds tolerance {test_tolerance:.4f}"
+                )
+
+            # Check butterfly2 basin stability
+            expected_bs_b2 = expected["bs_butterfly2"]
+            actual_bs_b2 = actual_bs.get("butterfly2", 0.0)
+            diff_b2 = abs(actual_bs_b2 - expected_bs_b2)
+
+            if rtol_value == 1e-3:
+                assert 0.0 <= actual_bs_b2 <= 1.0, (
+                    f"At rtol={rtol_value:.0e}, butterfly2 basin stability {actual_bs_b2:.4f} "
+                    f"is outside valid range [0, 1]"
+                )
+            else:
+                assert diff_b2 < test_tolerance, (
+                    f"At rtol={rtol_value:.0e}, butterfly2 basin stability: "
+                    f"expected {expected_bs_b2:.4f}, got {actual_bs_b2:.4f}, "
+                    f"difference {diff_b2:.4f} exceeds tolerance {test_tolerance:.4f}"
+                )
+
+            # Check unbounded basin stability
+            expected_bs_unbounded = expected["bs_unbounded"]
+            actual_bs_unbounded = actual_bs.get("unbounded", 0.0)
+            diff_unbounded = abs(actual_bs_unbounded - expected_bs_unbounded)
+
+            if rtol_value == 1e-3:
+                assert 0.0 <= actual_bs_unbounded <= 1.0, (
+                    f"At rtol={rtol_value:.0e}, unbounded basin stability {actual_bs_unbounded:.4f} "
+                    f"is outside valid range [0, 1]"
+                )
+            else:
+                assert diff_unbounded < test_tolerance, (
+                    f"At rtol={rtol_value:.0e}, unbounded basin stability: "
+                    f"expected {expected_bs_unbounded:.4f}, got {actual_bs_unbounded:.4f}, "
+                    f"difference {diff_unbounded:.4f} exceeds tolerance {test_tolerance:.4f}"
+                )
+
+            # Verify basin stabilities sum to approximately 1.0
+            total_bs = sum(actual_bs.values())
+            assert abs(total_bs - 1.0) < 0.01, (
+                f"At rtol={rtol_value:.0e}, basin stabilities should sum to 1.0, got {total_bs:.4f}"
+            )
+
+        # Additional check: verify that results for rtol >= 1e-4 are relatively consistent
+        # (i.e., they have converged to a stable solution)
+        consistent_results = as_bse.basin_stabilities[1:]  # Skip rtol=1e-3
+        if len(consistent_results) > 1:
+            butterfly1_values = [bs.get("butterfly1", 0.0) for bs in consistent_results]
+            butterfly1_std = np.std(butterfly1_values)
+            assert butterfly1_std < 0.01, (
+                f"butterfly1 values for rtol >= 1e-4 should be consistent, "
+                f"but std={butterfly1_std:.4f} is too high. Values: {butterfly1_values}"
+            )

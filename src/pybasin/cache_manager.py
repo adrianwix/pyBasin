@@ -15,14 +15,27 @@ class CacheManager:
         self.cache_dir = cache_dir
 
     def build_key(
-        self, solver_name: str, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+        self,
+        solver_name: str,
+        ode_system: ODESystem,
+        y0: torch.Tensor,
+        t_eval: torch.Tensor,
+        solver_config: dict | None = None,
     ) -> str:
-        """Build a unique cache key based on solver type, ODE system, and initial conditions."""
+        """Build a unique cache key based on solver type, configuration, ODE system, and initial conditions.
+
+        :param solver_name: Name of the solver class.
+        :param ode_system: The ODE system being solved.
+        :param y0: Initial conditions.
+        :param t_eval: Time evaluation points.
+        :param solver_config: Dictionary of solver-specific parameters (rtol, atol, method, etc.).
+        """
         key_data = (
             solver_name,
             ode_system.get_str(),
             y0.detach().cpu().numpy().tobytes(),
             t_eval.detach().cpu().numpy().tobytes(),
+            tuple(sorted(solver_config.items())) if solver_config else (),
         )
         key_bytes = pickle.dumps(key_data)
         return hashlib.md5(key_bytes).hexdigest()
