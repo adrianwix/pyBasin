@@ -85,15 +85,20 @@ class BasinStabilityEstimator:
         print("\nStarting Basin Stability Estimation...")
         total_start = time.perf_counter()
 
-        print("\n1. Generating initial conditions...")
+        # Step 1: Sampling
+        print("\nSTEP 1: Sampling Initial Conditions")
         t1 = time.perf_counter()
         self.y0 = self.sampler.sample(self.n)
         t1_elapsed = time.perf_counter() - t1
-        print(f"   Generated {self.n} initial conditions ({t1_elapsed:.4f}s)")
+        print(f"  Generated grid with {len(self.y0)} initial conditions in {t1_elapsed:.4f}s")
 
         # Step 2: Integration (possibly parallel with classifier fitting)
+        print("\nSTEP 2: ODE Integration")
+
         if parallel_integration and isinstance(self.cluster_classifier, SupervisedClassifier):
-            print("\n2. Integrating ODE system AND fitting classifier in parallel...")
+            print("  Mode: PARALLEL")
+            print("  • Main integration (sampled ICs)")
+            print("  • Template integration (classifier fitting)")
             t2 = time.perf_counter()
 
             # Run both integrations in parallel using threads
@@ -116,13 +121,13 @@ class BasinStabilityEstimator:
                 classifier_future.result()  # Just wait for completion
 
             t2_elapsed = time.perf_counter() - t2
-            print(
-                f"   Both integrations complete - trajectory shape: {y.shape} ({t2_elapsed:.4f}s)"
-            )
+            print(f"  Both integrations complete in {t2_elapsed:.4f}s")
+            print(f"  Main trajectory shape: {y.shape}")
         else:
             # Sequential execution (original behavior)
             if isinstance(self.cluster_classifier, SupervisedClassifier):
-                print("\n2a. Fitting classifier with template data...")
+                print("  Mode: SEQUENTIAL")
+                print("  Step 2a: Fitting classifier with template data...")
                 t2a = time.perf_counter()
                 self.cluster_classifier.fit(
                     solver=self.solver,
@@ -130,31 +135,35 @@ class BasinStabilityEstimator:
                     feature_extractor=self.feature_extractor,
                 )
                 t2a_elapsed = time.perf_counter() - t2a
-                print(f"    Classifier fitted ({t2a_elapsed:.4f}s)")
+                print(f"    Classifier fitted in {t2a_elapsed:.4f}s")
 
-            print("\n2b. Integrating ODE system...")
+            print("  Step 2b: Integrating sampled initial conditions...")
             t2 = time.perf_counter()
             t, y = self.solver.integrate(self.ode_system, self.y0)
             t2_elapsed = time.perf_counter() - t2
-            print(f"    Integration complete - trajectory shape: {y.shape} ({t2_elapsed:.4f}s)")
+            print(f"    Main trajectory shape: {y.shape}")
+            print(f"    Integration complete in {t2_elapsed:.4f}s")
 
-        print("\n3. Creating Solution object...")
+        # Step 3: Create Solution object
+        print("\nSTEP 3: Creating Solution Object")
         t3 = time.perf_counter()
         self.solution = Solution(initial_condition=self.y0, time=t, y=y)
 
         # Always compute bifurcation amplitudes
         self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
         t3_elapsed = time.perf_counter() - t3
-        print(f"   Solution created ({t3_elapsed:.4f}s)")
+        print(f"  Solution object created in {t3_elapsed:.4f}s")
 
-        print("\n4. Extracting features...")
+        # Step 4: Feature extraction
+        print("\nSTEP 4: Feature Extraction")
         t4 = time.perf_counter()
         features = self.feature_extractor.extract_features(self.solution)
         self.solution.set_features(features)
         t4_elapsed = time.perf_counter() - t4
-        print(f"   Features shape: {features.shape} ({t4_elapsed:.4f}s)")
+        print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
 
-        print("\n5. Performing classification...")
+        # Step 5: Classification
+        print("\nSTEP 5: Classification")
         t5 = time.perf_counter()
 
         # Convert features to numpy for classifier
@@ -164,11 +173,11 @@ class BasinStabilityEstimator:
         self.solution.set_labels(labels)
         t5_pred_elapsed = time.perf_counter() - t5_pred
         t5_elapsed = time.perf_counter() - t5
-        print(
-            f"   Classification complete - prediction: {t5_pred_elapsed:.4f}s, total: {t5_elapsed:.4f}s"
-        )
+        print(f"  Classification complete in {t5_elapsed:.4f}s")
+        print(f"  Prediction time: {t5_pred_elapsed:.4f}s")
 
-        print("\n6. Computing basin stability values...")
+        # Step 6: Compute basin stability
+        print("\nSTEP 6: Computing Basin Stability")
         t6 = time.perf_counter()
         unique_labels, counts = np.unique(labels, return_counts=True)
 
@@ -181,21 +190,34 @@ class BasinStabilityEstimator:
 
         for label, fraction in zip(unique_labels, fractions, strict=True):
             self.bs_vals[str(label)] = fraction
-            print(f"   {label}: {fraction:.3f}")
+            print(f"  {label}: {fraction:.4f}")
 
         t6_elapsed = time.perf_counter() - t6
-        print(f"   BS values computed ({t6_elapsed:.4f}s)")
+        print(f"  Basin stability computed in {t6_elapsed:.4f}s")
 
+        # Summary
         total_elapsed = time.perf_counter() - total_start
-        print(f"\nBasin Stability Estimation Complete! Total time: {total_elapsed:.4f}s")
-        print("\n=== TIMING BREAKDOWN ===")
-        print(f"1. Sampling:        {t1_elapsed:8.4f}s ({t1_elapsed / total_elapsed * 100:5.1f}%)")
-        print(f"2. Integration:     {t2_elapsed:8.4f}s ({t2_elapsed / total_elapsed * 100:5.1f}%)")
-        print(f"3. Solution/Amps:   {t3_elapsed:8.4f}s ({t3_elapsed / total_elapsed * 100:5.1f}%)")
-        print(f"4. Features:        {t4_elapsed:8.4f}s ({t4_elapsed / total_elapsed * 100:5.1f}%)")
-        print(f"5. Classification:  {t5_elapsed:8.4f}s ({t5_elapsed / total_elapsed * 100:5.1f}%)")
-        print(f"6. BS computation:  {t6_elapsed:8.4f}s ({t6_elapsed / total_elapsed * 100:5.1f}%)")
-        print("========================")
+        print("\nBASIN STABILITY ESTIMATION COMPLETE")
+        print(f"Total time: {total_elapsed:.4f}s")
+        print("\nTiming Breakdown:")
+        print(
+            f"  1. Sampling:           {t1_elapsed:8.4f}s  ({t1_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  2. Integration:        {t2_elapsed:8.4f}s  ({t2_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  3. Solution/Amps:      {t3_elapsed:8.4f}s  ({t3_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  4. Features:           {t4_elapsed:8.4f}s  ({t4_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  5. Classification:     {t5_elapsed:8.4f}s  ({t5_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  6. BS Computation:     {t6_elapsed:8.4f}s  ({t6_elapsed / total_elapsed * 100:5.1f}%)"
+        )
 
         return self.bs_vals
 

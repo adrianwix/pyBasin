@@ -43,12 +43,12 @@ def setup_pendulum_system_torchode() -> SetupProperties:
     # Available methods: 'dopri5' (default), 'tsit5', 'euler', 'midpoint', 'heun'
     solver = TorchOdeSolver(
         time_span=(0, 1000),
-        fs=25,
+        n_steps=1000,
         device=device,
         method="dopri5",  # Dormand-Prince 5(4) - similar to ode45
         rtol=1e-8,
         atol=1e-6,
-        use_jit=False,  # Set to True to enable JIT compilation for performance
+        use_jit=True,  # Set to True to enable JIT compilation for performance
     )
 
     # Instantiate the feature extractor with a steady state time.

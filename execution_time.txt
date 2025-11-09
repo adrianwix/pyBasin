@@ -62,3 +62,6 @@
 2025-11-08 15:17:56 - main_pendulum_case1_torchode.py: 128.4409956932068 seconds
 2025-11-08 15:19:50 - main_pendulum_case1.py: 85.35440564155579 seconds
 2025-11-08 15:34:02 - main_pendulum_case1_torchode.py: 130.54431462287903 seconds
+2025-11-08 21:44:15 - main_pendulum_case1_sklearn.py: 79.33873867988586 seconds
+2025-11-08 21:58:27 - main_pendulum_case1_sklearn.py: 756.7289237976074 seconds
+2025-11-09 00:14:33 - main_pendulum_case1.py: 57.192633867263794 seconds

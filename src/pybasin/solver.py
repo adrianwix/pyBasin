@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
 import torch
 import torchode as to
+from scipy.integrate import solve_ivp
+from sklearn.utils.parallel import Parallel, delayed
 from torchdiffeq import odeint
 
 from pybasin.cache_manager import CacheManager
@@ -22,18 +25,37 @@ class Solver(ABC):
     """
 
     def __init__(
-        self, time_span: tuple[float, float], fs: float, device: str | None = None, **kwargs
+        self,
+        time_span: tuple[float, float],
+        fs: float | None = None,
+        n_steps: int | None = None,
+        device: str | None = None,
+        **kwargs,
     ):
         """
         Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz) – number of samples per time unit.
+        :param fs: Sampling frequency (Hz) – number of samples per time unit. DEPRECATED: use n_steps instead.
+        :param n_steps: Number of evaluation points. If None, defaults to 500 (recommended for most cases).
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         """
         self.time_span = time_span
-        self.fs = fs
-        self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
+
+        # Handle n_steps with backward compatibility
+        if n_steps is not None:
+            self.n_steps = n_steps
+        elif fs is not None:
+            # Legacy behavior: compute from fs (not recommended)
+            self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
+            print(
+                f"Warning: Using fs={fs} results in {self.n_steps} steps. Consider using n_steps parameter directly."
+            )
+        else:
+            # Default: use 500 evaluation points (sufficient for most ODEs)
+            self.n_steps = 500
+
+        self.fs = fs  # Keep for backward compatibility
         self.params = kwargs  # Additional solver parameters
 
         # Auto-detect device if not specified and normalize cuda to cuda:0
@@ -59,9 +81,9 @@ class Solver(ABC):
 
         # Warn if y0 is on wrong device or has wrong dtype
         if y0.device != self.device:
-            print(f"Warning: y0 is on device {y0.device} but solver expects {self.device}")
+            print(f"  Warning: y0 is on device {y0.device} but solver expects {self.device}")
         if y0.dtype != torch.float32:
-            print(f"Warning: y0 has dtype {y0.dtype} but solver expects torch.float32")
+            print(f"  Warning: y0 has dtype {y0.dtype} but solver expects torch.float32")
 
         return t_eval, y0
 
@@ -87,13 +109,13 @@ class Solver(ABC):
         cached_result = self._cache_manager.load(cache_key, self.device)
 
         if cached_result is not None:
-            print(f"[{self.__class__.__name__}] Loaded result from cache.")
+            print(f"    [{self.__class__.__name__}] Loaded result from cache")
             return cached_result
 
         # Compute integration if not cached
-        print(f"[{self.__class__.__name__}] Cache miss. Integrating on {self.device}...")
+        print(f"    [{self.__class__.__name__}] Cache miss - integrating on {self.device}...")
         t_result, y_result = self._integrate(ode_system, y0, t_eval)
-        print(f"[{self.__class__.__name__}] Integration completed.")
+        print(f"    [{self.__class__.__name__}] Integration complete")
 
         # Save to cache
         self._cache_manager.save(cache_key, t_result, y_result)
@@ -122,8 +144,8 @@ class TorchDiffEqSolver(Solver):
     This class only needs to implement the _integrate method.
     """
 
-    def __init__(self, time_span, fs, **kwargs):
-        super().__init__(time_span, fs, **kwargs)
+    def __init__(self, time_span, fs=None, n_steps=None, **kwargs):
+        super().__init__(time_span, fs=fs, n_steps=n_steps, **kwargs)
 
     def _integrate(
         self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
@@ -155,7 +177,8 @@ class TorchOdeSolver(Solver):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float,
+        fs: float | None = None,
+        n_steps: int | None = None,
         device: str | None = None,
         method: str = "dopri5",
         rtol: float = 1e-8,
@@ -167,14 +190,15 @@ class TorchOdeSolver(Solver):
         Initialize TorchOdeSolver.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz).
+        :param fs: Sampling frequency (Hz). DEPRECATED: use n_steps instead.
+        :param n_steps: Number of evaluation points. If None, defaults to 500.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param method: Integration method ('dopri5', 'tsit5', 'euler', 'heun').
         :param rtol: Relative tolerance for adaptive stepping.
         :param atol: Absolute tolerance for adaptive stepping.
         :param use_jit: Whether to use JIT compilation (can improve performance).
         """
-        super().__init__(time_span, fs, device, **kwargs)
+        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device, **kwargs)
         self.method = method.lower()
         self.rtol = rtol
         self.atol = atol
@@ -223,7 +247,7 @@ class TorchOdeSolver(Solver):
             return ode_system(t, y)
 
         # Create torchode components
-        term = to.ODETerm(torchode_func)
+        term = to.ODETerm(torchode_func)  # pyright: ignore[reportArgumentType]
 
         # Select step method
         if self.method == "dopri5":
@@ -265,5 +289,107 @@ class TorchOdeSolver(Solver):
         else:
             # Transpose from (batch, n_steps, n_dims) to (n_steps, batch, n_dims)
             y_result = solution.ys.transpose(0, 1)
+
+        return t_eval, y_result
+
+
+class SklearnParallelSolver(Solver):
+    """
+    ODE solver using sklearn's parallel processing with scipy's solve_ivp.
+
+    Uses multiprocessing (loky backend) to solve multiple initial conditions in parallel.
+    Each worker solves one trajectory at a time using scipy's RK45 method.
+    """
+
+    def __init__(
+        self,
+        time_span: tuple[float, float],
+        fs: float,
+        device: str | None = None,
+        n_jobs: int = -1,
+        batch_size: int | None = None,
+        rtol: float = 1e-6,
+        atol: float = 1e-8,
+        max_step: float | None = None,
+        **kwargs,
+    ):
+        """
+        Initialize SklearnParallelSolver.
+
+        :param time_span: Integration interval (t_start, t_end).
+        :param fs: Sampling frequency (Hz).
+        :param device: Device to use (only 'cpu' supported).
+        :param n_jobs: Number of parallel jobs (-1 for all CPUs).
+        :param batch_size: Unused, kept for API compatibility.
+        :param rtol: Relative tolerance for RK45.
+        :param atol: Absolute tolerance for RK45.
+        :param max_step: Maximum step size for RK45.
+        """
+        if device and "cuda" in device:
+            print("  Warning: SklearnParallelSolver does not support CUDA - falling back to CPU")
+            device = "cpu"
+
+        super().__init__(time_span, fs, device="cpu", **kwargs)
+
+        self.n_jobs = n_jobs
+        self.batch_size = batch_size
+        self.rtol = rtol
+        self.atol = atol
+        self.max_step = max_step or (time_span[1] - time_span[0]) / 100
+
+    def _integrate(
+        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Integrate using sklearn parallel processing with scipy's solve_ivp."""
+        t_eval_np = t_eval.cpu().numpy()
+        y0_np = y0.cpu().numpy()
+
+        if y0_np.ndim == 1:
+            y0_np = y0_np.reshape(1, -1)
+            single_trajectory = True
+        else:
+            single_trajectory = False
+
+        batch_size = y0_np.shape[0]
+
+        def ode_func(t: float, y: np.ndarray) -> np.ndarray:
+            # Convert to torch, call ODE system, convert back
+            t_torch = torch.tensor(t, dtype=torch.float32, device=self.device)
+            y_torch = torch.tensor(y, dtype=torch.float32, device=self.device)
+            # Ensure y_torch is 2D: (1, n_dims) for ODE system
+            if y_torch.ndim == 1:
+                y_torch = y_torch.unsqueeze(0)
+            dy_torch = ode_system(t_torch, y_torch)
+            # Return as 1D array
+            if dy_torch.ndim == 2:
+                dy_torch = dy_torch.squeeze(0)
+            return dy_torch.cpu().numpy()
+
+        # Define solver for single trajectory using scipy's optimized RK45
+        def solve_single_trajectory(y0_single: np.ndarray) -> np.ndarray:
+            """Solve ODE for a single initial condition using scipy's solve_ivp."""
+            solution = solve_ivp(
+                fun=lambda t, y: ode_func(t, y),
+                t_span=(t_eval_np[0], t_eval_np[-1]),
+                y0=y0_single,
+                method="RK45",
+                t_eval=t_eval_np,
+                rtol=self.rtol,
+                atol=self.atol,
+            )
+            return solution.y.T
+
+        if batch_size == 1 or self.n_jobs == 1:
+            results = [solve_single_trajectory(y0_np[0])]
+        else:
+            results = Parallel(n_jobs=self.n_jobs, backend="loky", verbose=0)(
+                delayed(solve_single_trajectory)(y0_np[i])  # type: ignore
+                for i in range(batch_size)
+            )
+
+        y_result_np = (
+            results[0] if single_trajectory else np.stack(results, axis=1)  # type: ignore[arg-type]
+        )
+        y_result = torch.tensor(y_result_np, dtype=torch.float32, device=self.device)
 
         return t_eval, y_result

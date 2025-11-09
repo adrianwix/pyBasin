@@ -6,16 +6,28 @@ from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtr
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import GridSampler
-from pybasin.solver import TorchOdeSolver
+from pybasin.solver import SklearnParallelSolver
 from pybasin.types import SetupProperties
 
 
-def setup_pendulum_system() -> SetupProperties:
+def setup_pendulum_system_sklearn() -> SetupProperties:
+    """
+    Setup pendulum system using SklearnParallelSolver.
+
+    This configuration uses the new sklearn-based parallel solver that
+    leverages Python 3.14's free-threading capabilities for efficient
+    parallel ODE solving.
+
+    Returns:
+        SetupProperties dictionary containing all system components
+    """
+    # Use same sample size as MATLAB for fair comparison
     n = 10000
 
-    # Auto-detect device (use GPU if available)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Setting up pendulum system on device: {device}")
+    # SklearnParallelSolver runs on CPU with parallel processing
+    device = "cpu"
+    print(f"Setting up pendulum system with SklearnParallelSolver on device: {device}")
+    print("Using multiprocessing backend with sklearn for parallel execution")
 
     # Define the parameters of the pendulum
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
@@ -31,16 +43,16 @@ def setup_pendulum_system() -> SetupProperties:
         device=device,
     )
 
-    # Create the solver - TorchOdeSolver is ~2x faster than TorchDiffEqSolver
-    # Use n_steps instead of fs for better performance (fs would create 25,001 points!)
-    # 100-500 evaluation points is sufficient for feature extraction
-    solver = TorchOdeSolver(
+    # Create the sklearn parallel solver with specified integration time and frequency
+    # n_jobs=-1 uses all available CPU cores
+    # Python 3.14's free-threading allows true parallel execution without GIL
+    solver = SklearnParallelSolver(
         time_span=(0, 1000),
-        n_steps=500,
+        fs=25,
         device=device,
-        method="dopri5",  # Dormand-Prince 5(4) - similar to MATLAB's ode45
-        rtol=1e-8,
-        atol=1e-6,
+        n_jobs=-1,  # Use all available CPUs
+        rtol=1e-6,
+        atol=1e-8,
     )
 
     # Instantiate the feature extractor with a steady state time.

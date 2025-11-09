@@ -73,9 +73,9 @@ class SupervisedClassifier(ClusterClassifier, Generic[P]):
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
 
-        print("classifier.fit - ode_system.params: ", classifier_ode_system.params)
-        print("classifier.fit - self.initial_conditions: ", self.initial_conditions)
-        print("classifier.fit - self.labels: ", self.labels)
+        print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
+        print(f"    [SupervisedClassifier] Template ICs: {self.initial_conditions.shape}")
+        print(f"    [SupervisedClassifier]Labels: {self.labels}")
 
         t, y = solver.integrate(classifier_ode_system, self.initial_conditions)  # type: ignore[reportUnknownArgumentType]
 
@@ -87,7 +87,7 @@ class SupervisedClassifier(ClusterClassifier, Generic[P]):
         train_x = features.detach().cpu().numpy()
         train_y = self.labels
 
-        print(train_x, train_y)
+        print(f"    Training classifier with {train_x.shape[0]} samples")
 
         self.classifier.fit(train_x, train_y)
 

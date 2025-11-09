@@ -45,10 +45,6 @@ class Sampler(ABC):
         """
         pass
 
-    # def to_numpy(self, tensor: torch.Tensor) -> np.ndarray:
-    #     """Convert PyTorch tensor to numpy array for compatibility."""
-    #     return tensor.numpy()
-
 
 class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
@@ -80,7 +76,6 @@ class GridSampler(Sampler):
         grid_matrices = torch.meshgrid(*grid_points, indexing="ij")
         points = torch.stack([grid.t().flatten() for grid in grid_matrices], dim=1)
 
-        print(f"Created grid with {len(points)} points ({n_per_dim} points per dimension)")
         return points
 
 
