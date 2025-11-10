@@ -38,7 +38,7 @@ class Solver(ABC):
         Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz) – number of samples per time unit. DEPRECATED: use n_steps instead.
+        :param fs: Sampling frequency (Hz) - number of samples per time unit. DEPRECATED: use n_steps instead.
         :param n_steps: Number of evaluation points. If None, defaults to 500 (recommended for most cases).
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param use_cache: Whether to use caching for integration results (default: True).
@@ -100,9 +100,17 @@ class Solver(ABC):
         Uses caching to avoid recomputation if the same problem was solved before.
 
         :param ode_system: An instance of ODESystem.
-        :param y0: Initial conditions.
-        :return: Tuple (t_eval, y_values) where y_values is the solution.
+        :param y0: Initial conditions with shape (batch, n_dims) where batch is the number
+                   of initial conditions and n_dims is the number of state variables.
+        :return: Tuple (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
+        # Validate y0 shape
+        if y0.ndim != 2:
+            raise ValueError(
+                f"y0 must be 2D with shape (batch, n_dims), got shape {y0.shape}. "
+                f"For single initial condition, use y0.unsqueeze(0) or y0.reshape(1, -1)."
+            )
+
         # Prepare tensors with correct device and dtype
         t_eval, y0 = self._prepare_tensors(y0)
 
@@ -203,8 +211,15 @@ class TorchDiffEqSolver(Solver):
     def _integrate(
         self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Integrate using torchdiffeq's odeint.
+
+        :param ode_system: An instance of ODESystem.
+        :param y0: Initial conditions with shape (batch, n_dims).
+        :param t_eval: Time points at which the solution is evaluated (1D tensor).
+        :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
+        """
         try:
-            # odeint returns a torch.Tensor of shape (len(t_eval), len(y0))
             # Type checker incorrectly infers tuple return type, but runtime is torch.Tensor
             y_torch: torch.Tensor = odeint(
                 ode_system, y0, t_eval, method=self.method, rtol=self.rtol, atol=self.atol
@@ -265,22 +280,13 @@ class TorchOdeSolver(Solver):
         Integrate using torchode.
 
         :param ode_system: An instance of ODESystem.
-        :param y0: Initial conditions (1D tensor with shape [n_dims]).
+        :param y0: Initial conditions with shape (batch, n_dims).
         :param t_eval: Time points at which the solution is evaluated (1D tensor).
-        :return: (t_eval, y_values) where y_values has shape (n_steps, n_dims).
+        :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
-        # TODO: Check if y0.ndim == 1 check makes sense here
-        # Determine batch size from y0
-        if y0.ndim == 1:
-            # Single initial condition: (n_dims,)
-            y0_batched = y0.unsqueeze(0)  # -> (1, n_dims)
-            batch_size = 1
-        elif y0.ndim == 2:
-            # Already batched: (batch, n_dims)
-            y0_batched = y0
-            batch_size = y0.shape[0]
-        else:
-            raise ValueError(f"y0 must be 1D or 2D, got shape {y0.shape}")
+        # y0 is guaranteed to be 2D (batch, n_dims) by Solver.integrate validation
+        y0_batched = y0
+        batch_size = y0.shape[0]
 
         # For torchode, we need t_start and t_end as (batch,) tensors
         # Repeat for each sample in the batch
@@ -338,12 +344,7 @@ class TorchOdeSolver(Solver):
         # Extract solution and transpose to match expected format
         # torchode returns (batch, n_steps, n_dims)
         # We need (n_steps, batch, n_dims) to match TorchDiffEqSolver
-        if batch_size == 1:  # noqa: SIM108
-            # Return (n_steps, n_dims) for single trajectory
-            y_result = solution.ys[0]
-        else:
-            # Transpose from (batch, n_steps, n_dims) to (n_steps, batch, n_dims)
-            y_result = solution.ys.transpose(0, 1)
+        y_result = solution.ys.transpose(0, 1)
 
         return t_eval, y_result
 
