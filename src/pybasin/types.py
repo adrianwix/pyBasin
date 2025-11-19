@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from pybasin.cluster_classifier import ClusterClassifier
 from pybasin.feature_extractor import FeatureExtractor
@@ -15,8 +15,8 @@ class SetupProperties(TypedDict):
     may use more specific types (e.g., GridSampler instead of Sampler).
     """
 
-    n: int # Number of samples
-    ode_system: ODESystem
+    n: int  # Number of samples
+    ode_system: ODESystem[Any]
     sampler: Sampler
     solver: Solver
     feature_extractor: FeatureExtractor

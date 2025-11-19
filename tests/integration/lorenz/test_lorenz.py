@@ -15,7 +15,7 @@ class TestLorenz:
     """Integration tests for Lorenz system basin stability estimation."""
 
     @pytest.mark.integration
-    def test_case1(self, tolerance):
+    def test_case1(self, tolerance: float) -> None:
         """Test Lorenz system case 1 - broken butterfly attractor parameters.
 
         Parameters: σ=0.12, r=0.0, b=-0.6
@@ -65,7 +65,7 @@ class TestLorenz:
         )
 
     @pytest.mark.integration
-    def test_case2(self, tolerance):
+    def test_case2(self, tolerance: float) -> None:
         """Test Lorenz system case 2 - adaptive parameter study varying sigma.
 
         Studies the effect of varying sigma parameter from 0.12 to 0.18 on basin stability.
@@ -178,7 +178,7 @@ class TestLorenz:
         as_bse.estimate_as_bs()
 
         # Prepare CSV data - only store tolerance differences
-        csv_data = []
+        csv_data: list[dict[str, float | int | bool]] = []
         csv_headers = [
             "N",
             "actual_grid_points",
@@ -249,7 +249,7 @@ class TestLorenz:
                 all_tests_passed = False
 
             # Add to CSV data
-            csv_data.append(
+            csv_data.append(  # type: ignore[arg-type]
                 {
                     "N": param_value,
                     "actual_grid_points": actual_grid_points,
@@ -264,9 +264,9 @@ class TestLorenz:
         # Save results to CSV
         csv_path = Path(__file__).parent / "hyperparameter_test_results.csv"
         with open(csv_path, "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
+            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)  # type: ignore[arg-type]
             writer.writeheader()
-            writer.writerows(csv_data)
+            writer.writerows(csv_data)  # type: ignore[arg-type]
 
         print(f"\nHyperparameter test results saved to: {csv_path}")
 
@@ -348,7 +348,7 @@ class TestLorenz:
         assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"
 
     @pytest.mark.integration
-    def test_tolerance_study(self, tolerance):
+    def test_tolerance_study(self, tolerance: float) -> None:
         """Test hyperparameter study varying ODE solver tolerance (rtol).
 
         Studies the effect of varying relative tolerance from 1e-3 to 1e-8 on basin stability.
@@ -398,7 +398,7 @@ class TestLorenz:
 
             # Use a more lenient tolerance for rtol=1e-3 since it's expected to be less accurate
             # For rtol >= 1e-4, we expect convergence to accurate values
-            test_tolerance = tolerance * 3.0 if rtol_value >= 1e-3 else tolerance
+            test_tolerance = tolerance * 3.0 if rtol_value >= 1e-3 else tolerance  # type: ignore[assignment]
 
             # Check butterfly1 basin stability
             expected_bs_b1 = expected["bs_butterfly1"]

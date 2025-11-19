@@ -2,6 +2,7 @@ import hashlib
 import os
 import pickle
 import shutil
+from typing import Any
 
 import torch
 
@@ -17,10 +18,10 @@ class CacheManager:
     def build_key(
         self,
         solver_name: str,
-        ode_system: ODESystem,
+        ode_system: ODESystem[Any],
         y0: torch.Tensor,
         t_eval: torch.Tensor,
-        solver_config: dict | None = None,
+        solver_config: dict[str, Any] | None = None,
     ) -> str:
         """Build a unique cache key based on solver type, configuration, ODE system, and initial conditions.
 

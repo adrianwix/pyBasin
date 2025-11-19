@@ -1,11 +1,19 @@
+from typing import TypedDict
+
 import pytest
 import torch
 
 from pybasin.sampler import GaussianSampler, GridSampler, UniformRandomSampler
 
 
+class SamplerParams(TypedDict):
+    min_limits: list[float]
+    max_limits: list[float]
+    device: str
+
+
 @pytest.fixture
-def sampler_params():
+def sampler_params() -> SamplerParams:
     return {
         "min_limits": [0.0, -1.0],
         "max_limits": [1.0, 1.0],
@@ -13,7 +21,7 @@ def sampler_params():
     }
 
 
-def test_uniform_sampler_shape(sampler_params):
+def test_uniform_sampler_shape(sampler_params: SamplerParams) -> None:
     sampler = UniformRandomSampler(**sampler_params)
     n = 100
     samples = sampler.sample(n)
@@ -26,7 +34,7 @@ def test_uniform_sampler_shape(sampler_params):
     assert samples.dtype == torch.float32
 
 
-def test_uniform_sampler_bounds(sampler_params):
+def test_uniform_sampler_bounds(sampler_params: SamplerParams) -> None:
     sampler = UniformRandomSampler(**sampler_params)
     samples = sampler.sample(1000)
 
@@ -36,7 +44,7 @@ def test_uniform_sampler_bounds(sampler_params):
     assert torch.all(samples[:, 1] >= -1.0) and torch.all(samples[:, 1] <= 1.0)
 
 
-def test_uniform_sampler_seed_reproducibility(sampler_params):
+def test_uniform_sampler_seed_reproducibility(sampler_params: SamplerParams) -> None:
     sampler = UniformRandomSampler(**sampler_params)
     samples1 = sampler.sample(100, seed=42)
     samples2 = sampler.sample(100, seed=42)
@@ -45,7 +53,7 @@ def test_uniform_sampler_seed_reproducibility(sampler_params):
     assert torch.allclose(samples1, samples2)
 
 
-def test_grid_sampler_coverage(sampler_params):
+def test_grid_sampler_coverage(sampler_params: SamplerParams) -> None:
     sampler = GridSampler(**sampler_params)
     samples = sampler.sample(100)
 
@@ -55,7 +63,7 @@ def test_grid_sampler_coverage(sampler_params):
     assert samples.shape[0] >= 100
 
 
-def test_gaussian_sampler_distribution(sampler_params):
+def test_gaussian_sampler_distribution(sampler_params: SamplerParams) -> None:
     sampler = GaussianSampler(**sampler_params, std_factor=0.2)
     samples = sampler.sample(1000)
 

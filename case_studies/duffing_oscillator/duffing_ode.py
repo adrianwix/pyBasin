@@ -29,21 +29,19 @@ class DuffingODE(ODESystem[DuffingParams]):
         """
         delta = self.params["delta"]
         k3 = self.params["k3"]
-        A = self.params["A"]
+        amplitude = self.params["A"]
 
         x = y[..., 0]
         x_dot = y[..., 1]
 
         dx_dt = x_dot
-        dx_dot_dt = -delta * x_dot - k3 * x**3 + A * torch.cos(t)
+        dx_dot_dt = -delta * x_dot - k3 * x**3 + amplitude * torch.cos(t)
 
         return torch.stack([dx_dt, dx_dot_dt], dim=1)
 
     def get_str(self) -> str:
         delta = self.params["delta"]
         k3 = self.params["k3"]
-        A = self.params["A"]
-        description = (
-            f"  dx/dt       = x_dot\n  dx_dot/dt   = -({delta})*x_dot - ({k3})*x^3 + ({A})*cos(t)\n"
-        )
+        amplitude = self.params["A"]
+        description = f"  dx/dt       = x_dot\n  dx_dot/dt   = -({delta})*x_dot - ({k3})*x^3 + ({amplitude})*cos(t)\n"
         return description

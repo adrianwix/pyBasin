@@ -1,6 +1,9 @@
+from typing import cast
+
 import torch
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.lorenz.lorenz_ode import LorenzParams
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import KNNCluster
@@ -45,7 +48,7 @@ def preview_plot_templates():
     sampler = props["sampler"]
     solver = props["solver"]
     feature_extractor = props["feature_extractor"]
-    params = props["cluster_classifier"].ode_params  # pyright: ignore[reportAttributeAccessIssue]
+    params = cast(KNNCluster[LorenzParams], props["cluster_classifier"]).ode_params
 
     # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
 
@@ -62,7 +65,7 @@ def preview_plot_templates():
     knn = KNeighborsClassifier(n_neighbors=1)
 
     # Instantiate the KNNCluster with the training data
-    knn_cluster = KNNCluster(
+    knn_cluster: KNNCluster[LorenzParams] = KNNCluster(
         classifier=knn,
         initial_conditions=classifier_initial_conditions,
         labels=classifier_labels,

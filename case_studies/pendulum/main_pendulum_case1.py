@@ -2,7 +2,6 @@
 # Third Parties
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.plotter import Plotter
 from pybasin.utils import time_execution
 
 

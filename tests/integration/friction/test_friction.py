@@ -15,7 +15,7 @@ class TestFriction:
     """Integration tests for friction oscillator basin stability estimation."""
 
     @pytest.mark.integration
-    def test_case1(self, tolerance):
+    def test_case1(self, tolerance: float) -> None:
         """Test friction oscillator case 1 parameters.
 
         Parameters: v_d=1.5, ξ=0.05, μsd=2.0, μd=0.5, μv=0.0, v0=0.5
@@ -75,7 +75,7 @@ class TestFriction:
         assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"
 
     @pytest.mark.integration
-    def test_case_v_study(self, tolerance):
+    def test_case_v_study(self, tolerance: float) -> None:
         """Test friction oscillator case 2 - adaptive parameter study varying v_d.
 
         Studies the effect of varying driving velocity v_d from 1.85 to 2.0.

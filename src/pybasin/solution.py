@@ -93,13 +93,11 @@ class Solution:
 
         :return: Dictionary with key information about the solution.
         """
-        initial_condition_list: list[list[float]] = self.initial_condition.tolist()
-        features_list: list[list[float]] | None = None
+        initial_condition_list: list[Any] = self.initial_condition.tolist()  # type: ignore[assignment]
+        features_list: list[Any] | None = None
         if self.features is not None:
-            features_list = self.features.tolist()
-        labels_list: list[int] | None = (
-            self.labels.tolist() if self.labels is not None else None
-        )
+            features_list = self.features.tolist()  # type: ignore[assignment]
+        labels_list: list[Any] | None = self.labels.tolist() if self.labels is not None else None
 
         return {
             "initial_condition": initial_condition_list,

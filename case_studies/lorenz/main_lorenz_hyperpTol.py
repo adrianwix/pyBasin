@@ -70,9 +70,6 @@ def main():
     print("Basin Stability Estimation Complete")
     print("=" * 80)
 
-    # Get classifier labels
-    classifier_labels = ["butterfly1", "butterfly2", "unbounded"]
-
     # Display results summary
     print("\nResults Summary:")
     print("-" * 80)

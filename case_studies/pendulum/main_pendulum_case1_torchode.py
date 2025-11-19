@@ -4,7 +4,6 @@ from case_studies.pendulum.setup_pendulum_system_torchode import (
     setup_pendulum_system_torchode,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.plotter import Plotter
 from pybasin.utils import time_execution
 
 
@@ -33,7 +32,7 @@ def main():
 
     basin_stability = bse.estimate_bs()
     print("\n" + "=" * 80)
-    print(f"Basin Stability Results:")
+    print("Basin Stability Results:")
     print("=" * 80)
     for label, value in basin_stability.items():
         print(f"  {label}: {value:.4f}")

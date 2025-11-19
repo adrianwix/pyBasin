@@ -1,16 +1,21 @@
 import inspect
 import os
 import time
+from collections.abc import Callable
 from datetime import datetime
 from json import JSONEncoder
+from typing import Any, ParamSpec, TypeVar
 
 import numpy as np
 import torch
 
 from pybasin.solution import Solution
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def time_execution(script_name, func, *args, **kwargs):
+
+def time_execution(script_name: str, func: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
     start_time = time.time()  # Record the start time
     result = func(*args, **kwargs)  # Execute the function
     end_time = time.time()  # Record the end time
@@ -67,22 +72,22 @@ def resolve_folder(save_to: str):
 
 
 class NumpyEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, Solution):
+    def default(self, o: Any) -> Any:  # type: ignore[override]
+        if isinstance(o, np.ndarray):
+            return o.tolist()  # type: ignore[return-value]
+        if isinstance(o, np.integer):
+            return int(o)  # type: ignore[arg-type]
+        if isinstance(o, np.floating):
+            return float(o)  # type: ignore[arg-type]
+        if isinstance(o, Solution):
             return {
-                "initial_condition": obj.initial_condition.tolist(),
-                "time": obj.time.tolist(),
-                "trajectory": obj.trajectory.tolist(),
-                "features": obj.features.tolist() if obj.features is not None else None,
-                "label": obj.label,
+                "initial_condition": o.initial_condition.tolist(),  # type: ignore[misc]
+                "time": o.time.tolist(),  # type: ignore[misc]
+                "y": o.y.tolist(),  # type: ignore[misc]
+                "features": o.features.tolist() if o.features is not None else None,  # type: ignore[misc]
+                "labels": o.labels.tolist() if o.labels is not None else None,  # type: ignore[misc]
             }
-        return super().default(obj)
+        return super().default(o)
 
 
 def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

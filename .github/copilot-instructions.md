@@ -2,6 +2,7 @@
 
 ## General Guidelines
 
+- Always use uv to run python commands
 - **DO NOT** create new files unless explicitly requested by the user
 - **DO NOT** modify existing files unless explicitly requested by the user
 - **DO NOT** suggest changes proactively - wait for the user to ask

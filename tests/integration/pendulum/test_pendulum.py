@@ -15,7 +15,7 @@ class TestPendulum:
     """Integration tests for pendulum basin stability estimation."""
 
     @pytest.mark.integration
-    def test_case1(self, tolerance):
+    def test_case1(self, tolerance: float) -> None:
         """Test pendulum case 1 parameters."""
         # Load expected results from JSON
         json_path = Path(__file__).parent / "main_pendulum.json"
@@ -62,7 +62,7 @@ class TestPendulum:
         )
 
     @pytest.mark.integration
-    def test_case2(self, tolerance):
+    def test_case2(self, tolerance: float) -> None:
         """Test pendulum case 2 parameters - adaptive parameter study."""
         # Load expected results from JSON
         json_path = Path(__file__).parent / "main_pendulum_case2.json"
@@ -163,7 +163,7 @@ class TestPendulum:
         as_bse.estimate_as_bs()
 
         # Prepare CSV data - only store tolerance differences
-        csv_data = []
+        csv_data: list[dict[str, float | int | bool]] = []
         csv_headers = [
             "N",
             "actual_grid_points",
@@ -173,6 +173,7 @@ class TestPendulum:
             "test_passed",
         ]
 
+        # TODO: Extra the adaptative tolerance test
         # Adaptive tolerance parameters
         min_n = 50
         max_n = 5000
@@ -224,7 +225,7 @@ class TestPendulum:
                 all_tests_passed = False
 
             # Add to CSV data
-            csv_data.append(
+            csv_data.append(  # type: ignore[arg-type]
                 {
                     "N": param_value,
                     "actual_grid_points": actual_grid_points,
@@ -238,9 +239,9 @@ class TestPendulum:
         # Save results to CSV
         csv_path = Path(__file__).parent / "hyperparameter_test_results.csv"
         with open(csv_path, "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
+            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)  # type: ignore[arg-type]
             writer.writeheader()
-            writer.writerows(csv_data)
+            writer.writerows(csv_data)  # type: ignore[arg-type]
 
         print(f"\nHyperparameter test results saved to: {csv_path}")
 
@@ -255,7 +256,7 @@ class TestPendulum:
         assert all_tests_passed, f"Some hyperparameter tests failed. See {csv_path} for details."
 
     @pytest.mark.integration
-    def test_n50_single_case(self):
+    def test_n50_single_case(self) -> None:
         """Test single case with N=50 to debug grid sampling behavior.
 
         Expected from MATLAB:

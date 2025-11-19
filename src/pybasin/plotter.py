@@ -3,8 +3,10 @@ import os
 import matplotlib
 
 matplotlib.use("Agg")  # Set backend before importing pyplot
+
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import SupervisedClassifier
@@ -28,7 +30,7 @@ class Plotter:
         full_path = os.path.join(full_folder, file_name)
 
         print("Saving plots to: ", full_path)
-        plt.savefig(full_path, dpi=300)
+        plt.savefig(full_path, dpi=300)  # type: ignore[misc]
 
     def plot_bse_results(self):
         """
@@ -65,44 +67,50 @@ class Plotter:
         # ['LC' 'LC' 'FP' 'LC' 'LC' ... ]
         labels = np.array(self.bse.solution.labels)
 
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(10, 10))  # type: ignore[misc]
 
         # 1) Bar plot for basin stability values.
-        plt.subplot(2, 2, 1)
+        plt.subplot(2, 2, 1)  # type: ignore[misc]
         bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
-        plt.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])
-        plt.xticks(bar_labels)
-        plt.ylabel("Fraction of samples")
-        plt.title("Basin Stability")
+        plt.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])  # type: ignore[misc]
+        plt.xticks(bar_labels)  # type: ignore[misc]
+        plt.ylabel("Fraction of samples")  # type: ignore[misc]
+        plt.title("Basin Stability")  # type: ignore[misc]
 
         # 2) State space scatter plot: class-labeled initial conditions.
-        plt.subplot(2, 2, 2)
+        plt.subplot(2, 2, 2)  # type: ignore[misc]
         unique_labels = np.unique(labels)
         for label in unique_labels:
             idx = np.where(labels == label)
-            plt.scatter(
-                initial_conditions[idx, 0], initial_conditions[idx, 1], s=4, alpha=0.5, label=label
+            plt.scatter(  # type: ignore[misc]
+                initial_conditions[idx, 0],
+                initial_conditions[idx, 1],
+                s=4,
+                alpha=0.5,
+                label=str(label),
             )
-        plt.title("Initial Conditions in State Space")
+        plt.title("Initial Conditions in State Space")  # type: ignore[misc]
         # TODO: Have custom labels per case
-        plt.xlabel("y_1")
-        plt.ylabel("y_2")
-        plt.legend(loc="upper left")
+        plt.xlabel("y_1")  # type: ignore[misc]
+        plt.ylabel("y_2")  # type: ignore[misc]
+        plt.legend(loc="upper left")  # type: ignore[misc]
 
         # 3) Feature space scatter plot with classifier results.
-        plt.subplot(2, 2, 3)
+        plt.subplot(2, 2, 3)  # type: ignore[misc]
         for label in unique_labels:
             idx = np.where(labels == label)
             # Map labels to class names if desired (example mapping below)
-            plt.scatter(features_array[idx, 0], features_array[idx, 1], s=5, alpha=0.5, label=label)
-        plt.title("Feature Space with Classifier Results")
-        plt.xlabel("Feature 1")
-        plt.ylabel("Feature 2")
-        plt.legend()
+            plt.scatter(  # type: ignore[misc]
+                features_array[idx, 0], features_array[idx, 1], s=5, alpha=0.5, label=str(label)
+            )
+        plt.title("Feature Space with Classifier Results")  # type: ignore[misc]
+        plt.xlabel("Feature 1")  # type: ignore[misc]
+        plt.ylabel("Feature 2")  # type: ignore[misc]
+        plt.legend()  # type: ignore[misc]
 
         # 4) Placeholder for future plotting.
-        plt.subplot(2, 2, 4)
-        plt.title("Future Plot")
+        plt.subplot(2, 2, 4)  # type: ignore[misc]
+        plt.title("Future Plot")  # type: ignore[misc]
 
         plt.tight_layout()
 
@@ -111,7 +119,7 @@ class Plotter:
         if self.bse.save_to:
             self.save_plot("bse_results_plot")
 
-        plt.show()
+        plt.show()  # type: ignore[misc]
 
     def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
         """
@@ -122,41 +130,42 @@ class Plotter:
                 "plot_phase requires a SupervisedClassifier with template initial conditions."
             )
 
-        t, trajectories = self.bse.solver.integrate(
-            self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
+        _t, trajectories = self.bse.solver.integrate(
+            self.bse.ode_system,
+            self.bse.cluster_classifier.initial_conditions,  # type: ignore[misc]
         )
 
         # Move tensors to CPU for plotting
         trajectories = trajectories.cpu()
 
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(8, 6))  # type: ignore[misc]
         if z_var is None:
-            ax = fig.add_subplot(111)
+            ax: Axes = fig.add_subplot(111)  # type: ignore[assignment]
             for _i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
             ):
-                ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))
-            ax.set_xlabel(f"State {x_var}")
-            ax.set_ylabel(f"State {y_var}")
-            ax.set_title("2D Phase Plot")
+                ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))  # type: ignore[misc]
+            ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
+            ax.set_ylabel(f"State {y_var}")  # type: ignore[misc]
+            ax.set_title("2D Phase Plot")  # type: ignore[misc]
         else:
-            ax = fig.add_subplot(111, projection="3d")
+            ax = fig.add_subplot(111, projection="3d")  # type: ignore[assignment]
             for _i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)
+                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
             ):
-                ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))
-            ax.set_xlabel(f"State {x_var}")
-            ax.set_ylabel(f"State {y_var}")
-            ax.set_zlabel(f"State {z_var}")
-            ax.set_title("3D Phase Plot")
+                ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))  # type: ignore[misc,attr-defined]
+            ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
+            ax.set_ylabel(f"State {y_var}")  # type: ignore[misc]
+            ax.set_zlabel(f"State {z_var}")  # type: ignore[misc,attr-defined]
+            ax.set_title("3D Phase Plot")  # type: ignore[misc]
 
-        plt.legend()
+        plt.legend()  # type: ignore[misc]
         plt.tight_layout()
 
         if self.bse.save_to:
             self.save_plot("phase_plot")
 
-        plt.show()
+        plt.show()  # type: ignore[misc]
 
     def plot_templates(self, plotted_var: int, time_span: tuple[float, float] | None = None):
         """
@@ -173,14 +182,15 @@ class Plotter:
 
         # Get trajectories for template initial conditions
         t, y = self.bse.solver.integrate(
-            self.bse.ode_system, self.bse.cluster_classifier.initial_conditions
+            self.bse.ode_system,
+            self.bse.cluster_classifier.initial_conditions,  # type: ignore[misc]
         )
 
         # Move tensors to CPU for plotting
         t = t.cpu()
         y = y.cpu()
 
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(8, 6))  # type: ignore[misc]
 
         # Filter time if specified
         idx = (t >= time_span[0]) & (t <= time_span[1]) if time_span is not None else slice(None)
@@ -188,18 +198,18 @@ class Plotter:
         # Plot each trajectory
         # Use permute instead of transpose for 3D tensors
         for _i, (label, traj) in enumerate(
-            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2), strict=True)
+            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
         ):
-            plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")
+            plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")  # type: ignore[misc]
 
-        plt.xlabel("Time")
-        plt.ylabel(f"State {plotted_var}")
-        plt.title("Template Trajectories")
-        plt.legend()
-        plt.grid(True)
+        plt.xlabel("Time")  # type: ignore[misc]
+        plt.ylabel(f"State {plotted_var}")  # type: ignore[misc]
+        plt.title("Template Trajectories")  # type: ignore[misc]
+        plt.legend()  # type: ignore[misc]
+        plt.grid(True)  # type: ignore[misc]
 
         # Save plot
         if self.bse.save_to:
             self.save_plot("template_trajectories_plot")
 
-        plt.show()
+        plt.show()  # type: ignore[misc]

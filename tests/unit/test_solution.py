@@ -6,7 +6,7 @@ from pybasin.solution import Solution
 
 
 @pytest.fixture
-def sample_solution():
+def sample_solution() -> Solution:
     n_steps, n_batch, n_states = 100, 5, 2
     ic = torch.randn(n_batch, n_states)
     time = torch.linspace(0, 10, n_steps)
@@ -14,7 +14,7 @@ def sample_solution():
     return Solution(initial_condition=ic, time=time, y=y)
 
 
-def test_solution_initialization(sample_solution):
+def test_solution_initialization(sample_solution: Solution) -> None:
     # 100 time steps
     assert sample_solution.time.shape == (100,)
     # 100 steps × 5 batches × 2 states
@@ -23,7 +23,7 @@ def test_solution_initialization(sample_solution):
     assert sample_solution.initial_condition.shape == (5, 2)
 
 
-def test_solution_set_labels(sample_solution):
+def test_solution_set_labels(sample_solution: Solution) -> None:
     labels = np.array([0, 1, 0, 1, 0])
     sample_solution.set_labels(labels)
 
@@ -33,7 +33,7 @@ def test_solution_set_labels(sample_solution):
     assert len(sample_solution.labels) == 5
 
 
-def test_solution_set_features(sample_solution):
+def test_solution_set_features(sample_solution: Solution) -> None:
     features = torch.randn(5, 3)
     sample_solution.set_features(features)
 
@@ -43,7 +43,7 @@ def test_solution_set_features(sample_solution):
     assert sample_solution.features.shape == (5, 3)
 
 
-def test_solution_shape_validation():
+def test_solution_shape_validation() -> None:
     # Solution rejects mismatched shapes (time has 100 steps but y has only 50)
     with pytest.raises(AssertionError):
         Solution(

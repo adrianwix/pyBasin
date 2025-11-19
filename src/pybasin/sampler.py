@@ -25,7 +25,7 @@ class Sampler(ABC):
         else:
             # Normalize "cuda" to "cuda:0" for consistency
             dev = torch.device(device)
-            if dev.type == "cuda" and dev.index is None:
+            if dev.type == "cuda" and dev.index is None:  # type: ignore[comparison-overlap]
                 self.device = torch.device("cuda:0")
             else:
                 self.device = dev

@@ -16,7 +16,7 @@ class TestDuffing:
     """Integration tests for Duffing oscillator basin stability estimation."""
 
     @pytest.mark.integration
-    def test_supervised(self, tolerance):
+    def test_supervised(self, tolerance: float) -> None:
         """Test Duffing oscillator supervised classification approach.
 
         Parameters: δ=0.08, k3=1, A=0.2
@@ -74,7 +74,7 @@ class TestDuffing:
         assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"
 
     @pytest.mark.integration
-    def test_unsupervised(self, tolerance):
+    def test_unsupervised(self, tolerance: float) -> None:
         """Test Duffing oscillator unsupervised clustering approach.
 
         Parameters: δ=0.08, k3=1, A=0.2

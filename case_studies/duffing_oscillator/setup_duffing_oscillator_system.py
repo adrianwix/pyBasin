@@ -1,8 +1,8 @@
 import torch
-from case_studies.duffing_oscillator.duffing_feature_extractor import DuffingFeatureExtractor
-from case_studies.duffing_oscillator.duffing_ode import DuffingODE, DuffingParams
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.duffing_oscillator.duffing_feature_extractor import DuffingFeatureExtractor
+from case_studies.duffing_oscillator.duffing_ode import DuffingODE, DuffingParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import GridSampler
 from pybasin.solver import TorchDiffEqSolver

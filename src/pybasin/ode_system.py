@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 import torch
 import torch.nn as nn
@@ -9,7 +9,7 @@ import torch.nn as nn
 P = TypeVar("P")
 
 
-class ODESystem(ABC, Generic[P], nn.Module):
+class ODESystem[P](ABC, nn.Module):
     """
     Abstract base class for defining an ODE system.
 

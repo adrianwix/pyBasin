@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 import torch
@@ -32,7 +32,7 @@ class ClusterClassifier(ABC):
         pass
 
 
-class SupervisedClassifier(ClusterClassifier, Generic[P]):
+class SupervisedClassifier[P](ClusterClassifier):
     """Base class for supervised classifiers that require template data."""
 
     labels: list[str]
@@ -92,7 +92,7 @@ class SupervisedClassifier(ClusterClassifier, Generic[P]):
         self.classifier.fit(train_x, train_y)
 
 
-class KNNCluster(SupervisedClassifier[P], Generic[P]):
+class KNNCluster[P](SupervisedClassifier[P]):
     """K-Nearest Neighbors classifier for basin stability analysis."""
 
     # TODO: Group initial_conditions, labels, and ode_params into a single argument
@@ -128,7 +128,7 @@ class KNNCluster(SupervisedClassifier[P], Generic[P]):
         return self.classifier.predict(features)
 
 
-class UnsupervisedClassifier(ClusterClassifier, Generic[P]):
+class UnsupervisedClassifier[P](ClusterClassifier):
     """Base class for unsupervised clustering algorithms."""
 
     def __init__(self, initial_conditions: torch.Tensor, ode_params: P):
@@ -142,7 +142,7 @@ class UnsupervisedClassifier(ClusterClassifier, Generic[P]):
         self.ode_params = ode_params
 
 
-class DBSCANCluster(UnsupervisedClassifier):
+class DBSCANCluster(UnsupervisedClassifier[Any]):
     """DBSCAN clustering for basin stability analysis."""
 
     classifier: DBSCAN

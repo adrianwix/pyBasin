@@ -1,11 +1,22 @@
+# pyright: reportUntypedBaseClass=false
 from abc import ABC, abstractmethod
+from typing import Any
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import torch
-import torchode as to
+import torchode as to  # type: ignore[import-untyped]
+from diffrax import (
+    ODETerm,
+    PIDController,
+    SaveAt,
+    Tsit5,
+    diffeqsolve,  # type: ignore[import-untyped]
+)
 from scipy.integrate import solve_ivp
-from sklearn.utils.parallel import Parallel, delayed
-from torchdiffeq import odeint
+from sklearn.utils.parallel import Parallel, delayed  # type: ignore[import-untyped]
+from torchdiffeq import odeint  # type: ignore[import-untyped]
 
 from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
@@ -32,7 +43,7 @@ class Solver(ABC):
         n_steps: int | None = None,
         device: str | None = None,
         use_cache: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize the solver with integration parameters.
@@ -69,8 +80,10 @@ class Solver(ABC):
         else:
             # Normalize "cuda" to "cuda:0" for consistency
             dev = torch.device(device)
-            if dev.type == "cuda" and dev.index is None:
-                self.device = torch.device("cuda:0")
+            # For CUDA devices, normalize to cuda:0 if no specific index given
+            # torch.device("cuda") creates index=0 automatically, but we normalize explicitly
+            if dev.type == "cuda":
+                self.device = torch.device(f"cuda:{dev.index}")
             else:
                 self.device = dev
 
@@ -93,7 +106,7 @@ class Solver(ABC):
         return t_eval, y0
 
     def integrate(
-        self, ode_system: ODESystem, y0: torch.Tensor
+        self, ode_system: ODESystem[Any], y0: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Solve the ODE system and return the evaluation time points and solution.
@@ -147,7 +160,7 @@ class Solver(ABC):
 
         return t_result, y_result
 
-    def _get_cache_config(self) -> dict:
+    def _get_cache_config(self) -> dict[str, Any]:
         """
         Get solver-specific configuration for cache key.
         Subclasses should override this to include relevant parameters.
@@ -158,7 +171,7 @@ class Solver(ABC):
 
     @abstractmethod
     def _integrate(
-        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Perform the actual integration using the given solver.
@@ -179,14 +192,14 @@ class TorchDiffEqSolver(Solver):
 
     def __init__(
         self,
-        time_span,
-        fs=None,
-        n_steps=None,
-        device=None,
+        time_span: tuple[float, float],
+        fs: float | None = None,
+        n_steps: int | None = None,
+        device: str | None = None,
         method: str = "dopri5",
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize TorchDiffEqSolver.
@@ -204,12 +217,12 @@ class TorchDiffEqSolver(Solver):
         self.rtol = rtol
         self.atol = atol
 
-    def _get_cache_config(self) -> dict:
+    def _get_cache_config(self) -> dict[str, Any]:
         """Include method, rtol, and atol in cache key."""
         return {"method": self.method, "rtol": self.rtol, "atol": self.atol}
 
     def _integrate(
-        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Integrate using torchdiffeq's odeint.
@@ -220,10 +233,10 @@ class TorchDiffEqSolver(Solver):
         :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
         try:
-            # Type checker incorrectly infers tuple return type, but runtime is torch.Tensor
-            y_torch: torch.Tensor = odeint(
+            # odeint returns Tensor, but type stubs are incomplete
+            y_torch: torch.Tensor = odeint(  # type: ignore[assignment]
                 ode_system, y0, t_eval, method=self.method, rtol=self.rtol, atol=self.atol
-            )  # type: ignore
+            )
         except RuntimeError as e:
             raise e
         return t_eval, y_torch
@@ -244,7 +257,7 @@ class TorchOdeSolver(Solver):
         rtol: float = 1e-8,
         atol: float = 1e-6,
         use_jit: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize TorchOdeSolver.
@@ -264,8 +277,8 @@ class TorchOdeSolver(Solver):
         self.atol = atol
         self.use_jit = use_jit
 
-    def _get_cache_config(self) -> dict:
-        """Include method, rtol, atol, and use_jit in cache key."""
+    def _get_cache_config(self) -> dict[str, Any]:
+        """Include method, rtol , atol, and use_jit in cache key."""
         return {
             "method": self.method,
             "rtol": self.rtol,
@@ -274,7 +287,7 @@ class TorchOdeSolver(Solver):
         }
 
     def _integrate(
-        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Integrate using torchode.
@@ -368,7 +381,7 @@ class SklearnParallelSolver(Solver):
         rtol: float = 1e-6,
         atol: float = 1e-8,
         max_step: float | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize SklearnParallelSolver.
@@ -396,7 +409,7 @@ class SklearnParallelSolver(Solver):
         self.atol = atol
         self.max_step = max_step or (time_span[1] - time_span[0]) / 100
 
-    def _get_cache_config(self) -> dict:
+    def _get_cache_config(self) -> dict[str, Any]:
         """Include method, rtol, atol, and max_step in cache key."""
         return {
             "method": self.method,
@@ -406,7 +419,7 @@ class SklearnParallelSolver(Solver):
         }
 
     def _integrate(
-        self, ode_system: ODESystem, y0: torch.Tensor, t_eval: torch.Tensor
+        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Integrate using sklearn parallel processing with scipy's solve_ivp."""
         t_eval_np = t_eval.cpu().numpy()
@@ -436,29 +449,201 @@ class SklearnParallelSolver(Solver):
         # Define solver for single trajectory using scipy's solve_ivp
         def solve_single_trajectory(y0_single: np.ndarray) -> np.ndarray:
             """Solve ODE for a single initial condition using scipy's solve_ivp."""
-            solution = solve_ivp(
-                fun=lambda t, y: ode_func(t, y),
+            # scipy.integrate.solve_ivp has incomplete type stubs
+            solution = solve_ivp(  # type: ignore[no-untyped-call]
+                fun=lambda t, y: ode_func(float(t), np.asarray(y)),  # type: ignore[arg-type]
                 t_span=(t_eval_np[0], t_eval_np[-1]),
                 y0=y0_single,
-                method=self.method,
+                method=self.method,  # type: ignore[arg-type]
                 t_eval=t_eval_np,
                 rtol=self.rtol,
                 atol=self.atol,
                 max_step=self.max_step,
             )
-            return solution.y.T
+            return solution.y.T  # type: ignore[no-any-return]
 
         if batch_size == 1 or self.n_jobs == 1:
             results = [solve_single_trajectory(y0_np[0])]
         else:
-            results = Parallel(n_jobs=self.n_jobs, backend="loky", verbose=0)(
-                delayed(solve_single_trajectory)(y0_np[i])  # type: ignore
+            # sklearn.utils.parallel has incomplete type stubs
+            results = Parallel(n_jobs=self.n_jobs, backend="loky", verbose=0)(  # type: ignore[misc]
+                delayed(solve_single_trajectory)(y0_np[i])  # type: ignore[misc]
                 for i in range(batch_size)
             )
 
-        y_result_np = (
-            results[0] if single_trajectory else np.stack(results, axis=1)  # type: ignore[arg-type]
-        )
+        # Stack results into array
+        if single_trajectory:
+            y_result_np: np.ndarray = results[0]  # type: ignore[index]
+        else:
+            # Filter out None values and stack
+            valid_results = [r for r in results if r is not None]  # type: ignore[misc]
+            y_result_np = np.stack(valid_results, axis=1)  # type: ignore[arg-type]
+
         y_result = torch.tensor(y_result_np, dtype=torch.float32, device=self.device)
+
+        return t_eval, y_result
+
+
+class JaxSolver(Solver):
+    """
+    ODE solver using JAX and Diffrax for high-performance GPU integration.
+
+    This solver leverages JAX's JIT compilation and automatic differentiation
+    with Diffrax's adaptive ODE solvers. It uses vmap for efficient batch processing
+    and supports both CPU and GPU devices.
+    """
+
+    def __init__(
+        self,
+        time_span: tuple[float, float],
+        fs: float | None = None,
+        n_steps: int | None = None,
+        device: str | None = None,
+        solver: Any | None = None,
+        rtol: float = 1e-6,
+        atol: float = 1e-8,
+        max_steps: int = 16**5,
+        **kwargs: Any,
+    ):
+        """
+        Initialize JaxSolver.
+
+        :param time_span: Tuple (t_start, t_end) defining the integration interval.
+        :param fs: Sampling frequency (Hz). DEPRECATED: use n_steps instead.
+        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
+        :param solver: Diffrax solver instance (e.g., Tsit5(), Dopri5()). If None, defaults to Tsit5().
+        :param rtol: Relative tolerance for adaptive stepping.
+        :param atol: Absolute tolerance for adaptive stepping.
+        :param max_steps: Maximum number of steps for the integrator.
+        """
+        # Map device strings to JAX device types
+        jax_device: Any
+        if device is None:
+            # Auto-detect: prefer GPU if available
+            jax_device = jax.devices()[0]  # type: ignore[misc]
+        elif device in ["cuda", "gpu", "cuda:0"]:
+            # Try to get GPU device
+            gpu_devices: list[Any] = [d for d in jax.devices() if d.device_kind == "gpu"]  # type: ignore[misc, union-attr]
+            if gpu_devices:
+                jax_device = gpu_devices[0]
+            else:
+                print("  Warning: GPU requested but not available - falling back to CPU")
+                jax_device = jax.devices("cpu")[0]  # type: ignore[misc]
+        elif device == "cpu":
+            jax_device = jax.devices("cpu")[0]  # type: ignore[misc]
+        else:
+            # Try to parse as specific device
+            jax_device = jax.devices()[0]  # type: ignore[misc]
+
+        # Store JAX device
+        self.jax_device: Any = jax_device  # JAX Device type not fully typed
+
+        # Call parent with normalized device string for PyTorch compatibility
+        device_str = "cuda:0" if jax_device.device_kind == "gpu" else "cpu"  # type: ignore[union-attr]
+        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device_str, **kwargs)
+
+        # Use provided solver or default to Tsit5
+        self.diffrax_solver = solver if solver is not None else Tsit5()
+        self.rtol = rtol
+        self.atol = atol
+        self.max_steps = max_steps
+
+    def _get_cache_config(self) -> dict[str, Any]:
+        """Include solver type, rtol, atol, and max_steps in cache key."""
+        return {
+            "solver": self.diffrax_solver.__class__.__name__,
+            "rtol": self.rtol,
+            "atol": self.atol,
+            "max_steps": self.max_steps,
+        }
+
+    def _integrate(
+        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Integrate using JAX/Diffrax.
+
+        :param ode_system: An instance of ODESystem.
+        :param y0: Initial conditions with shape (batch, n_dims).
+        :param t_eval: Time points at which the solution is evaluated (1D tensor).
+        :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
+        """
+        # Convert torch tensors to JAX arrays on the appropriate device
+        y0_jax: Any = jax.device_put(  # pyright: ignore[reportUnknownMemberType]
+            jnp.array(y0.cpu().numpy(), dtype=jnp.float32),  # pyright: ignore[reportUnknownMemberType]
+            self.jax_device,  # type: ignore[misc]
+        )
+        t_eval_jax: Any = jax.device_put(  # type: ignore[reportUnknownMemberType]
+            jnp.array(t_eval.cpu().numpy(), dtype=jnp.float32),  # type: ignore[reportUnknownMemberType]
+            self.jax_device,
+        )
+
+        # Define ODE function for Diffrax using pure JAX operations
+        # Diffrax expects f(t, y, args) where t is scalar and y matches y0 shape
+        def diffrax_ode(t: Any, y: Any, args: Any) -> jax.Array:
+            # Use JAX callback to call PyTorch ODE system
+            # This allows us to use the existing PyTorch ODE definitions
+            def torch_ode_callback(t_val: np.ndarray, y_val: np.ndarray) -> np.ndarray:
+                # Convert to torch tensors (happens outside JAX tracing)
+                t_torch = torch.tensor(t_val, dtype=torch.float32, device=self.device)
+                y_torch = torch.tensor(y_val, dtype=torch.float32, device=self.device)
+
+                # Ensure y_torch is 2D: (1, n_dims) for single trajectory
+                if y_torch.ndim == 1:
+                    y_torch = y_torch.unsqueeze(0)
+
+                # Call ODE system
+                dy_torch = ode_system(t_torch, y_torch)
+
+                # Convert back to numpy and squeeze batch dimension
+                if dy_torch.ndim == 2 and dy_torch.shape[0] == 1:
+                    dy_torch = dy_torch.squeeze(0)
+
+                return dy_torch.cpu().numpy()
+
+            # Use pure_callback to call PyTorch code from JAX
+            result_shape = jax.ShapeDtypeStruct(y.shape, jnp.float32)
+            dy_jax = jax.pure_callback(
+                torch_ode_callback, result_shape, t, y, vmap_method="sequential"
+            )
+            return dy_jax
+
+        # Setup Diffrax components
+        term = ODETerm(diffrax_ode)
+        t0, t1 = float(t_eval_jax[0]), float(t_eval_jax[-1])
+        saveat = SaveAt(ts=t_eval_jax)
+        stepsize_controller = PIDController(rtol=self.rtol, atol=self.atol)
+
+        # Define solve function for a single initial condition
+        def solve_single(y0_single: Any) -> jax.Array:
+            sol = diffeqsolve(  # type: ignore[misc]
+                term,
+                self.diffrax_solver,
+                t0=t0,
+                t1=t1,
+                dt0=None,
+                y0=y0_single,
+                saveat=saveat,
+                stepsize_controller=stepsize_controller,
+                max_steps=self.max_steps,
+            )
+            return sol.ys  # type: ignore[return-value]
+
+        # Use vmap for batch processing
+        solve_batch = jax.vmap(solve_single)
+
+        try:
+            # Integrate all trajectories in parallel
+            y_batch_jax = solve_batch(y0_jax)
+            jax.block_until_ready(y_batch_jax)  # type: ignore[no-untyped-call]
+        except Exception as e:
+            raise RuntimeError(f"JAX/Diffrax integration failed: {e}") from e
+
+        # Transpose from (batch, n_steps, n_dims) to (n_steps, batch, n_dims)
+        y_batch_jax = jnp.transpose(y_batch_jax, (1, 0, 2))
+
+        # Convert back to PyTorch tensors
+        y_result = torch.tensor(np.array(y_batch_jax), dtype=torch.float32, device=self.device)
 
         return t_eval, y_result

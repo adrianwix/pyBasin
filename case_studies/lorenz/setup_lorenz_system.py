@@ -5,7 +5,7 @@ from case_studies.lorenz.lorenz_feature_extractor import LorenzFeatureExtractor
 from case_studies.lorenz.lorenz_ode import LorenzODE, LorenzParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import UniformRandomSampler
-from pybasin.solver import TorchDiffEqSolver, TorchOdeSolver
+from pybasin.solver import TorchOdeSolver
 from pybasin.types import SetupProperties
 
 

@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import numpy as np
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 import torch
 
 from pybasin.cluster_classifier import ClusterClassifier, SupervisedClassifier
@@ -112,7 +112,7 @@ class BasinStabilityEstimator:
 
                 # Submit classifier fitting (which does its own integration)
                 classifier_future = executor.submit(
-                    self.cluster_classifier.fit,
+                    self.cluster_classifier.fit,  # type: ignore[arg-type,misc]
                     self.solver,
                     self.ode_system,
                     self.feature_extractor,
@@ -131,7 +131,7 @@ class BasinStabilityEstimator:
                 print("  Mode: SEQUENTIAL")
                 print("  Step 2a: Fitting classifier with template data...")
                 t2a = time.perf_counter()
-                self.cluster_classifier.fit(
+                self.cluster_classifier.fit(  # type: ignore[misc]
                     solver=self.solver,
                     ode_system=self.ode_system,
                     feature_extractor=self.feature_extractor,
@@ -171,7 +171,7 @@ class BasinStabilityEstimator:
         # Convert features to numpy for classifier
         t5_pred = time.perf_counter()
         features_np = features.detach().cpu().numpy()
-        labels = self.cluster_classifier.predict_labels(features_np)
+        labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
         self.solution.set_labels(labels)
         t5_pred_elapsed = time.perf_counter() - t5_pred
         t5_elapsed = time.perf_counter() - t5
@@ -286,8 +286,8 @@ class BasinStabilityEstimator:
         full_path = os.path.join(full_folder, file_name)
 
         # Convert tensors to lists for DataFrame
-        y0_list = self.y0.detach().cpu().numpy().tolist()
-        amplitudes_list = (
+        y0_list: list[Any] = self.y0.detach().cpu().numpy().tolist()
+        amplitudes_list: list[Any] = (
             self.solution.bifurcation_amplitudes.detach().cpu().numpy().tolist()
             if self.solution.bifurcation_amplitudes is not None
             else []
@@ -301,4 +301,4 @@ class BasinStabilityEstimator:
             }
         )
 
-        df.to_excel(full_path, index=False)
+        df.to_excel(full_path, index=False)  # type: ignore[call-overload]
