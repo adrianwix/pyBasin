@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-11-20 00:38:29",
+  "solver": "torchdiffeq_rk4",
+  "device": "cuda",
+  "parallel": true,
+  "n_samples": 10000,
+  "completed_samples": 10000,
+  "elapsed_seconds": 0.6581307800006471,
+  "time_per_integration_ms": 0.0658130780000647,
+  "integration_complete": true,
+  "rtol": 1e-08,
+  "atol": 1e-06,
+  "basin_stability": {
+    "FP": {
+      "count": 2907,
+      "fraction": 0.2907,
+      "percentage": 29.07,
+      "std_error": 0.004540853554123939
+    },
+    "LC": {
+      "count": 7093,
+      "fraction": 0.7093,
+      "percentage": 70.93,
+      "std_error": 0.004540853554123938
+    },
+    "total_samples": 10000
+  },
+  "verification": {
+    "overall_pass": false,
+    "FP": {
+      "measured": 0.2907,
+      "expected_range": [
+        0.141,
+        0.163
+      ],
+      "pass": false
+    },
+    "LC": {
+      "measured": 0.7093,
+      "expected_range": [
+        0.837,
+        0.859
+      ],
+      "pass": false
+    }
+  },
+  "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b"
+}

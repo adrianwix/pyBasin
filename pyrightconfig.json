@@ -8,7 +8,8 @@
         "**/node_modules",
         "**/.venv",
         "cache",
-        "artifacts"
+        "artifacts",
+        "benchmarks"
     ],
     "venvPath": ".",
     "venv": ".venv",

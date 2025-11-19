@@ -81,6 +81,7 @@ results_*/
 **/cache/
 **/results/
 **/results_*/
+!benchmarks/time_integrations/results/
 execution_time.txt
 *.png
 *.jpg
