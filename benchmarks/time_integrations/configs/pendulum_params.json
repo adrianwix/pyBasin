@@ -18,7 +18,7 @@
         "n_steps": 500
     },
     "initial_conditions": {
-        "n_samples": 10000,
+        "n_samples": 100000,
         "roi_min": [
             -2.6180339887498949,
             -10.0
@@ -40,8 +40,7 @@
             "alternative_method": "RK45"
         },
         "jax_diffrax": {
-            "method": "Dopri5",
-            "alternative_method": "Tsit5"
+            "method": "Dopri5"
         },
         "torchode": {
             "method": "dopri5",

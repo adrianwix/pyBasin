@@ -12,8 +12,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 1.214519886738279,
-    "relative_performance": 82.3370626466731
+    "speedup": 13.073921070604165,
+    "relative_performance": 7.648814725128125
   },
   {
     "timestamp": "2025-11-19 23:38:06",
@@ -28,8 +28,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.3328723783011129,
-    "relative_performance": 300.4154340182021
+    "speedup": 3.5832654928200913,
+    "relative_performance": 27.907505095665762
   },
   {
     "timestamp": "2025-11-19 23:38:34",
@@ -44,8 +44,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.9793308407233271,
-    "relative_performance": 102.11053899430011
+    "speedup": 10.542185643423977,
+    "relative_performance": 9.485699017487722
   },
   {
     "timestamp": "2025-11-19 23:40:08",
@@ -60,8 +60,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.2621667990432596,
-    "relative_performance": 381.43655247321834
+    "speedup": 2.8221423753130646,
+    "relative_performance": 35.43407337445434
   },
   {
     "timestamp": "2025-11-19 23:57:26",
@@ -76,8 +76,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.15274581409101598,
-    "relative_performance": 654.6824251459581
+    "speedup": 1.6442602044617307,
+    "relative_performance": 60.81762468534369
   },
   {
     "timestamp": "2025-11-20 00:05:02",
@@ -92,8 +92,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.02828458125285988,
-    "relative_performance": 3535.495155682707
+    "speedup": 0.3044745391597427,
+    "relative_performance": 328.43468710378755
   },
   {
     "timestamp": "2025-11-20 00:06:06",
@@ -108,8 +108,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.36592579039680256,
-    "relative_performance": 273.2794534420818
+    "speedup": 3.9390749822914835,
+    "relative_performance": 25.38667084266237
   },
   {
     "timestamp": "2025-11-20 00:09:46",
@@ -124,8 +124,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.10043782738914192,
-    "relative_performance": 995.6408118283404
+    "speedup": 1.081181331097936,
+    "relative_performance": 92.4914231532747
   },
   {
     "timestamp": "2025-11-20 00:37:14",
@@ -140,8 +140,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.6941952010197296,
-    "relative_performance": 144.05170167282373
+    "speedup": 7.472790989119411,
+    "relative_performance": 13.38188103288353
   },
   {
     "timestamp": "2025-11-20 00:37:15",
@@ -156,8 +156,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": false,
-    "speedup": 49.18976942116462,
-    "relative_performance": 2.032943052523713
+    "speedup": 529.5122541143776,
+    "relative_performance": 0.18885304206463077
   },
   {
     "timestamp": "2025-11-20 00:38:28",
@@ -172,8 +172,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": true,
-    "speedup": 0.37108360924592393,
-    "relative_performance": 269.481048228482
+    "speedup": 3.9945972650191757,
+    "relative_performance": 25.03381276398084
   },
   {
     "timestamp": "2025-11-20 00:38:29",
@@ -188,8 +188,8 @@
     "atol": 1e-06,
     "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b",
     "basin_stability_succeeded": false,
-    "speedup": 17.21224497858329,
-    "relative_performance": 5.8098173785248335
+    "speedup": 185.28435372289104,
+    "relative_performance": 0.5397109793175454
   },
   {
     "timestamp": "2025-11-20 00:50:48",
@@ -200,6 +200,54 @@
     "completed_samples": 10000,
     "elapsed_seconds": 11.327912,
     "time_per_integration_ms": 1.132791,
+    "rtol": 1e-08,
+    "atol": 1e-06,
+    "git_commit": "unknown",
+    "basin_stability_succeeded": true,
+    "speedup": 10.764682582279947,
+    "relative_performance": 9.28963759364469
+  },
+  {
+    "timestamp": "2025-11-20 01:28:43",
+    "solver": "jax_diffrax_dopri5",
+    "device": "cpu",
+    "parallel": "True",
+    "n_samples": 100000,
+    "completed_samples": 100000,
+    "elapsed_seconds": 56.355671,
+    "time_per_integration_ms": 0.563557,
+    "rtol": 1e-08,
+    "atol": 1e-06,
+    "git_commit": "cc1ba9c471640ee3be4c9b41cf944cd9876ff108",
+    "basin_stability_succeeded": true,
+    "speedup": 2.1637818312907675,
+    "relative_performance": 46.2153801986343
+  },
+  {
+    "timestamp": "2025-11-20 01:29:07",
+    "solver": "jax_diffrax_dopri5",
+    "device": "cuda",
+    "parallel": "True",
+    "n_samples": 100000,
+    "completed_samples": 100000,
+    "elapsed_seconds": 11.788935,
+    "time_per_integration_ms": 0.117889,
+    "rtol": 1e-08,
+    "atol": 1e-06,
+    "git_commit": "cc1ba9c471640ee3be4c9b41cf944cd9876ff108",
+    "basin_stability_succeeded": true,
+    "speedup": 10.343714423737174,
+    "relative_performance": 9.667706967094524
+  },
+  {
+    "timestamp": "2025-11-20 01:30:31",
+    "solver": "matlab_ode45",
+    "device": "cpu",
+    "parallel": "1",
+    "n_samples": 100000,
+    "completed_samples": 100000,
+    "elapsed_seconds": 121.941377,
+    "time_per_integration_ms": 1.219414,
     "rtol": 1e-08,
     "atol": 1e-06,
     "git_commit": "unknown",

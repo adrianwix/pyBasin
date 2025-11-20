@@ -314,9 +314,9 @@ def main():
     max_time = config["time_integration"]["max_integration_time_seconds"]
 
     # Detect available devices
-    devices_to_test = ["cpu"]
-    if jax.devices("gpu"):
-        devices_to_test.append("cuda")
+    devices_to_test = ["cuda"]
+    # if jax.devices("gpu"):
+    #     devices_to_test.append("cuda")
 
     # Run benchmarks for each device
     for device in devices_to_test:
@@ -328,11 +328,11 @@ def main():
         save_results(results, results_dir)
 
         # Run with alternative method (Tsit5)
-        print("\n" + "=" * 50)
-        print(f"Running ALTERNATIVE method: Tsit5 on {device.upper()}")
-        print("=" * 50 + "\n")
-        results_alt = run_benchmark(config, method="Tsit5", device=device, max_time=max_time)
-        save_results(results_alt, results_dir)
+        # print("\n" + "=" * 50)
+        # print(f"Running ALTERNATIVE method: Tsit5 on {device.upper()}")
+        # print("=" * 50 + "\n")
+        # results_alt = run_benchmark(config, method="Tsit5", device=device, max_time=max_time)
+        # save_results(results_alt, results_dir)
 
     print("\nAll JAX/Diffrax benchmarks complete!")
 

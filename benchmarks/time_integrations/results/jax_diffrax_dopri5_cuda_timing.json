@@ -1,34 +1,34 @@
 {
-  "timestamp": "2025-11-19 23:38:34",
+  "timestamp": "2025-11-20 01:36:52",
   "solver": "jax_diffrax_dopri5",
   "device": "cuda",
   "parallel": true,
-  "n_samples": 10000,
-  "completed_samples": 10000,
-  "elapsed_seconds": 11.566991527000937,
-  "time_per_integration_ms": 1.1566991527000936,
+  "n_samples": 100000,
+  "completed_samples": 100000,
+  "elapsed_seconds": 11.72299490000296,
+  "time_per_integration_ms": 0.11722994900002959,
   "integration_complete": true,
   "rtol": 1e-08,
   "atol": 1e-06,
   "basin_stability": {
     "FP": {
-      "count": 1527,
-      "fraction": 0.1527,
-      "percentage": 15.27,
-      "std_error": 0.0035969808172966393
+      "count": 15227,
+      "fraction": 0.15227,
+      "percentage": 15.226999999999999,
+      "std_error": 0.001136150725476158
     },
     "LC": {
-      "count": 8473,
-      "fraction": 0.8473,
-      "percentage": 84.73,
-      "std_error": 0.003596980817296639
+      "count": 84773,
+      "fraction": 0.84773,
+      "percentage": 84.773,
+      "std_error": 0.001136150725476158
     },
-    "total_samples": 10000
+    "total_samples": 100000
   },
   "verification": {
     "overall_pass": true,
     "FP": {
-      "measured": 0.1527,
+      "measured": 0.15227,
       "expected_range": [
         0.141,
         0.163
@@ -36,7 +36,7 @@
       "pass": true
     },
     "LC": {
-      "measured": 0.8473,
+      "measured": 0.84773,
       "expected_range": [
         0.837,
         0.859
@@ -44,5 +44,6 @@
       "pass": true
     }
   },
-  "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b"
+  "basin_stability_succeeded": true,
+  "git_commit": "cc1ba9c471640ee3be4c9b41cf944cd9876ff108"
 }
