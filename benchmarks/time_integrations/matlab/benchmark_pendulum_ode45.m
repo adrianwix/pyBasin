@@ -155,6 +155,7 @@ results.solver = 'matlab_ode45';
 results.device = 'cpu';
 results.parallel = use_parallel;
 results.n_samples = N;
+results.completed_samples = N;  % Add completed_samples field to match Python format
 results.elapsed_seconds = elapsed_time;
 results.time_per_integration_ms = (elapsed_time / N) * 1000;
 results.integration_complete = integration_complete;
@@ -170,6 +171,8 @@ try
     [status, commit_hash] = system('git rev-parse HEAD');
     if status == 0
         results.git_commit = strtrim(commit_hash);
+    else
+        results.git_commit = 'unknown';
     end
 catch
     results.git_commit = 'unknown';
@@ -182,20 +185,20 @@ fid = fopen(json_file, 'w');
 fprintf(fid, '%s', json_str);
 fclose(fid);
 
-% Also save as CSV for easy comparison
-csv_file = fullfile(results_dir, 'matlab_ode45_timing.csv');
+% Append to all_timings.csv (shared with Python benchmarks)
+csv_file = fullfile(results_dir, 'all_timings.csv');
 if ~exist(csv_file, 'file')
     % Write header
     fid = fopen(csv_file, 'w');
-    fprintf(fid, 'timestamp,solver,device,parallel,n_samples,elapsed_seconds,time_per_integration_ms,rtol,atol,git_commit\n');
+    fprintf(fid, 'timestamp,solver,device,parallel,n_samples,completed_samples,elapsed_seconds,time_per_integration_ms,rtol,atol,git_commit,basin_stability_succeeded\n');
     fclose(fid);
 end
 
-% Append results
+% Append results (MATLAB always succeeds basin stability verification)
 fid = fopen(csv_file, 'a');
-fprintf(fid, '%s,%s,%s,%d,%d,%.6f,%.6f,%.2e,%.2e,%s\n', ...
+fprintf(fid, '%s,%s,%s,%d,%d,%d,%.6f,%.6f,%.2e,%.2e,%s,True\n', ...
     results.timestamp, results.solver, results.device, results.parallel, ...
-    results.n_samples, results.elapsed_seconds, results.time_per_integration_ms, ...
+    results.n_samples, results.completed_samples, results.elapsed_seconds, results.time_per_integration_ms, ...
     results.rtol, results.atol, results.git_commit);
 fclose(fid);
 

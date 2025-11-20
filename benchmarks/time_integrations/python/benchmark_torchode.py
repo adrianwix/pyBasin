@@ -236,6 +236,8 @@ def run_benchmark(config, method="dopri5", device="cpu", max_time=120):
     print()
 
     # Save results
+    basin_stability_succeeded = verification["overall_pass"] if verification is not None else False
+
     results = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "solver": f"torchode_{method}",
@@ -252,6 +254,7 @@ def run_benchmark(config, method="dopri5", device="cpu", max_time=120):
         "atol": atol,
         "basin_stability": basin_stability_data,
         "verification": verification,
+        "basin_stability_succeeded": basin_stability_succeeded,
         "git_commit": get_git_commit(),
     }
 
@@ -276,7 +279,7 @@ def save_results(results, output_dir):
         with open(csv_file, "w") as f:
             f.write(
                 "timestamp,solver,device,parallel,n_samples,completed_samples,"
-                "elapsed_seconds,time_per_integration_ms,rtol,atol,git_commit\n"
+                "elapsed_seconds,time_per_integration_ms,rtol,atol,git_commit,basin_stability_succeeded\n"
             )
 
     # Append results
@@ -290,7 +293,8 @@ def save_results(results, output_dir):
             f"{results['timestamp']},{results['solver']},{results['device']},"
             f"{results['parallel']},{results['n_samples']},{results['completed_samples']},"
             f"{results['elapsed_seconds']:.6f},{time_per},"
-            f"{results['rtol']:.2e},{results['atol']:.2e},{results['git_commit']}\n"
+            f"{results['rtol']:.2e},{results['atol']:.2e},{results['git_commit']},"
+            f"{results['basin_stability_succeeded']}\n"
         )
 
     print("Results saved to:")

@@ -110,6 +110,11 @@ def print_comparison_report(df, baseline_solver="matlab_ode45", baseline_device=
     # Get most recent run for each solver/device combination
     latest_results = df.sort_values("timestamp").groupby(["solver", "device"]).tail(1)
 
+    # Filter out failed basin stability results
+    if "basin_stability_succeeded" in latest_results.columns:
+        latest_results = latest_results[latest_results["basin_stability_succeeded"] == True]
+        print("(Excluding solvers with failed basin stability verification)\n")
+
     # Sort by elapsed time
     latest_results = latest_results.sort_values("elapsed_seconds")
 
@@ -139,7 +144,7 @@ def print_comparison_report(df, baseline_solver="matlab_ode45", baseline_device=
 
     # Best performers
     print("-" * 80)
-    print("TOP 5 FASTEST SOLVERS")
+    print("TOP 5 FASTEST SOLVERS (with successful basin stability)")
     print("-" * 80)
 
     top_5 = latest_results.nsmallest(5, "elapsed_seconds")
@@ -203,6 +208,7 @@ def save_comparison_summary(df, output_dir):
             "time_per_integration_ms",
             "speedup",
             "relative_performance",
+            "basin_stability_succeeded",
         ]
     ].to_csv(summary_csv, index=False)
     print(f"Summary results saved to: {summary_csv}")
