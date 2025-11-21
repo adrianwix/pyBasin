@@ -224,22 +224,6 @@
     "relative_performance": 46.2153801986343
   },
   {
-    "timestamp": "2025-11-20 01:29:07",
-    "solver": "jax_diffrax_dopri5",
-    "device": "cuda",
-    "parallel": "True",
-    "n_samples": 100000,
-    "completed_samples": 100000,
-    "elapsed_seconds": 11.788935,
-    "time_per_integration_ms": 0.117889,
-    "rtol": 1e-08,
-    "atol": 1e-06,
-    "git_commit": "cc1ba9c471640ee3be4c9b41cf944cd9876ff108",
-    "basin_stability_succeeded": true,
-    "speedup": 10.343714423737174,
-    "relative_performance": 9.667706967094524
-  },
-  {
     "timestamp": "2025-11-20 01:30:31",
     "solver": "matlab_ode45",
     "device": "cpu",
@@ -254,5 +238,21 @@
     "basin_stability_succeeded": true,
     "speedup": 1.0,
     "relative_performance": 100.0
+  },
+  {
+    "timestamp": "2025-11-20 01:36:52",
+    "solver": "jax_diffrax_dopri5",
+    "device": "cuda",
+    "parallel": "True",
+    "n_samples": 100000,
+    "completed_samples": 100000,
+    "elapsed_seconds": 11.722995,
+    "time_per_integration_ms": 0.11723,
+    "rtol": 1e-08,
+    "atol": 1e-06,
+    "git_commit": "cc1ba9c471640ee3be4c9b41cf944cd9876ff108",
+    "basin_stability_succeeded": true,
+    "speedup": 10.401896187791602,
+    "relative_performance": 9.613631802763715
   }
 ]
