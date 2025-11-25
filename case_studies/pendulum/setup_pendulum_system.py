@@ -1,15 +1,17 @@
 import numpy as np
 import torch
 from sklearn.neighbors import KNeighborsClassifier
-from tsfresh.feature_extraction import (  # pyright: ignore[reportMissingTypeStubs]
-    MinimalFCParameters,
-)
 
+# from tsfresh.feature_extraction import (  # pyright: ignore[reportMissingTypeStubs]
+#     MinimalFCParameters,
+# )
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
+from pybasin.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import GridSampler
 from pybasin.solver import TorchOdeSolver
-from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
+
+# from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.types import SetupProperties
 
 
@@ -47,12 +49,13 @@ def setup_pendulum_system() -> SetupProperties:
     )
 
     # Instantiate the feature extractor with a steady state time.
-    feature_extractor = TsfreshFeatureExtractor(
-        time_steady=950.0,  # Same as PendulumFeatureExtractor
-        default_fc_parameters=MinimalFCParameters(),
-        n_jobs=1,  # Use n_jobs=1 for deterministic results (n_jobs>1 causes non-determinism)
-        normalize=False,  # Don't normalize - causes issues with KNN when templates differ from main data
-    )
+    # feature_extractor = TsfreshFeatureExtractor(
+    #     time_steady=950.0,  # Same as PendulumFeatureExtractor
+    #     default_fc_parameters=MinimalFCParameters(),
+    #     n_jobs=1,  # Use n_jobs=1 for deterministic results (n_jobs>1 causes non-determinism)
+    #     normalize=False,  # Don't normalize - causes issues with KNN when templates differ from main data
+    # )
+    feature_extractor = JaxFeatureExtractor(time_steady=950.0, normalize=False)
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
     classifier_initial_conditions = torch.tensor(
