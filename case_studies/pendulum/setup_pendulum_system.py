@@ -55,15 +55,25 @@ def setup_pendulum_system() -> SetupProperties:
     feature_extractor = JaxFeatureExtractor(time_steady=950.0, normalize=False)
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
-    classifier_initial_conditions = torch.tensor(
+    template_y0 = torch.tensor(
         [
             [0.5, 0.0],  # FP: fixed point
             [2.7, 0.0],  # LC: limit cycle
         ],
         dtype=torch.float32,
-        device=device,
+        device="cpu",  # Templates on CPU for CPU-based solver
     )
     classifier_labels = ["FP", "LC"]
+
+    # Create a CPU solver for template integration (more efficient for small batch)
+    template_solver = JaxSolver(
+        time_span=(0, 1000),
+        n_steps=1000,
+        device="cpu",
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=False,
+    )
 
     # Create a KNeighborsClassifier with k=1.
     knn = KNeighborsClassifier(n_neighbors=1)
@@ -71,9 +81,10 @@ def setup_pendulum_system() -> SetupProperties:
     # Instantiate the KNNCluster with the training data.
     knn_cluster = KNNCluster(
         classifier=knn,
-        initial_conditions=classifier_initial_conditions,
+        template_y0=template_y0,
         labels=classifier_labels,
         ode_params=params,
+        solver=template_solver,
     )
 
     return {

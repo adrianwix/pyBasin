@@ -18,7 +18,7 @@ def main():
         save_to="results_case1",
     )
 
-    basin_stability = bse.estimate_bs(parallel_integration=False)
+    basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
     # plotter = Plotter(bse=bse)

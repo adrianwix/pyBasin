@@ -11,8 +11,6 @@ from pybasin.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.solution import Solution
 
-# TODO: Fix namings
-
 # TypeVar for ODE parameters
 P = TypeVar("P")
 
@@ -35,25 +33,30 @@ class SupervisedClassifier[P](ClusterClassifier):
     """Base class for supervised classifiers that require template data."""
 
     labels: list[str]
-    initial_conditions: torch.Tensor
+    template_y0: torch.Tensor
     classifier: Any  # Type depends on subclass
 
     def __init__(
         self,
-        initial_conditions: torch.Tensor,
+        template_y0: torch.Tensor,
         labels: list[str],
         ode_params: P,
+        solver: SolverProtocol | None = None,
     ):
         """
         Initialize the supervised classifier.
 
-        :param initial_conditions: Template initial conditions for training.
+        :param template_y0: Template initial conditions for training.
         :param labels: Ground truth labels for template conditions.
         :param ode_params: ODE parameters to use for generating training data.
+        :param solver: Optional solver for template integration. If provided, this solver
+                       will be used instead of the main solver (useful for CPU-based
+                       template integration when templates are few).
         """
         self.labels = labels
-        self.initial_conditions = initial_conditions
+        self.template_y0 = template_y0
         self.ode_params = deepcopy(ode_params)
+        self.solver = solver
         self.solution: Solution | None = None  # Populated by integrate_templates
 
     def integrate_templates(
@@ -67,18 +70,22 @@ class SupervisedClassifier[P](ClusterClassifier):
         This method should be called before fit_with_features() to allow the main
         feature extraction to fit the scaler first.
 
-        :param solver: Solver to integrate the ODE system (Solver or JaxSolver).
+        :param solver: Fallback solver if no solver was provided at init.
         :param ode_system: ODE system to integrate (ODESystem or JaxODESystem).
         """
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
 
-        print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
-        print(f"    [SupervisedClassifier] Template ICs: {self.initial_conditions.shape}")
-        print(f"    [SupervisedClassifier] Labels: {self.labels}")
+        # Use the classifier's own solver if provided, otherwise use the passed solver
+        effective_solver = self.solver if self.solver is not None else solver
 
-        t, y = solver.integrate(classifier_ode_system, self.initial_conditions)  # type: ignore[reportUnknownArgumentType]
-        self.solution = Solution(initial_condition=self.initial_conditions, time=t, y=y)
+        print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
+        print(f"    [SupervisedClassifier] Template ICs: {self.template_y0.shape}")
+        print(f"    [SupervisedClassifier] Labels: {self.labels}")
+        print(f"    [SupervisedClassifier] Using solver: {type(effective_solver).__name__}")
+
+        t, y = effective_solver.integrate(classifier_ode_system, self.template_y0)  # type: ignore[reportUnknownArgumentType]
+        self.solution = Solution(initial_condition=self.template_y0, time=t, y=y)
 
     def fit_with_features(
         self,
@@ -132,28 +139,29 @@ class SupervisedClassifier[P](ClusterClassifier):
 class KNNCluster[P](SupervisedClassifier[P]):
     """K-Nearest Neighbors classifier for basin stability analysis."""
 
-    # TODO: Group initial_conditions, labels, and ode_params into a single argument
     def __init__(
         self,
         classifier: KNeighborsClassifier | None,
-        initial_conditions: torch.Tensor,
+        template_y0: torch.Tensor,
         labels: list[str],
         ode_params: P,
+        solver: SolverProtocol | None = None,
         **kwargs: Any,
     ):
         """
         Initialize KNN classifier.
 
         :param classifier: KNeighborsClassifier instance, or None to create default.
-        :param initial_conditions: Template initial conditions.
+        :param template_y0: Template initial conditions.
         :param labels: Ground truth labels.
         :param ode_params: ODE parameters.
+        :param solver: Optional solver for template integration.
         :param kwargs: Additional arguments for KNeighborsClassifier if classifier is None.
         """
         if classifier is None:
             classifier = KNeighborsClassifier(**kwargs)
         self.classifier = classifier
-        super().__init__(initial_conditions, labels, ode_params)
+        super().__init__(template_y0, labels, ode_params, solver)
 
     def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """
@@ -168,14 +176,14 @@ class KNNCluster[P](SupervisedClassifier[P]):
 class UnsupervisedClassifier[P](ClusterClassifier):
     """Base class for unsupervised clustering algorithms."""
 
-    def __init__(self, initial_conditions: torch.Tensor, ode_params: P):
+    def __init__(self, template_y0: torch.Tensor, ode_params: P):
         """
         Initialize the unsupervised classifier.
 
-        :param initial_conditions: Initial conditions to cluster.
+        :param template_y0: Template initial conditions to cluster.
         :param ode_params: ODE parameters.
         """
-        self.initial_conditions = initial_conditions
+        self.template_y0 = template_y0
         self.ode_params = ode_params
 
 

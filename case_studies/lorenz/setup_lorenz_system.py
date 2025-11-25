@@ -45,7 +45,7 @@ def setup_lorenz_system() -> SetupProperties:
 
     knn_cluster = KNNCluster(
         classifier=knn,
-        initial_conditions=classifier_initial_conditions,
+        template_y0=classifier_initial_conditions,
         labels=classifier_labels,
         ode_params=params,
     )

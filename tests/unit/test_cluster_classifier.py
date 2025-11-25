@@ -40,7 +40,7 @@ def test_knn_classifier_fit_predict():
 
     knn = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
-        initial_conditions=initial_conditions,
+        template_y0=initial_conditions,
         labels=labels,
         ode_params=params,
     )

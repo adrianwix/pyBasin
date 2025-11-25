@@ -130,9 +130,11 @@ class Plotter:
                 "plot_phase requires a SupervisedClassifier with template initial conditions."
             )
 
-        _t, trajectories = self.bse.solver.integrate(
+        # Use classifier's solver if available, otherwise use main solver
+        solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
+        _t, trajectories = solver.integrate(
             self.bse.ode_system,
-            self.bse.cluster_classifier.initial_conditions,  # type: ignore[misc]
+            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
         )
 
         # Move tensors to CPU for plotting
@@ -180,10 +182,13 @@ class Plotter:
                 "plot_templates requires a SupervisedClassifier with template initial conditions."
             )
 
+        # Use classifier's solver if available, otherwise use main solver
+        solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
+
         # Get trajectories for template initial conditions
-        t, y = self.bse.solver.integrate(
+        t, y = solver.integrate(
             self.bse.ode_system,
-            self.bse.cluster_classifier.initial_conditions,  # type: ignore[misc]
+            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
         )
 
         # Move tensors to CPU for plotting
