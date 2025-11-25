@@ -4,7 +4,8 @@ import pytest
 import torch
 
 from pybasin.ode_system import ODESystem
-from pybasin.solver import JaxSolver, SklearnParallelSolver, TorchDiffEqSolver, TorchOdeSolver
+from pybasin.solver import SklearnParallelSolver, TorchDiffEqSolver, TorchOdeSolver
+from pybasin.solvers import JaxForPytorchSolver
 
 
 class ExponentialParams(TypedDict):
@@ -118,7 +119,7 @@ def test_sklearn_solver_batched(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_jax_solver_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxForPytorchSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_ode, y0)
@@ -134,7 +135,7 @@ def test_jax_solver_integration(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_jax_solver_batched(simple_ode: ExponentialDecayODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxForPytorchSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
 
     y0 = torch.tensor([[1.0], [2.0]])
     t, y = solver.integrate(simple_ode, y0)
@@ -148,13 +149,15 @@ def test_jax_solver_batched(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_cache_behavior(simple_ode: ExponentialDecayODE) -> None:
-    """Test that JaxSolver produces accurate results comparable to other solvers."""
+    """Test that JaxForPytorchSolver produces accurate results comparable to other solvers."""
     y0 = torch.tensor([[1.0]])
     time_span = (0, 1)
     n_steps = 50
 
     # Solve with multiple solvers
-    jax_solver = JaxSolver(time_span=time_span, n_steps=n_steps, device="cpu", use_cache=False)
+    jax_solver = JaxForPytorchSolver(
+        time_span=time_span, n_steps=n_steps, device="cpu", use_cache=False
+    )
     torch_solver = TorchDiffEqSolver(
         time_span=time_span, n_steps=n_steps, device="cpu", use_cache=False
     )
@@ -167,12 +170,12 @@ def test_cache_behavior(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_jax_solver_custom_solver(simple_ode: ExponentialDecayODE) -> None:
-    """Test that JaxSolver accepts custom Diffrax solvers."""
+    """Test that JaxForPytorchSolver accepts custom Diffrax solvers."""
     from diffrax import Dopri5
 
     # Use custom Dopri5 solver instead of default Tsit5
     custom_solver = Dopri5()
-    solver = JaxSolver(
+    solver = JaxForPytorchSolver(
         time_span=(0, 1), n_steps=10, device="cpu", solver=custom_solver, use_cache=False
     )
 

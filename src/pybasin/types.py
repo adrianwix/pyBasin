@@ -1,10 +1,9 @@
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from pybasin.cluster_classifier import ClusterClassifier
 from pybasin.feature_extractor import FeatureExtractor
-from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
-from pybasin.solver import Solver
 
 
 class SetupProperties(TypedDict):
@@ -16,8 +15,8 @@ class SetupProperties(TypedDict):
     """
 
     n: int  # Number of samples
-    ode_system: ODESystem[Any]
+    ode_system: ODESystemProtocol
     sampler: Sampler
-    solver: Solver
+    solver: SolverProtocol
     feature_extractor: FeatureExtractor
     cluster_classifier: ClusterClassifier

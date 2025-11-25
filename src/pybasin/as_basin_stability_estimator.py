@@ -11,9 +11,8 @@ import torch
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import ClusterClassifier
 from pybasin.feature_extractor import FeatureExtractor
-from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
-from pybasin.solver import Solver
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 
@@ -32,9 +31,9 @@ class ASBasinStabilityEstimator:
     def __init__(
         self,
         n: int,
-        ode_system: ODESystem[Any],
+        ode_system: ODESystemProtocol,
         sampler: Sampler,
-        solver: Solver,
+        solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
         as_params: AdaptiveStudyParams,
@@ -44,9 +43,9 @@ class ASBasinStabilityEstimator:
         Initialize the ASBasinStabilityEstimator.
 
         :param n: Number of initial conditions (samples) to generate.
-        :param ode_system: The ODE system model.
+        :param ode_system: The ODE system model (ODESystem or JaxODESystem).
         :param sampler: The Sampler object to generate initial conditions.
-        :param solver: The Solver object to integrate the ODE system.
+        :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features.
         :param cluster_classifier: The ClusterClassifier object to assign labels.
         :param as_params: The AdaptiveStudyParams object to vary the parameter.

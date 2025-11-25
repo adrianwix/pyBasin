@@ -8,9 +8,8 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.feature_extractor import FeatureExtractor
-from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.solution import Solution
-from pybasin.solver import Solver
 
 # TODO: Fix namings
 
@@ -59,8 +58,8 @@ class SupervisedClassifier[P](ClusterClassifier):
 
     def integrate_templates(
         self,
-        solver: Solver,
-        ode_system: ODESystem[P],
+        solver: SolverProtocol,
+        ode_system: ODESystemProtocol,
     ) -> None:
         """
         Integrate ODE for template initial conditions (without feature extraction).
@@ -68,8 +67,8 @@ class SupervisedClassifier[P](ClusterClassifier):
         This method should be called before fit_with_features() to allow the main
         feature extraction to fit the scaler first.
 
-        :param solver: Solver to integrate the ODE system.
-        :param ode_system: ODE system to integrate.
+        :param solver: Solver to integrate the ODE system (Solver or JaxSolver).
+        :param ode_system: ODE system to integrate (ODESystem or JaxODESystem).
         """
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
@@ -109,8 +108,8 @@ class SupervisedClassifier[P](ClusterClassifier):
 
     def fit(
         self,
-        solver: Solver,
-        ode_system: ODESystem[P],
+        solver: SolverProtocol,
+        ode_system: ODESystemProtocol,
         feature_extractor: FeatureExtractor,
     ) -> None:
         """
@@ -121,8 +120,8 @@ class SupervisedClassifier[P](ClusterClassifier):
         better normalization, use integrate_templates() + fit_with_features()
         to allow the main data to fit the scaler first.
 
-        :param solver: Solver to integrate the ODE system.
-        :param ode_system: ODE system to integrate.
+        :param solver: Solver to integrate the ODE system (Solver or JaxSolver).
+        :param ode_system: ODE system to integrate (ODESystem or JaxODESystem).
         :param feature_extractor: Feature extractor to transform trajectories.
         """
         # Use the new two-step methods for consistency

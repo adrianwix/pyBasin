@@ -5,11 +5,11 @@ from sklearn.neighbors import KNeighborsClassifier
 # from tsfresh.feature_extraction import (  # pyright: ignore[reportMissingTypeStubs]
 #     MinimalFCParameters,
 # )
-from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
+from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import GridSampler
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import JaxSolver
 
 # from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.types import SetupProperties
@@ -25,8 +25,8 @@ def setup_pendulum_system() -> SetupProperties:
     # Define the parameters of the pendulum
     params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 
-    # Instantiate ODE system for the pendulum.
-    ode_system = PendulumODE(params)
+    # Instantiate JAX ODE system for the pendulum (high-performance).
+    ode_system = PendulumJaxODE(params)
 
     # Define sampling limits based on the pendulum parameters.
     # Here the angular limits for theta are adjusted using arcsin(T/K).
@@ -36,16 +36,13 @@ def setup_pendulum_system() -> SetupProperties:
         device=device,
     )
 
-    # Create the solver - TorchOdeSolver is ~2x faster than TorchDiffEqSolver
-    # Use n_steps instead of fs for better performance (fs would create 25,001 points!)
-    # 100-500 evaluation points is sufficient for feature extraction
-    solver = TorchOdeSolver(
+    solver = JaxSolver(
         time_span=(0, 1000),
         n_steps=1000,
         device=device,
-        method="dopri5",  # Dormand-Prince 5(4) - similar to MATLAB's ode45
         rtol=1e-8,
         atol=1e-6,
+        use_cache=False,
     )
 
     # Instantiate the feature extractor with a steady state time.

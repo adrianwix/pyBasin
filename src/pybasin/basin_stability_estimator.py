@@ -10,10 +10,9 @@ import torch
 
 from pybasin.cluster_classifier import ClusterClassifier, SupervisedClassifier
 from pybasin.feature_extractor import FeatureExtractor
-from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
-from pybasin.solver import Solver
 from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
 
 
@@ -33,9 +32,9 @@ class BasinStabilityEstimator:
     def __init__(
         self,
         n: int,
-        ode_system: ODESystem[Any],
+        ode_system: ODESystemProtocol,
         sampler: Sampler,
-        solver: Solver,
+        solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
         cluster_classifier: ClusterClassifier,
         save_to: str | None = None,
@@ -44,9 +43,9 @@ class BasinStabilityEstimator:
         Initialize the BasinStabilityEstimator.
 
         :param n: Number of initial conditions (samples) to generate.
-        :param ode_system: The ODE system model.
+        :param ode_system: The ODE system model (ODESystem or JaxODESystem).
         :param sampler: The Sampler object to generate initial conditions.
-        :param solver: The Solver object to integrate the ODE system.
+        :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
         :param cluster_classifier: The ClusterClassifier object to assign labels.
         :param save_to: Optional file path to save results.
@@ -96,12 +95,14 @@ class BasinStabilityEstimator:
 
         # Step 2: Integration (possibly parallel with classifier fitting)
         print("\nSTEP 2: ODE Integration")
+        t2_start = time.perf_counter()  # Track total integration time
+        t2a_elapsed = 0.0  # Template integration time
+        t2b_elapsed = 0.0  # Main integration time
 
         if parallel_integration and isinstance(self.cluster_classifier, SupervisedClassifier):
             print("  Mode: PARALLEL (integration only)")
             print("  • Main integration (sampled ICs)")
             print("  • Template integration (classifier ICs)")
-            t2 = time.perf_counter()
 
             # Run ONLY integrations in parallel (not feature extraction)
             # This ensures the scaler is fitted on main data first for consistent normalization
@@ -120,7 +121,8 @@ class BasinStabilityEstimator:
                 t, y = main_future.result()
                 template_future.result()  # Just wait for completion
 
-            t2_elapsed = time.perf_counter() - t2
+            t2_elapsed = time.perf_counter() - t2_start
+            # In parallel mode, we can't separate the times accurately
             print(f"  Both integrations complete in {t2_elapsed:.4f}s")
             print(f"  Main trajectory shape: {y.shape}")
         else:
@@ -128,20 +130,24 @@ class BasinStabilityEstimator:
             if isinstance(self.cluster_classifier, SupervisedClassifier):
                 print("  Mode: SEQUENTIAL")
                 print("  Step 2a: Integrating template initial conditions...")
-                t2a = time.perf_counter()
+                t2a_start = time.perf_counter()
                 self.cluster_classifier.integrate_templates(  # type: ignore[misc]
                     solver=self.solver,
                     ode_system=self.ode_system,
                 )
-                t2a_elapsed = time.perf_counter() - t2a
+                t2a_elapsed = time.perf_counter() - t2a_start
                 print(f"    Template integration in {t2a_elapsed:.4f}s")
 
             print("  Step 2b: Integrating sampled initial conditions...")
-            t2 = time.perf_counter()
+            t2b_start = time.perf_counter()
             t, y = self.solver.integrate(self.ode_system, self.y0)
-            t2_elapsed = time.perf_counter() - t2
+            t2b_elapsed = time.perf_counter() - t2b_start
             print(f"    Main trajectory shape: {y.shape}")
-            print(f"    Integration complete in {t2_elapsed:.4f}s")
+            print(f"    Main integration complete in {t2b_elapsed:.4f}s")
+
+            # Total integration time includes both template and main
+            t2_elapsed = time.perf_counter() - t2_start
+            print(f"    Total integration time: {t2_elapsed:.4f}s")
 
         # Step 3: Create Solution object
         print("\nSTEP 3: Creating Solution Object")
@@ -213,6 +219,14 @@ class BasinStabilityEstimator:
         print(
             f"  2. Integration:        {t2_elapsed:8.4f}s  ({t2_elapsed / total_elapsed * 100:5.1f}%)"
         )
+        if t2a_elapsed > 0:
+            print(
+                f"     - Template:         {t2a_elapsed:8.4f}s  ({t2a_elapsed / total_elapsed * 100:5.1f}%)"
+            )
+        if t2b_elapsed > 0:
+            print(
+                f"     - Main:             {t2b_elapsed:8.4f}s  ({t2b_elapsed / total_elapsed * 100:5.1f}%)"
+            )
         print(
             f"  3. Solution/Amps:      {t3_elapsed:8.4f}s  ({t3_elapsed / total_elapsed * 100:5.1f}%)"
         )
