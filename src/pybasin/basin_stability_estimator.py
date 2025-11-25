@@ -111,6 +111,8 @@ class BasinStabilityEstimator:
                 main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)
 
                 # Submit template integration only (not full classifier fitting)
+                # Note: integrate_templates uses classifier's own solver if available,
+                # otherwise falls back to the passed solver
                 template_future = executor.submit(
                     self.cluster_classifier.integrate_templates,  # type: ignore[arg-type,misc]
                     self.solver,

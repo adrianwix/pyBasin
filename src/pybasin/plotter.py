@@ -1,6 +1,7 @@
 import os
 
 import matplotlib
+import torch
 
 matplotlib.use("Agg")  # Set backend before importing pyplot
 
@@ -132,9 +133,17 @@ class Plotter:
 
         # Use classifier's solver if available, otherwise use main solver
         solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
+
+        # Convert template_y0 list to tensor on solver's device
+        template_tensor = torch.tensor(
+            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            dtype=torch.float32,
+            device=solver.device,
+        )
+
         _t, trajectories = solver.integrate(
             self.bse.ode_system,
-            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            template_tensor,
         )
 
         # Move tensors to CPU for plotting
@@ -185,10 +194,17 @@ class Plotter:
         # Use classifier's solver if available, otherwise use main solver
         solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
 
+        # Convert template_y0 list to tensor on solver's device
+        template_tensor = torch.tensor(
+            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            dtype=torch.float32,
+            device=solver.device,
+        )
+
         # Get trajectories for template initial conditions
         t, y = solver.integrate(
             self.bse.ode_system,
-            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            template_tensor,
         )
 
         # Move tensors to CPU for plotting

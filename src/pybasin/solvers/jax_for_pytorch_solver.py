@@ -80,6 +80,21 @@ class JaxForPytorchSolver(Solver):
         self.atol = atol
         self.max_steps = max_steps
 
+    def with_device(self, device: str) -> "JaxForPytorchSolver":
+        """Create a copy of this solver configured for a different device."""
+        return JaxForPytorchSolver(
+            time_span=self.time_span,
+            fs=self.fs,
+            n_steps=self.n_steps,
+            device=device,
+            solver=self.diffrax_solver,
+            rtol=self.rtol,
+            atol=self.atol,
+            max_steps=self.max_steps,
+            use_cache=self.use_cache,
+            **self.params,
+        )
+
     def _get_cache_config(self) -> dict[str, Any]:
         """Include solver type, rtol, atol, and max_steps in cache key."""
         return {

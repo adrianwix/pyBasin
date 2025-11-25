@@ -1,6 +1,5 @@
 from typing import cast
 
-import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.lorenz.lorenz_ode import LorenzParams
@@ -52,13 +51,11 @@ def preview_plot_templates():
 
     # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
 
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.8, -3.0, 0.0],  # butterfly1
-            [-0.8, 3.0, 0.0],  # butterfly2
-        ],
-        dtype=torch.float32,
-    )
+    # Template initial conditions as plain Python lists
+    classifier_initial_conditions = [
+        [0.8, -3.0, 0.0],  # butterfly1
+        [-0.8, 3.0, 0.0],  # butterfly2
+    ]
     classifier_labels = ["butterfly1", "butterfly2"]
 
     # Create a KNeighborsClassifier with k=1

@@ -81,13 +81,11 @@ class JaxSolver:
         :param use_cache: Whether to use caching for integration results.
         """
         self.time_span = time_span
-        self.n_steps = n_steps if n_steps is not None else 500
-        self.jax_device: Any = get_jax_device(device)
         self.use_cache = use_cache
         self.params = kwargs
 
-        # PyTorch device for output tensors
-        self.device = torch.device("cuda:0" if self.jax_device.platform == "gpu" else "cpu")
+        self._set_n_steps(n_steps)
+        self._set_device(device)
 
         # Diffrax solver settings
         self.diffrax_solver = solver if solver is not None else Dopri5()
@@ -95,7 +93,52 @@ class JaxSolver:
         self.atol = atol
         self.max_steps = max_steps
 
-        self._cache_manager = CacheManager(resolve_folder("cache"))
+        # Only create cache manager if caching is enabled
+        # This avoids resolve_folder issues when called from threads
+        self._cache_manager: CacheManager | None = None
+        if use_cache:
+            self._cache_manager = CacheManager(resolve_folder("cache"))
+
+    def _set_n_steps(self, n_steps: int | None) -> None:
+        """
+        Set the number of evaluation steps.
+
+        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        """
+        self.n_steps = n_steps if n_steps is not None else 500
+
+    def _set_device(self, device: str | None) -> None:
+        """
+        Set the device for tensor operations with auto-detection.
+
+        :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
+        """
+        # Store original device string for with_device()
+        self._device_str = device
+
+        self.jax_device: Any = get_jax_device(device)
+
+        # PyTorch device for output tensors
+        self.device = torch.device("cuda:0" if self.jax_device.platform == "gpu" else "cpu")
+
+    def with_device(self, device: str) -> "JaxSolver":
+        """
+        Create a copy of this solver configured for a different device.
+
+        :param device: Target device ('cpu', 'cuda', 'gpu').
+        :return: New JaxSolver instance with the same configuration but different device.
+        """
+        return JaxSolver(
+            time_span=self.time_span,
+            n_steps=self.n_steps,
+            device=device,
+            solver=self.diffrax_solver,
+            rtol=self.rtol,
+            atol=self.atol,
+            max_steps=self.max_steps,
+            use_cache=self.use_cache,
+            **self.params,
+        )
 
     def _get_cache_config(self) -> dict[str, Any]:
         """Include solver type, rtol, atol, and max_steps in cache key."""
@@ -133,7 +176,7 @@ class JaxSolver:
 
         # Check cache if enabled
         cache_key = None
-        if self.use_cache:
+        if self.use_cache and self._cache_manager is not None:
             solver_config = self._get_cache_config()
             # Use original torch tensors for cache key
             t_eval_torch_cpu = torch.linspace(
@@ -169,7 +212,7 @@ class JaxSolver:
         y_result = jax_to_torch(y_result_jax, torch_device)
 
         # Save to cache if enabled
-        if self.use_cache and cache_key is not None:
+        if self.use_cache and cache_key is not None and self._cache_manager is not None:
             self._cache_manager.save(cache_key, t_result.cpu(), y_result.cpu())
 
         return t_result, y_result

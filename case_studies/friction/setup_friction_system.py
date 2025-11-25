@@ -51,14 +51,10 @@ def setup_friction_system() -> SetupProperties:
     feature_extractor = FrictionFeatureExtractor(time_steady=400)
 
     # Template initial conditions for classification from setup_friction.m
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.1, 0.1],  # Fixed point (FP)
-            [2.0, 2.0],  # Limit cycle (LC)
-        ],
-        dtype=torch.float64,
-        device=device,
-    )
+    classifier_initial_conditions = [
+        [0.1, 0.1],  # Fixed point (FP)
+        [2.0, 2.0],  # Limit cycle (LC)
+    ]
 
     classifier_labels = ["FP", "LC"]
 

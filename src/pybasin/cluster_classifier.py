@@ -33,12 +33,12 @@ class SupervisedClassifier[P](ClusterClassifier):
     """Base class for supervised classifiers that require template data."""
 
     labels: list[str]
-    template_y0: torch.Tensor
+    template_y0: list[list[float]]  # Stored as list, converted to tensor during integration
     classifier: Any  # Type depends on subclass
 
     def __init__(
         self,
-        template_y0: torch.Tensor,
+        template_y0: list[list[float]],
         labels: list[str],
         ode_params: P,
         solver: SolverProtocol | None = None,
@@ -46,7 +46,8 @@ class SupervisedClassifier[P](ClusterClassifier):
         """
         Initialize the supervised classifier.
 
-        :param template_y0: Template initial conditions for training.
+        :param template_y0: Template initial conditions as a list of lists (e.g., [[0.5, 0.0], [2.7, 0.0]]).
+                           Will be converted to tensor with appropriate device during integration.
         :param labels: Ground truth labels for template conditions.
         :param ode_params: ODE parameters to use for generating training data.
         :param solver: Optional solver for template integration. If provided, this solver
@@ -59,9 +60,14 @@ class SupervisedClassifier[P](ClusterClassifier):
         self.solver = solver
         self.solution: Solution | None = None  # Populated by integrate_templates
 
+    @property
+    def has_dedicated_solver(self) -> bool:
+        """Check if the classifier has its own dedicated solver for template integration."""
+        return self.solver is not None
+
     def integrate_templates(
         self,
-        solver: SolverProtocol,
+        solver: SolverProtocol | None,
         ode_system: ODESystemProtocol,
     ) -> None:
         """
@@ -70,22 +76,55 @@ class SupervisedClassifier[P](ClusterClassifier):
         This method should be called before fit_with_features() to allow the main
         feature extraction to fit the scaler first.
 
-        :param solver: Fallback solver if no solver was provided at init.
+        By default, if no dedicated solver was provided at init, this method will
+        automatically create a CPU variant of the passed solver. This is because
+        CPU is typically faster than GPU for small batch sizes (like templates).
+
+        :param solver: Fallback solver if no solver was provided at init. Can be None
+                       if a solver was provided during classifier initialization.
         :param ode_system: ODE system to integrate (ODESystem or JaxODESystem).
         """
         classifier_ode_system = deepcopy(ode_system)
         classifier_ode_system.params = self.ode_params
 
-        # Use the classifier's own solver if provided, otherwise use the passed solver
-        effective_solver = self.solver if self.solver is not None else solver
+        # Determine which solver to use
+        if self.solver is not None:
+            # User provided a dedicated solver - use it as-is
+            effective_solver = self.solver
+            solver_source = "dedicated"
+        elif solver is not None:
+            # No dedicated solver - auto-create CPU variant for better performance
+            # GPU has overhead that hurts small batch sizes (templates are typically 2-5 samples)
+            if hasattr(solver, "with_device") and str(solver.device) != "cpu":
+                effective_solver = solver.with_device("cpu")
+                solver_source = "auto-cpu"
+                print(
+                    "    [SupervisedClassifier] Auto-created CPU solver for templates "
+                    "(faster for small batch sizes)"
+                )
+            else:
+                effective_solver = solver
+                solver_source = "fallback"
+        else:
+            raise ValueError(
+                "No solver available. Either pass a solver to integrate_templates() "
+                "or provide one during classifier initialization."
+            )
 
         print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
-        print(f"    [SupervisedClassifier] Template ICs: {self.template_y0.shape}")
+        print(f"    [SupervisedClassifier] Template ICs: {len(self.template_y0)} templates")
         print(f"    [SupervisedClassifier] Labels: {self.labels}")
-        print(f"    [SupervisedClassifier] Using solver: {type(effective_solver).__name__}")
+        print(
+            f"    [SupervisedClassifier] Using solver: {type(effective_solver).__name__} ({solver_source})"
+        )
 
-        t, y = effective_solver.integrate(classifier_ode_system, self.template_y0)  # type: ignore[reportUnknownArgumentType]
-        self.solution = Solution(initial_condition=self.template_y0, time=t, y=y)
+        # Convert template_y0 to tensor on the solver's device
+        template_tensor = torch.tensor(
+            self.template_y0, dtype=torch.float32, device=effective_solver.device
+        )
+
+        t, y = effective_solver.integrate(classifier_ode_system, template_tensor)
+        self.solution = Solution(initial_condition=template_tensor, time=t, y=y)
 
     def fit_with_features(
         self,
@@ -142,7 +181,7 @@ class KNNCluster[P](SupervisedClassifier[P]):
     def __init__(
         self,
         classifier: KNeighborsClassifier | None,
-        template_y0: torch.Tensor,
+        template_y0: list[list[float]],
         labels: list[str],
         ode_params: P,
         solver: SolverProtocol | None = None,
@@ -152,7 +191,7 @@ class KNNCluster[P](SupervisedClassifier[P]):
         Initialize KNN classifier.
 
         :param classifier: KNeighborsClassifier instance, or None to create default.
-        :param template_y0: Template initial conditions.
+        :param template_y0: Template initial conditions as a list of lists.
         :param labels: Ground truth labels.
         :param ode_params: ODE parameters.
         :param solver: Optional solver for template integration.

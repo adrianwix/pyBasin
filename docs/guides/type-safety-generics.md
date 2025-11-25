@@ -84,7 +84,7 @@ ode_system = MyODE(params)
 # The KNNCluster will also be generic over MyODEParams
 knn_cluster = KNNCluster[MyODEParams](
     classifier=KNeighborsClassifier(n_neighbors=3),
-    initial_conditions=torch.tensor([[0.0, 1.0]]),
+    template_y0=[[0.0, 1.0], [1.0, 0.0]],
     labels=["stable", "unstable"],
     ode_params=params,  # Type-checked!
 )

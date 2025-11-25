@@ -37,7 +37,7 @@ def test_basin_stability_estimator_basic():
     solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
     feature_extractor = FinalStateExtractor(time_steady=0)
 
-    template_ics = torch.tensor([[1.0]], dtype=torch.float32)
+    template_ics = [[1.0]]
     knn: KNNCluster[LinearParams] = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,
@@ -76,7 +76,7 @@ def test_basin_stability_multiple_classes():
     solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
     feature_extractor = FinalStateExtractor(time_steady=0)
 
-    template_ics = torch.tensor([[-1.0], [1.0]], dtype=torch.float32)
+    template_ics = [[-1.0], [1.0]]
     knn: KNNCluster[LinearParams] = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,

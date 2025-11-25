@@ -25,17 +25,13 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25, device=device)
     feature_extractor = DuffingFeatureExtractor(time_steady=950)
 
-    classifier_initial_conditions = torch.tensor(
-        [
-            [-0.21, 0.02],
-            [1.05, 0.77],
-            [-0.67, 0.02],
-            [-0.46, 0.30],
-            [-0.43, 0.12],
-        ],
-        dtype=torch.float32,
-        device=device,
-    )
+    classifier_initial_conditions = [
+        [-0.21, 0.02],
+        [1.05, 0.77],
+        [-0.67, 0.02],
+        [-0.46, 0.30],
+        [-0.43, 0.12],
+    ]
 
     classifier_labels = [
         "y1",

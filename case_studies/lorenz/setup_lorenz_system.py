@@ -29,15 +29,11 @@ def setup_lorenz_system() -> SetupProperties:
 
     feature_extractor = LorenzFeatureExtractor(time_steady=900)
 
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.8, -3.0, 0.0],
-            [-0.8, 3.0, 0.0],
-            [10.0, 50.0, 0.0],
-        ],
-        dtype=torch.float32,
-        device=device,
-    )
+    classifier_initial_conditions = [
+        [0.8, -3.0, 0.0],
+        [-0.8, 3.0, 0.0],
+        [10.0, 50.0, 0.0],
+    ]
 
     classifier_labels = ["butterfly1", "butterfly2", "unbounded"]
 

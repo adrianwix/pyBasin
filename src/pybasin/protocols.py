@@ -87,3 +87,19 @@ class SolverProtocol(Protocol):
             Tuple (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
         ...
+
+    def with_device(self, device: str) -> "SolverProtocol":
+        """
+        Create a copy of this solver configured for a different device.
+
+        Parameters
+        ----------
+        device : str
+            Target device ('cpu', 'cuda', 'gpu').
+
+        Returns
+        -------
+        SolverProtocol
+            New solver instance with the same configuration but different device.
+        """
+        ...

@@ -35,12 +35,12 @@ def test_knn_classifier_fit_predict():
     solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
     feature_extractor = SimpleFeatureExtractor(time_steady=0)
 
-    initial_conditions = torch.tensor([[1.0], [2.0]], dtype=torch.float32)
+    template_y0 = [[1.0], [2.0]]
     labels = ["A", "B"]
 
     knn = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
-        template_y0=initial_conditions,
+        template_y0=template_y0,
         labels=labels,
         ode_params=params,
     )

@@ -46,13 +46,31 @@ class Solver(ABC):
         :param use_cache: Whether to use caching for integration results (default: True).
         """
         self.time_span = time_span
+        self.fs = fs  # Keep for backward compatibility
+        self.params = kwargs  # Additional solver parameters
+        self.use_cache = use_cache
 
-        # Handle n_steps with backward compatibility
+        self._set_n_steps(n_steps, fs)
+        self._set_device(device)
+
+        # Only create cache manager if caching is enabled
+        # This avoids resolve_folder issues when called from threads
+        self._cache_manager: CacheManager | None = None
+        if use_cache:
+            self._cache_manager = CacheManager(resolve_folder("cache"))
+
+    def _set_n_steps(self, n_steps: int | None, fs: float | None) -> None:
+        """
+        Set the number of evaluation steps with backward compatibility for fs parameter.
+
+        :param n_steps: Number of evaluation points. If provided, used directly.
+        :param fs: Sampling frequency (Hz). DEPRECATED: used only if n_steps is None.
+        """
         if n_steps is not None:
             self.n_steps = n_steps
         elif fs is not None:
             # Legacy behavior: compute from fs (not recommended)
-            self.n_steps = int((time_span[1] - time_span[0]) * fs) + 1
+            self.n_steps = int((self.time_span[1] - self.time_span[0]) * fs) + 1
             print(
                 f"Warning: Using fs={fs} results in {self.n_steps} steps. Consider using n_steps parameter directly."
             )
@@ -60,10 +78,14 @@ class Solver(ABC):
             # Default: use 500 evaluation points (sufficient for most ODEs)
             self.n_steps = 500
 
-        self.fs = fs  # Keep for backward compatibility
-        # TODO: Review if params is necessary
-        self.params = kwargs  # Additional solver parameters
-        self.use_cache = use_cache
+    def _set_device(self, device: str | None) -> None:
+        """
+        Set the device for tensor operations with auto-detection and normalization.
+
+        :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
+        """
+        # Store original device string for with_device()
+        self._device_str = device
 
         # Auto-detect device if not specified and normalize cuda to cuda:0
         if device is None:
@@ -80,7 +102,15 @@ class Solver(ABC):
             else:
                 self.device = dev
 
-        self._cache_manager = CacheManager(resolve_folder("cache"))
+    @abstractmethod
+    def with_device(self, device: str) -> "Solver":
+        """
+        Create a copy of this solver configured for a different device.
+
+        :param device: Target device ('cpu', 'cuda').
+        :return: New solver instance with the same configuration but different device.
+        """
+        pass
 
     def _prepare_tensors(self, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Prepare time evaluation points and initial conditions with correct device and dtype."""
@@ -126,7 +156,7 @@ class Solver(ABC):
         # Check cache if enabled
         cache_key = None
 
-        if self.use_cache:
+        if self.use_cache and self._cache_manager is not None:
             solver_config = self._get_cache_config()
             cache_key = self._cache_manager.build_key(
                 self.__class__.__name__, ode_system, y0, t_eval, solver_config
@@ -148,7 +178,7 @@ class Solver(ABC):
         print(f"    [{self.__class__.__name__}] Integration complete")
 
         # Save to cache if enabled
-        if self.use_cache and cache_key is not None:
+        if self.use_cache and cache_key is not None and self._cache_manager is not None:
             self._cache_manager.save(cache_key, t_result, y_result)
 
         return t_result, y_result
@@ -214,6 +244,20 @@ class TorchDiffEqSolver(Solver):
         """Include method, rtol, and atol in cache key."""
         return {"method": self.method, "rtol": self.rtol, "atol": self.atol}
 
+    def with_device(self, device: str) -> "TorchDiffEqSolver":
+        """Create a copy of this solver configured for a different device."""
+        return TorchDiffEqSolver(
+            time_span=self.time_span,
+            fs=self.fs,
+            n_steps=self.n_steps,
+            device=device,
+            method=self.method,
+            rtol=self.rtol,
+            atol=self.atol,
+            use_cache=self.use_cache,
+            **self.params,
+        )
+
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -278,6 +322,21 @@ class TorchOdeSolver(Solver):
             "atol": self.atol,
             "use_jit": self.use_jit,
         }
+
+    def with_device(self, device: str) -> "TorchOdeSolver":
+        """Create a copy of this solver configured for a different device."""
+        return TorchOdeSolver(
+            time_span=self.time_span,
+            fs=self.fs,
+            n_steps=self.n_steps,
+            device=device,
+            method=self.method,
+            rtol=self.rtol,
+            atol=self.atol,
+            use_jit=self.use_jit,
+            use_cache=self.use_cache,
+            **self.params,
+        )
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
@@ -410,6 +469,27 @@ class SklearnParallelSolver(Solver):
             "atol": self.atol,
             "max_step": self.max_step,
         }
+
+    def with_device(self, device: str) -> "SklearnParallelSolver":
+        """Create a copy of this solver configured for a different device.
+
+        Note: SklearnParallelSolver only supports CPU, so this always returns a CPU solver.
+        """
+        if device and "cuda" in device:
+            print("  Warning: SklearnParallelSolver does not support CUDA - using CPU")
+        return SklearnParallelSolver(
+            time_span=self.time_span,
+            fs=self.fs,  # type: ignore[arg-type]
+            device="cpu",
+            n_jobs=self.n_jobs,
+            batch_size=self.batch_size,
+            method=self.method,
+            rtol=self.rtol,
+            atol=self.atol,
+            max_step=self.max_step,
+            use_cache=self.use_cache,
+            **self.params,
+        )
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor

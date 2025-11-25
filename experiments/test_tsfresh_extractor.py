@@ -153,23 +153,21 @@ def test_tsfresh_extractor():
     # Reuse the same feature extractor (already fitted with training data)
     print("   ✓ Using the same feature extractor (already fitted)")
 
-    # Define template initial conditions
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.5, 0.0],  # FP: fixed point
-            [2.7, 0.0],  # LC: limit cycle
-        ],
-        dtype=torch.float32,
-        device=device,
-    )
+    classifier_initial_conditions = [
+        [0.5, 0.0],  # FP: fixed point
+        [2.7, 0.0],  # LC: limit cycle
+    ]
     classifier_labels = ["FP", "LC"]
 
-    print(f"   ✓ Template conditions: {classifier_initial_conditions.shape}")
+    print(f"   ✓ Template conditions: {len(classifier_initial_conditions)} templates")
 
-    # Solve for templates
-    time_arr, y_arr = solver.integrate(ode_system, classifier_initial_conditions)
+    # Solve for templates (need to convert to tensor for direct solver usage)
+    classifier_tensor = torch.tensor(
+        classifier_initial_conditions, dtype=torch.float32, device=device
+    )
+    time_arr, y_arr = solver.integrate(ode_system, classifier_tensor)
     template_solution = Solution(
-        initial_condition=classifier_initial_conditions,
+        initial_condition=classifier_tensor,
         time=time_arr,
         y=y_arr,
         model_params=cast(dict[str, float], params),  # Convert TypedDict to dict
