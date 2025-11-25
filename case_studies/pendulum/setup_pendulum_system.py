@@ -1,12 +1,15 @@
 import numpy as np
 import torch
 from sklearn.neighbors import KNeighborsClassifier
+from tsfresh.feature_extraction import (  # pyright: ignore[reportMissingTypeStubs]
+    MinimalFCParameters,
+)
 
-from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
 from pybasin.sampler import GridSampler
 from pybasin.solver import TorchOdeSolver
+from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.types import SetupProperties
 
 
@@ -36,7 +39,7 @@ def setup_pendulum_system() -> SetupProperties:
     # 100-500 evaluation points is sufficient for feature extraction
     solver = TorchOdeSolver(
         time_span=(0, 1000),
-        n_steps=500,
+        n_steps=1000,
         device=device,
         method="dopri5",  # Dormand-Prince 5(4) - similar to MATLAB's ode45
         rtol=1e-8,
@@ -44,7 +47,12 @@ def setup_pendulum_system() -> SetupProperties:
     )
 
     # Instantiate the feature extractor with a steady state time.
-    feature_extractor = PendulumFeatureExtractor(time_steady=950)
+    feature_extractor = TsfreshFeatureExtractor(
+        time_steady=950.0,  # Same as PendulumFeatureExtractor
+        default_fc_parameters=MinimalFCParameters(),
+        n_jobs=1,  # Use n_jobs=1 for deterministic results (n_jobs>1 causes non-determinism)
+        normalize=False,  # Don't normalize - causes issues with KNN when templates differ from main data
+    )
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
     classifier_initial_conditions = torch.tensor(

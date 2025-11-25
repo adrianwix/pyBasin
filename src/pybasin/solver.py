@@ -81,9 +81,11 @@ class Solver(ABC):
             # Normalize "cuda" to "cuda:0" for consistency
             dev = torch.device(device)
             # For CUDA devices, normalize to cuda:0 if no specific index given
-            # torch.device("cuda") creates index=0 automatically, but we normalize explicitly
             if dev.type == "cuda":
-                self.device = torch.device(f"cuda:{dev.index}")
+                # If device string was just "cuda" without index, index will be None
+                # torch.device("cuda").index returns None, not 0
+                idx = dev.index if dev.index is not None else 0  # pyright: ignore[reportUnnecessaryComparison]
+                self.device = torch.device(f"cuda:{idx}")
             else:
                 self.device = dev
 

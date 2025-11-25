@@ -55,6 +55,57 @@ class SupervisedClassifier[P](ClusterClassifier):
         self.labels = labels
         self.initial_conditions = initial_conditions
         self.ode_params = deepcopy(ode_params)
+        self.solution: Solution | None = None  # Populated by integrate_templates
+
+    def integrate_templates(
+        self,
+        solver: Solver,
+        ode_system: ODESystem[P],
+    ) -> None:
+        """
+        Integrate ODE for template initial conditions (without feature extraction).
+
+        This method should be called before fit_with_features() to allow the main
+        feature extraction to fit the scaler first.
+
+        :param solver: Solver to integrate the ODE system.
+        :param ode_system: ODE system to integrate.
+        """
+        classifier_ode_system = deepcopy(ode_system)
+        classifier_ode_system.params = self.ode_params
+
+        print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
+        print(f"    [SupervisedClassifier] Template ICs: {self.initial_conditions.shape}")
+        print(f"    [SupervisedClassifier] Labels: {self.labels}")
+
+        t, y = solver.integrate(classifier_ode_system, self.initial_conditions)  # type: ignore[reportUnknownArgumentType]
+        self.solution = Solution(initial_condition=self.initial_conditions, time=t, y=y)
+
+    def fit_with_features(
+        self,
+        feature_extractor: FeatureExtractor,
+    ) -> None:
+        """
+        Fit the classifier using pre-integrated template solutions.
+
+        Must call integrate_templates() first to populate self.solution.
+
+        :param feature_extractor: Feature extractor to transform trajectories.
+        """
+        if self.solution is None:
+            raise RuntimeError("Must call integrate_templates() before fit_with_features()")
+
+        # Extract features from pre-integrated solution
+        features = feature_extractor.extract_features(self.solution)
+
+        train_x = features.detach().cpu().numpy()
+        train_y = self.labels
+
+        print(
+            f"    Training classifier with {train_x.shape[0]} samples, {train_x.shape[1]} features"
+        )
+
+        self.classifier.fit(train_x, train_y)
 
     def fit(
         self,
@@ -65,31 +116,18 @@ class SupervisedClassifier[P](ClusterClassifier):
         """
         Fit the classifier using template initial conditions.
 
+        WARNING: This method extracts features from templates FIRST, which means
+        the scaler will be fitted on template data (often just 2 samples). For
+        better normalization, use integrate_templates() + fit_with_features()
+        to allow the main data to fit the scaler first.
+
         :param solver: Solver to integrate the ODE system.
         :param ode_system: ODE system to integrate.
         :param feature_extractor: Feature extractor to transform trajectories.
         """
-        # Generate features for each template initial condition
-        classifier_ode_system = deepcopy(ode_system)
-        classifier_ode_system.params = self.ode_params
-
-        print(f"    [SupervisedClassifier] ODE params: {classifier_ode_system.params}")
-        print(f"    [SupervisedClassifier] Template ICs: {self.initial_conditions.shape}")
-        print(f"    [SupervisedClassifier]Labels: {self.labels}")
-
-        t, y = solver.integrate(classifier_ode_system, self.initial_conditions)  # type: ignore[reportUnknownArgumentType]
-
-        self.solution = Solution(initial_condition=self.initial_conditions, time=t, y=y)
-
-        # Build the features array from the Solution instances.
-        features = feature_extractor.extract_features(self.solution)
-
-        train_x = features.detach().cpu().numpy()
-        train_y = self.labels
-
-        print(f"    Training classifier with {train_x.shape[0]} samples")
-
-        self.classifier.fit(train_x, train_y)
+        # Use the new two-step methods for consistency
+        self.integrate_templates(solver, ode_system)
+        self.fit_with_features(feature_extractor)
 
 
 class KNNCluster[P](SupervisedClassifier[P]):

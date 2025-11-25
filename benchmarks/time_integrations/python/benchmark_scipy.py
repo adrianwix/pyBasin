@@ -14,8 +14,6 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from scipy.integrate import solve_ivp
-
 from basin_stability_utils import (
     classify_pendulum_trajectories,
     compute_basin_stability,
@@ -23,6 +21,7 @@ from basin_stability_utils import (
     print_verification_results,
     verify_against_reference,
 )
+from scipy.integrate import solve_ivp
 
 
 def ode_pendulum(t, y, alpha, capital_t, capital_k):
@@ -79,7 +78,7 @@ def run_benchmark(config, method="DOP853", max_time=120):
         f"Time span: [{config['time_integration']['t_start']}, {config['time_integration']['t_end']}]"
     )
     print(f"Solver: {method}")
-    print(f"Device: CPU (scipy is CPU-only)")
+    print("Device: CPU (scipy is CPU-only)")
     print("=" * 50)
     print()
 

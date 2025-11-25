@@ -88,7 +88,7 @@ def run_benchmark(config, method="dopri5", device="cpu", max_time=120):
         else:
             print(f"Using GPU: {torch.cuda.get_device_name(0)}")
     else:
-        print(f"Using CPU")
+        print("Using CPU")
 
     torch_device = torch.device(device)
 

@@ -119,7 +119,7 @@ def print_comparison_report(df, baseline_solver="matlab_ode45", baseline_device=
 
     # Filter out failed basin stability results
     if "basin_stability_succeeded" in latest_results.columns:
-        latest_results = latest_results[latest_results["basin_stability_succeeded"] == True]
+        latest_results = latest_results[latest_results["basin_stability_succeeded"]]
         print("(Excluding solvers with failed basin stability verification)\n")
 
     # Get unique sample sizes

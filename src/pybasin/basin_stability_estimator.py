@@ -98,29 +98,27 @@ class BasinStabilityEstimator:
         print("\nSTEP 2: ODE Integration")
 
         if parallel_integration and isinstance(self.cluster_classifier, SupervisedClassifier):
-            print("  Mode: PARALLEL")
+            print("  Mode: PARALLEL (integration only)")
             print("  • Main integration (sampled ICs)")
-            print("  • Template integration (classifier fitting)")
+            print("  • Template integration (classifier ICs)")
             t2 = time.perf_counter()
 
-            # Run both integrations in parallel using threads
-            # Threads work for GPU operations because PyTorch releases the GIL during CUDA kernels
-
+            # Run ONLY integrations in parallel (not feature extraction)
+            # This ensures the scaler is fitted on main data first for consistent normalization
             with ThreadPoolExecutor(max_workers=2) as executor:
                 # Submit main integration
                 main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)
 
-                # Submit classifier fitting (which does its own integration)
-                classifier_future = executor.submit(
-                    self.cluster_classifier.fit,  # type: ignore[arg-type,misc]
+                # Submit template integration only (not full classifier fitting)
+                template_future = executor.submit(
+                    self.cluster_classifier.integrate_templates,  # type: ignore[arg-type,misc]
                     self.solver,
                     self.ode_system,
-                    self.feature_extractor,
                 )
 
                 # Wait for both to complete
                 t, y = main_future.result()
-                classifier_future.result()  # Just wait for completion
+                template_future.result()  # Just wait for completion
 
             t2_elapsed = time.perf_counter() - t2
             print(f"  Both integrations complete in {t2_elapsed:.4f}s")
@@ -129,15 +127,14 @@ class BasinStabilityEstimator:
             # Sequential execution (original behavior)
             if isinstance(self.cluster_classifier, SupervisedClassifier):
                 print("  Mode: SEQUENTIAL")
-                print("  Step 2a: Fitting classifier with template data...")
+                print("  Step 2a: Integrating template initial conditions...")
                 t2a = time.perf_counter()
-                self.cluster_classifier.fit(  # type: ignore[misc]
+                self.cluster_classifier.integrate_templates(  # type: ignore[misc]
                     solver=self.solver,
                     ode_system=self.ode_system,
-                    feature_extractor=self.feature_extractor,
                 )
                 t2a_elapsed = time.perf_counter() - t2a
-                print(f"    Classifier fitted in {t2a_elapsed:.4f}s")
+                print(f"    Template integration in {t2a_elapsed:.4f}s")
 
             print("  Step 2b: Integrating sampled initial conditions...")
             t2 = time.perf_counter()
@@ -156,13 +153,21 @@ class BasinStabilityEstimator:
         t3_elapsed = time.perf_counter() - t3
         print(f"  Solution object created in {t3_elapsed:.4f}s")
 
-        # Step 4: Feature extraction
+        # Step 4: Feature extraction (main data - fits scaler on large dataset)
         print("\nSTEP 4: Feature Extraction")
         t4 = time.perf_counter()
         features = self.feature_extractor.extract_features(self.solution)
         self.solution.set_features(features)
         t4_elapsed = time.perf_counter() - t4
         print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
+
+        # Step 4b: Fit classifier with template features (using already-fitted scaler)
+        if isinstance(self.cluster_classifier, SupervisedClassifier):  # type: ignore[type-arg]
+            print("\nSTEP 4b: Fitting Classifier")
+            t4b = time.perf_counter()
+            self.cluster_classifier.fit_with_features(self.feature_extractor)  # type: ignore[misc]
+            t4b_elapsed = time.perf_counter() - t4b
+            print(f"  Classifier fitted in {t4b_elapsed:.4f}s")
 
         # Step 5: Classification
         print("\nSTEP 5: Classification")

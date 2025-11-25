@@ -18,7 +18,7 @@ class TestPendulum:
     def test_case1(self, tolerance: float) -> None:
         """Test pendulum case 1 parameters."""
         # Load expected results from JSON
-        json_path = Path(__file__).parent / "main_pendulum.json"
+        json_path = Path(__file__).parent / "main_pendulum_case1.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 
