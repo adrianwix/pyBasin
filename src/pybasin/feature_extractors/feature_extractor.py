@@ -13,28 +13,22 @@ class FeatureExtractor(ABC):
 
     Feature extractors transform ODE solution trajectories into feature vectors
     that can be used for basin of attraction classification. This class provides
-    utilities for filtering solutions by time (to remove transients) and by state
-    (to exclude certain state variables).
+    utilities for filtering solutions by time (to remove transients).
 
     Args:
         time_steady: Time threshold for filtering transients. Only data after this
             time will be used for feature extraction. Default of 0.0 uses the entire
             time series. A common choice is the last 10% of the integration time to
             avoid transient behavior.
-        exclude_states: Optional list of state indices to exclude from feature
-            extraction. Useful when certain state variables are not relevant for
-            classification (e.g., time-dependent forcing terms).
 
     Example:
         >>> class AmplitudeExtractor(FeatureExtractor):
         ...     def extract_features(self, solution: Solution) -> torch.Tensor:
         ...         y_filtered = self.filter_time(solution)
-        ...         y_filtered = self.filter_states(solution)
         ...         return torch.max(torch.abs(y_filtered), dim=0)[0]
     """
 
-    def __init__(self, time_steady: float = 0.0, exclude_states: list[int] | None = None):
-        self.exclude_states = exclude_states
+    def __init__(self, time_steady: float = 0.0):
         self.time_steady = time_steady
 
     @abstractmethod
@@ -55,40 +49,6 @@ class FeatureExtractor(ABC):
             the number of features extracted per trajectory.
         """
         pass
-
-    def filter_states(self, solution: Solution) -> torch.Tensor:
-        """Filter out excluded state variables from the solution.
-
-        Removes state variables specified in `exclude_states` from the solution
-        tensor. This is useful when certain state variables (e.g., auxiliary
-        variables, forcing terms) should not contribute to feature extraction.
-
-        Args:
-            solution: ODE solution with y tensor of shape (N, B, S) where N is
-                time steps, B is batch size, and S is number of state variables.
-
-        Returns:
-            Filtered tensor of shape (N, B, S') where S' = S - len(exclude_states)
-            is the number of remaining state variables after filtering. If
-            exclude_states is None, returns the original solution.y unchanged.
-
-        Example:
-            >>> # Exclude the 3rd state variable (index 2)
-            >>> extractor = FeatureExtractor(exclude_states=[2])
-            >>> filtered = extractor.filter_states(solution)
-            >>> # If solution.y had shape (100, 50, 4), filtered has shape (100, 50, 3)
-        """
-        if self.exclude_states is not None:
-            # Create a boolean mask to select which state indices to keep
-            all_indices = torch.arange(solution.y.shape[2])
-            mask = torch.ones_like(all_indices, dtype=torch.bool)
-            for idx in self.exclude_states:
-                mask[idx] = False
-            # Apply mask to the last dimension (state variables)
-            y_filtered = solution.y[..., mask]
-        else:
-            y_filtered = solution.y
-        return y_filtered
 
     def filter_time(self, solution: Solution) -> torch.Tensor:
         """Filter out transient behavior by removing early time steps.

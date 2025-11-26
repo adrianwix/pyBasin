@@ -1,6 +1,6 @@
 import torch
 
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.solution import Solution
 
 PendulumOHE = {"FP": [1, 0], "LC": [0, 1]}

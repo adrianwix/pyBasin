@@ -6,7 +6,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.cluster_classifier import DBSCANCluster, KNNCluster
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver

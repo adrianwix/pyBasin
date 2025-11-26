@@ -81,6 +81,28 @@ def minimum(x: Array) -> Array:
     return jnp.min(x, axis=0)
 
 
+def delta(x: Array) -> Array:
+    """Calculate the absolute difference between maximum and mean.
+
+    This feature captures the spread of values around the mean and is useful
+    for distinguishing between different dynamical behaviors:
+    - Near-constant signals: delta ≈ 0
+    - Oscillating signals: delta > 0
+    """
+    return jnp.abs(jnp.max(x, axis=0) - jnp.mean(x, axis=0))
+
+
+def log_delta(x: Array) -> Array:
+    """Calculate log(delta + epsilon) for improved feature space separation.
+
+    Applies logarithmic transformation to the delta feature, which can
+    linearize exponential ranges and improve classification performance
+    when values span multiple orders of magnitude.
+    """
+    eps = 1e-12  # Small epsilon to avoid log(0)
+    return jnp.log(delta(x) + eps)
+
+
 # Dictionary of minimal features (matching tsfresh MinimalFCParameters)
 MINIMAL_FEATURES: dict[str, Callable[[Array], Array]] = {
     "sum_values": sum_values,
@@ -93,6 +115,9 @@ MINIMAL_FEATURES: dict[str, Callable[[Array], Array]] = {
     "maximum": maximum,
     "absolute_maximum": absolute_maximum,
     "minimum": minimum,
+    # Not in tsfresh
+    "delta": delta,
+    "log_delta": log_delta,
 }
 
 

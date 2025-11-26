@@ -8,6 +8,7 @@ defined using pure JAX operations. This is the fastest solver option when
 using JAX-native ODE systems.
 """
 
+from collections.abc import Callable
 from typing import Any
 
 import jax
@@ -15,6 +16,7 @@ import jax.numpy as jnp
 import torch
 from diffrax import (  # type: ignore[import-untyped]
     Dopri5,
+    Event,
     ODETerm,
     PIDController,
     SaveAt,
@@ -66,6 +68,7 @@ class JaxSolver:
         atol: float = 1e-8,
         max_steps: int = 16**5,
         use_cache: bool = True,
+        event_fn: Callable[[Any, Array, Any], Array] | None = None,
         **kwargs: Any,
     ):
         """
@@ -79,10 +82,14 @@ class JaxSolver:
         :param atol: Absolute tolerance for adaptive stepping.
         :param max_steps: Maximum number of steps for the integrator.
         :param use_cache: Whether to use caching for integration results.
+        :param event_fn: Optional event function for early termination. Should return positive
+                         when integration should continue, negative/zero to stop.
+                         Signature: (t, y, args) -> scalar Array.
         """
         self.time_span = time_span
         self.use_cache = use_cache
         self.params = kwargs
+        self.event_fn = event_fn
 
         self._set_n_steps(n_steps)
         self._set_device(device)
@@ -137,6 +144,7 @@ class JaxSolver:
             atol=self.atol,
             max_steps=self.max_steps,
             use_cache=self.use_cache,
+            event_fn=self.event_fn,
             **self.params,
         )
 
@@ -239,6 +247,9 @@ class JaxSolver:
         saveat = SaveAt(ts=t_eval)
         stepsize_controller = PIDController(rtol=self.rtol, atol=self.atol)
 
+        # Create event if event_fn is provided
+        event = Event(cond_fn=self.event_fn) if self.event_fn is not None else None
+
         # Define solve function for a single initial condition
         def solve_single(y0_single: Array) -> Array:
             sol = diffeqsolve(  # type: ignore[misc]
@@ -251,6 +262,7 @@ class JaxSolver:
                 saveat=saveat,
                 stepsize_controller=stepsize_controller,
                 max_steps=self.max_steps,
+                event=event,
             )
             return sol.ys  # type: ignore[return-value]
 

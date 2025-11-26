@@ -9,7 +9,7 @@ import pandas as pd  # type: ignore[import-untyped]
 import torch
 
 from pybasin.cluster_classifier import ClusterClassifier, SupervisedClassifier
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution

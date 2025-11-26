@@ -18,11 +18,11 @@ class TestLorenz:
     def test_case1(self, tolerance: float) -> None:
         """Test Lorenz system case 1 - broken butterfly attractor parameters.
 
-        Parameters: σ=0.12, r=0.0, b=-0.6
+        Parameters: sigma=0.12, r=0.0, b=-0.6
         Expected attractors: butterfly1, butterfly2, unbounded
         """
         # Load expected results from JSON
-        json_path = Path(__file__).parent / "main_lorenz_case1.json"
+        json_path = Path(__file__).parent / "main_lorenz.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 

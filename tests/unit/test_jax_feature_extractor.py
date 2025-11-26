@@ -1,6 +1,6 @@
 import torch
 
-from pybasin.jax_feature_extractor import JaxFeatureExtractor
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.solution import Solution
 
 
@@ -20,30 +20,38 @@ def test_jax_feature_extractor_output_shape():
 
 
 def test_jax_feature_extractor_feature_count():
-    """Test that extractor has 10 minimal features."""
-    extractor = JaxFeatureExtractor()
+    """Test that extractor has correct feature count after extraction."""
+    n_steps, n_batch, n_states = 100, 5, 2
+    ic = torch.randn(n_batch, n_states)
+    time = torch.linspace(0, 10, n_steps)
+    y = torch.randn(n_steps, n_batch, n_states)
+    solution = Solution(initial_condition=ic, time=time, y=y)
 
-    assert extractor.n_features == 10
-    assert len(extractor.feature_names) == 10
+    extractor = JaxFeatureExtractor()
+    extractor.extract_features(solution)
+
+    # 10 features per state * 2 states = 20 features
+    assert extractor.n_features == 20
+    assert len(extractor.feature_names) == 20
 
 
 def test_jax_feature_extractor_feature_names():
-    """Test that feature names match tsfresh MinimalFCParameters."""
-    extractor = JaxFeatureExtractor()
+    """Test that feature names use per-state naming convention."""
+    n_steps, n_batch, n_states = 100, 5, 2
+    ic = torch.randn(n_batch, n_states)
+    time = torch.linspace(0, 10, n_steps)
+    y = torch.randn(n_steps, n_batch, n_states)
+    solution = Solution(initial_condition=ic, time=time, y=y)
 
-    expected_names = [
-        "sum_values",
-        "median",
-        "mean",
-        "length",
-        "standard_deviation",
-        "variance",
-        "root_mean_square",
-        "maximum",
-        "absolute_maximum",
-        "minimum",
-    ]
-    assert extractor.feature_names == expected_names
+    extractor = JaxFeatureExtractor()
+    extractor.extract_features(solution)
+
+    # Should have features for both states with state_X__ prefix
+    feature_names = extractor.feature_names
+    assert len(feature_names) == 20  # 10 features * 2 states
+    assert feature_names[0] == "state_0__sum_values"
+    assert feature_names[10] == "state_1__sum_values"
+    assert all("state_0__" in name or "state_1__" in name for name in feature_names)
 
 
 def test_jax_feature_extractor_time_filtering():
@@ -61,19 +69,28 @@ def test_jax_feature_extractor_time_filtering():
     assert features.shape == (n_batch, 20)
 
 
-def test_jax_feature_extractor_state_filtering():
-    """Test that state filtering reduces the state dimension."""
+def test_jax_feature_extractor_per_state_features():
+    """Test that per-state feature configuration works correctly."""
     n_steps, n_batch, n_states = 100, 5, 3
     ic = torch.randn(n_batch, n_states)
     time = torch.linspace(0, 10, n_steps)
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    extractor = JaxFeatureExtractor(exclude_states=[2], normalize=False)
+    # Configure different features for each state
+    extractor = JaxFeatureExtractor(
+        state_to_features={
+            0: ["maximum", "standard_deviation"],  # 2 features for state 0
+            1: ["mean"],  # 1 feature for state 1
+            # State 2 uses default (all 10 features)
+        },
+        normalize=False,
+    )
     features = extractor.extract_features(solution)
 
-    # 10 features per state * 2 remaining states = 20 features
-    assert features.shape == (n_batch, 20)
+    # 2 + 1 + 10 = 13 features total
+    assert features.shape == (n_batch, 13)
+    assert extractor.n_features == 13
 
 
 def test_jax_feature_extractor_normalization():

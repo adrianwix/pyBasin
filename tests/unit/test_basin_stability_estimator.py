@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.cluster_classifier import KNNCluster
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solution import Solution

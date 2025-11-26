@@ -135,3 +135,5 @@
 2025-11-25 19:05:34 - main_pendulum_case1.py: 23.572068452835083 seconds
 2025-11-25 19:09:49 - main_pendulum_case1.py: 23.27928590774536 seconds
 2025-11-25 19:57:35 - main_pendulum_case1.py: 15.646576881408691 seconds
+2025-11-25 21:21:44 - main_lorenz.py: 19.28189492225647 seconds
+2025-11-25 21:24:56 - main_lorenz.py: 13.415327787399292 seconds

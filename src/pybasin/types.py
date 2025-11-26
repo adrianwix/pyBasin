@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 from pybasin.cluster_classifier import ClusterClassifier
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 

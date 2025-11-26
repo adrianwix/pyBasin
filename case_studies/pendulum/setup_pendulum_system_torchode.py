@@ -55,14 +55,10 @@ def setup_pendulum_system_torchode() -> SetupProperties:
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.5, 0.0],  # FP: fixed point
-            [2.7, 0.0],  # LC: limit cycle
-        ],
-        dtype=torch.float32,
-        device=device,
-    )
+    classifier_initial_conditions = [
+        [0.5, 0.0],  # FP: fixed point
+        [2.7, 0.0],  # LC: limit cycle
+    ]
     classifier_labels = ["FP", "LC"]
 
     # Create a KNeighborsClassifier with k=1.

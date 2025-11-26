@@ -1,11 +1,11 @@
 import torch
 from sklearn.neighbors import KNeighborsClassifier
 
-from case_studies.duffing_oscillator.duffing_feature_extractor import DuffingFeatureExtractor
-from case_studies.duffing_oscillator.duffing_ode import DuffingODE, DuffingParams
+from case_studies.duffing_oscillator.duffing_jax_ode import DuffingJaxODE, DuffingParams
 from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import GridSampler
-from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
 
 
@@ -18,12 +18,23 @@ def setup_duffing_oscillator_system() -> SetupProperties:
 
     # Create ODE system instance
     params: DuffingParams = {"delta": 0.08, "k3": 1, "A": 0.2}
-    ode_system = DuffingODE(params)
+    ode_system = DuffingJaxODE(params)
 
     # Instantiate sampler, solver, feature extractor, and cluster classifier
     sampler = GridSampler(min_limits=[-1, -0.5], max_limits=[1, 1], device=device)
-    solver = TorchDiffEqSolver(time_span=(0, 1000), fs=25, device=device)
-    feature_extractor = DuffingFeatureExtractor(time_steady=950)
+
+    solver = JaxSolver(
+        time_span=(0, 1000),
+        n_steps=1000,
+        device=device,
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=True,
+    )
+
+    feature_extractor = JaxFeatureExtractor(
+        time_steady=950.0, normalize=False, default_features=["maximum", "standard_deviation"]
+    )
 
     classifier_initial_conditions = [
         [-0.21, 0.02],

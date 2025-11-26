@@ -10,11 +10,14 @@ pyBasin is a Python library for estimating basin stability in dynamical systems.
 ## 🎯 Features
 
 - **Basin Stability Estimation**: Calculate the probability that a system ends up in specific attractors
-- **Adaptive Sampling**: Intelligent sampling strategies that focus computational resources on uncertain regions
-- **Multiple Solvers**: Support for various ODE solvers including neural ODE
+- **Multiple Sampling Strategies**: Grid sampling, uniform random sampling, and Gaussian sampling
+- **Multiple Solvers**: Support for JAX-based and PyTorch ODE solvers with GPU acceleration
+- **Feature Extraction**: Extract features from trajectories for classification (JAX-based and Tsfresh)
+- **Supervised & Unsupervised Classification**: KNN clustering and other sklearn classifiers
 - **Visualization Tools**: Built-in plotting utilities for basin stability results
 - **Extensible Architecture**: Easy to add custom feature extractors and classifiers
 - **Type-Safe**: Full type annotations with py.typed marker
+- **High Performance**: GPU acceleration and caching for efficient computation
 
 ## 📦 Installation
 
@@ -44,29 +47,149 @@ uv pip install -e ".[all]"
 
 ## 🚀 Quick Start
 
+### What is Basin Stability?
+
+Basin stability measures the probability that a dynamical system, starting from a random initial condition, will converge to a specific attractor. For example, in a system with two attractors (a fixed point and a limit cycle), basin stability tells us what fraction of the phase space leads to each attractor.
+
+### Tutorial: Analyzing a Bistable System
+
+Let's analyze a simple 2D system with two competing attractors:
+
 ```python
 import numpy as np
-from pybasin import BasinStabilityEstimator, ODESystem
+import torch
+from sklearn.neighbors import KNeighborsClassifier
 
-# Define your dynamical system
-class MySystem(ODESystem):
-    def dynamics(self, t, state):
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
+from pybasin.jax_ode_system import JaxODESystem
+from pybasin.sampler import GridSampler
+from pybasin.solvers import JaxSolver
+```
+
+#### Step 1: Define Your Dynamical System
+
+First, we define the ODE system. This system has a fixed point at the origin and can exhibit limit cycle behavior depending on initial conditions:
+
+```python
+class MySystem(JaxODESystem):
+    """A bistable system with a fixed point and limit cycle."""
+    def dynamics(self, t, state, params):
         x, y = state
         dx = -x + y
         dy = -y - x**3
         return np.array([dx, dy])
-    
-    def classify_attractor(self, solution):
-        final_state = solution.y[:, -1]
-        return 0 if np.linalg.norm(final_state) < 0.1 else 1
 
-# Create estimator and run
-system = MySystem()
-estimator = BasinStabilityEstimator(system)
-bounds = [(-2, 2), (-2, 2)]
-results = estimator.estimate(bounds, n_samples=1000)
+ode_system = MySystem(params={})
+```
 
-print(f"Basin stability: {results.basin_stability}")
+#### Step 2: Choose a Sampling Strategy
+
+We need to sample initial conditions across the phase space. pyBasin supports multiple sampling strategies:
+
+```python
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Option A: Grid sampling (uniform coverage)
+sampler = GridSampler(
+    min_limits=[-2, -2],  # Lower bounds for [x, y]
+    max_limits=[2, 2],    # Upper bounds for [x, y]
+    device=device
+)
+
+# Option B: Random uniform sampling
+# from pybasin.sampler import UniformRandomSampler
+# sampler = UniformRandomSampler(min_limits=[-2, -2], max_limits=[2, 2], device=device)
+
+# Option C: Gaussian sampling
+# from pybasin.sampler import GaussianSampler
+# sampler = GaussianSampler(min_limits=[-2, -2], max_limits=[2, 2], std_factor=0.3, device=device)
+```
+
+#### Step 3: Configure the ODE Solver
+
+The solver integrates each initial condition forward in time:
+
+```python
+solver = JaxSolver(
+    time_span=(0, 100),   # Integrate from t=0 to t=100
+    n_steps=1000,         # Number of time steps (Δt = 0.1)
+    device=device,
+    rtol=1e-8,            # Relative tolerance for adaptive stepping
+    atol=1e-6,            # Absolute tolerance
+    use_cache=True        # Cache results for efficiency
+)
+```
+
+#### Step 4: Extract Features from Trajectories
+
+We extract features from the steady-state portion of trajectories to characterize attractors:
+
+```python
+feature_extractor = JaxFeatureExtractor(
+    time_steady=90.0,  # Only use t > 90 (steady state)
+    state_to_features={
+        0: [],              # No features from x (state 0)
+        1: ["log_delta"]    # Log of velocity variation in y
+    }
+    # The log_delta feature helps distinguish:
+    # - Fixed points: small delta → large negative log_delta
+    # - Limit cycles: large delta → positive log_delta
+)
+```
+
+#### Step 5: Train the Classifier
+
+We provide template initial conditions that we know lead to each attractor type:
+
+```python
+knn = KNeighborsClassifier(n_neighbors=1)
+classifier = KNNCluster(
+    classifier=knn,
+    template_y0=[
+        [0.0, 0.0],   # This IC leads to the fixed point
+        [1.5, 0.0]    # This IC leads to the limit cycle
+    ],
+    labels=["Fixed Point", "Limit Cycle"],
+    ode_params={}
+)
+```
+
+#### Step 6: Estimate Basin Stability
+
+Now we're ready to run the analysis:
+
+```python
+estimator = BasinStabilityEstimator(
+    n=1000,                 # Sample 1000 initial conditions
+    ode_system=ode_system,
+    sampler=sampler,
+    solver=solver,
+    feature_extractor=feature_extractor,
+    cluster_classifier=classifier,
+    save_to="my_results"    # Optional: save results to folder
+)
+
+# Run the estimation
+basin_stability = estimator.estimate_bs()
+print(f"Basin stability: {basin_stability}")
+# Example output: {'Fixed Point': 0.45, 'Limit Cycle': 0.55}
+# This means 45% of initial conditions lead to the fixed point,
+# and 55% lead to the limit cycle.
+```
+
+### Next Steps
+
+For complete working examples with visualization:
+- **Pendulum**: `case_studies/pendulum/` - Forced pendulum with multiple attractors
+- **Lorenz System**: `case_studies/lorenz/` - Chaotic attractor analysis
+- **Duffing Oscillator**: `case_studies/duffing_oscillator/` - Classic bistable system
+- **Friction System**: `case_studies/friction/` - Mechanical system with friction
+
+Run a case study:
+```bash
+uv run python -m case_studies.pendulum.main_pendulum_case1
 ```
 
 ## 📚 Documentation
@@ -86,17 +209,17 @@ Then visit http://localhost:8000
 
 This repository includes validated case studies from the original bSTAB paper:
 
-| Case Study | Location | Description |
-|------------|----------|-------------|
+| Case Study             | Location                           | Description                        |
+| ---------------------- | ---------------------------------- | ---------------------------------- |
 | **Duffing Oscillator** | `case_studies/duffing_oscillator/` | Forced oscillator with bistability |
-| **Lorenz System** | `case_studies/lorenz/` | Classic chaotic attractor |
-| **Pendulum** | `case_studies/pendulum/` | Forced pendulum with bifurcations |
-| **Friction System** | `case_studies/friction/` | Mechanical system with friction |
+| **Lorenz System**      | `case_studies/lorenz/`             | Classic chaotic attractor          |
+| **Pendulum**           | `case_studies/pendulum/`           | Forced pendulum with bifurcations  |
+| **Friction System**    | `case_studies/friction/`           | Mechanical system with friction    |
 
 Run a case study:
 
 ```bash
-uv run python case_studies/duffing_oscillator/main_supervised.py
+uv run python -m case_studies.pendulum.main_pendulum_case1
 ```
 
 ## 📁 Project Structure
@@ -110,11 +233,13 @@ pyBasinWorkspace/
 │   ├── pendulum/
 │   └── friction/
 ├── tests/                # ✅ Unit and integration tests
+│   ├── unit/             # Unit tests for individual components
 │   └── integration/      # Validation against MATLAB
 ├── docs/                 # 📖 Documentation source
 ├── artifacts/            # 📊 Generated figures and results
-├── scripts/              # 🛠️ Helper scripts
-└── notebooks/            # 📓 Jupyter examples
+├── benchmarks/           # ⚡ Performance benchmarks
+├── experiments/          # 🧪 Experiments with different libraries and algorithms
+└── scripts/              # 🛠️ Helper scripts
 ```
 
 ## 🧑‍💻 Development
@@ -130,29 +255,40 @@ uv pip install -e ".[all]"
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run with coverage
-pytest --cov=src/pybasin
+uv run pytest --cov=src/pybasin
 
 # Run only integration tests
-pytest tests/integration/
+uv run pytest tests/integration/
+
+# Run only unit tests
+uv run pytest tests/unit/
 
 # Run specific case study test
-pytest tests/integration/test_duffing.py
+uv run pytest tests/integration/test_duffing.py
 ```
 
 ### Code Quality
 
-```bash
-# Format code
-black src/ tests/ case_studies/
+Run all code quality checks (linter, formatter, and type checker):
 
-# Lint
-ruff check src/ tests/ case_studies/
+```bash
+sh scripts/ci.sh
+```
+
+Or run individual tools:
+
+```bash
+# Lint and auto-fix issues
+uv run ruff check --fix
+
+# Format code
+uv run ruff format
 
 # Type check
-mypy src/
+uv run pyright
 ```
 
 ## 📊 Validation
@@ -161,7 +297,7 @@ pyBasin is validated against the original MATLAB bSTAB implementation. Integrati
 
 ## 🎓 Academic Context
 
-This library is part of a bachelor thesis on basin stability estimation for dynamical systems. It ports and extends the functionality of the MATLAB bSTAB library with modern Python practices and additional features.
+This library is the main contribution of the bachelor thesis **"Pybasin: A Python Toolbox for Basin Stability of Multi-Stable Dynamical Systems"**. It ports and extends the functionality of the MATLAB bSTAB library with modern Python practices and additional features.
 
 ## 🔗 Related Projects
 
@@ -174,7 +310,7 @@ If you use pyBasin in your research, please cite:
 ```bibtex
 @software{pybasin2025,
   author = {Wix, Adrian},
-  title = {pyBasin: Basin Stability Estimation for Dynamical Systems},
+  title = {Pybasin: A Python Toolbox for Basin Stability of Multi-Stable Dynamical Systems},
   year = {2025},
   url = {https://github.com/adrianwix/pyBSTAB}
 }

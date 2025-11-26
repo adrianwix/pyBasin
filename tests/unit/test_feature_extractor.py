@@ -1,13 +1,12 @@
 import torch
 
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.solution import Solution
 
 
 class MeanFeatureExtractor(FeatureExtractor):
     def extract_features(self, solution: Solution) -> torch.Tensor:
         y_filtered = self.filter_time(solution)
-        y_filtered = self.filter_states(solution)
         return y_filtered.mean(dim=0)
 
 
@@ -29,20 +28,6 @@ def test_feature_extractor_time_filtering():
     assert y_filtered.shape[0] == expected_steps
     # Batch and state dimensions should remain unchanged
     assert y_filtered.shape[1:] == (n_batch, n_states)
-
-
-def test_feature_extractor_state_filtering():
-    n_steps, n_batch, n_states = 100, 5, 3
-    ic = torch.randn(n_batch, n_states)
-    time = torch.linspace(0, 10, n_steps)
-    y = torch.randn(n_steps, n_batch, n_states)
-    solution = Solution(initial_condition=ic, time=time, y=y)
-
-    extractor = MeanFeatureExtractor(time_steady=0, exclude_states=[2])
-    y_filtered = extractor.filter_states(solution)
-
-    # State dimension reduced from 3 to 2 (excluded state index 2)
-    assert y_filtered.shape == (n_steps, n_batch, 2)
 
 
 def test_feature_extractor_extract():

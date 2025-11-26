@@ -37,6 +37,7 @@ dependencies = [
     "scipy-stubs>=1.16.3.0",
     "microsoft-python-type-stubs",
     "tsfresh>=0.21.1",
+    "nolds>=0.6.2",
 ]
 
 [project.optional-dependencies]

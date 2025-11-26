@@ -1,12 +1,29 @@
+from typing import Any
+
+import jax.numpy as jnp
 import torch
+from jax import Array
 from sklearn.neighbors import KNeighborsClassifier
 
-from case_studies.lorenz.lorenz_feature_extractor import LorenzFeatureExtractor
-from case_studies.lorenz.lorenz_ode import LorenzODE, LorenzParams
+from case_studies.lorenz.lorenz_jax_ode import LorenzJaxODE, LorenzParams
 from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import UniformRandomSampler
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
+
+
+def lorenz_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
+    """
+    Event function to stop integration when amplitude exceeds threshold.
+
+    Replicates lorenzStopFcn.m (bSTAB library) behavior:
+    - Returns positive when under threshold (continue integration)
+    - Returns negative/zero when over threshold (stop integration)
+    """
+    max_val = 200.0
+    max_abs_y = jnp.max(jnp.abs(y))
+    return max_val - max_abs_y
 
 
 def setup_lorenz_system() -> SetupProperties:
@@ -19,15 +36,23 @@ def setup_lorenz_system() -> SetupProperties:
     # Parameters for broken butterfly system
     params: LorenzParams = {"sigma": 0.12, "r": 0.0, "b": -0.6}
 
-    ode_system = LorenzODE(params)
+    ode_system = LorenzJaxODE(params)
 
     sampler = UniformRandomSampler(
         min_limits=[-10.0, -20.0, 0.0], max_limits=[10.0, 20.0, 0.0], device=device
     )
 
-    solver = TorchOdeSolver(time_span=(0, 1000), n_steps=1000, device=device)
+    solver = JaxSolver(
+        time_span=(0, 1000),
+        n_steps=1000,
+        device=device,
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=True,
+        event_fn=lorenz_stop_event,
+    )
 
-    feature_extractor = LorenzFeatureExtractor(time_steady=900)
+    feature_extractor = JaxFeatureExtractor(time_steady=900.0, normalize=False)
 
     classifier_initial_conditions = [
         [0.8, -3.0, 0.0],

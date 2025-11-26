@@ -29,12 +29,12 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    plotter = Plotter(bse=bse)
+    # plotter = Plotter(bse=bse)
 
-    plotter.plot_bse_results()
-    plotter.plot_phase(x_var=1, y_var=2)
+    # plotter.plot_bse_results()
+    # plotter.plot_phase(x_var=1, y_var=2)
 
-    bse.save()
+    # bse.save()
 
 
 # TODO: Having example trajectories and previewing them before running the full analysis

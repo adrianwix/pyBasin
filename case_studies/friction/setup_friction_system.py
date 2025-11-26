@@ -1,11 +1,11 @@
 import torch
 from sklearn.neighbors import KNeighborsClassifier
 
-from case_studies.friction.friction_feature_extractor import FrictionFeatureExtractor
-from case_studies.friction.friction_ode import FrictionODE, FrictionParams
+from case_studies.friction.friction_jax_ode import FrictionJaxODE, FrictionParams
 from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import UniformRandomSampler
-from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
 
 
@@ -26,14 +26,9 @@ def setup_friction_system() -> SetupProperties:
         "v0": 0.5,  # Reference velocity for exponential decay
     }
 
-    ode_system = FrictionODE(params)
+    ode_system = FrictionJaxODE(params)
 
     # Sampling limits from setup_friction.m
-    # sampler = UniformRandomSampler(
-    #     min_limits=[-2.0, 0.0],    # [disp, vel]
-    #     max_limits=[2.0, 2.0]      # [disp, vel]
-    # )
-
     sampler = UniformRandomSampler(
         min_limits=[0.5, -2.0],  # [disp, vel]
         max_limits=[2.5, 0.0],  # [disp, vel]
@@ -41,14 +36,17 @@ def setup_friction_system() -> SetupProperties:
     )
 
     # Time integration parameters from setup_friction.m
-    solver = TorchDiffEqSolver(
-        time_span=(0, 500),  # tSpan
-        fs=100,  # Sampling frequency
+    solver = JaxSolver(
+        time_span=(0, 500),
+        n_steps=500,
         device=device,
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=True,
     )
 
     # Feature extraction (using last 100 time units as in setup_friction.m)
-    feature_extractor = FrictionFeatureExtractor(time_steady=400)
+    feature_extractor = JaxFeatureExtractor(time_steady=400.0, normalize=False)
 
     # Template initial conditions for classification from setup_friction.m
     classifier_initial_conditions = [

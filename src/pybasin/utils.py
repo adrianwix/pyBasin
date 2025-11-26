@@ -1,5 +1,6 @@
 import inspect
 import os
+import sys
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -44,18 +45,31 @@ def _get_caller_dir():
     Inspects the call stack to determine the directory of the calling script
     that is outside the pybasin module. This implementation iterates over the
     stack frames and returns the first frame whose __file__ is not within the
-    pybasin package directory.
+    pybasin package directory or the Python standard library.
     """
     # Get the absolute directory of the current (pybasin) module.
     library_dir = os.path.abspath(os.path.dirname(__file__))
+
+    # Get standard library paths to exclude them
+    stdlib_paths = {os.path.dirname(os.__file__)}
+    if hasattr(sys, "base_prefix"):
+        stdlib_paths.add(sys.base_prefix)
+    if hasattr(sys, "prefix"):
+        stdlib_paths.add(sys.prefix)
 
     for frame in inspect.stack():
         caller_file = frame.frame.f_globals.get("__file__")
         if caller_file:
             abs_caller_file = os.path.abspath(caller_file)
-            # Check if the caller file is outside of the pybasin module directory.
+            # Check if the caller file is outside of the pybasin module directory
+            # and not in the standard library
             if not abs_caller_file.startswith(library_dir):
-                return os.path.dirname(abs_caller_file)
+                # Skip standard library paths
+                is_stdlib = any(
+                    abs_caller_file.startswith(stdlib_path) for stdlib_path in stdlib_paths
+                )
+                if not is_stdlib:
+                    return os.path.dirname(abs_caller_file)
 
     # Fallback if __file__ is not found (e.g. interactive shell)
     return os.getcwd()

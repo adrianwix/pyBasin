@@ -31,10 +31,10 @@ from tsfresh.feature_extraction import MinimalFCParameters
 
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
+from pybasin.feature_extractors.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.sampler import GridSampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
-from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
 
 
 def test_tsfresh_extractor():

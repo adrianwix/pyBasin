@@ -9,7 +9,7 @@ from tsfresh import extract_features  # type: ignore[import-untyped]
 from tsfresh.feature_extraction import MinimalFCParameters  # type: ignore[import-untyped]
 from tsfresh.utilities.dataframe_functions import impute  # type: ignore[import-untyped]
 
-from pybasin.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.solution import Solution
 
 
@@ -28,8 +28,6 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         time_steady: Time threshold for filtering transients. Only data after this
             time will be used for feature extraction. Default of 0.0 uses the entire
             time series.
-        exclude_states: Optional list of state indices to exclude from feature
-            extraction.
         default_fc_parameters: Default feature extraction parameters for all states.
             Can be one of:
             - MinimalFCParameters() - Fast extraction with ~20 features
@@ -92,7 +90,6 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     def __init__(
         self,
         time_steady: float = 0.0,
-        exclude_states: list[int] | None = None,
         default_fc_parameters: dict[str, Any] | Any | None = None,
         kind_to_fc_parameters: dict[int, dict[str, Any] | Any] | None = None,
         n_jobs: int = 1,
@@ -100,7 +97,7 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     ):
         import threading
 
-        super().__init__(time_steady=time_steady, exclude_states=exclude_states)
+        super().__init__(time_steady=time_steady)
         self.normalize = normalize
         self.scaler = StandardScaler() if normalize else None
         self._is_fitted = False
@@ -149,9 +146,8 @@ class TsfreshFeatureExtractor(FeatureExtractor):
             the total number of features extracted by tsfresh across all state
             variables.
         """
-        # Apply time and state filtering
+        # Apply time filtering
         y_filtered = self.filter_time(solution)
-        y_filtered = self.filter_states(solution)
 
         # Get dimensions
         n_timesteps, n_batch, n_states = y_filtered.shape

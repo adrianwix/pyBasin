@@ -7,7 +7,7 @@ from sklearn.neighbors import KNeighborsClassifier
 # )
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.cluster_classifier import KNNCluster
-from pybasin.jax_feature_extractor import JaxFeatureExtractor
+from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import GridSampler
 from pybasin.solvers import JaxSolver
 
@@ -42,17 +42,23 @@ def setup_pendulum_system() -> SetupProperties:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,
+        use_cache=True,
     )
 
     # Instantiate the feature extractor with a steady state time.
-    # feature_extractor = TsfreshFeatureExtractor(
-    #     time_steady=950.0,  # Same as PendulumFeatureExtractor
-    #     default_fc_parameters=MinimalFCParameters(),
-    #     n_jobs=1,  # Use n_jobs=1 for deterministic results (n_jobs>1 causes non-determinism)
-    #     normalize=False,  # Don't normalize - causes issues with KNN when templates differ from main data
-    # )
-    feature_extractor = JaxFeatureExtractor(time_steady=950.0, normalize=False)
+    # For the pendulum, we use the "log_delta" feature on velocity (state 1).
+    # Log transformation of delta makes the exponential range more linear:
+    #   FP: log(delta) ~ -11 to -4 (delta ~ 1e-5 to 1e-2)
+    #   LC: log(delta) ~ -4 to 2+  (delta ~ 1e-2 to 10+)
+    # This provides better KNN separation across different T parameters.
+    feature_extractor = JaxFeatureExtractor(
+        time_steady=950.0,
+        state_to_features={
+            0: [],
+            1: ["log_delta"],
+        },
+        normalize=False,
+    )
 
     # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
     # Templates are defined as plain Python lists - the classifier will convert them
