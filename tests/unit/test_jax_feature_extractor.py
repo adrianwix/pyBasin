@@ -1,5 +1,10 @@
+import pytest
 import torch
 
+from pybasin.feature_extractors.jax_feature_calculators import (
+    COMPREHENSIVE_FEATURES,
+    get_feature_names,
+)
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.solution import Solution
 
@@ -127,3 +132,97 @@ def test_jax_feature_extractor_reset_scaler():
     assert not extractor._is_fitted  # pyright: ignore[reportPrivateUsage]
     assert extractor._feature_mean is None  # pyright: ignore[reportPrivateUsage]
     assert extractor._feature_std is None  # pyright: ignore[reportPrivateUsage]
+
+
+def test_jax_feature_extractor_comprehensive_features():
+    """Test that comprehensive feature set includes all 12 features per state."""
+    n_steps, n_batch, n_states = 100, 5, 2
+    ic = torch.randn(n_batch, n_states)
+    time = torch.linspace(0, 10, n_steps)
+    y = torch.randn(n_steps, n_batch, n_states)
+    solution = Solution(initial_condition=ic, time=time, y=y)
+
+    # Use comprehensive features (includes delta and log_delta)
+    comprehensive_names = get_feature_names(comprehensive=True)
+    extractor = JaxFeatureExtractor(
+        default_features=comprehensive_names,
+        normalize=False,
+    )
+    features = extractor.extract_features(solution)
+
+    # 12 features per state * 2 states = 24 features
+    assert len(COMPREHENSIVE_FEATURES) == 12
+    assert features.shape == (n_batch, 24)
+    assert extractor.n_features == 24
+
+    # Verify delta and log_delta are included
+    feature_names = extractor.feature_names
+    assert "state_0__delta" in feature_names
+    assert "state_0__log_delta" in feature_names
+    assert "state_1__delta" in feature_names
+    assert "state_1__log_delta" in feature_names
+
+
+def test_jax_feature_extractor_custom_feature_in_per_state():
+    """Test that custom features (delta, log_delta) work in per-state configuration."""
+    n_steps, n_batch, n_states = 100, 5, 2
+    ic = torch.randn(n_batch, n_states)
+    time = torch.linspace(0, 10, n_steps)
+    y = torch.randn(n_steps, n_batch, n_states)
+    solution = Solution(initial_condition=ic, time=time, y=y)
+
+    # Use log_delta for state 1 (like pendulum case)
+    extractor = JaxFeatureExtractor(
+        state_to_features={
+            0: [],  # No features for state 0
+            1: ["log_delta"],  # Only log_delta for state 1
+        },
+        normalize=False,
+    )
+    features = extractor.extract_features(solution)
+
+    # Only 1 feature total
+    assert features.shape == (n_batch, 1)
+    assert extractor.n_features == 1
+    assert extractor.feature_names == ["state_1__log_delta"]
+
+
+def test_jax_feature_extractor_feature_names_format():
+    """Test that feature_names property returns correctly formatted names."""
+    n_steps, n_batch, n_states = 100, 5, 3
+    ic = torch.randn(n_batch, n_states)
+    time = torch.linspace(0, 10, n_steps)
+    y = torch.randn(n_steps, n_batch, n_states)
+    solution = Solution(initial_condition=ic, time=time, y=y)
+
+    extractor = JaxFeatureExtractor(
+        state_to_features={
+            0: ["maximum", "minimum"],
+            1: ["mean", "variance", "standard_deviation"],
+            2: ["delta"],
+        },
+        normalize=False,
+    )
+    extractor.extract_features(solution)
+
+    expected_names = [
+        "state_0__maximum",
+        "state_0__minimum",
+        "state_1__mean",
+        "state_1__variance",
+        "state_1__standard_deviation",
+        "state_2__delta",
+    ]
+    assert extractor.feature_names == expected_names
+    assert extractor.n_features == 6
+
+
+def test_jax_feature_extractor_feature_names_raises_before_extraction():
+    """Test that accessing feature_names before extraction raises RuntimeError."""
+    extractor = JaxFeatureExtractor()
+
+    with pytest.raises(RuntimeError, match="Feature configuration not initialized"):
+        _ = extractor.feature_names
+
+    with pytest.raises(RuntimeError, match="Feature configuration not initialized"):
+        _ = extractor.n_features

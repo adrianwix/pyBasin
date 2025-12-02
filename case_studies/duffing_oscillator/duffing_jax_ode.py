@@ -72,12 +72,5 @@ class DuffingJaxODE(JaxODESystem[DuffingParams]):
         """
         Returns a string representation of the ODE system with its parameters.
         """
-        delta = self.params["delta"]
-        k3 = self.params["k3"]
-        amplitude = self.params["A"]
-        description = (
-            f"DuffingJaxODE:\n"
-            f"  dx/dt       = x_dot\n"
-            f"  dx_dot/dt   = -({delta})*x_dot - ({k3})*x^3 + ({amplitude})*cos(t)\n"
-        )
+        description = "Duffing:\n  dx/dt = x_dot\n  dx_dot/dt = -delta·x_dot - k3·x³ + A·cos(t)\n"
         return description

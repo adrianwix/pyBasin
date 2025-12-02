@@ -7,6 +7,8 @@ import torch
 class Sampler(ABC):
     """Abstract base class for sampling initial conditions using PyTorch."""
 
+    display_name: str = "Sampler"
+
     def __init__(self, min_limits: list[float], max_limits: list[float], device: str | None = None):
         """
         Initialize the sampler.
@@ -49,6 +51,8 @@ class Sampler(ABC):
 class UniformRandomSampler(Sampler):
     """Generates random samples using a uniform distribution within the specified range."""
 
+    display_name: str = "Uniform Random Sampler"
+
     def sample(self, n: int, seed: int | None = 299792458) -> torch.Tensor:
         generator = torch.Generator(device=self.device)
         if seed is not None:
@@ -62,6 +66,8 @@ class UniformRandomSampler(Sampler):
 
 class GridSampler(Sampler):
     """Generates evenly spaced samples in a grid pattern within the specified range."""
+
+    display_name: str = "Grid Sampler"
 
     def sample(self, n: int) -> torch.Tensor:
         # Use ceiling to match MATLAB implementation
@@ -81,6 +87,8 @@ class GridSampler(Sampler):
 
 class GaussianSampler(Sampler):
     """Generates samples using a Gaussian distribution around the midpoint."""
+
+    display_name: str = "Gaussian Sampler"
 
     def __init__(
         self,

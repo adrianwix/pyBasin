@@ -18,6 +18,8 @@ P = TypeVar("P")
 class ClusterClassifier(ABC):
     """Abstract base class for clustering/classification algorithms."""
 
+    display_name: str = "Classifier"
+
     @abstractmethod
     def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """
@@ -178,6 +180,8 @@ class SupervisedClassifier[P](ClusterClassifier):
 class KNNCluster[P](SupervisedClassifier[P]):
     """K-Nearest Neighbors classifier for basin stability analysis."""
 
+    display_name: str = "KNN Classifier"
+
     def __init__(
         self,
         classifier: KNeighborsClassifier | None,
@@ -228,6 +232,8 @@ class UnsupervisedClassifier[P](ClusterClassifier):
 
 class DBSCANCluster(UnsupervisedClassifier[Any]):
     """DBSCAN clustering for basin stability analysis."""
+
+    display_name: str = "DBSCAN Clustering"
 
     classifier: DBSCAN
 

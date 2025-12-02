@@ -38,6 +38,9 @@ dependencies = [
     "microsoft-python-type-stubs",
     "tsfresh>=0.21.1",
     "nolds>=0.6.2",
+    "plotly>=5.18.0",
+    "dash>=2.14.0",
+    "dash-mantine-components>=0.14.0",
 ]
 
 [project.optional-dependencies]

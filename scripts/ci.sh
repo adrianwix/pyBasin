@@ -16,4 +16,8 @@ echo "==> Running pyright type checker..."
 uv run pyright
 
 echo ""
+echo "==> Running pyright for plotters (basic checking)..."
+uv run pyright -p src/pybasin/plotters/pyrightconfig.json
+
+echo ""
 echo "✓ All CI checks passed!"

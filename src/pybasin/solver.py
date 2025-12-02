@@ -27,6 +27,8 @@ class Solver(ABC):
     The persistent cache is stored in the folder given by resolve_folder("cache").
     """
 
+    display_name: str = "Solver"
+
     def __init__(
         self,
         time_span: tuple[float, float],
@@ -213,6 +215,8 @@ class TorchDiffEqSolver(Solver):
     Solver using torchdiffeq's odeint.
     """
 
+    display_name: str = "TorchDiffEq Solver"
+
     def __init__(
         self,
         time_span: tuple[float, float],
@@ -283,6 +287,8 @@ class TorchOdeSolver(Solver):
     """
     Solver using torchode's parallel ODE solver.
     """
+
+    display_name: str = "TorchODE Solver"
 
     def __init__(
         self,
@@ -421,6 +427,8 @@ class SklearnParallelSolver(Solver):
     Uses multiprocessing (loky backend) to solve multiple initial conditions in parallel.
     Each worker solves one trajectory at a time using scipy's solve_ivp.
     """
+
+    display_name: str = "Sklearn Parallel Solver"
 
     def __init__(
         self,

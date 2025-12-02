@@ -1,6 +1,6 @@
 from case_studies.friction.setup_friction_system import setup_friction_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.plotter import Plotter
+from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.utils import time_execution
 
 
@@ -20,14 +20,12 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    plotter = Plotter(bse=bse)
+    # bse.save()
 
-    plotter.plot_bse_results()
-    plotter.plot_templates(plotted_var=1, time_span=(0, 200))
-    plotter.plot_phase(x_var=0, y_var=1)
-
-    bse.save()
+    return bse
 
 
 if __name__ == "__main__":
-    time_execution("main_friction.py", main)
+    bse = time_execution("main_friction.py", main)
+    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
+    plotter.run(port=8050)

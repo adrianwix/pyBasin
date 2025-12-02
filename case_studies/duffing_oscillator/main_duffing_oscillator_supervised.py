@@ -2,11 +2,11 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.utils import time_execution
 
-# from pybasin.plotter import Plotter
 
-if __name__ == "__main__":
-    # Use the setup function to get all system components
+def main():
     setup = setup_duffing_oscillator_system()
 
     bse = BasinStabilityEstimator(
@@ -22,8 +22,12 @@ if __name__ == "__main__":
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    # plotter = Plotter(bse)
-    # plotter.plot_templates(plotted_var=1, time_span=(0, 50))
-    # plotter.plot_bse_results()
-
     # bse.save()
+
+    return bse
+
+
+if __name__ == "__main__":
+    bse = time_execution("main_duffing_oscillator_supervised.py", main)
+    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
+    plotter.run(port=8050)

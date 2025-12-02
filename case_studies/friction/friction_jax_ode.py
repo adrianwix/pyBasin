@@ -88,24 +88,5 @@ class FrictionJaxODE(JaxODESystem[FrictionParams]):
         """
         Returns a string representation of the ODE system with its parameters.
         """
-        v_d = self.params["v_d"]
-        xi = self.params["xi"]
-        musd = self.params["musd"]
-        mud = self.params["mud"]
-        muv = self.params["muv"]
-        v0 = self.params["v0"]
-
-        description = (
-            f"FrictionJaxODE:\n"
-            f"  ddisp/dt = vel\n"
-            f"  dvel/dt  = -disp - 2*({xi})*vel - sign(vel - {v_d})*friction_law(...)\n"
-            f"\n"
-            f"Parameters:\n"
-            f"  v_d  = {v_d}\n"
-            f"  xi   = {xi}\n"
-            f"  musd = {musd}\n"
-            f"  mud  = {mud}\n"
-            f"  muv  = {muv}\n"
-            f"  v0   = {v0}\n"
-        )
+        description = "Friction:\n  ddisp/dt = vel\n  dvel/dt = -disp - 2·xi·vel - sign(vel - v_d)·friction_law(...)\n"
         return description

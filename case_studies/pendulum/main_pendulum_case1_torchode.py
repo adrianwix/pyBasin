@@ -1,23 +1,12 @@
-# Pybasin Imports
-# Third Parties
 from case_studies.pendulum.setup_pendulum_system_torchode import (
     setup_pendulum_system_torchode,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.utils import time_execution
 
 
 def main():
-    """
-    Test case study for pendulum using TorchOdeSolver.
-
-    This demonstrates the usage of torchode as an alternative ODE solver
-    to torchdiffeq. The results should be similar to the standard case study.
-    """
-    print("=" * 80)
-    print("Pendulum Case Study - TorchOdeSolver")
-    print("=" * 80)
-
     props = setup_pendulum_system_torchode()
 
     bse = BasinStabilityEstimator(
@@ -31,22 +20,15 @@ def main():
     )
 
     basin_stability = bse.estimate_bs()
-    print("\n" + "=" * 80)
-    print("Basin Stability Results:")
-    print("=" * 80)
-    for label, value in basin_stability.items():
-        print(f"  {label}: {value:.4f}")
-    print("=" * 80)
+    print("Basin Stability:", basin_stability)
 
-    # Uncomment to generate plots
-    # plotter = Plotter(bse=bse)
-    # plotter.plot_templates(plotted_var=1, time_span=(0, 100))
-    # plotter.plot_bse_results()
-
-    # Uncomment to save results
     # bse.save()
     # bse.save_to_excel()
 
+    return bse
+
 
 if __name__ == "__main__":
-    time_execution("main_pendulum_case1_torchode.py", main)
+    bse = time_execution("main_pendulum_case1_torchode.py", main)
+    plotter = InteractivePlotter(bse, state_labels={0: "θ", 1: "ω"})
+    plotter.run(port=8050)

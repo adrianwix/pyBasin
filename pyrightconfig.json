@@ -9,7 +9,8 @@
         "**/.venv",
         "cache",
         "artifacts",
-        "benchmarks"
+        "benchmarks",
+        "src/pybasin/plotters"
     ],
     "venvPath": ".",
     "venv": ".venv",

@@ -1,19 +1,15 @@
-from typing import cast
-
-from sklearn.neighbors import KNeighborsClassifier
-
-from case_studies.lorenz.lorenz_ode import LorenzParams
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import KNNCluster
-from pybasin.plotter import Plotter
+from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.plotters.types import (
+    FeatureSpaceOptions,
+    InteractivePlotterOptions,
+    PhasePlotOptions,
+)
 from pybasin.utils import time_execution
 
 
 def main():
-    # Preview templates first
-    # preview_plot_templates()
-
     props = setup_lorenz_system()
 
     bse = BasinStabilityEstimator(
@@ -29,65 +25,16 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    # plotter = Plotter(bse=bse)
-
-    # plotter.plot_bse_results()
-    # plotter.plot_phase(x_var=1, y_var=2)
-
     # bse.save()
 
-
-# TODO: Having example trajectories and previewing them before running the full analysis
-# seem like a useful feature to have in other case studies as well, and part of the library
-def preview_plot_templates():
-    """Preview the template trajectories before running the full analysis"""
-    props = setup_lorenz_system()
-    n = props["n"]
-    ode_system = props["ode_system"]
-    sampler = props["sampler"]
-    solver = props["solver"]
-    feature_extractor = props["feature_extractor"]
-    params = cast(KNNCluster[LorenzParams], props["cluster_classifier"]).ode_params
-
-    # Here we override the setup_lorenz because we only want to plot the 2 bounded solutions
-
-    # Template initial conditions as plain Python lists
-    classifier_initial_conditions = [
-        [0.8, -3.0, 0.0],  # butterfly1
-        [-0.8, 3.0, 0.0],  # butterfly2
-    ]
-    classifier_labels = ["butterfly1", "butterfly2"]
-
-    # Create a KNeighborsClassifier with k=1
-    knn = KNeighborsClassifier(n_neighbors=1)
-
-    # Instantiate the KNNCluster with the training data
-    knn_cluster: KNNCluster[LorenzParams] = KNNCluster(
-        classifier=knn,
-        template_y0=classifier_initial_conditions,
-        labels=classifier_labels,
-        ode_params=params,
-    )
-
-    bse = BasinStabilityEstimator(
-        n=n,
-        ode_system=ode_system,
-        sampler=sampler,
-        solver=solver,
-        feature_extractor=feature_extractor,
-        cluster_classifier=knn_cluster,
-        save_to="results",
-    )
-
-    plotter = Plotter(bse=bse)
-
-    print("Generating template trajectories...")
-
-    # Plot the first state variable (x) trajectories
-    plotter.plot_templates(plotted_var=1, time_span=(0, 200))
-
-    plotter.plot_phase(x_var=1, y_var=2)
+    return bse
 
 
 if __name__ == "__main__":
-    time_execution("main_lorenz.py", main)
+    bse = time_execution("main_lorenz.py", main)
+    options = InteractivePlotterOptions(
+        phase_plot=PhasePlotOptions(x_var=1, y_var=2, exclude_templates=["unbounded"]),
+        feature_space=FeatureSpaceOptions(exclude_labels=["unbounded"]),
+    )
+    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y", 2: "z"}, options=options)
+    plotter.run(port=8050)

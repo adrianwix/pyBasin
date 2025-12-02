@@ -73,13 +73,7 @@ class LorenzJaxODE(JaxODESystem[LorenzParams]):
         """
         Returns a string representation of the ODE system with its parameters.
         """
-        sigma = self.params["sigma"]
-        r = self.params["r"]
-        b = self.params["b"]
         description = (
-            f"LorenzJaxODE:\n"
-            f"  dx/dt = {sigma} * (y - x)\n"
-            f"  dy/dt = {r} * x - x * z - y\n"
-            f"  dz/dt = x * y - {b} * z\n"
+            "Lorenz:\n  dx/dt = sigma·(y - x)\n  dy/dt = r·x - x·z - y\n  dz/dt = x·y - b·z\n"
         )
         return description

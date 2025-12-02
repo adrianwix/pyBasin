@@ -103,7 +103,7 @@ def log_delta(x: Array) -> Array:
     return jnp.log(delta(x) + eps)
 
 
-# Dictionary of minimal features (matching tsfresh MinimalFCParameters)
+# Dictionary of minimal features (matching tsfresh MinimalFCParameters - 10 features)
 MINIMAL_FEATURES: dict[str, Callable[[Array], Array]] = {
     "sum_values": sum_values,
     "median": median,
@@ -115,17 +115,38 @@ MINIMAL_FEATURES: dict[str, Callable[[Array], Array]] = {
     "maximum": maximum,
     "absolute_maximum": absolute_maximum,
     "minimum": minimum,
-    # Not in tsfresh
+}
+
+# Dictionary of comprehensive features (minimal + custom features - 12 features)
+COMPREHENSIVE_FEATURES: dict[str, Callable[[Array], Array]] = {
+    **MINIMAL_FEATURES,
     "delta": delta,
     "log_delta": log_delta,
 }
 
+# All available features (for lookup by name)
+ALL_FEATURES: dict[str, Callable[[Array], Array]] = COMPREHENSIVE_FEATURES
 
-def get_feature_names() -> list[str]:
-    """Get the list of feature names."""
+
+def get_feature_names(comprehensive: bool = False) -> list[str]:
+    """Get the list of feature names.
+
+    Args:
+        comprehensive: If True, include custom features (delta, log_delta).
+                      If False (default), return only tsfresh MinimalFCParameters.
+    """
+    if comprehensive:
+        return list(COMPREHENSIVE_FEATURES.keys())
     return list(MINIMAL_FEATURES.keys())
 
 
-def get_feature_functions() -> dict[str, Callable[[Array], Array]]:
-    """Get the feature functions dictionary."""
+def get_feature_functions(comprehensive: bool = False) -> dict[str, Callable[[Array], Array]]:
+    """Get the feature functions dictionary.
+
+    Args:
+        comprehensive: If True, include custom features (delta, log_delta).
+                      If False (default), return only tsfresh MinimalFCParameters.
+    """
+    if comprehensive:
+        return COMPREHENSIVE_FEATURES.copy()
     return MINIMAL_FEATURES.copy()

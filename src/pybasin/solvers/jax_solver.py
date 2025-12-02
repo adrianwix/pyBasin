@@ -58,6 +58,8 @@ class JaxSolver:
     >>> t, y = solver.integrate(MyODE({}), y0)
     """
 
+    display_name: str = "JAX Solver"
+
     def __init__(
         self,
         time_span: tuple[float, float],

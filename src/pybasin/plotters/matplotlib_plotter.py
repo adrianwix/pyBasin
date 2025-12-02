@@ -1,11 +1,9 @@
+# pyright: basic
+
 import os
 
-import matplotlib
-import torch
-
-matplotlib.use("Agg")  # Set backend before importing pyplot
-
 import numpy as np
+import torch
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
@@ -14,7 +12,7 @@ from pybasin.cluster_classifier import SupervisedClassifier
 from pybasin.utils import generate_filename, resolve_folder
 
 
-class Plotter:
+class MatplotlibPlotter:
     def __init__(self, bse: BasinStabilityEstimator):
         """
         Initialize the Plotter with a BasinStabilityEstimator instance.
@@ -122,6 +120,7 @@ class Plotter:
 
         plt.show()  # type: ignore[misc]
 
+    # Plots 2 states over time for the same trajectory in the same space
     def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
@@ -178,6 +177,7 @@ class Plotter:
 
         plt.show()  # type: ignore[misc]
 
+    # Plots over time
     def plot_templates(self, plotted_var: int, time_span: tuple[float, float] | None = None):
         """
         Plot trajectories for the template initial conditions.

@@ -14,7 +14,7 @@ import torch
 from jax import Array
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.feature_extractors.jax_feature_calculators import MINIMAL_FEATURES, get_feature_names
+from pybasin.feature_extractors.jax_feature_calculators import ALL_FEATURES, get_feature_names
 from pybasin.feature_extractors.jax_feature_utilities import impute, impute_extreme
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.solution import Solution
@@ -143,9 +143,10 @@ class JaxFeatureExtractor(FeatureExtractor):
         for state_idx in range(self._num_states):
             feature_names = self._state_feature_config[state_idx]
             for fname in feature_names:
-                if fname not in MINIMAL_FEATURES:
-                    raise ValueError(f"Unknown feature: {fname}. Available: {get_feature_names()}")
-                state_feature_funcs.append((state_idx, MINIMAL_FEATURES[fname]))
+                if fname not in ALL_FEATURES:
+                    available = list(ALL_FEATURES.keys())
+                    raise ValueError(f"Unknown feature: {fname}. Available: {available}")
+                state_feature_funcs.append((state_idx, ALL_FEATURES[fname]))
 
         def extract_all_features(x: Array) -> Array:
             # x shape: (N, B, S) where S is number of states

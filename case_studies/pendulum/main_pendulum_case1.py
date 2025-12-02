@@ -2,6 +2,7 @@
 # Third Parties
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.utils import time_execution
 
 
@@ -21,13 +22,13 @@ def main():
     basin_stability = bse.estimate_bs()
     print("Basin Stability:", basin_stability)
 
-    # plotter = Plotter(bse=bse)
-    # plotter.plot_templates(plotted_var=1, time_span=(0, 100))
-    # plotter.plot_bse_results()
-
     # bse.save()
     # bse.save_to_excel()
 
+    return bse
+
 
 if __name__ == "__main__":
-    time_execution("main_pendulum_case1.py", main)
+    bse = time_execution("main_pendulum_case1.py", main)
+    plotter = InteractivePlotter(bse, state_labels={0: "θ", 1: "ω"})
+    plotter.run(port=8050)
