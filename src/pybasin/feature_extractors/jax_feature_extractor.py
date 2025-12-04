@@ -1,7 +1,7 @@
 """JAX-based feature extractor for ODE solution trajectories.
 
 This module provides a high-performance feature extractor using JAX for GPU-accelerated
-time series feature extraction from ODE solutions, matching tsfresh's MinimalFCParameters.
+time series feature extraction from ODE solutions.
 """
 
 from collections.abc import Callable
@@ -21,16 +21,22 @@ from pybasin.solution import Solution
 
 
 class JaxFeatureExtractor(FeatureExtractor):
-    """JAX-based feature extractor using MinimalFCParameters features.
+    """JAX-based feature extractor for time series features.
 
     Supports per-state variable feature configuration, allowing you to apply
     different feature sets to different state variables based on domain knowledge.
 
+    By default, uses COMPREHENSIVE_FEATURES which includes all tsfresh EfficientFCParameters
+    equivalent features plus custom features (delta, log_delta).
+
     Args:
         time_steady: Time threshold for filtering transients. Default 0.0.
+        comprehensive: If True (default), use all COMPREHENSIVE_FEATURES (tsfresh
+            EfficientFCParameters equivalent + custom features). If False, use only
+            MINIMAL_FEATURES (tsfresh MinimalFCParameters equivalent).
         default_features: Default feature calculators to apply to all states.
-            Can be a list of feature names or None. If None and state_to_features
-            is not provided, all MINIMAL_FEATURES will be used.
+            Can be a list of feature names or None. If None, features are determined
+            by the `comprehensive` parameter.
             Example: ["maximum", "standard_deviation"]
         state_to_features: Optional dict mapping state indices to feature lists.
             Allows different feature sets per state variable. If provided, overrides
@@ -50,13 +56,13 @@ class JaxFeatureExtractor(FeatureExtractor):
               NaN->median). Better when all trajectories are bounded.
 
     Examples:
-        >>> # Same features for all states
-        >>> extractor = JaxFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     default_features=["maximum", "standard_deviation"],
-        ... )
+        >>> # Use all comprehensive features (default) for all states
+        >>> extractor = JaxFeatureExtractor(time_steady=9.0)
 
-        >>> # Different features per state (e.g., Duffing: position vs velocity)
+        >>> # Use only minimal features
+        >>> extractor = JaxFeatureExtractor(time_steady=9.0, comprehensive=False)
+
+        >>> # Custom features for specific states
         >>> extractor = JaxFeatureExtractor(
         ...     time_steady=9.0,
         ...     state_to_features={
@@ -64,14 +70,12 @@ class JaxFeatureExtractor(FeatureExtractor):
         ...         1: ["mean"],                           # Velocity
         ...     },
         ... )
-
-        >>> # Use all minimal features for all states
-        >>> extractor = JaxFeatureExtractor(time_steady=9.0)
     """
 
     def __init__(
         self,
         time_steady: float = 0.0,
+        comprehensive: bool = True,
         default_features: list[str] | None = None,
         state_to_features: dict[int, list[str]] | None = None,
         normalize: bool = True,
@@ -83,6 +87,7 @@ class JaxFeatureExtractor(FeatureExtractor):
 
         super().__init__(time_steady=time_steady)
 
+        self.comprehensive = comprehensive
         self.normalize = normalize
         self.use_jit = use_jit
         self.impute_method = impute_method
@@ -115,9 +120,9 @@ class JaxFeatureExtractor(FeatureExtractor):
         self._num_states = num_states
         self._state_feature_config = {}
 
-        # Determine default features
+        # Determine default features based on comprehensive flag or explicit list
         if self.default_features is None:
-            default_feature_list = get_feature_names()
+            default_feature_list = get_feature_names(comprehensive=self.comprehensive)
         else:
             default_feature_list = self.default_features
 
@@ -153,11 +158,12 @@ class JaxFeatureExtractor(FeatureExtractor):
             # For each (state_idx, feature_func), extract feature for that state
             feature_values: list[Array] = []
             for state_idx, feature_func in state_feature_funcs:
-                # Extract single state: (N, B)
-                x_state = x[:, :, state_idx]
-                # Compute feature: (B,)
+                # Extract single state keeping dim: (N, B, 1)
+                x_state = x[:, :, state_idx : state_idx + 1]
+                # Compute feature: (B, 1)
                 feat = feature_func(x_state)
-                feature_values.append(feat)
+                # Squeeze state dim: (B,)
+                feature_values.append(feat.squeeze(-1))
 
             # Stack features: (num_features, B)
             stacked = jnp.stack(feature_values, axis=0)

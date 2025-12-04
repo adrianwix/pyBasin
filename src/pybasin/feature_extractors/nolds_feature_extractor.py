@@ -7,6 +7,55 @@ from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.solution import Solution
 
 
+def impute_torch(features: torch.Tensor) -> torch.Tensor:
+    """
+    Columnwise replaces all NaNs and infs from the feature tensor with average/extreme values.
+
+    This is done as follows for each column:
+        * -inf -> min (of finite values in that column)
+        * +inf -> max (of finite values in that column)
+        * NaN -> median (of finite values in that column)
+
+    If a column does not contain any finite values at all, it is filled with zeros.
+
+    Parameters
+    ----------
+    features : torch.Tensor
+        Feature tensor of shape (B, F) where B is batch size and F is number of features.
+
+    Returns
+    -------
+    torch.Tensor
+        Imputed feature tensor with the same shape, guaranteed to contain no NaN or inf values.
+    """
+    result = features.clone()
+
+    for col in range(features.shape[1]):
+        col_data = features[:, col]
+        finite_mask = torch.isfinite(col_data)
+
+        if finite_mask.any():
+            finite_values = col_data[finite_mask]
+            col_min = finite_values.min()
+            col_max = finite_values.max()
+            col_median = finite_values.median()
+        else:
+            col_min = torch.tensor(0.0)
+            col_max = torch.tensor(0.0)
+            col_median = torch.tensor(0.0)
+
+        # Replace -inf with column min
+        result[:, col] = torch.where(torch.isneginf(col_data), col_min, result[:, col])
+
+        # Replace +inf with column max
+        result[:, col] = torch.where(torch.isposinf(col_data), col_max, result[:, col])
+
+        # Replace NaN with column median
+        result[:, col] = torch.where(torch.isnan(col_data), col_median, result[:, col])
+
+    return result
+
+
 class LyapunovFeatureExtractor(FeatureExtractor):
     """Extract Lyapunov exponent features using nolds.
 
@@ -76,6 +125,9 @@ class LyapunovFeatureExtractor(FeatureExtractor):
         # Convert to tensor: (B, S)
         features = torch.tensor(lyapunov_features, dtype=torch.float32)
 
+        # Impute NaN/inf values
+        features = impute_torch(features)
+
         return features
 
 
@@ -141,5 +193,8 @@ class CorrelationDimensionExtractor(FeatureExtractor):
 
         # Convert to tensor: (B, S)
         features = torch.tensor(corr_dim_features, dtype=torch.float32)
+
+        # Impute NaN/inf values
+        features = impute_torch(features)
 
         return features

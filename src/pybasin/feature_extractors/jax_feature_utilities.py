@@ -1,3 +1,5 @@
+# pyright: basic
+
 """JAX-based utility functions for feature extraction.
 
 This module provides utility functions for handling NaN, inf, and other
@@ -102,3 +104,36 @@ def impute_extreme(features: Array, extreme_value: float = 1e10) -> Array:
     result = jnp.where(jnp.isneginf(features), -extreme_value, result)
     result = jnp.where(jnp.isnan(features), extreme_value, result)
     return result
+
+
+def delay_embedding(data: Array, emb_dim: int, lag: int = 1) -> Array:
+    """Create delay embedding of a 1D time series.
+
+    Args:
+        data: 1D time series of shape (N,)
+        emb_dim: Embedding dimension
+        lag: Lag between elements in embedded vectors
+
+    Returns:
+        Embedded orbit matrix of shape (M, emb_dim) where M = N - (emb_dim-1)*lag
+    """
+    n = data.shape[0]
+    m = n - (emb_dim - 1) * lag
+
+    indices = jnp.arange(emb_dim) * lag
+    indices = indices + jnp.arange(m)[:, None]
+
+    return data[indices]
+
+
+def rowwise_euclidean(x: Array, y: Array) -> Array:
+    """Compute Euclidean distance from each row of x to vector y.
+
+    Args:
+        x: Matrix of shape (M, D)
+        y: Vector of shape (D,)
+
+    Returns:
+        Distances of shape (M,)
+    """
+    return jnp.sqrt(jnp.sum((x - y) ** 2, axis=1))
