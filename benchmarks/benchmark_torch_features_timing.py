@@ -1,0 +1,1072 @@
+# pyright: basic
+"""
+Benchmark to compare PyTorch vs tsfresh feature extraction timing.
+
+This script times each feature in both PyTorch and tsfresh to compare performance.
+Unlike JAX, PyTorch uses eager execution without JIT compilation overhead.
+
+Usage:
+    uv run python benchmarks/benchmark_torch_features_timing.py --individual-only
+    uv run python benchmarks/benchmark_torch_features_timing.py --batch-only
+    uv run python benchmarks/benchmark_torch_features_timing.py --batch-only --gpu
+    uv run python benchmarks/benchmark_torch_features_timing.py --batch-only --batches=10000
+    uv run python benchmarks/benchmark_torch_features_timing.py --batch-only --real-data
+"""
+
+import multiprocessing as mp
+import os
+import sys
+import time
+import warnings
+from datetime import datetime
+
+# Add parent directory to path for imports when running as script
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+
+import numpy as np
+import pandas as pd
+import torch
+from tsfresh import extract_features
+from tsfresh.feature_extraction import ComprehensiveFCParameters
+from tsfresh.feature_extraction import feature_calculators as fc
+
+from pybasin.feature_extractors.torch_feature_calculators import (
+    ALL_FEATURE_FUNCTIONS,
+    TORCH_COMPREHENSIVE_FC_PARAMETERS,
+    TORCH_GPU_FC_PARAMETERS,
+)
+from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
+from pybasin.sampler import GridSampler
+from pybasin.solvers import JaxSolver
+
+# Suppress pandas FutureWarning from tsfresh
+warnings.filterwarnings("ignore", category=FutureWarning, module="tsfresh")
+
+# Parse --gpu and --cpu-only flags
+USE_GPU = "--gpu" in sys.argv
+CPU_ONLY = "--cpu-only" in sys.argv
+
+
+# =============================================================================
+# DATA GENERATION
+# =============================================================================
+def generate_sample(
+    n_timesteps: int,
+    n_batches: int,
+    n_states: int,
+    real_data: bool = False,
+    time_steady: float = 950.0,
+    seed: int = 42,
+) -> torch.Tensor:
+    """Generate sample data for benchmarking.
+
+    Args:
+        n_timesteps: Number of time steps per series
+        n_batches: Number of batches (trajectories)
+        n_states: Number of state variables
+        real_data: If True, generate real pendulum ODE trajectories.
+                   If False, generate random Gaussian noise.
+        time_steady: Time threshold for filtering transients (only used with real_data)
+        seed: Random seed for reproducibility
+
+    Returns:
+        Tensor of shape (n_timesteps, n_batches, n_states)
+    """
+    np.random.seed(seed)
+
+    if not real_data:
+        # Generate random Gaussian noise
+        x_np = np.random.randn(n_timesteps, n_batches, n_states).astype(np.float32)
+        return torch.from_numpy(x_np)
+
+    # Generate real pendulum ODE trajectories
+    print(f"  Generating {n_batches} real pendulum trajectories...")
+
+    # Define pendulum parameters
+    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
+    ode_system = PendulumJaxODE(params)
+
+    # Create sampler with pendulum-appropriate limits
+    sampler = GridSampler(
+        min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
+        max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
+        device="cpu",
+    )
+
+    # Sample initial conditions
+    y0 = sampler.sample(n_batches)
+
+    # Create solver - compute n_steps to get desired n_timesteps after filtering
+    # We need extra steps to account for transient filtering
+    total_time = 1000.0
+    # Calculate how many steps we need in total to get n_timesteps after filtering
+    steady_fraction = (total_time - time_steady) / total_time
+    total_steps = int(n_timesteps / steady_fraction) + 10  # Add buffer
+
+    solver = JaxSolver(
+        time_span=(0, total_time),
+        n_steps=total_steps,
+        device="cpu",
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=False,
+    )
+
+    # Integrate ODE system
+    t, y = solver.integrate(ode_system, y0)
+
+    # Filter to steady state portion (t >= time_steady)
+    # t has shape (n_steps,), y has shape (n_steps, n_batches, n_states)
+    t_np = t.cpu().numpy()
+    steady_mask = t_np >= time_steady
+    y_steady = y[steady_mask, :, :]
+
+    # Trim or pad to exactly n_timesteps
+    current_timesteps = y_steady.shape[0]
+    if current_timesteps >= n_timesteps:
+        y_steady = y_steady[:n_timesteps, :, :]
+    else:
+        # Pad with last value if needed (shouldn't happen with proper buffer)
+        pad_size = n_timesteps - current_timesteps
+        last_val = y_steady[-1:, :, :].expand(pad_size, -1, -1)
+        y_steady = torch.cat([y_steady, last_val], dim=0)
+
+    # Limit states if needed
+    if n_states < y_steady.shape[2]:
+        y_steady = y_steady[:, :, :n_states]
+
+    print(f"  Generated trajectory shape: {y_steady.shape}")
+    return y_steady.float()
+
+
+# =============================================================================
+# MINIMAL FEATURE SET FOR FAST BATCH BENCHMARKS
+# =============================================================================
+MINIMAL_BATCH_FEATURES: dict[str, dict | None] = {
+    "sum_values": None,
+    "median": None,
+    "mean": None,
+    "length": None,
+    "standard_deviation": None,
+    "variance": None,
+    "root_mean_square": None,
+    "maximum": None,
+    "absolute_maximum": None,
+    "minimum": None,
+    "abs_energy": None,
+    "kurtosis": None,
+    "skewness": None,
+    "variation_coefficient": None,
+    "absolute_sum_of_changes": None,
+    "mean_abs_change": None,
+    "mean_change": None,
+    "mean_second_derivative_central": None,
+    "count_above_mean": None,
+    "count_below_mean": None,
+    "has_duplicate": None,
+    "has_duplicate_max": None,
+    "has_duplicate_min": None,
+    "has_variance_larger_than_standard_deviation": None,
+    "first_location_of_maximum": None,
+    "first_location_of_minimum": None,
+    "last_location_of_maximum": None,
+    "last_location_of_minimum": None,
+    "longest_strike_above_mean": None,
+    "longest_strike_below_mean": None,
+    "fourier_entropy": {"bins": 10},
+    "cid_ce": {"normalize": True},
+    "percentage_of_reoccurring_datapoints_to_all_datapoints": None,
+    "percentage_of_reoccurring_values_to_all_values": None,
+    "sum_of_reoccurring_data_points": None,
+    "sum_of_reoccurring_values": None,
+    "ratio_value_number_to_time_series_length": None,
+    "benford_correlation": None,
+    "mean_n_absolute_max": {"number_of_maxima": 1},
+    "ratio_beyond_r_sigma": {"r": 1.0},
+    "symmetry_looking": {"r": 0.1},
+}
+
+
+# =============================================================================
+# FEATURE CONFIGURATIONS FOR INDIVIDUAL BENCHMARKS
+# =============================================================================
+# Each entry: (torch_func_name, torch_kwargs, tsfresh_func_name, tsfresh_kwargs)
+# We use ONE representative parameter set per feature
+
+INDIVIDUAL_FEATURE_CONFIGS: list[tuple[str, dict, str, dict]] = [
+    # === NO-PARAMETER FEATURES (36 features) ===
+    ("sum_values", {}, "sum_values", {}),
+    ("median", {}, "median", {}),
+    ("mean", {}, "mean", {}),
+    ("length", {}, "length", {}),
+    ("standard_deviation", {}, "standard_deviation", {}),
+    ("variance", {}, "variance", {}),
+    ("root_mean_square", {}, "root_mean_square", {}),
+    ("maximum", {}, "maximum", {}),
+    ("absolute_maximum", {}, "absolute_maximum", {}),
+    ("minimum", {}, "minimum", {}),
+    ("abs_energy", {}, "abs_energy", {}),
+    ("kurtosis", {}, "kurtosis", {}),
+    ("skewness", {}, "skewness", {}),
+    ("variation_coefficient", {}, "variation_coefficient", {}),
+    ("absolute_sum_of_changes", {}, "absolute_sum_of_changes", {}),
+    ("mean_abs_change", {}, "mean_abs_change", {}),
+    ("mean_change", {}, "mean_change", {}),
+    ("mean_second_derivative_central", {}, "mean_second_derivative_central", {}),
+    ("count_above_mean", {}, "count_above_mean", {}),
+    ("count_below_mean", {}, "count_below_mean", {}),
+    ("has_duplicate", {}, "has_duplicate", {}),
+    ("has_duplicate_max", {}, "has_duplicate_max", {}),
+    ("has_duplicate_min", {}, "has_duplicate_min", {}),
+    (
+        "has_variance_larger_than_standard_deviation",
+        {},
+        "variance_larger_than_standard_deviation",
+        {},
+    ),
+    ("first_location_of_maximum", {}, "first_location_of_maximum", {}),
+    ("first_location_of_minimum", {}, "first_location_of_minimum", {}),
+    ("last_location_of_maximum", {}, "last_location_of_maximum", {}),
+    ("last_location_of_minimum", {}, "last_location_of_minimum", {}),
+    ("longest_strike_above_mean", {}, "longest_strike_above_mean", {}),
+    ("longest_strike_below_mean", {}, "longest_strike_below_mean", {}),
+    (
+        "percentage_of_reoccurring_datapoints_to_all_datapoints",
+        {},
+        "percentage_of_reoccurring_datapoints_to_all_datapoints",
+        {},
+    ),
+    (
+        "percentage_of_reoccurring_values_to_all_values",
+        {},
+        "percentage_of_reoccurring_values_to_all_values",
+        {},
+    ),
+    ("sum_of_reoccurring_data_points", {}, "sum_of_reoccurring_data_points", {}),
+    ("sum_of_reoccurring_values", {}, "sum_of_reoccurring_values", {}),
+    (
+        "ratio_value_number_to_time_series_length",
+        {},
+        "ratio_value_number_to_time_series_length",
+        {},
+    ),
+    ("benford_correlation", {}, "benford_correlation", {}),
+    # === PARAMETERIZED FEATURES (one config each) ===
+    (
+        "time_reversal_asymmetry_statistic",
+        {"lag": 1},
+        "time_reversal_asymmetry_statistic",
+        {"lag": 1},
+    ),
+    ("c3", {"lag": 1}, "c3", {"lag": 1}),
+    ("cid_ce", {"normalize": True}, "cid_ce", {"normalize": True}),
+    ("symmetry_looking", {"r": 0.1}, "symmetry_looking", {"param": [{"r": 0.1}]}),
+    ("large_standard_deviation", {"r": 0.25}, "large_standard_deviation", {"r": 0.25}),
+    ("quantile", {"q": 0.5}, "quantile", {"q": 0.5}),
+    ("autocorrelation", {"lag": 1}, "autocorrelation", {"lag": 1}),
+    (
+        "agg_autocorrelation",
+        {"f_agg": "mean", "maxlag": 40},
+        "agg_autocorrelation",
+        {"param": [{"f_agg": "mean", "maxlag": 40}]},
+    ),
+    ("partial_autocorrelation", {"lag": 1}, "partial_autocorrelation", {"param": [{"lag": 1}]}),
+    ("number_cwt_peaks", {"max_width": 5}, "number_cwt_peaks", {"n": 5}),
+    ("number_peaks", {"n": 3}, "number_peaks", {"n": 3}),
+    ("binned_entropy", {"max_bins": 10}, "binned_entropy", {"max_bins": 10}),
+    ("fourier_entropy", {"bins": 10}, "fourier_entropy", {"bins": 10}),
+    (
+        "permutation_entropy",
+        {"tau": 1, "dimension": 3},
+        "permutation_entropy",
+        {"tau": 1, "dimension": 3},
+    ),
+    ("lempel_ziv_complexity", {"bins": 2}, "lempel_ziv_complexity", {"bins": 2}),
+    ("index_mass_quantile", {"q": 0.5}, "index_mass_quantile", {"param": [{"q": 0.5}]}),
+    (
+        "fft_coefficient",
+        {"coeff": 0, "attr": "abs"},
+        "fft_coefficient",
+        {"param": [{"coeff": 0, "attr": "abs"}]},
+    ),
+    (
+        "fft_aggregated",
+        {"aggtype": "centroid"},
+        "fft_aggregated",
+        {"param": [{"aggtype": "centroid"}]},
+    ),
+    ("spkt_welch_density", {"coeff": 2}, "spkt_welch_density", {"param": [{"coeff": 2}]}),
+    (
+        "cwt_coefficients",
+        {"width": 2, "coeff": 0},
+        "cwt_coefficients",
+        {"param": [{"widths": (2,), "coeff": 0, "w": 2}]},
+    ),
+    ("ar_coefficient", {"coeff": 0, "k": 10}, "ar_coefficient", {"param": [{"coeff": 0, "k": 10}]}),
+    ("linear_trend", {"attr": "slope"}, "linear_trend", {"param": [{"attr": "slope"}]}),
+    (
+        "linear_trend_timewise",
+        {"attr": "slope"},
+        "linear_trend_timewise",
+        {"param": [{"attr": "slope"}]},
+    ),
+    (
+        "agg_linear_trend",
+        {"attr": "slope", "chunk_size": 10, "f_agg": "mean"},
+        "agg_linear_trend",
+        {"param": [{"attr": "slope", "chunk_len": 10, "f_agg": "mean"}]},
+    ),
+    (
+        "augmented_dickey_fuller",
+        {"attr": "teststat"},
+        "augmented_dickey_fuller",
+        {"param": [{"attr": "teststat"}]},
+    ),
+    (
+        "change_quantiles",
+        {"ql": 0.0, "qh": 0.5, "isabs": False, "f_agg": "mean"},
+        "change_quantiles",
+        {"ql": 0.0, "qh": 0.5, "isabs": False, "f_agg": "mean"},
+    ),
+    ("count_above", {"t": 0}, "count_above", {"t": 0}),
+    ("count_below", {"t": 0}, "count_below", {"t": 0}),
+    ("number_crossing_m", {"m": 0}, "number_crossing_m", {"m": 0}),
+    (
+        "energy_ratio_by_chunks",
+        {"num_segments": 10, "segment_focus": 0},
+        "energy_ratio_by_chunks",
+        {"param": [{"num_segments": 10, "segment_focus": 0}]},
+    ),
+    ("ratio_beyond_r_sigma", {"r": 1.0}, "ratio_beyond_r_sigma", {"r": 1.0}),
+    ("value_count", {"value": 0}, "value_count", {"value": 0}),
+    ("range_count", {"min_val": -1, "max_val": 1}, "range_count", {"min": -1, "max": 1}),
+    (
+        "friedrich_coefficients",
+        {"coeff": 0, "m": 3, "r": 30},
+        "friedrich_coefficients",
+        {"param": [{"coeff": 0, "m": 3, "r": 30}]},
+    ),
+    ("max_langevin_fixed_point", {"m": 3, "r": 30}, "max_langevin_fixed_point", {"m": 3, "r": 30}),
+    (
+        "mean_n_absolute_max",
+        {"number_of_maxima": 3},
+        "mean_n_absolute_max",
+        {"number_of_maxima": 3},
+    ),
+]
+
+
+def time_torch_feature(func, x_torch, kwargs, n_runs=3):
+    """Time a PyTorch feature function."""
+    try:
+        # Warmup
+        _ = func(x_torch, **kwargs)
+        if USE_GPU:
+            torch.cuda.synchronize()
+
+        # Time
+        times = []
+        for _ in range(n_runs):
+            start = time.perf_counter()
+            _ = func(x_torch, **kwargs)
+            if USE_GPU:
+                torch.cuda.synchronize()
+            times.append(time.perf_counter() - start)
+
+        return np.mean(times), None
+    except Exception as e:
+        return None, str(e)
+
+
+def time_tsfresh_feature(func_name, x_np, kwargs, n_batches, n_runs=3):
+    """Time a tsfresh feature function over n_batches calls."""
+    if not hasattr(fc, func_name):
+        return None, f"No tsfresh function: {func_name}"
+
+    tsfresh_fn = getattr(fc, func_name)
+
+    try:
+        # Test call
+        if "param" in kwargs:
+            list(tsfresh_fn(x_np, kwargs["param"]))
+        else:
+            tsfresh_fn(x_np, **kwargs)
+
+        # Time n_batches calls
+        times = []
+        for _ in range(n_runs):
+            start = time.perf_counter()
+            for _ in range(n_batches):
+                if "param" in kwargs:
+                    list(tsfresh_fn(x_np, kwargs["param"]))
+                else:
+                    tsfresh_fn(x_np, **kwargs)
+            times.append(time.perf_counter() - start)
+
+        return np.mean(times), None
+    except Exception as e:
+        return None, str(e)
+
+
+def time_all_features_torch(x_torch, n_runs=3, use_all=False):
+    """Time extracting all features at once using PyTorch.
+
+    Args:
+        x_torch: Input tensor
+        n_runs: Number of timing runs
+        use_all: If True, use all features from TORCH_COMPREHENSIVE_FC_PARAMETERS
+
+    Returns:
+        Tuple of (mean_run_time, n_features)
+    """
+    feature_calls = []
+
+    if use_all:
+        for feature_name, param_list in TORCH_COMPREHENSIVE_FC_PARAMETERS.items():
+            if feature_name not in ALL_FEATURE_FUNCTIONS:
+                continue
+            func = ALL_FEATURE_FUNCTIONS[feature_name]
+            if param_list is None:
+                feature_calls.append((feature_name, func, {}))
+            else:
+                for params in param_list:
+                    feature_calls.append((f"{feature_name}_{params}", func, params))
+    else:
+        for feature_name, kwargs in MINIMAL_BATCH_FEATURES.items():
+            if feature_name not in ALL_FEATURE_FUNCTIONS:
+                continue
+            func = ALL_FEATURE_FUNCTIONS[feature_name]
+            feature_calls.append((feature_name, func, kwargs or {}))
+
+    def extract_all():
+        results = {}
+        for fname, func, kwargs in feature_calls:
+            results[fname] = func(x_torch, **kwargs)
+        if USE_GPU:
+            torch.cuda.synchronize()
+        return results
+
+    # Time
+    times = []
+    for _ in range(n_runs):
+        start = time.perf_counter()
+        _ = extract_all()
+        times.append(time.perf_counter() - start)
+
+    return np.mean(times), len(feature_calls)
+
+
+def _process_chunk_worker(args):
+    """Worker function for multiprocessing - must be at module level."""
+    chunk_np, feature_names_and_kwargs = args
+    chunk = torch.from_numpy(chunk_np)
+    torch.set_num_threads(1)
+
+    results = {}
+    for feature_name, kwargs in feature_names_and_kwargs:
+        func = ALL_FEATURE_FUNCTIONS[feature_name]
+        results[(feature_name, str(kwargs))] = func(chunk, **kwargs).numpy()
+    return results
+
+
+def time_all_features_torch_parallel(x_torch, n_runs=3, use_all=False, n_workers=None):
+    """Time extracting all features using PyTorch with batch-level parallelism.
+
+    Uses multiprocessing to truly parallelize across CPU cores.
+
+    Args:
+        x_torch: Input tensor of shape (n_timesteps, n_batches, n_states)
+        n_runs: Number of timing runs
+        use_all: If True, use all features from TORCH_COMPREHENSIVE_FC_PARAMETERS
+        n_workers: Number of worker threads (default: cpu_count)
+
+    Returns:
+        Tuple of (mean_run_time, n_features)
+    """
+    if n_workers is None:
+        n_workers = os.cpu_count() or 1
+
+    feature_calls = []
+    feature_names_and_kwargs = []
+
+    if use_all:
+        for feature_name, param_list in TORCH_COMPREHENSIVE_FC_PARAMETERS.items():
+            if feature_name not in ALL_FEATURE_FUNCTIONS:
+                continue
+            func = ALL_FEATURE_FUNCTIONS[feature_name]
+            if param_list is None:
+                feature_calls.append((feature_name, func, {}))
+                feature_names_and_kwargs.append((feature_name, {}))
+            else:
+                for params in param_list:
+                    fname = f"{feature_name}_{params}"
+                    feature_calls.append((fname, func, params))
+                    feature_names_and_kwargs.append((feature_name, params))
+    else:
+        for feature_name, kwargs in MINIMAL_BATCH_FEATURES.items():
+            if feature_name not in ALL_FEATURE_FUNCTIONS:
+                continue
+            func = ALL_FEATURE_FUNCTIONS[feature_name]
+            feature_calls.append((feature_name, func, kwargs or {}))
+            feature_names_and_kwargs.append((feature_name, kwargs or {}))
+
+    # Split batches into chunks for parallel processing
+    x_np = x_torch.numpy()
+    n_batches = x_np.shape[1]
+    chunk_size = max(1, n_batches // n_workers)
+    worker_args = []
+    for i in range(0, n_batches, chunk_size):
+        end = min(i + chunk_size, n_batches)
+        chunk_np = x_np[:, i:end, :].copy()
+        worker_args.append((chunk_np, feature_names_and_kwargs))
+
+    def extract_all_parallel():
+        with mp.Pool(processes=n_workers) as pool:
+            chunk_results = pool.map(_process_chunk_worker, worker_args)
+        return chunk_results
+
+    # Time
+    times = []
+    for _ in range(n_runs):
+        start = time.perf_counter()
+        _ = extract_all_parallel()
+        times.append(time.perf_counter() - start)
+
+    # Restore original thread count
+    torch.set_num_threads(os.cpu_count() or 1)
+
+    return np.mean(times), len(feature_calls)
+
+
+def time_all_features_torch_gpu(x_torch, n_runs=3, use_all=False, use_gpu_friendly=True):
+    """Time extracting all features using PyTorch on GPU.
+
+    GPU naturally parallelizes across all batches without chunking.
+    The key is to keep data on GPU and avoid CPU-GPU transfers.
+
+    Args:
+        x_torch: Input tensor (will be moved to GPU)
+        n_runs: Number of timing runs
+        use_all: If True, use all features from TORCH_COMPREHENSIVE_FC_PARAMETERS
+        use_gpu_friendly: If True, use GPU-optimized subset (excludes slow features)
+
+    Returns:
+        Tuple of (mean_run_time, n_features)
+    """
+    if not torch.cuda.is_available():
+        return None, 0
+
+    device = torch.device("cuda")
+    x_gpu = x_torch.to(device)
+
+    feature_calls = []
+
+    # Select feature parameters based on mode
+    if use_gpu_friendly:
+        fc_params = TORCH_GPU_FC_PARAMETERS
+    elif use_all:
+        fc_params = TORCH_COMPREHENSIVE_FC_PARAMETERS
+    else:
+        fc_params = MINIMAL_BATCH_FEATURES  # type: ignore[assignment]
+
+    for feature_name, param_list in fc_params.items():
+        if feature_name not in ALL_FEATURE_FUNCTIONS:
+            continue
+        func = ALL_FEATURE_FUNCTIONS[feature_name]
+        if param_list is None:
+            feature_calls.append((feature_name, func, {}))
+        else:
+            for params in param_list:
+                feature_calls.append((f"{feature_name}_{params}", func, params))
+
+    def extract_all_gpu():
+        results = {}
+        for fname, func, kwargs in feature_calls:
+            results[fname] = func(x_gpu, **kwargs)
+        torch.cuda.synchronize()
+        return results
+
+    # Warmup
+    _ = extract_all_gpu()
+
+    # Time
+    times = []
+    for _ in range(n_runs):
+        torch.cuda.synchronize()
+        start = time.perf_counter()
+        _ = extract_all_gpu()
+        torch.cuda.synchronize()
+        times.append(time.perf_counter() - start)
+
+    return np.mean(times), len(feature_calls)
+
+
+def time_all_features_tsfresh(
+    n_timesteps: int,
+    n_batches: int,
+    use_all: bool,
+    use_comprehensive: bool = False,
+    n_runs: int = 3,
+):
+    """Time extracting features using tsfresh extract_features API."""
+    if use_comprehensive:
+        fc_parameters = ComprehensiveFCParameters()
+        # Count total feature values (each function can have multiple param combinations)
+        n_features = sum(len(v) if v else 1 for v in fc_parameters.values())
+    else:
+        fc_parameters = {}
+
+    param_remap = {
+        "number_cwt_peaks": {"max_width": "n"},
+        "agg_linear_trend": {"chunk_size": "chunk_len"},
+        "range_count": {"min_val": "min", "max_val": "max"},
+    }
+
+    name_remap = {
+        "has_variance_larger_than_standard_deviation": "variance_larger_than_standard_deviation",
+    }
+
+    if use_comprehensive:
+        pass
+    elif use_all:
+        source_features = TORCH_COMPREHENSIVE_FC_PARAMETERS
+        for feature_name, param_list in source_features.items():
+            tsfresh_name = name_remap.get(feature_name, feature_name)
+
+            if param_list is None:
+                fc_parameters[tsfresh_name] = None
+            else:
+                params = param_list[0].copy()
+
+                # Special transform for cwt_coefficients
+                if feature_name == "cwt_coefficients":
+                    width = params.pop("width", 2)
+                    params["widths"] = (width,)
+                    params["w"] = width
+
+                # Apply parameter name remapping
+                if feature_name in param_remap:
+                    for torch_key, tsfresh_key in param_remap[feature_name].items():
+                        if torch_key in params:
+                            params[tsfresh_key] = params.pop(torch_key)
+
+                fc_parameters[tsfresh_name] = [params]
+    else:
+        for feature_name, kwargs in MINIMAL_BATCH_FEATURES.items():
+            tsfresh_name = name_remap.get(feature_name, feature_name)
+            if kwargs is None:
+                fc_parameters[tsfresh_name] = None
+            else:
+                remapped = {}
+                for k, v in kwargs.items():
+                    if feature_name in param_remap and k in param_remap[feature_name]:
+                        remapped[param_remap[feature_name][k]] = v
+                    else:
+                        remapped[k] = v
+                fc_parameters[tsfresh_name] = [remapped]
+
+    if not use_comprehensive:
+        n_features = len(fc_parameters)
+
+    # Create DataFrame
+    np.random.seed(42)
+    data_rows = []
+    for batch_id in range(n_batches):
+        values = np.random.randn(n_timesteps)
+        for t_idx, val in enumerate(values):
+            data_rows.append({"id": batch_id, "time": t_idx, "value": val})
+
+    df = pd.DataFrame(data_rows)
+
+    # Time
+    n_jobs = os.cpu_count() or 1
+    times = []
+    for _ in range(n_runs):
+        start = time.perf_counter()
+        _ = extract_features(
+            df,
+            column_id="id",
+            column_sort="time",
+            default_fc_parameters=fc_parameters,
+            disable_progressbar=True,
+            n_jobs=n_jobs,
+        )
+        times.append(time.perf_counter() - start)
+
+    return np.mean(times), n_features
+
+
+def run_individual_benchmark(n_timesteps: int, n_batches: int, n_states: int, n_runs: int = 3):
+    """Run individual feature benchmarks comparing PyTorch vs tsfresh."""
+    print("\n" + "=" * 100)
+    print("INDIVIDUAL FEATURE BENCHMARK")
+    print("=" * 100)
+
+    device = torch.device("cuda" if USE_GPU and torch.cuda.is_available() else "cpu")
+    total_series = n_batches * n_states
+
+    print(f"\nDevice: {device}")
+    print(
+        f"Data: {n_timesteps} timesteps, {n_batches} batches x {n_states} states = {total_series} series"
+    )
+    print(
+        f"PyTorch processes all {total_series} series at once, tsfresh runs {total_series}x per feature"
+    )
+    print(f"Timing: {n_runs} runs per feature\n")
+
+    # Create test data
+    np.random.seed(42)
+    x_torch = torch.from_numpy(
+        np.random.randn(n_timesteps, n_batches, n_states).astype(np.float32)
+    ).to(device)
+    x_np = np.random.randn(n_timesteps)  # Single series for tsfresh
+
+    print("-" * 100)
+    print(f"{'Feature':<45} {'PyTorch':>12} {'tsfresh':>12} {'Speedup':>12} {'Status'}")
+    print("-" * 100)
+
+    results = []
+    torch_total = 0.0
+    tsfresh_total = 0.0
+    n_success = 0
+    n_torch_faster = 0
+    n_tsfresh_faster = 0
+
+    for torch_name, torch_kwargs, tsfresh_name, tsfresh_kwargs in INDIVIDUAL_FEATURE_CONFIGS:
+        # Get PyTorch function
+        if torch_name not in ALL_FEATURE_FUNCTIONS:
+            print(f"  {torch_name:<45} {'SKIP':>12} {'':>12} {'':>12} PyTorch func not found")
+            continue
+
+        torch_func = ALL_FEATURE_FUNCTIONS[torch_name]
+
+        # Time PyTorch
+        torch_time, torch_err = time_torch_feature(torch_func, x_torch, torch_kwargs, n_runs)
+
+        # Time tsfresh
+        tsfresh_time, tsfresh_err = time_tsfresh_feature(
+            tsfresh_name, x_np, tsfresh_kwargs, total_series, n_runs
+        )
+
+        # Format results
+        if torch_time is not None:
+            torch_str = f"{torch_time * 1000:8.2f}ms"
+            torch_total += torch_time
+        else:
+            torch_str = "ERROR"
+
+        if tsfresh_time is not None:
+            tsfresh_str = f"{tsfresh_time * 1000:8.2f}ms"
+            tsfresh_total += tsfresh_time
+        else:
+            tsfresh_str = "ERROR"
+
+        if torch_time is not None and tsfresh_time is not None:
+            speedup = tsfresh_time / torch_time
+            if speedup >= 1:
+                speedup_str = f"{speedup:8.1f}x"
+                n_torch_faster += 1
+            else:
+                speedup_str = f"{1 / speedup:7.1f}x slower"
+                n_tsfresh_faster += 1
+            status = "OK"
+            n_success += 1
+        else:
+            speedup_str = "N/A"
+            status = torch_err or tsfresh_err or "ERROR"
+            status = status[:20] if len(status) > 20 else status
+
+        # Display name with params
+        display_name = torch_name
+        if torch_kwargs:
+            param_str = ", ".join(f"{k}={v}" for k, v in list(torch_kwargs.items())[:2])
+            display_name = f"{torch_name}({param_str})"
+        display_name = display_name[:44]
+
+        print(f"  {display_name:<45} {torch_str:>12} {tsfresh_str:>12} {speedup_str:>12} {status}")
+
+        results.append(
+            {
+                "feature": torch_name,
+                "torch_kwargs": torch_kwargs,
+                "torch_time": torch_time,
+                "tsfresh_time": tsfresh_time,
+                "speedup": tsfresh_time / torch_time if torch_time and tsfresh_time else None,
+            }
+        )
+
+    print("-" * 100)
+    print("\nSUMMARY:")
+    print(f"  Features tested: {n_success}/{len(INDIVIDUAL_FEATURE_CONFIGS)}")
+    print(f"  PyTorch faster: {n_torch_faster}")
+    print(f"  tsfresh faster: {n_tsfresh_faster}")
+    if torch_total > 0 and tsfresh_total > 0:
+        print(f"\n  Total PyTorch time: {torch_total * 1000:.2f}ms")
+        print(f"  Total tsfresh time: {tsfresh_total * 1000:.2f}ms")
+        print(f"  Overall speedup: {tsfresh_total / torch_total:.1f}x")
+
+    # Show features where tsfresh is faster (torch is slower)
+    slower_features = [
+        r
+        for r in results
+        if r["torch_time"] is not None and r["speedup"] is not None and r["speedup"] < 1
+    ]
+    if slower_features:
+        print("\n  Features where PyTorch is slower than tsfresh:")
+        sorted_slower = sorted(slower_features, key=lambda r: r["speedup"])
+        for r in sorted_slower:
+            slowdown = 1 / r["speedup"]
+            print(
+                f"    {r['feature']:<40} {r['torch_time'] * 1000:8.2f}ms  ({slowdown:.1f}x slower)"
+            )
+
+
+def run_batch_benchmark(
+    n_timesteps: int,
+    n_batches: int,
+    n_states: int,
+    use_gpu: bool,
+    use_all: bool,
+    use_comprehensive: bool = False,
+    gpu_only: bool = False,
+    gpu_friendly: bool = False,
+    cpu_only: bool = False,
+    real_data: bool = False,
+):
+    """Benchmark extracting all features at once (batch mode)."""
+    print("\n" + "=" * 100)
+    print("BATCH FEATURE EXTRACTION BENCHMARK")
+    print("=" * 100)
+
+    device = torch.device("cuda" if use_gpu and torch.cuda.is_available() else "cpu")
+    total_series = n_batches * n_states
+
+    if gpu_friendly:
+        feature_set = "TORCH_GPU_FC_PARAMETERS (GPU-optimized subset)"
+    elif use_comprehensive:
+        feature_set = "Comprehensive (~788 tsfresh, ~783 PyTorch features)"
+    elif use_all:
+        feature_set = "TORCH_COMPREHENSIVE_FC_PARAMETERS (all permutations)"
+    else:
+        feature_set = f"MINIMAL_BATCH_FEATURES ({len(MINIMAL_BATCH_FEATURES)} features)"
+
+    data_source = "Real pendulum ODE trajectories" if real_data else "Random Gaussian noise"
+
+    print(f"\nDevice: {device}")
+    print(
+        f"Data: {n_timesteps} timesteps, {n_batches} batches x {n_states} states = {total_series} series"
+    )
+    print(f"Data source: {data_source}")
+    print(f"Feature set: {feature_set}")
+
+    # Create test data
+    x_torch = generate_sample(
+        n_timesteps=n_timesteps,
+        n_batches=n_batches,
+        n_states=n_states,
+        real_data=real_data,
+    ).to(device)
+
+    tsfresh_time, tsfresh_n_features = 0.0, 0
+
+    torch_time, torch_n_features = 0.0, 0
+    torch_parallel_time = 0.0
+    torch_use_all = use_all or use_comprehensive
+
+    if not gpu_only:
+        print("\nTiming PyTorch sequential extraction...")
+        torch_time, torch_n_features = time_all_features_torch(x_torch, use_all=torch_use_all)
+
+        print("Timing PyTorch parallel extraction (CPU multiprocessing)...")
+        torch_parallel_time, _ = time_all_features_torch_parallel(x_torch, use_all=torch_use_all)
+
+    # GPU timing
+    torch_gpu_time = None
+    torch_gpu_n_features = 0
+    if torch.cuda.is_available() and not cpu_only:
+        print("Timing PyTorch GPU extraction...")
+        torch_gpu_time, torch_gpu_n_features = time_all_features_torch_gpu(
+            x_torch, use_all=torch_use_all, use_gpu_friendly=gpu_friendly
+        )
+
+    # tsfresh timing
+    if not gpu_only and not gpu_friendly:
+        print("Timing tsfresh bulk extraction...")
+        tsfresh_time, tsfresh_n_features = time_all_features_tsfresh(
+            n_timesteps, total_series, use_all, use_comprehensive
+        )
+
+    print("\n" + "-" * 100)
+    print("RESULTS")
+    print("-" * 100)
+    if not gpu_only:
+        print(
+            f"  PyTorch sequential (cpu): {torch_time * 1000:.2f}ms ({torch_n_features} features)"
+        )
+        print(
+            f"  PyTorch parallel ({os.cpu_count()} workers): {torch_parallel_time * 1000:.2f}ms ({torch_n_features} features)"
+        )
+    if torch_gpu_time is not None:
+        gpu_n_features = torch_n_features if torch_n_features > 0 else torch_gpu_n_features
+        print(f"  PyTorch GPU (cuda): {torch_gpu_time * 1000:.2f}ms ({gpu_n_features} features)")
+
+    if tsfresh_time > 0:
+        print(
+            f"  tsfresh ({os.cpu_count()} jobs): {tsfresh_time * 1000:.2f}ms ({tsfresh_n_features} features)"
+        )
+
+    if not gpu_only and torch_time > 0 and torch_parallel_time > 0:
+        speedup_parallel = torch_time / torch_parallel_time
+        print(f"\n  Speedup (PyTorch parallel vs sequential): {speedup_parallel:.2f}x")
+    if torch_gpu_time is not None and torch_parallel_time > 0:
+        speedup_gpu = torch_parallel_time / torch_gpu_time
+        print(f"  Speedup (PyTorch GPU vs parallel CPU): {speedup_gpu:.2f}x")
+    if tsfresh_time > 0 and torch_parallel_time > 0:
+        speedup_vs_tsfresh = tsfresh_time / torch_parallel_time
+        print(f"  Speedup (PyTorch parallel vs tsfresh): {speedup_vs_tsfresh:.2f}x")
+
+    print("\n" + "=" * 100)
+
+    # Save results to CSV
+    if not gpu_only:
+        save_batch_result(
+            "pytorch",
+            "sequential",
+            "cpu",
+            n_timesteps,
+            n_batches,
+            n_states,
+            torch_n_features,
+            torch_time * 1000,
+        )
+        save_batch_result(
+            "pytorch",
+            "parallel",
+            "cpu",
+            n_timesteps,
+            n_batches,
+            n_states,
+            torch_n_features,
+            torch_parallel_time * 1000,
+        )
+    if torch_gpu_time is not None:
+        save_batch_result(
+            "pytorch",
+            "gpu",
+            "cuda",
+            n_timesteps,
+            n_batches,
+            n_states,
+            gpu_n_features,
+            torch_gpu_time * 1000,
+        )
+    if tsfresh_time > 0:
+        save_batch_result(
+            "tsfresh",
+            "parallel",
+            "cpu",
+            n_timesteps,
+            n_batches,
+            n_states,
+            tsfresh_n_features,
+            tsfresh_time * 1000,
+        )
+
+
+def save_batch_result(
+    backend: str,
+    mode: str,
+    device: str,
+    n_timesteps: int,
+    n_batches: int,
+    n_states: int,
+    n_features: int,
+    time_ms: float,
+) -> None:
+    """Save a single batch benchmark result to CSV file."""
+    results_file = os.path.join(os.path.dirname(__file__), "batch_benchmark_results.csv")
+    file_exists = os.path.exists(results_file)
+
+    python_version = sys.version.split()[0]
+    is_free_threaded = hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled()  # type: ignore[attr-defined]
+    gil_status = "free-threaded" if is_free_threaded else "with-gil"
+    timestamp = datetime.now().isoformat()
+    n_workers = os.cpu_count() or 1
+
+    with open(results_file, "a") as f:
+        if not file_exists:
+            f.write(
+                "timestamp,python_version,gil_status,backend,mode,device,n_timesteps,n_batches,n_states,n_features,time_ms,n_workers\n"
+            )
+        f.write(
+            f"{timestamp},{python_version},{gil_status},{backend},{mode},{device},{n_timesteps},{n_batches},{n_states},{n_features},{time_ms:.2f},{n_workers}\n"
+        )
+
+    print(f"  Saved {backend} {mode}: {time_ms:.2f}ms")
+
+
+def main():
+    print("=" * 100)
+    print("PYTORCH vs TSFRESH FEATURE TIMING BENCHMARK")
+    print("=" * 100)
+
+    # Parse arguments
+    individual_only = "--individual-only" in sys.argv
+    use_gpu = USE_GPU
+    use_all = "--all" in sys.argv
+    use_comprehensive = "--comprehensive" in sys.argv
+    gpu_only = "--gpu-only" in sys.argv
+    gpu_friendly = "--gpu-friendly" in sys.argv
+    cpu_only = CPU_ONLY
+    real_data = "--real-data" in sys.argv
+
+    # Parse --batches and --states
+    n_batches = 1000
+    n_states = 1
+    for arg in sys.argv:
+        if arg.startswith("--batches="):
+            n_batches = int(arg.split("=")[1])
+        if arg.startswith("--states="):
+            n_states = int(arg.split("=")[1])
+
+    n_timesteps = 200
+
+    print("\nConfiguration:")
+    print(f"  Timesteps: {n_timesteps}")
+    print(f"  Batches: {n_batches}")
+    print(f"  States: {n_states}")
+    print(f"  Total series: {n_batches * n_states}")
+    print(f"  GPU mode: {use_gpu}")
+    print(f"  GPU only: {gpu_only}")
+    print(f"  CPU only: {cpu_only}")
+    print(f"  GPU friendly subset: {gpu_friendly}")
+    print(f"  All features: {use_all}")
+    print(f"  Comprehensive (tsfresh): {use_comprehensive}")
+    print(f"  Real data (pendulum): {real_data}")
+    print(f"  Batch benchmark: {not individual_only}")
+
+    batch_only = "--batch-only" in sys.argv
+
+    if individual_only or (not batch_only):
+        run_individual_benchmark(n_timesteps, n_batches, n_states)
+
+    if not individual_only:
+        run_batch_benchmark(
+            n_timesteps,
+            n_batches,
+            n_states,
+            use_gpu,
+            use_all,
+            use_comprehensive,
+            gpu_only,
+            gpu_friendly,
+            cpu_only,
+            real_data,
+        )
+
+    print("\n" + "=" * 100)
+
+
+if __name__ == "__main__":
+    main()
