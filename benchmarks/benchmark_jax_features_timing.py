@@ -240,7 +240,7 @@ INDIVIDUAL_FEATURE_CONFIGS: list[tuple[str, dict, str, dict]] = [
     ("spkt_welch_density", {"coeff": 2}, "spkt_welch_density", {"param": [{"coeff": 2}]}),
     (
         "cwt_coefficients",
-        {"width": 2, "coeff": 0},
+        {"widths": (2,), "coeff": 0, "w": 2},
         "cwt_coefficients",
         {"param": [{"widths": (2,), "coeff": 0, "w": 2}]},
     ),
@@ -615,12 +615,6 @@ def time_all_features_tsfresh(
                 fc_parameters[tsfresh_name] = None
             else:
                 params = param_list[0].copy()
-
-                # Special transform for cwt_coefficients
-                if feature_name == "cwt_coefficients":
-                    width = params.pop("width", 2)
-                    params["widths"] = (width,)
-                    params["w"] = width
 
                 # Apply parameter name remapping
                 if feature_name in param_remap:

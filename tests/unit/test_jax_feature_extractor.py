@@ -1,11 +1,7 @@
 import pytest
 import torch
 
-from pybasin.feature_extractors.jax_feature_calculators import (
-    COMPREHENSIVE_FEATURE_NAMES,
-    MINIMAL_FEATURE_NAMES,
-    get_feature_names,
-)
+from pybasin.feature_extractors.jax_feature_calculators import MINIMAL_FEATURE_NAMES
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.solution import Solution
 
@@ -18,11 +14,9 @@ def test_jax_feature_extractor_output_shape():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive=False for minimal 10 features
-    extractor = JaxFeatureExtractor(time_steady=0.0, normalize=False, comprehensive=False)
+    extractor = JaxFeatureExtractor(time_steady=0.0, normalize=False)
     features = extractor.extract_features(solution)
 
-    # 10 minimal features per state * 2 states = 20 features
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     assert features.shape == (n_batch, n_minimal * n_states)
 
@@ -35,14 +29,11 @@ def test_jax_feature_extractor_feature_count():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive=False for minimal 10 features
-    extractor = JaxFeatureExtractor(comprehensive=False)
+    extractor = JaxFeatureExtractor()
     extractor.extract_features(solution)
 
-    # 10 minimal features per state * 2 states = 20 features
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     expected = n_minimal * n_states
-    assert extractor.n_features == expected
     assert len(extractor.feature_names) == expected
 
 
@@ -54,11 +45,9 @@ def test_jax_feature_extractor_feature_names():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive=False for minimal 10 features
-    extractor = JaxFeatureExtractor(comprehensive=False)
+    extractor = JaxFeatureExtractor()
     extractor.extract_features(solution)
 
-    # Should have features for both states with state_X__ prefix
     feature_names = extractor.feature_names
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     assert len(feature_names) == n_minimal * n_states
@@ -75,11 +64,9 @@ def test_jax_feature_extractor_time_filtering():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive=False for minimal 10 features
-    extractor = JaxFeatureExtractor(time_steady=5.0, normalize=False, comprehensive=False)
+    extractor = JaxFeatureExtractor(time_steady=5.0, normalize=False)
     features = extractor.extract_features(solution)
 
-    # Should still return minimal features (10 per state * 2 states)
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     assert features.shape == (n_batch, n_minimal * n_states)
 
@@ -92,23 +79,18 @@ def test_jax_feature_extractor_per_state_features():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Configure different features for each state
-    # Note: when state_to_features is used, states not specified get default features
     extractor = JaxFeatureExtractor(
-        state_to_features={
-            0: ["maximum", "standard_deviation"],  # 2 features for state 0
-            1: ["mean"],  # 1 feature for state 1
-            # State 2 uses default (comprehensive features when comprehensive=True)
+        features_per_state={
+            0: {"maximum": None, "standard_deviation": None},
+            1: {"mean": None},
         },
         normalize=False,
-        comprehensive=False,  # Use minimal for state 2
     )
     features = extractor.extract_features(solution)
 
-    # 2 + 1 + 10 (minimal) = 13 features total
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     assert features.shape == (n_batch, 2 + 1 + n_minimal)
-    assert extractor.n_features == 2 + 1 + n_minimal
+    assert len(extractor.feature_names) == 2 + 1 + n_minimal
 
 
 def test_jax_feature_extractor_normalization():
@@ -119,12 +101,9 @@ def test_jax_feature_extractor_normalization():
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive=False for faster test
-    extractor = JaxFeatureExtractor(normalize=True, comprehensive=False)
+    extractor = JaxFeatureExtractor(normalize=True)
     features = extractor.extract_features(solution)
 
-    # After normalization, mean should be ~0 and std ~1
-    # Allow wider tolerance for small batch sizes
     assert torch.abs(features.mean()).item() < 0.2
     assert torch.abs(features.std() - 1.0).item() < 0.2
 
@@ -149,29 +128,22 @@ def test_jax_feature_extractor_reset_scaler():
     assert extractor._feature_std is None  # pyright: ignore[reportPrivateUsage]
 
 
-def test_jax_feature_extractor_comprehensive_features():
-    """Test that comprehensive feature set includes all features per state."""
+def test_jax_feature_extractor_minimal_includes_delta():
+    """Test that minimal feature set includes delta and log_delta."""
     n_steps, n_batch, n_states = 100, 5, 2
     ic = torch.randn(n_batch, n_states)
     time = torch.linspace(0, 10, n_steps)
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use comprehensive features (includes delta and log_delta)
-    comprehensive_names = get_feature_names(comprehensive=True)
-    n_comprehensive = len(COMPREHENSIVE_FEATURE_NAMES)
-    extractor = JaxFeatureExtractor(
-        default_features=comprehensive_names,
-        normalize=False,
-    )
+    extractor = JaxFeatureExtractor(normalize=False)
     features = extractor.extract_features(solution)
 
-    # n_comprehensive features per state * 2 states
-    expected_features = n_comprehensive * n_states
+    n_minimal = len(MINIMAL_FEATURE_NAMES)
+    expected_features = n_minimal * n_states
     assert features.shape == (n_batch, expected_features)
-    assert extractor.n_features == expected_features
+    assert len(extractor.feature_names) == expected_features
 
-    # Verify delta and log_delta are included
     feature_names = extractor.feature_names
     assert "state_0__delta" in feature_names
     assert "state_0__log_delta" in feature_names
@@ -179,27 +151,25 @@ def test_jax_feature_extractor_comprehensive_features():
     assert "state_1__log_delta" in feature_names
 
 
-def test_jax_feature_extractor_custom_feature_in_per_state():
-    """Test that custom features (delta, log_delta) work in per-state configuration."""
+def test_jax_feature_extractor_skip_state_with_features_none():
+    """Test that setting features=None skips states not in features_per_state."""
     n_steps, n_batch, n_states = 100, 5, 2
     ic = torch.randn(n_batch, n_states)
     time = torch.linspace(0, 10, n_steps)
     y = torch.randn(n_steps, n_batch, n_states)
     solution = Solution(initial_condition=ic, time=time, y=y)
 
-    # Use log_delta for state 1 (like pendulum case)
     extractor = JaxFeatureExtractor(
-        state_to_features={
-            0: [],  # No features for state 0
-            1: ["log_delta"],  # Only log_delta for state 1
+        features=None,
+        features_per_state={
+            1: {"log_delta": None},
         },
         normalize=False,
     )
     features = extractor.extract_features(solution)
 
-    # Only 1 feature total
     assert features.shape == (n_batch, 1)
-    assert extractor.n_features == 1
+    assert len(extractor.feature_names) == 1
     assert extractor.feature_names == ["state_1__log_delta"]
 
 
@@ -212,10 +182,10 @@ def test_jax_feature_extractor_feature_names_format():
     solution = Solution(initial_condition=ic, time=time, y=y)
 
     extractor = JaxFeatureExtractor(
-        state_to_features={
-            0: ["maximum", "minimum"],
-            1: ["mean", "variance", "standard_deviation"],
-            2: ["delta"],
+        features_per_state={
+            0: {"maximum": None, "minimum": None},
+            1: {"mean": None, "variance": None, "standard_deviation": None},
+            2: {"delta": None},
         },
         normalize=False,
     )
@@ -230,7 +200,7 @@ def test_jax_feature_extractor_feature_names_format():
         "state_2__delta",
     ]
     assert extractor.feature_names == expected_names
-    assert extractor.n_features == 6
+    assert len(extractor.feature_names) == 6
 
 
 def test_jax_feature_extractor_feature_names_raises_before_extraction():
@@ -239,6 +209,3 @@ def test_jax_feature_extractor_feature_names_raises_before_extraction():
 
     with pytest.raises(RuntimeError, match="Feature configuration not initialized"):
         _ = extractor.feature_names
-
-    with pytest.raises(RuntimeError, match="Feature configuration not initialized"):
-        _ = extractor.n_features

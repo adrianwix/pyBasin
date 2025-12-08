@@ -14,7 +14,12 @@ import torch
 from jax import Array
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.feature_extractors.jax_feature_calculators import ALL_FEATURES, get_feature_names
+from pybasin.feature_extractors.jax_feature_calculators import (
+    ALL_FEATURE_FUNCTIONS,
+    FCParameters,
+    JAX_MINIMAL_FC_PARAMETERS,
+    get_feature_names_from_config,
+)
 from pybasin.feature_extractors.jax_feature_utilities import impute, impute_extreme
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.solution import Solution
@@ -23,29 +28,22 @@ from pybasin.solution import Solution
 class JaxFeatureExtractor(FeatureExtractor):
     """JAX-based feature extractor for time series features.
 
-    Supports per-state variable feature configuration, allowing you to apply
-    different feature sets to different state variables based on domain knowledge.
+    Supports per-state variable feature configuration using tsfresh-style FCParameters
+    dictionaries, allowing different feature sets for different state variables.
 
-    By default, uses COMPREHENSIVE_FEATURES which includes all tsfresh EfficientFCParameters
-    equivalent features plus custom features (delta, log_delta).
+    Warning:
+        Using JAX_COMPREHENSIVE_FC_PARAMETERS may cause very long JIT compile times
+        (~40 minutes). Use JAX_MINIMAL_FC_PARAMETERS or a custom subset for faster
+        compilation.
 
     Args:
         time_steady: Time threshold for filtering transients. Default 0.0.
-        comprehensive: If True (default), use all COMPREHENSIVE_FEATURES (tsfresh
-            EfficientFCParameters equivalent + custom features). If False, use only
-            MINIMAL_FEATURES (tsfresh MinimalFCParameters equivalent).
-        default_features: Default feature calculators to apply to all states.
-            Can be a list of feature names or None. If None, features are determined
-            by the `comprehensive` parameter.
-            Example: ["maximum", "standard_deviation"]
-        state_to_features: Optional dict mapping state indices to feature lists.
-            Allows different feature sets per state variable. If provided, overrides
-            default_features for those states. Example:
-            {
-                0: ["maximum", "standard_deviation"],  # State 0: only max and std
-                1: ["mean", "median", "variance"],     # State 1: different features
-            }
-            States not in this dict will use default_features.
+        features: Default FCParameters configuration to apply to all states.
+            Defaults to JAX_MINIMAL_FC_PARAMETERS. Set to None to skip states
+            not explicitly configured in features_per_state.
+        features_per_state: Optional dict mapping state indices to FCParameters.
+            Overrides `features` for specified states. Use None as value to skip
+            a state. States not in this dict use the global `features` config.
         normalize: Whether to apply z-score normalization. Default True.
         use_jit: Whether to JIT-compile extraction. Default True.
         device: JAX device to use ('cpu', 'gpu', 'cuda', 'cuda:N', or None for auto).
@@ -56,18 +54,24 @@ class JaxFeatureExtractor(FeatureExtractor):
               NaN->median). Better when all trajectories are bounded.
 
     Examples:
-        >>> # Use all comprehensive features (default) for all states
+        >>> # Default: use minimal features for all states
         >>> extractor = JaxFeatureExtractor(time_steady=9.0)
 
-        >>> # Use only minimal features
-        >>> extractor = JaxFeatureExtractor(time_steady=9.0, comprehensive=False)
-
-        >>> # Custom features for specific states
+        >>> # Custom features for specific states, skip others
         >>> extractor = JaxFeatureExtractor(
         ...     time_steady=9.0,
-        ...     state_to_features={
-        ...         0: ["maximum", "standard_deviation"],  # Position
-        ...         1: ["mean"],                           # Velocity
+        ...     features=None,  # Don't extract features by default
+        ...     features_per_state={
+        ...         1: {"log_delta": None},  # Only extract for state 1
+        ...     },
+        ... )
+
+        >>> # Global features with per-state override
+        >>> extractor = JaxFeatureExtractor(
+        ...     time_steady=9.0,
+        ...     features_per_state={
+        ...         0: {"maximum": None},  # Override state 0
+        ...         1: None,  # Skip state 1
         ...     },
         ... )
     """
@@ -75,9 +79,8 @@ class JaxFeatureExtractor(FeatureExtractor):
     def __init__(
         self,
         time_steady: float = 0.0,
-        comprehensive: bool = True,
-        default_features: list[str] | None = None,
-        state_to_features: dict[int, list[str]] | None = None,
+        features: FCParameters | None = JAX_MINIMAL_FC_PARAMETERS,
+        features_per_state: dict[int, FCParameters | None] | None = None,
         normalize: bool = True,
         use_jit: bool = True,
         device: str | None = None,
@@ -87,7 +90,6 @@ class JaxFeatureExtractor(FeatureExtractor):
 
         super().__init__(time_steady=time_steady)
 
-        self.comprehensive = comprehensive
         self.normalize = normalize
         self.use_jit = use_jit
         self.impute_method = impute_method
@@ -97,81 +99,126 @@ class JaxFeatureExtractor(FeatureExtractor):
         self._feature_mean: Array | None = None
         self._feature_std: Array | None = None
 
-        # Configure features per state
-        self.default_features = default_features
-        self.state_to_features = state_to_features or {}
+        self.features = features
+        self.features_per_state = features_per_state or {}
 
-        # Build the feature configuration
-        # This will be finalized when we know the number of states (in extract_features)
-        self._state_feature_config: dict[int, list[str]] | None = None
+        self._state_feature_config: dict[int, FCParameters] | None = None
         self._num_states: int | None = None
 
-        # Resolve JAX device
         self.jax_device = get_jax_device(device)
 
-        # Extract function will be built on first call
         self._extract_fn: Callable[[Array], Array] | None = None
 
     def _configure_state_features(self, num_states: int) -> None:
         """Configure which features to compute for each state."""
         if self._state_feature_config is not None and self._num_states == num_states:
-            return  # Already configured
+            return
 
         self._num_states = num_states
         self._state_feature_config = {}
 
-        # Determine default features based on comprehensive flag or explicit list
-        if self.default_features is None:
-            default_feature_list = get_feature_names(comprehensive=self.comprehensive)
-        else:
-            default_feature_list = self.default_features
-
-        # Configure each state
         for state_idx in range(num_states):
-            if state_idx in self.state_to_features:
-                self._state_feature_config[state_idx] = self.state_to_features[state_idx]
-            else:
-                self._state_feature_config[state_idx] = default_feature_list
+            if state_idx in self.features_per_state:
+                fc_params = self.features_per_state[state_idx]
+                if fc_params is not None:
+                    self._state_feature_config[state_idx] = fc_params
+            elif self.features is not None:
+                self._state_feature_config[state_idx] = self.features
 
-        # Build the extraction function with the configured features
         self._extract_fn = self._build_extract_function()
 
+    def _is_uniform_config(self) -> bool:
+        """Check if all states use the same feature configuration."""
+        if not self._state_feature_config:
+            return True
+        configs = list(self._state_feature_config.values())
+        if len(configs) <= 1:
+            return True
+        first = configs[0]
+        return all(c is first for c in configs[1:])
+
     def _build_extract_function(self) -> Callable[[Array], Array]:
-        """Build the feature extraction function based on per-state configuration."""
+        """Build the feature extraction function based on per-state FCParameters."""
         if self._state_feature_config is None or self._num_states is None:
             raise RuntimeError(
                 "Must call _configure_state_features before building extract function"
             )
 
-        # Build a list of (state_idx, feature_func) tuples
-        state_feature_funcs: list[tuple[int, Callable[[Array], Array]]] = []
-        for state_idx in range(self._num_states):
-            feature_names = self._state_feature_config[state_idx]
-            for fname in feature_names:
-                if fname not in ALL_FEATURES:
-                    available = list(ALL_FEATURES.keys())
-                    raise ValueError(f"Unknown feature: {fname}. Available: {available}")
-                state_feature_funcs.append((state_idx, ALL_FEATURES[fname]))
+        if not self._state_feature_config:
+
+            def extract_no_features(x: Array) -> Array:
+                batch_size = x.shape[1]
+                return jnp.zeros((batch_size, 0), dtype=jnp.float32)
+
+            if self.use_jit:
+                return jax.jit(extract_no_features)
+            return extract_no_features
+
+        if self._is_uniform_config():
+            fc_params = next(iter(self._state_feature_config.values()))
+            state_indices = list(self._state_feature_config.keys())
+
+            feature_funcs: list[tuple[Callable[..., Array], dict[str, object] | None]] = []
+            for feature_name, param_list in fc_params.items():
+                if feature_name not in ALL_FEATURE_FUNCTIONS:
+                    available = list(ALL_FEATURE_FUNCTIONS.keys())
+                    raise ValueError(f"Unknown feature: {feature_name}. Available: {available}")
+
+                func = ALL_FEATURE_FUNCTIONS[feature_name]
+                if param_list is None:
+                    feature_funcs.append((func, None))
+                else:
+                    for params in param_list:
+                        feature_funcs.append((func, params))
+
+            def extract_uniform(x: Array) -> Array:
+                x_selected = x[:, :, jnp.array(state_indices)]
+                feature_values: list[Array] = []
+
+                for feature_func, params in feature_funcs:
+                    feat = (
+                        feature_func(x_selected)
+                        if params is None
+                        else feature_func(x_selected, **params)
+                    )
+                    for state_pos in range(len(state_indices)):
+                        feature_values.append(feat[:, state_pos])
+
+                stacked = jnp.stack(feature_values, axis=0)
+                return jnp.transpose(stacked, (1, 0))
+
+            if self.use_jit:
+                return jax.jit(extract_uniform)  # pyright: ignore[reportUnknownMemberType]
+            return extract_uniform
+
+        state_feature_funcs: list[tuple[int, Callable[..., Array], dict[str, object] | None]] = []
+
+        for state_idx, fc_params in self._state_feature_config.items():
+            for feature_name, param_list in fc_params.items():
+                if feature_name not in ALL_FEATURE_FUNCTIONS:
+                    available = list(ALL_FEATURE_FUNCTIONS.keys())
+                    raise ValueError(f"Unknown feature: {feature_name}. Available: {available}")
+
+                func = ALL_FEATURE_FUNCTIONS[feature_name]
+
+                if param_list is None:
+                    state_feature_funcs.append((state_idx, func, None))
+                else:
+                    for params in param_list:
+                        state_feature_funcs.append((state_idx, func, params))
 
         def extract_all_features(x: Array) -> Array:
-            # x shape: (N, B, S) where S is number of states
-            # For each (state_idx, feature_func), extract feature for that state
             feature_values: list[Array] = []
-            for state_idx, feature_func in state_feature_funcs:
-                # Extract single state keeping dim: (N, B, 1)
+            for state_idx, feature_func, params in state_feature_funcs:
                 x_state = x[:, :, state_idx : state_idx + 1]
-                # Compute feature: (B, 1)
-                feat = feature_func(x_state)
-                # Squeeze state dim: (B,)
+                feat = feature_func(x_state) if params is None else feature_func(x_state, **params)
                 feature_values.append(feat.squeeze(-1))
 
-            # Stack features: (num_features, B)
             stacked = jnp.stack(feature_values, axis=0)
-            # Transpose: (B, num_features)
             return jnp.transpose(stacked, (1, 0))
 
         if self.use_jit:
-            return jax.jit(extract_all_features)  # type: ignore[return-value]
+            return jax.jit(extract_all_features)  # pyright: ignore[reportUnknownMemberType]
         return extract_all_features
 
     def extract_features(self, solution: Solution) -> torch.Tensor:
@@ -227,19 +274,6 @@ class JaxFeatureExtractor(FeatureExtractor):
             self._is_fitted = False
 
     @property
-    def n_features(self) -> int:
-        """Return the total number of features across all states."""
-        if self._state_feature_config is None or self._num_states is None:
-            raise RuntimeError(
-                "Feature configuration not initialized. Call extract_features first."
-            )
-
-        total = 0
-        for state_idx in range(self._num_states):
-            total += len(self._state_feature_config[state_idx])
-        return total
-
-    @property
     def feature_names(self) -> list[str]:
         """Return the list of feature names in the format 'state_X__feature_name'."""
         if self._state_feature_config is None or self._num_states is None:
@@ -248,7 +282,7 @@ class JaxFeatureExtractor(FeatureExtractor):
             )
 
         names: list[str] = []
-        for state_idx in range(self._num_states):
-            for fname in self._state_feature_config[state_idx]:
+        for state_idx, fc_params in self._state_feature_config.items():
+            for fname in get_feature_names_from_config(fc_params):
                 names.append(f"state_{state_idx}__{fname}")
         return names

@@ -75,11 +75,6 @@ def create_pendulum_setup(
     if feature_extractor_type == "jax":
         feature_extractor = JaxFeatureExtractor(
             time_steady=950.0,
-            comprehensive=comprehensive,
-            state_to_features={
-                0: [],
-                1: ["log_delta"],
-            },
             normalize=False,
         )
     else:
@@ -139,12 +134,18 @@ def run_benchmark(n: int, extractor_type: str, comprehensive: bool = True) -> di
     bs_vals = bse.estimate_bs(parallel_integration=True)
     total_time = time.perf_counter() - t0
 
+    n_features = 0
+    if bse.solution is not None and bse.solution.features is not None:
+        n_features = bse.solution.features.shape[1]
+    print(f"Number of features extracted: {n_features}")
+
     return {
         "extractor": extractor_type,
         "n": n,
         "comprehensive": comprehensive,
         "total_time": total_time,
         "bs_vals": bs_vals,
+        "n_features": n_features,
     }
 
 
@@ -177,7 +178,7 @@ def main():
         results.append(jax_result)
 
     if run_tsfresh:
-        tsfresh_result = run_benchmark(n, "tsfresh", comprehensive=True)
+        tsfresh_result = run_benchmark(n, "tsfresh", comprehensive=False)
         results.append(tsfresh_result)
 
     print("\n" + "=" * 80)
@@ -186,6 +187,7 @@ def main():
 
     for r in results:
         print(f"\n{r['extractor'].upper()}:")
+        print(f"  Number of features: {r['n_features']}")
         print(f"  Total time: {r['total_time']:.2f}s")
         print(f"  Basin stability: {r['bs_vals']}")
 

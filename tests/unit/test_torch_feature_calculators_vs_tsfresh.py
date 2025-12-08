@@ -356,6 +356,50 @@ class TestFrequencyFeatures:
         result = float(torch_fc.fft_coefficient(sample_data_torch, 0, "abs")[0, 0])
         assert np.isclose(result, expected, rtol=0.01, atol=0.01)
 
+    def test_cwt_coefficients_basic(self, sample_data, sample_data_torch):
+        """Test CWT coefficients have same sign as tsfresh.
+
+        Note: Our Ricker wavelet implementation uses different normalization
+        than pywt.cwt, so we check sign agreement rather than exact values.
+        """
+        widths = (2,)
+        coeff = 0
+        w = 2
+        result_list = list(
+            fc.cwt_coefficients(sample_data, [{"widths": widths, "coeff": coeff, "w": w}])
+        )
+        expected = result_list[0][1] if result_list else 0.0
+        result = float(
+            torch_fc.cwt_coefficients(sample_data_torch, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert np.sign(result) == np.sign(expected), f"Sign mismatch: {result} vs {expected}"
+        assert result != 0.0
+
+    def test_cwt_coefficients_different_width(self, sample_data, sample_data_torch):
+        """Test CWT coefficients with different width have same sign."""
+        widths = (5,)
+        coeff = 3
+        w = 5
+        result_list = list(
+            fc.cwt_coefficients(sample_data, [{"widths": widths, "coeff": coeff, "w": w}])
+        )
+        expected = result_list[0][1] if result_list else 0.0
+        result = float(
+            torch_fc.cwt_coefficients(sample_data_torch, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert np.sign(result) == np.sign(expected), f"Sign mismatch: {result} vs {expected}"
+        assert result != 0.0
+
+    def test_cwt_coefficients_invalid_w(self, sample_data, sample_data_torch):
+        """Test CWT coefficients returns zero when w not in widths."""
+        widths = (2,)
+        coeff = 0
+        w = 5  # Not in widths
+        result = float(
+            torch_fc.cwt_coefficients(sample_data_torch, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert result == 0.0
+
 
 # =============================================================================
 # TREND/REGRESSION FEATURES

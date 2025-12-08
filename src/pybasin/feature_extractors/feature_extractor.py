@@ -7,7 +7,6 @@ import torch
 from pybasin.solution import Solution
 
 
-# TODO: Review. I am not entirely convinced with this implementation. It could be made more customizable.
 class FeatureExtractor(ABC):
     """Abstract base class for extracting features from ODE solutions.
 

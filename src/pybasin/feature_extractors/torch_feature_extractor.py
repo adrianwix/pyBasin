@@ -1,0 +1,288 @@
+# pyright: basic
+"""PyTorch-based feature extractor for ODE solution trajectories.
+
+This module provides a high-performance feature extractor using PyTorch for
+time series feature extraction from ODE solutions, supporting both CPU (with
+multiprocessing) and GPU (with batched CUDA operations).
+"""
+
+import os
+import threading
+from typing import Literal
+
+import torch
+from torch import Tensor
+
+from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.torch_feature_calculators import (
+    TORCH_COMPREHENSIVE_FC_PARAMETERS,
+    TORCH_MINIMAL_FC_PARAMETERS,
+    FCParameters,
+    get_feature_names_from_config,
+)
+from pybasin.feature_extractors.torch_feature_processors import (
+    extract_features_gpu_batched,
+    extract_features_parallel,
+)
+from pybasin.feature_extractors.torch_feature_utilities import impute, impute_extreme
+from pybasin.solution import Solution
+
+
+class TorchFeatureExtractor(FeatureExtractor):
+    """PyTorch-based feature extractor for time series features.
+
+    Supports per-state variable feature configuration using tsfresh-style FCParameters
+    dictionaries, allowing different feature sets for different state variables.
+
+    For CPU extraction, uses multiprocessing to parallelize across batches.
+    For GPU extraction, uses batched CUDA operations for optimal performance.
+
+    Args:
+        time_steady: Time threshold for filtering transients. Default 0.0.
+        features: Default feature configuration to apply to all states. Can be:
+            - 'comprehensive': Use TORCH_COMPREHENSIVE_FC_PARAMETERS (default)
+            - 'minimal': Use TORCH_MINIMAL_FC_PARAMETERS (10 basic features)
+            - FCParameters dict: Custom feature configuration
+            - None: Skip states not explicitly configured in features_per_state
+        features_per_state: Optional dict mapping state indices to FCParameters.
+            Overrides `features` for specified states. Use None as value to skip
+            a state. States not in this dict use the global `features` config.
+        normalize: Whether to apply z-score normalization. Default True.
+        device: Execution device ('cpu' or 'gpu'). Default 'cpu'.
+        n_jobs: Number of worker processes for CPU extraction. If None, uses all
+            available CPU cores. Ignored when device='gpu'.
+        impute_method: Method for handling NaN/inf values in features. Options:
+            - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
+              trajectories. Best for systems with divergent solutions. (default)
+            - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
+              NaN->median). Better when all trajectories are bounded.
+
+    Raises:
+        RuntimeError: If device='gpu' but CUDA is not available.
+
+    Examples:
+        >>> # Default: use comprehensive features for all states on CPU
+        >>> extractor = TorchFeatureExtractor(time_steady=9.0)
+
+        >>> # GPU extraction with default features
+        >>> extractor = TorchFeatureExtractor(time_steady=9.0, device='gpu')
+
+        >>> # Custom features for specific states, skip others
+        >>> extractor = TorchFeatureExtractor(
+        ...     time_steady=9.0,
+        ...     features=None,  # Don't extract features by default
+        ...     features_per_state={
+        ...         1: {"maximum": None, "minimum": None},  # Only extract for state 1
+        ...     },
+        ... )
+
+        >>> # Global features with per-state override
+        >>> extractor = TorchFeatureExtractor(
+        ...     time_steady=9.0,
+        ...     features_per_state={
+        ...         0: {"maximum": None},  # Override state 0
+        ...         1: None,  # Skip state 1
+        ...     },
+        ... )
+    """
+
+    def __init__(
+        self,
+        time_steady: float = 0.0,
+        features: Literal["comprehensive", "minimal"] | FCParameters | None = "comprehensive",
+        features_per_state: dict[int, FCParameters | None] | None = None,
+        normalize: bool = True,
+        device: Literal["cpu", "gpu"] = "cpu",
+        n_jobs: int | None = None,
+        impute_method: Literal["extreme", "tsfresh"] = "extreme",
+    ):
+        super().__init__(time_steady=time_steady)
+
+        if device == "gpu" and not torch.cuda.is_available():
+            raise RuntimeError("CUDA is not available but device='gpu' was requested")
+
+        self.normalize = normalize
+        self.device = device
+        self.n_jobs = n_jobs if n_jobs is not None else (os.cpu_count() or 1)
+        self.impute_method = impute_method
+        self._is_fitted = False
+        self._fit_lock = threading.Lock()
+
+        self._feature_mean: Tensor | None = None
+        self._feature_std: Tensor | None = None
+
+        if features == "comprehensive":
+            self.features: FCParameters | None = TORCH_COMPREHENSIVE_FC_PARAMETERS
+        elif features == "minimal":
+            self.features = TORCH_MINIMAL_FC_PARAMETERS
+        else:
+            self.features = features
+        self.features_per_state = features_per_state or {}
+
+        self._state_feature_config: dict[int, FCParameters] | None = None
+        self._num_states: int | None = None
+
+    def _configure_state_features(self, num_states: int) -> None:
+        """Configure which features to compute for each state."""
+        if self._state_feature_config is not None and self._num_states == num_states:
+            return
+
+        self._num_states = num_states
+        self._state_feature_config = {}
+
+        for state_idx in range(num_states):
+            if state_idx in self.features_per_state:
+                fc_params = self.features_per_state[state_idx]
+                if fc_params is not None:
+                    self._state_feature_config[state_idx] = fc_params
+            elif self.features is not None:
+                self._state_feature_config[state_idx] = self.features
+
+    def _is_uniform_config(self) -> bool:
+        """Check if all states use the same feature configuration."""
+        if not self._state_feature_config:
+            return True
+        configs = list(self._state_feature_config.values())
+        if len(configs) <= 1:
+            return True
+        first = configs[0]
+        return all(c is first for c in configs[1:])
+
+    def _extract_all_states(self, y: Tensor, fc_params: FCParameters) -> dict[str, Tensor]:
+        """Extract features for all states together (optimized path).
+
+        Args:
+            y: Tensor of shape (n_timesteps, n_batches, n_states)
+            fc_params: Feature configuration for all states
+
+        Returns:
+            Dictionary mapping feature names to result tensors of shape (n_batches, n_states)
+        """
+        if self.device == "gpu":
+            y = y.cuda() if not y.is_cuda else y
+            return extract_features_gpu_batched(y, fc_params, use_gpu_friendly=False)
+        else:
+            y = y.cpu() if y.is_cuda else y
+            return extract_features_parallel(y, fc_params, n_workers=self.n_jobs)
+
+    def _extract_for_state(self, y_state: Tensor, fc_params: FCParameters) -> dict[str, Tensor]:
+        """Extract features for a single state variable.
+
+        Args:
+            y_state: Tensor of shape (n_timesteps, n_batches, 1) for one state
+            fc_params: Feature configuration for this state
+
+        Returns:
+            Dictionary mapping feature names to result tensors of shape (n_batches,)
+        """
+        if self.device == "gpu":
+            y_state = y_state.cuda() if not y_state.is_cuda else y_state
+            results = extract_features_gpu_batched(y_state, fc_params, use_gpu_friendly=False)
+        else:
+            y_state = y_state.cpu() if y_state.is_cuda else y_state
+            results = extract_features_parallel(y_state, fc_params, n_workers=self.n_jobs)
+
+        flattened: dict[str, Tensor] = {}
+        for fname, tensor in results.items():
+            if tensor.dim() == 2:
+                flattened[fname] = tensor[:, 0]
+            else:
+                flattened[fname] = tensor
+
+        return flattened
+
+    def extract_features(self, solution: Solution) -> torch.Tensor:
+        """Extract features from an ODE solution using PyTorch.
+
+        Args:
+            solution: ODE solution containing time series data.
+
+        Returns:
+            Feature tensor of shape (n_batches, n_features).
+        """
+        y = self.filter_time(solution)
+
+        num_states = y.shape[2]
+        if self._state_feature_config is None:
+            self._configure_state_features(num_states)
+
+        assert self._state_feature_config is not None
+
+        if not self._state_feature_config:
+            n_batches = y.shape[1]
+            return torch.zeros((n_batches, 0), dtype=y.dtype, device=y.device)
+
+        all_features: list[Tensor] = []
+
+        if self._is_uniform_config() and self._state_feature_config:
+            fc_params = next(iter(self._state_feature_config.values()))
+            state_indices = list(self._state_feature_config.keys())
+            y_selected = y[:, :, state_indices]
+
+            results = self._extract_all_states(y_selected, fc_params)
+
+            feature_names = get_feature_names_from_config(fc_params, include_custom=False)
+            for state_pos, _state_idx in enumerate(state_indices):
+                for fname in feature_names:
+                    if fname in results:
+                        all_features.append(results[fname][:, state_pos])
+        else:
+            for state_idx, fc_params in self._state_feature_config.items():
+                y_state = y[:, :, state_idx : state_idx + 1]
+
+                state_results = self._extract_for_state(y_state, fc_params)
+
+                feature_names = get_feature_names_from_config(fc_params, include_custom=False)
+                for fname in feature_names:
+                    if fname in state_results:
+                        all_features.append(state_results[fname])
+
+        if not all_features:
+            n_batches = y.shape[1]
+            return torch.zeros((n_batches, 0), dtype=y.dtype, device=y.device)
+
+        features = torch.stack(all_features, dim=1)
+
+        if self.device == "gpu":
+            features = features.cpu()
+
+        features = impute_extreme(features) if self.impute_method == "extreme" else impute(features)
+
+        if self.normalize:
+            with self._fit_lock:
+                if not self._is_fitted:
+                    self._feature_mean = features.mean(dim=0, keepdim=True)
+                    self._feature_std = features.std(dim=0, keepdim=True)
+                    self._feature_std = torch.where(
+                        self._feature_std == 0,
+                        torch.ones_like(self._feature_std),
+                        self._feature_std,
+                    )
+                    self._is_fitted = True
+
+                assert self._feature_mean is not None
+                assert self._feature_std is not None
+                features = (features - self._feature_mean) / self._feature_std
+
+        return features
+
+    def reset_scaler(self) -> None:
+        """Reset the normalization parameters."""
+        with self._fit_lock:
+            self._feature_mean = None
+            self._feature_std = None
+            self._is_fitted = False
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names in the format 'state_X__feature_name'."""
+        if self._state_feature_config is None or self._num_states is None:
+            raise RuntimeError(
+                "Feature configuration not initialized. Call extract_features first."
+            )
+
+        names: list[str] = []
+        for state_idx, fc_params in self._state_feature_config.items():
+            for fname in get_feature_names_from_config(fc_params, include_custom=False):
+                names.append(f"state_{state_idx}__{fname}")
+        return names

@@ -394,6 +394,50 @@ class TestFrequencyFeatures:
         assert result > 0
         assert expected > 0
 
+    def test_cwt_coefficients_basic(self, sample_data, sample_data_jax):
+        """Test CWT coefficients have same sign as tsfresh.
+
+        Note: Our Ricker wavelet implementation uses different normalization
+        than pywt.cwt, so we check sign agreement rather than exact values.
+        """
+        widths = (2,)
+        coeff = 0
+        w = 2
+        result_list = list(
+            fc.cwt_coefficients(sample_data, [{"widths": widths, "coeff": coeff, "w": w}])
+        )
+        expected = result_list[0][1] if result_list else 0.0
+        result = float(
+            jax_fc.cwt_coefficients(sample_data_jax, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert np.sign(result) == np.sign(expected), f"Sign mismatch: {result} vs {expected}"
+        assert result != 0.0
+
+    def test_cwt_coefficients_different_width(self, sample_data, sample_data_jax):
+        """Test CWT coefficients with different width have same sign."""
+        widths = (5,)
+        coeff = 3
+        w = 5
+        result_list = list(
+            fc.cwt_coefficients(sample_data, [{"widths": widths, "coeff": coeff, "w": w}])
+        )
+        expected = result_list[0][1] if result_list else 0.0
+        result = float(
+            jax_fc.cwt_coefficients(sample_data_jax, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert np.sign(result) == np.sign(expected), f"Sign mismatch: {result} vs {expected}"
+        assert result != 0.0
+
+    def test_cwt_coefficients_invalid_w(self, sample_data, sample_data_jax):
+        """Test CWT coefficients returns zero when w not in widths."""
+        widths = (2,)
+        coeff = 0
+        w = 5  # Not in widths
+        result = float(
+            jax_fc.cwt_coefficients(sample_data_jax, widths=widths, coeff=coeff, w=w)[0, 0]
+        )
+        assert result == 0.0
+
 
 # =============================================================================
 # TREND/REGRESSION FEATURES
@@ -769,16 +813,16 @@ class TestParameterizedSpktWelchDensity:
 
 
 # =============================================================================
-# EXTRACT FEATURES FROM CONFIG TESTS
+# EXTRACT FEATURES TESTS
 # =============================================================================
 
 
-class TestExtractFeaturesFromConfig:
-    """Tests for the extract_features_from_config function."""
+class TestExtractFeatures:
+    """Tests for the extract_features function."""
 
-    def test_default_config_returns_features(self, sample_data_jax):
-        """Test that default config extracts features."""
-        features = jax_fc.extract_features_from_config(sample_data_jax)
+    def test_minimal_config_returns_features(self, sample_data_jax):
+        """Test that minimal config extracts features."""
+        features = jax_fc.extract_features(sample_data_jax, jax_fc.JAX_MINIMAL_FC_PARAMETERS)
         assert len(features) > 0
         assert "mean" in features
         assert "variance" in features
@@ -790,24 +834,22 @@ class TestExtractFeaturesFromConfig:
             "variance": None,
             "autocorrelation": [{"lag": 1}, {"lag": 2}],
         }
-        features = jax_fc.extract_features_from_config(sample_data_jax, config)
+        features = jax_fc.extract_features(sample_data_jax, config)
         assert "mean" in features
         assert "variance" in features
         assert "autocorrelation__lag_1" in features
         assert "autocorrelation__lag_2" in features
         assert len(features) == 4
 
-    def test_include_custom_features(self, sample_data_jax):
-        """Test that custom features can be included."""
-        config = {"mean": None}
-        features = jax_fc.extract_features_from_config(sample_data_jax, config, include_custom=True)
-        assert "mean" in features
+    def test_delta_features_in_minimal(self, sample_data_jax):
+        """Test that delta features are included in minimal config."""
+        features = jax_fc.extract_features(sample_data_jax, jax_fc.JAX_MINIMAL_FC_PARAMETERS)
         assert "delta" in features
         assert "log_delta" in features
 
     def test_feature_shape(self, sample_data_jax):
         """Test that extracted features have correct shape."""
-        features = jax_fc.extract_features_from_config(sample_data_jax, {"mean": None})
+        features = jax_fc.extract_features(sample_data_jax, {"mean": None})
         assert features["mean"].shape == (1, 1)
 
     def test_batch_feature_shape(self):
@@ -815,7 +857,7 @@ class TestExtractFeaturesFromConfig:
         import jax.numpy as jnp
 
         x = jnp.ones((100, 5, 3))  # 100 timesteps, 5 trajectories, 3 states
-        features = jax_fc.extract_features_from_config(x, {"mean": None})
+        features = jax_fc.extract_features(x, {"mean": None})
         assert features["mean"].shape == (5, 3)
 
     def test_parameterized_feature_naming(self, sample_data_jax):
@@ -824,7 +866,7 @@ class TestExtractFeaturesFromConfig:
             "ratio_beyond_r_sigma": [{"r": 2.0}],
             "autocorrelation": [{"lag": 5}],
         }
-        features = jax_fc.extract_features_from_config(sample_data_jax, config)
+        features = jax_fc.extract_features(sample_data_jax, config)
         assert "ratio_beyond_r_sigma__r_2.0" in features
         assert "autocorrelation__lag_5" in features
 
@@ -832,11 +874,13 @@ class TestExtractFeaturesFromConfig:
 class TestGetFeatureNamesFromConfig:
     """Tests for the get_feature_names_from_config function."""
 
-    def test_default_config(self):
-        """Test that default config returns feature names."""
-        names = jax_fc.get_feature_names_from_config()
+    def test_minimal_config(self):
+        """Test that minimal config returns feature names."""
+        names = jax_fc.get_feature_names_from_config(jax_fc.JAX_MINIMAL_FC_PARAMETERS)
         assert len(names) > 0
         assert "mean" in names
+        assert "delta" in names
+        assert "log_delta" in names
 
     def test_custom_config(self):
         """Test that custom config returns correct names."""
@@ -846,14 +890,6 @@ class TestGetFeatureNamesFromConfig:
         }
         names = jax_fc.get_feature_names_from_config(config)
         assert names == ["mean", "autocorrelation__lag_1", "autocorrelation__lag_2"]
-
-    def test_include_custom(self):
-        """Test that custom features can be included."""
-        config = {"mean": None}
-        names = jax_fc.get_feature_names_from_config(config, include_custom=True)
-        assert "mean" in names
-        assert "delta" in names
-        assert "log_delta" in names
 
 
 # =============================================================================
@@ -877,14 +913,14 @@ class TestComprehensiveFeatureSet:
         for feature_name in jax_fc.JAX_COMPREHENSIVE_FC_PARAMETERS:
             assert feature_name in jax_fc.ALL_FEATURE_FUNCTIONS, f"Missing: {feature_name}"
 
-    def test_custom_features_separate(self):
-        """Verify custom features are in separate config."""
-        assert "delta" in jax_fc.JAX_CUSTOM_FC_PARAMETERS
-        assert "log_delta" in jax_fc.JAX_CUSTOM_FC_PARAMETERS
+    def test_delta_features_in_minimal(self):
+        """Verify delta features are in minimal config."""
+        assert "delta" in jax_fc.JAX_MINIMAL_FC_PARAMETERS
+        assert "log_delta" in jax_fc.JAX_MINIMAL_FC_PARAMETERS
         assert "delta" not in jax_fc.JAX_COMPREHENSIVE_FC_PARAMETERS
         assert "log_delta" not in jax_fc.JAX_COMPREHENSIVE_FC_PARAMETERS
 
     def test_comprehensive_feature_count(self):
         """Verify we have a reasonable number of features."""
-        names = jax_fc.get_feature_names_from_config()
+        names = jax_fc.get_feature_names_from_config(jax_fc.JAX_COMPREHENSIVE_FC_PARAMETERS)
         assert len(names) > 100

@@ -53,9 +53,9 @@ def setup_pendulum_system() -> SetupProperties:
     # This provides better KNN separation across different T parameters.
     feature_extractor = JaxFeatureExtractor(
         time_steady=950.0,
-        state_to_features={
-            0: [],
-            1: ["log_delta"],
+        features=None,
+        features_per_state={
+            1: {"log_delta": None},
         },
         normalize=False,
     )

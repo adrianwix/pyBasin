@@ -33,7 +33,9 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     )
 
     feature_extractor = JaxFeatureExtractor(
-        time_steady=950.0, normalize=False, default_features=["maximum", "standard_deviation"]
+        time_steady=950.0,
+        normalize=False,
+        features={"maximum": None, "standard_deviation": None},
     )
 
     classifier_initial_conditions = [

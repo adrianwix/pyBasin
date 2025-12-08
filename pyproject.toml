@@ -41,6 +41,7 @@ dependencies = [
     "plotly>=5.18.0",
     "dash>=2.14.0",
     "dash-mantine-components>=0.14.0",
+    "hdbscan>=0.8.40",
 ]
 
 [project.optional-dependencies]

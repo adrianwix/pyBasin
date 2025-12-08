@@ -44,6 +44,7 @@ Features implemented:
 from collections.abc import Callable, Mapping
 from typing import Any
 
+import jax
 import jax.numpy as jnp
 from jax import Array
 
@@ -663,26 +664,45 @@ def spkt_welch_density(x: Array, coeff: int = 0) -> Array:
     return psd[coeff]
 
 
-def cwt_coefficients(x: Array, width: int = 2, coeff: int = 0) -> Array:
-    """Calculate continuous wavelet transform coefficients using Ricker wavelet."""
+def cwt_coefficients(x: Array, widths: tuple[int, ...] = (2,), coeff: int = 0, w: int = 2) -> Array:
+    """Calculate continuous wavelet transform coefficients using Ricker wavelet.
+
+    This matches tsfresh's cwt_coefficients interface:
+    - widths: tuple of scale values to compute CWT for
+    - coeff: coefficient index to extract from the convolution result
+    - w: which width from the widths tuple to use for the result
+
+    Note: This implementation uses a direct Ricker wavelet convolution which differs
+    from tsfresh's pywt.cwt in normalization. Results have the same sign but different
+    scaling. This is acceptable for feature extraction where relative patterns matter.
+
+    Args:
+        x: Input array of shape (N, B, S)
+        widths: Tuple of wavelet width (scale) parameters
+        coeff: Coefficient index to extract
+        w: Which width from widths to use (must be in widths)
+
+    Returns:
+        Array of shape (B, S) with the CWT coefficient
+    """
     n = x.shape[0]
+
+    if w not in widths:
+        return jnp.zeros(x.shape[1:])
+
+    width = w
 
     t = jnp.arange(-width * 4, width * 4 + 1, dtype=jnp.float32)
     amplitude = 2 / (jnp.sqrt(3 * width) * (jnp.pi**0.25))
     wavelet = amplitude * (1 - (t / width) ** 2) * jnp.exp(-0.5 * (t / width) ** 2)
 
-    wavelet = wavelet.reshape(-1, 1, 1)
-
     pad_size = len(t) // 2
     x_padded = jnp.pad(x, ((pad_size, pad_size), (0, 0), (0, 0)), mode="reflect")
 
-    result = jnp.zeros_like(x)
-    for i in range(n):
-        result = result.at[i].set(
-            jnp.sum(
-                x_padded[i : i + len(t)] * wavelet.squeeze(axis=(1, 2)).reshape(-1, 1, 1), axis=0
-            )
-        )
+    kernel = wavelet[::-1].reshape(1, 1, -1)
+    x_conv = x_padded.transpose(1, 2, 0).reshape(-1, 1, x_padded.shape[0])
+    conv_out = jax.lax.conv_general_dilated(x_conv, kernel, window_strides=(1,), padding="VALID")
+    result = conv_out.reshape(x.shape[1], x.shape[2], n).transpose(2, 0, 1)
 
     if coeff >= n:
         return jnp.zeros(x.shape[1:])
@@ -1391,7 +1411,7 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "binned_entropy": [{"max_bins": 10}],
     "index_mass_quantile": [{"q": q} for q in [0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9]],
     "cwt_coefficients": [
-        {"width": w, "coeff": coeff} for w in [2, 5, 10, 20] for coeff in range(15)
+        {"widths": (w,), "coeff": coeff, "w": w} for w in [2, 5, 10, 20] for coeff in range(15)
     ],
     "spkt_welch_density": [{"coeff": coeff} for coeff in [2, 5, 8]],
     "ar_coefficient": [{"coeff": coeff, "k": 10} for coeff in range(11)],
@@ -1452,13 +1472,6 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "mean_n_absolute_max": [{"number_of_maxima": n} for n in [3, 5, 7]],
 }
 
-# JAX Custom Feature Configuration (JAX-only features not in tsfresh)
-JAX_CUSTOM_FC_PARAMETERS: FCParameters = {
-    "delta": None,
-    "log_delta": None,
-}
-
-
 def _format_feature_name(feature_name: str, params: dict[str, object] | None) -> str:
     """Format feature name with parameters in tsfresh naming convention.
 
@@ -1473,16 +1486,19 @@ def _format_feature_name(feature_name: str, params: dict[str, object] | None) ->
     return f"{feature_name}__{'_'.join(param_strs)}"
 
 
-# TODO: Review if needed since only used in test
-def extract_features_from_config(
+def extract_features(
     x: Array,
-    fc_parameters: FCParameters | None = None,
-    include_custom: bool = False,
+    fc_parameters: FCParameters,
 ) -> dict[str, Array]:
     """Extract features from time series using tsfresh-compatible configuration.
 
     This function processes all B trajectories at once (vectorized) and returns
     a dictionary mapping feature names to result arrays.
+
+    Warning:
+        Using JAX_COMPREHENSIVE_FC_PARAMETERS may cause very long JIT compile times
+        (~40 minutes). Use JAX_MINIMAL_FC_PARAMETERS or a custom subset for faster
+        compilation.
 
     Args:
         x: Input array with shape (N, B, S) where:
@@ -1492,8 +1508,6 @@ def extract_features_from_config(
         fc_parameters: Feature configuration dictionary in tsfresh format.
             - Keys are feature names (strings)
             - Values are None (no params) or list of param dicts
-            - If None, uses JAX_COMPREHENSIVE_FC_PARAMETERS
-        include_custom: If True, also include JAX_CUSTOM_FC_PARAMETERS (delta, log_delta)
 
     Returns:
         Dictionary mapping feature names to Arrays with shape (B, S).
@@ -1501,17 +1515,13 @@ def extract_features_from_config(
 
     Example:
         >>> import jax.numpy as jnp
+        >>> from pybasin.feature_extractors.jax_feature_calculators import (
+        ...     extract_features, JAX_MINIMAL_FC_PARAMETERS
+        ... )
         >>> x = jnp.ones((100, 5, 2))  # 100 timesteps, 5 trajectories, 2 states
-        >>> features = extract_features_from_config(x)
+        >>> features = extract_features(x, JAX_MINIMAL_FC_PARAMETERS)
         >>> features["mean"].shape  # (5, 2)
-        >>> features["autocorrelation__lag_5"].shape  # (5, 2)
     """
-    if fc_parameters is None:
-        fc_parameters = JAX_COMPREHENSIVE_FC_PARAMETERS
-
-    if include_custom:
-        fc_parameters = {**fc_parameters, **JAX_CUSTOM_FC_PARAMETERS}
-
     results: dict[str, Array] = {}
 
     for feature_name, param_list in fc_parameters.items():
@@ -1521,11 +1531,9 @@ def extract_features_from_config(
         func = ALL_FEATURE_FUNCTIONS[feature_name]
 
         if param_list is None:
-            # No parameters - call function directly
             output_name = _format_feature_name(feature_name, None)
             results[output_name] = func(x)
         else:
-            # Parameterized - call for each parameter combination
             for params in param_list:
                 output_name = _format_feature_name(feature_name, params)
                 results[output_name] = func(x, **params)
@@ -1534,24 +1542,18 @@ def extract_features_from_config(
 
 
 def get_feature_names_from_config(
-    fc_parameters: FCParameters | None = None,
-    include_custom: bool = False,
+    fc_parameters: FCParameters,
 ) -> list[str]:
-    """Get list of feature names that would be extracted with given configuration.
+    """
+    Get list of feature names that would be extracted with given configuration. 
+    Used by the InteractivePlotter to display the features.
 
     Args:
-        fc_parameters: Feature configuration dictionary. If None, uses JAX_COMPREHENSIVE_FC_PARAMETERS.
-        include_custom: If True, also include JAX_CUSTOM_FC_PARAMETERS.
+        fc_parameters: Feature configuration dictionary.
 
     Returns:
         List of feature names in tsfresh naming convention.
     """
-    if fc_parameters is None:
-        fc_parameters = JAX_COMPREHENSIVE_FC_PARAMETERS
-
-    if include_custom:
-        fc_parameters = {**fc_parameters, **JAX_CUSTOM_FC_PARAMETERS}
-
     names: list[str] = []
 
     for feature_name, param_list in fc_parameters.items():
@@ -1571,7 +1573,7 @@ def get_feature_names_from_config(
 # SIMPLE API (for JaxFeatureExtractor)
 # =============================================================================
 
-# Minimal feature names (matching tsfresh MinimalFCParameters - 10 features)
+# Minimal feature names (tsfresh MinimalFCParameters + delta/log_delta = 12 features)
 MINIMAL_FEATURE_NAMES: list[str] = [
     "sum_values",
     "median",
@@ -1583,85 +1585,24 @@ MINIMAL_FEATURE_NAMES: list[str] = [
     "maximum",
     "absolute_maximum",
     "minimum",
-]
-
-# Comprehensive feature names (all no-param features + custom)
-# This is what JaxFeatureExtractor uses for the simple API
-COMPREHENSIVE_FEATURE_NAMES: list[str] = [
-    # Minimal
-    "sum_values",
-    "median",
-    "mean",
-    "length",
-    "standard_deviation",
-    "variance",
-    "root_mean_square",
-    "maximum",
-    "absolute_maximum",
-    "minimum",
-    # Simple Statistics
-    "abs_energy",
-    "kurtosis",
-    "skewness",
-    "variation_coefficient",
-    # Change/Difference
-    "absolute_sum_of_changes",
-    "mean_abs_change",
-    "mean_change",
-    "mean_second_derivative_central",
-    # Counting
-    "count_above_mean",
-    "count_below_mean",
-    # Boolean
-    "has_duplicate",
-    "has_duplicate_max",
-    "has_duplicate_min",
-    "has_variance_larger_than_standard_deviation",
-    # Location
-    "first_location_of_maximum",
-    "first_location_of_minimum",
-    "last_location_of_maximum",
-    "last_location_of_minimum",
-    # Streak/Pattern
-    "longest_strike_above_mean",
-    "longest_strike_below_mean",
-    # Entropy/Complexity
-    "fourier_entropy",
-    "cid_ce",
-    # Reoccurrence
-    "percentage_of_reoccurring_datapoints_to_all_datapoints",
-    "percentage_of_reoccurring_values_to_all_values",
-    "sum_of_reoccurring_data_points",
-    "sum_of_reoccurring_values",
-    "ratio_value_number_to_time_series_length",
-    # Advanced
-    "benford_correlation",
-    # Custom
     "delta",
     "log_delta",
 ]
 
-# All available no-param features (for JaxFeatureExtractor simple API)
-ALL_FEATURES: dict[str, Callable[[Array], Array]] = {
-    name: func
-    for name, func in ALL_FEATURE_FUNCTIONS.items()
-    if name in COMPREHENSIVE_FEATURE_NAMES
+# JAX Minimal Feature Configuration (FCParameters format)
+JAX_MINIMAL_FC_PARAMETERS: FCParameters = {
+    "sum_values": None,
+    "median": None,
+    "mean": None,
+    "length": None,
+    "standard_deviation": None,
+    "variance": None,
+    "root_mean_square": None,
+    "maximum": None,
+    "absolute_maximum": None,
+    "minimum": None,
+    "delta": None,
+    "log_delta": None,
 }
 
 
-def get_feature_names(comprehensive: bool = False) -> list[str]:
-    """Get the list of feature names for simple (no-param) features.
-
-    This is used by JaxFeatureExtractor for the simple API where features
-    take only x as input (no additional parameters).
-
-    Args:
-        comprehensive: If True, include all no-param features + custom features.
-                      If False (default), return only tsfresh MinimalFCParameters.
-
-    Returns:
-        List of feature names.
-    """
-    if comprehensive:
-        return COMPREHENSIVE_FEATURE_NAMES.copy()
-    return MINIMAL_FEATURE_NAMES.copy()

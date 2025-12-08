@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -8,8 +9,10 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import torch
 
-from pybasin.cluster_classifier import ClusterClassifier, SupervisedClassifier
+from pybasin.cluster_classifier import ClusterClassifier, HDBSCANCluster, SupervisedClassifier
+from pybasin.feature_extractors import TorchFeatureExtractor
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
@@ -35,8 +38,8 @@ class BasinStabilityEstimator:
         ode_system: ODESystemProtocol,
         sampler: Sampler,
         solver: SolverProtocol,
-        feature_extractor: FeatureExtractor,
-        cluster_classifier: ClusterClassifier,
+        feature_extractor: FeatureExtractor | None = None,
+        cluster_classifier: ClusterClassifier | None = None,
         save_to: str | None = None,
     ):
         """
@@ -47,7 +50,9 @@ class BasinStabilityEstimator:
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
-        :param cluster_classifier: The ClusterClassifier object to assign labels.
+                                 If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
+        :param cluster_classifier: The ClusterClassifier object to assign labels. If None, defaults
+                                  to HDBSCANCluster with auto_tune=True and assign_noise=True.
         :param save_to: Optional file path to save results.
         """
         self.n = int(
@@ -56,9 +61,31 @@ class BasinStabilityEstimator:
         self.ode_system = ode_system
         self.sampler = sampler
         self.solver = solver
-        self.feature_extractor = feature_extractor
-        self.cluster_classifier = cluster_classifier
         self.save_to = save_to
+
+        if feature_extractor is None:
+            time_steady = self.solver.time_span[0] + 0.85 * (
+                self.solver.time_span[1] - self.solver.time_span[0]
+            )
+            feature_extractor = TorchFeatureExtractor(
+                time_steady=time_steady,
+                features=DEFAULT_TORCH_FC_PARAMETERS,
+                device=self.solver._device_str,
+            )
+
+        self.feature_extractor = feature_extractor
+
+        if cluster_classifier is None:
+            warnings.warn(
+                "No cluster_classifier provided. Using default HDBSCANCluster with auto_tune=True "
+                "and assign_noise=True. For better performance with known attractors, pass a custom "
+                "supervised classifier (e.g., KNNCluster).",
+                UserWarning,
+                stacklevel=2,
+            )
+            cluster_classifier = HDBSCANCluster(auto_tune=True, assign_noise=True)
+
+        self.cluster_classifier = cluster_classifier
 
         # Attributes to be populated during estimation
         self.bs_vals: dict[str, float] | None = None

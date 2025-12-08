@@ -77,6 +77,11 @@ def lyap_e_single(
         Array of matrix_dim Lyapunov exponents
     """
     data = np.asarray(data, dtype=np.float64)
+
+    # Handle unbounded trajectories (NaN/inf values)
+    if not np.all(np.isfinite(data)):
+        return np.full(matrix_dim, np.inf, dtype=np.float64)
+
     n = len(data)
     m = (emb_dim - 1) // (matrix_dim - 1)
 

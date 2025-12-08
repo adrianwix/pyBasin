@@ -5,12 +5,7 @@ This module provides GPU-accelerated feature calculators using PyTorch, implemen
 a comprehensive set of tsfresh features. All functions are designed to work with
 batched inputs and leverage PyTorch's vectorization.
 
-The calculators operate on time series data with shape (N, B, S) where:
-- N: number of time steps
-- B: batch size (number of trajectories)
-- S: number of state variables
-
-Each calculator returns features with shape (B, S).
+e
 
 Note: Unlike JAX, we don't use JIT compilation since features run one-off.
 PyTorch's eager execution with native batch operations should be efficient.
@@ -21,6 +16,10 @@ from typing import Any
 
 import torch
 from torch import Tensor
+
+from pybasin.feature_extractors.torch_corr_dim import corr_dim_batch
+from pybasin.feature_extractors.torch_lyapunov_e import lyap_e_batch
+from pybasin.feature_extractors.torch_lyapunov_r import lyap_r_batch
 
 # =============================================================================
 # MINIMAL FEATURES (tsfresh MinimalFCParameters - 10 features)
@@ -400,38 +399,40 @@ def number_peaks(x: Tensor, n: int) -> Tensor:
 
 @torch.no_grad()
 def number_cwt_peaks(x: Tensor, max_width: int = 5) -> Tensor:
-    """Count peaks detected via CWT-like multi-scale analysis (fully vectorized)."""
+    """Count peaks detected via CWT-like multi-scale analysis (optimized).
+
+    Uses integer accumulation and precomputed masks to minimize allocations
+    and avoid unnecessary dtype conversions during the loop.
+
+    Input x: (N, B, S) -> returns (B, S)
+    """
     length, batch_size, n_states = x.shape
 
-    # Reshape once: (B*S, 1, N)
-    x_reshaped = x.permute(1, 2, 0).reshape(batch_size * n_states, 1, length)
-
-    # Compute peaks for all widths and accumulate
-    # Use the largest valid width to determine which widths to use
     valid_widths = [w for w in range(1, max_width + 1) if 2 * w < length]
     if not valid_widths:
         return torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
 
-    total_peaks = torch.zeros(batch_size * n_states, dtype=x.dtype, device=x.device)
+    x_reshaped = x.permute(1, 2, 0).reshape(batch_size * n_states, 1, length)
 
-    # Process each width - the loop is unavoidable due to different kernel sizes
-    # but we minimize overhead by reusing the reshaped tensor
+    total_peaks = torch.zeros(batch_size * n_states, dtype=torch.long, device=x.device)
+
     for width in valid_widths:
         window_size = 2 * width + 1
         padded = torch.nn.functional.pad(x_reshaped, (width, width), mode="replicate")
         local_max = torch.nn.functional.max_pool1d(padded, kernel_size=window_size, stride=1)
 
-        # Count peaks (where value equals local max, excluding edges)
         is_peak = x_reshaped == local_max
-        # Zero out edges using a mask instead of assignment
+
         edge_mask = torch.ones(length, dtype=torch.bool, device=x.device)
         edge_mask[:width] = False
         edge_mask[-width:] = False
         is_peak = is_peak & edge_mask.view(1, 1, -1)
 
-        total_peaks += is_peak.sum(dim=2).squeeze(1).float()
+        cnt = is_peak.sum(dim=2).squeeze(1).to(torch.long)
+        total_peaks += cnt
 
-    return (total_peaks / len(valid_widths)).reshape(batch_size, n_states)
+    avg_peaks = total_peaks.to(x.dtype) / len(valid_widths)
+    return avg_peaks.reshape(batch_size, n_states)
 
 
 # =============================================================================
@@ -459,32 +460,43 @@ def autocorrelation(x: Tensor, lag: int) -> Tensor:
 
 @torch.no_grad()
 def partial_autocorrelation(x: Tensor, lag: int) -> Tensor:
-    """Partial autocorrelation at given lag using Durbin-Levinson."""
+    """Partial autocorrelation at given lag using Durbin-Levinson (fully vectorized)."""
     if lag == 0:
         return torch.ones(x.shape[1:], dtype=x.dtype, device=x.device)
 
     n = x.shape[0]
+    batch_size = x.shape[1]
+    n_states = x.shape[2]
     maxlag = min(lag, n - 1)
 
-    # Compute autocorrelations up to maxlag
-    acf = torch.stack([autocorrelation(x, k) for k in range(maxlag + 1)], dim=0)
+    if maxlag < 1:
+        return torch.zeros(x.shape[1:], dtype=x.dtype, device=x.device)
 
-    # Durbin-Levinson algorithm (simplified for single lag)
-    result = torch.zeros(x.shape[1:], dtype=x.dtype, device=x.device)
-    for b in range(x.shape[1]):
-        for s in range(x.shape[2]):
-            r = acf[:, b, s].cpu().numpy()
-            # Levinson recursion
-            phi = [0.0] * (maxlag + 1)
-            phi[1] = float(r[1])
-            for k in range(2, maxlag + 1):
-                num = r[k] - sum(phi[j] * r[k - j] for j in range(1, k))
-                denom = 1 - sum(phi[j] * r[j] for j in range(1, k))
-                phi[k] = float(num / (denom + 1e-10))
-                for j in range(1, k):
-                    phi[j] = phi[j] - phi[k] * phi[k - j]
-            result[b, s] = float(phi[lag]) if lag <= maxlag else 0.0
-    return result
+    x_centered = x - x.mean(dim=0, keepdim=True)
+    n_fft = 2 * n
+    fft_x = torch.fft.rfft(x_centered, n=n_fft, dim=0)
+    power_spectrum = fft_x.real**2 + fft_x.imag**2
+    autocorr_full = torch.fft.irfft(power_spectrum, n=n_fft, dim=0)
+
+    var = autocorr_full[0:1]
+    acf = autocorr_full[: maxlag + 1] / (var + 1e-10)  # (maxlag+1, B, S)
+
+    phi = torch.zeros(maxlag + 1, batch_size, n_states, dtype=x.dtype, device=x.device)
+    phi[1] = acf[1]
+
+    for k in range(2, maxlag + 1):
+        phi_prev = phi[1:k].flip(dims=[0])
+        acf_prev = acf[1:k]
+        num = acf[k] - (phi[1:k] * acf_prev.flip(dims=[0])).sum(dim=0)
+        denom = 1.0 - (phi[1:k] * acf_prev).sum(dim=0)
+        phi_k = num / (denom + 1e-10)
+        phi[k] = phi_k
+        phi[1:k] = phi[1:k] - phi_k.unsqueeze(0) * phi_prev
+
+    if lag <= maxlag:
+        return phi[lag]
+    else:
+        return torch.zeros(x.shape[1:], dtype=x.dtype, device=x.device)
 
 
 @torch.no_grad()
@@ -521,7 +533,7 @@ def agg_autocorrelation(x: Tensor, maxlag: int = 40, f_agg: str = "mean") -> Ten
 
 @torch.no_grad()
 def permutation_entropy(x: Tensor, tau: int = 1, dimension: int = 3) -> Tensor:
-    """Permutation entropy (vectorized)."""
+    """Permutation entropy (fully vectorized GPU implementation)."""
     import math
 
     n, batch_size, n_states = x.shape
@@ -530,19 +542,14 @@ def permutation_entropy(x: Tensor, tau: int = 1, dimension: int = 3) -> Tensor:
     if num_patterns <= 0:
         return torch.zeros(x.shape[1:], dtype=x.dtype, device=x.device)
 
-    # Build embedded matrix: (num_patterns, dimension, B, S)
     indices = (
         torch.arange(num_patterns, device=x.device).unsqueeze(1)
         + torch.arange(dimension, device=x.device).unsqueeze(0) * tau
     )
     embedded = x[indices]  # (num_patterns, dimension, B, S)
 
-    # Get rank patterns using argsort: (num_patterns, dimension, B, S)
     ranks = embedded.argsort(dim=1)
 
-    # Convert ranks to a single integer pattern ID for counting
-    # Each pattern is a permutation of [0, 1, ..., dimension-1]
-    # Use base factorial encoding for unique ID
     multipliers = torch.tensor(
         [math.factorial(dimension - 1 - i) for i in range(dimension)],
         device=x.device,
@@ -550,22 +557,25 @@ def permutation_entropy(x: Tensor, tau: int = 1, dimension: int = 3) -> Tensor:
     ).view(1, dimension, 1, 1)
     pattern_ids = (ranks * multipliers).sum(dim=1)  # (num_patterns, B, S)
 
-    # Count unique patterns per batch/state
     n_permutations = math.factorial(dimension)
-    result = torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
+    pattern_ids_flat = pattern_ids.permute(1, 2, 0).reshape(-1, num_patterns)  # (B*S, num_patterns)
 
-    # Flatten batch and state dims for efficient bincount
-    pattern_ids_flat = pattern_ids.permute(1, 2, 0).reshape(batch_size * n_states, num_patterns)
+    one_hot = torch.zeros(batch_size * n_states, n_permutations, dtype=x.dtype, device=x.device)
+    one_hot.scatter_add_(
+        dim=1,
+        index=pattern_ids_flat,
+        src=torch.ones_like(pattern_ids_flat, dtype=x.dtype),
+    )
+    counts = one_hot  # (B*S, n_permutations)
 
-    for i in range(batch_size * n_states):
-        counts = torch.bincount(pattern_ids_flat[i], minlength=n_permutations).float()
-        probs = counts / num_patterns
-        probs = probs[probs > 0]
-        entropy = -(probs * probs.log()).sum()
-        max_entropy = math.log(n_permutations)
-        result.view(-1)[i] = entropy / max_entropy if max_entropy > 0 else 0.0
+    probs = counts / num_patterns
+    log_probs = torch.where(probs > 0, probs.log(), torch.zeros_like(probs))
+    entropy = -(probs * log_probs).sum(dim=1)
 
-    return result
+    max_entropy = math.log(n_permutations)
+    result = entropy / max_entropy if max_entropy > 0 else entropy
+
+    return result.reshape(batch_size, n_states)
 
 
 @torch.no_grad()
@@ -675,6 +685,24 @@ def cid_ce(x: Tensor, normalize: bool = True) -> Tensor:
     return ce
 
 
+@torch.no_grad()
+def approximate_entropy(x: Tensor, m: int = 2, r: float = 0.3) -> Tensor:
+    """Approximate entropy of the time series."""
+    raise NotImplementedError(
+        "approximate_entropy is not yet implemented in PyTorch. "
+        "This feature is excluded from tsfresh's EfficientFCParameters due to high computational cost."
+    )
+
+
+@torch.no_grad()
+def sample_entropy(x: Tensor, m: int = 2, r: float = 0.3) -> Tensor:
+    """Sample entropy of the time series."""
+    raise NotImplementedError(
+        "sample_entropy is not yet implemented in PyTorch. "
+        "This feature is excluded from tsfresh's EfficientFCParameters due to high computational cost."
+    )
+
+
 # =============================================================================
 # FREQUENCY DOMAIN FEATURES (4 features)
 # =============================================================================
@@ -741,11 +769,36 @@ def spkt_welch_density(x: Tensor, coeff: int = 0) -> Tensor:
 
 
 @torch.no_grad()
-def cwt_coefficients(x: Tensor, width: int = 2, coeff: int = 0) -> Tensor:
-    """CWT coefficients using Ricker wavelet (vectorized)."""
+def cwt_coefficients(
+    x: Tensor, widths: tuple[int, ...] = (2,), coeff: int = 0, w: int = 2
+) -> Tensor:
+    """CWT coefficients using Ricker wavelet (vectorized).
+
+    This matches tsfresh's cwt_coefficients interface:
+    - widths: tuple of scale values to compute CWT for
+    - coeff: coefficient index to extract from the convolution result
+    - w: which width from the widths tuple to use for the result
+
+    Note: This implementation uses a direct Ricker wavelet convolution which differs
+    from tsfresh's pywt.cwt in normalization. Results have the same sign but different
+    scaling. This is acceptable for feature extraction where relative patterns matter.
+
+    Args:
+        x: Input tensor of shape (N, B, S)
+        widths: Tuple of wavelet width (scale) parameters
+        coeff: Coefficient index to extract
+        w: Which width from widths to use (must be in widths)
+
+    Returns:
+        Tensor of shape (B, S) with the CWT coefficient
+    """
     n, batch_size, n_states = x.shape
 
-    # Create Ricker wavelet
+    if w not in widths:
+        return torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
+
+    width = w
+
     t = torch.arange(-width * 4, width * 4 + 1, dtype=x.dtype, device=x.device)
     sigma = float(width)
     wavelet = (
@@ -754,22 +807,19 @@ def cwt_coefficients(x: Tensor, width: int = 2, coeff: int = 0) -> Tensor:
         * torch.exp(-(t**2) / (2 * sigma**2))
     )
     wavelet_len = len(wavelet)
+    pad_size = wavelet_len // 2
 
-    # Reshape x for batch conv1d: (B*S, 1, N)
     x_reshaped = x.permute(1, 2, 0).reshape(batch_size * n_states, 1, n)
 
-    # Pad and convolve
-    padded = torch.nn.functional.pad(
-        x_reshaped, (wavelet_len // 2, wavelet_len // 2), mode="reflect"
-    )
+    if n >= pad_size:
+        padded = torch.nn.functional.pad(x_reshaped, (pad_size, pad_size), mode="reflect")
+    else:
+        padded = torch.nn.functional.pad(x_reshaped, (pad_size, pad_size), mode="replicate")
 
-    # Wavelet kernel: (1, 1, wavelet_len)
     kernel = wavelet.unsqueeze(0).unsqueeze(0)
 
-    # Convolution: (B*S, 1, N)
     conv = torch.nn.functional.conv1d(padded, kernel, padding=0)
 
-    # Extract coefficient
     if coeff < conv.shape[2]:
         result = conv[:, 0, coeff].reshape(batch_size, n_states)
     else:
@@ -952,19 +1002,38 @@ def augmented_dickey_fuller(x: Tensor, attr: str = "teststat") -> Tensor:
 
 @torch.no_grad()
 def percentage_of_reoccurring_datapoints_to_all_datapoints(x: Tensor) -> Tensor:
-    """Percentage of values that appear more than once (optimized)."""
+    """Percentage of unique values that appear more than once (fully vectorized)."""
     n, batch_size, n_states = x.shape
 
-    # Reshape to (N, B*S) for batch processing
-    x_flat = x.reshape(n, -1)  # (N, B*S)
+    x_flat = x.reshape(n, -1).T  # (B*S, N)
 
-    # Use a single loop over flattened batch*state dimension
-    result = torch.zeros(batch_size * n_states, dtype=x.dtype, device=x.device)
-    for i in range(batch_size * n_states):
-        series = x_flat[:, i]
-        unique, counts = torch.unique(series, return_counts=True)
-        reoccurring = (counts > 1).sum()
-        result[i] = reoccurring.float() / len(unique) if len(unique) > 0 else 0.0
+    sorted_x, _ = x_flat.sort(dim=1)
+
+    is_dup = sorted_x[:, 1:] == sorted_x[:, :-1]  # (B*S, N-1)
+
+    is_dup_prev = torch.cat(
+        [torch.zeros(batch_size * n_states, 1, dtype=torch.bool, device=x.device), is_dup],
+        dim=1,
+    )
+    is_dup_next = torch.cat(
+        [is_dup, torch.zeros(batch_size * n_states, 1, dtype=torch.bool, device=x.device)],
+        dim=1,
+    )
+    is_part_of_dup_group = is_dup_prev | is_dup_next  # (B*S, N)
+
+    is_first_in_group = (~is_dup_prev) & is_part_of_dup_group
+    num_reoccurring_unique = is_first_in_group.sum(dim=1).float()
+
+    is_unique_start = torch.cat(
+        [
+            torch.ones(batch_size * n_states, 1, dtype=torch.bool, device=x.device),
+            sorted_x[:, 1:] != sorted_x[:, :-1],
+        ],
+        dim=1,
+    )
+    num_unique = is_unique_start.sum(dim=1).float()
+
+    result = num_reoccurring_unique / (num_unique + 1e-10)
 
     return result.reshape(batch_size, n_states)
 
@@ -1155,43 +1224,90 @@ def c3(x: Tensor, lag: int) -> Tensor:
     return (x[: -2 * lag] * x[lag:-lag] * x[2 * lag :]).mean(dim=0)
 
 
-@torch.no_grad()
-def change_quantiles(
-    x: Tensor, ql: float, qh: float, isabs: bool = True, f_agg: str = "mean"
+def _change_quantiles_core(
+    x: Tensor,
+    q_low: Tensor,
+    q_high: Tensor,
+    isabs: Tensor,
+    is_var: Tensor,
 ) -> Tensor:
-    """Statistics of changes within quantile corridor (optimized)."""
-    n, batch_size, n_states = x.shape
+    """Core computation for change_quantiles (vmap-compatible).
 
-    q_low = torch.quantile(x, ql, dim=0, keepdim=True)  # (1, B, S)
-    q_high = torch.quantile(x, qh, dim=0, keepdim=True)  # (1, B, S)
+    This is the inner computation that can be used with vmap.
+    Quantiles must be pre-computed outside this function.
+
+    Args:
+        x: Input tensor (N, B, S)
+        q_low: Low quantile values (B, S) or (1, B, S)
+        q_high: High quantile values (B, S) or (1, B, S)
+        isabs: Whether to use absolute differences (scalar bool tensor)
+        is_var: Whether to compute variance instead of mean (scalar bool tensor)
+
+    Returns:
+        Result tensor of shape (B, S)
+    """
+    # Ensure quantiles have correct shape for broadcasting
+    if q_low.dim() == 2:
+        q_low = q_low.unsqueeze(0)
+    if q_high.dim() == 2:
+        q_high = q_high.unsqueeze(0)
+
     mask = (x >= q_low) & (x <= q_high)  # (N, B, S)
 
     # Compute differences between consecutive values
     diff = x[1:] - x[:-1]  # (N-1, B, S)
-    if isabs:
-        diff = diff.abs()
+    diff_abs = diff.abs()
 
-    # Mask for valid differences: both current and previous must be in corridor
-    # A change is valid if both endpoints are in the quantile corridor
+    # Select diff or diff_abs based on isabs (use torch.where for vmap compatibility)
+    d = torch.where(isabs, diff_abs, diff)
+
+    # Mask for valid differences: both endpoints must be in corridor
     valid_changes = mask[:-1] & mask[1:]  # (N-1, B, S)
 
     # Apply mask and compute aggregation
-    masked_diff = diff * valid_changes.float()  # Zero out invalid changes
+    masked_diff = d * valid_changes.float()
     count = valid_changes.float().sum(dim=0)  # (B, S)
 
-    if f_agg == "mean":
-        result = masked_diff.sum(dim=0) / (count + 1e-10)
-    elif f_agg == "var":
-        mean_val = masked_diff.sum(dim=0) / (count + 1e-10)
-        sq_diff = (diff - mean_val.unsqueeze(0)) ** 2 * valid_changes.float()
-        result = sq_diff.sum(dim=0) / (count + 1e-10)
-    else:
-        result = masked_diff.sum(dim=0) / (count + 1e-10)
+    # Compute mean
+    mean_result = masked_diff.sum(dim=0) / (count + 1e-10)
+
+    # Compute variance
+    sq_diff = (d - mean_result.unsqueeze(0)) ** 2 * valid_changes.float()
+    var_result = sq_diff.sum(dim=0) / (count + 1e-10)
+
+    # Select mean or var based on is_var (use torch.where for vmap compatibility)
+    result = torch.where(is_var, var_result, mean_result)
 
     # Zero out where no valid changes
-    result = torch.where(count > 0, result, torch.zeros_like(result))
+    return torch.where(count > 0, result, torch.zeros_like(result))
 
-    return result
+
+@torch.no_grad()
+def change_quantiles(
+    x: Tensor, ql: float, qh: float, isabs: bool = True, f_agg: str = "mean"
+) -> Tensor:
+    """Statistics of changes within quantile corridor.
+
+    Computes statistics of consecutive value changes where both values
+    fall within the [ql, qh] quantile range.
+
+    Args:
+        x: Input tensor (N, B, S)
+        ql: Lower quantile (0.0 to 1.0)
+        qh: Upper quantile (0.0 to 1.0), must be > ql
+        isabs: If True, use absolute differences
+        f_agg: Aggregation function, "mean" or "var"
+
+    Returns:
+        Result tensor of shape (B, S)
+    """
+    q_low = torch.quantile(x, ql, dim=0, keepdim=True)  # (1, B, S)
+    q_high = torch.quantile(x, qh, dim=0, keepdim=True)  # (1, B, S)
+
+    isabs_t = torch.tensor(isabs, dtype=torch.bool, device=x.device)
+    is_var_t = torch.tensor(f_agg == "var", dtype=torch.bool, device=x.device)
+
+    return _change_quantiles_core(x, q_low, q_high, isabs_t, is_var_t)
 
 
 @torch.no_grad()
@@ -1372,6 +1488,80 @@ def log_delta(x: Tensor) -> Tensor:
 
 
 # =============================================================================
+# DYNAMICAL SYSTEMS FEATURES (3 features)
+# =============================================================================
+
+
+@torch.no_grad()
+def lyapunov_r(
+    x: Tensor,
+    emb_dim: int = 10,
+    lag: int = 1,
+    trajectory_len: int = 20,
+    tau: float = 1.0,
+) -> Tensor:
+    """Compute largest Lyapunov exponent using Rosenstein algorithm.
+
+    Args:
+        x: Time series of shape (N, B, S)
+        emb_dim: Embedding dimension
+        lag: Lag for delay embedding
+        trajectory_len: Number of steps to follow divergence
+        tau: Time step size for normalization
+
+    Returns:
+        Lyapunov exponents of shape (B, S)
+    """
+    return lyap_r_batch(x, emb_dim, lag, trajectory_len, tau)
+
+
+@torch.no_grad()
+def lyapunov_e(
+    x: Tensor,
+    emb_dim: int = 10,
+    matrix_dim: int = 4,
+    min_nb: int = 8,
+    min_tsep: int = 0,
+    tau: float = 1.0,
+) -> Tensor:
+    """Compute multiple Lyapunov exponents using Eckmann algorithm.
+
+    Args:
+        x: Time series of shape (N, B, S)
+        emb_dim: Embedding dimension
+        matrix_dim: Matrix dimension for Jacobian estimation (number of exponents)
+        min_nb: Minimal number of neighbors
+        min_tsep: Minimal temporal separation
+        tau: Time step size for normalization
+
+    Returns:
+        Lyapunov exponents of shape (B, S, matrix_dim)
+    """
+    return lyap_e_batch(x, emb_dim, matrix_dim, min_nb, min_tsep, tau)
+
+
+@torch.no_grad()
+def correlation_dimension(
+    x: Tensor,
+    emb_dim: int = 4,
+    lag: int = 1,
+    n_rvals: int = 50,
+) -> Tensor:
+    """Compute correlation dimension using Grassberger-Procaccia algorithm.
+
+    Args:
+        x: Time series of shape (N, B, S)
+        emb_dim: Embedding dimension
+        lag: Lag for delay embedding
+        n_rvals: Number of radius values to use
+
+    Returns:
+        Correlation dimensions of shape (B, S)
+    """
+    return corr_dim_batch(x, emb_dim, lag, n_rvals)
+
+
+# =============================================================================
 # FEATURE FUNCTIONS DICTIONARY
 # =============================================================================
 
@@ -1425,12 +1615,14 @@ ALL_FEATURE_FUNCTIONS: dict[str, Callable[..., Tensor]] = {
     "autocorrelation": autocorrelation,
     "partial_autocorrelation": partial_autocorrelation,
     "agg_autocorrelation": agg_autocorrelation,
-    # Entropy/complexity (5)
+    # Entropy/complexity (7 - 2 not implemented: approximate_entropy, sample_entropy)
     "permutation_entropy": permutation_entropy,
     "binned_entropy": binned_entropy,
     "fourier_entropy": fourier_entropy,
     "lempel_ziv_complexity": lempel_ziv_complexity,
     "cid_ce": cid_ce,
+    "approximate_entropy": approximate_entropy,
+    "sample_entropy": sample_entropy,
     # Frequency domain (4)
     "fft_coefficient": fft_coefficient,
     "fft_aggregated": fft_aggregated,
@@ -1464,6 +1656,10 @@ ALL_FEATURE_FUNCTIONS: dict[str, Callable[..., Tensor]] = {
     # Custom (2)
     "delta": delta,
     "log_delta": log_delta,
+    # Dynamical systems (3)
+    "lyapunov_r": lyapunov_r,
+    "lyapunov_e": lyapunov_e,
+    "correlation_dimension": correlation_dimension,
 }
 
 # =============================================================================
@@ -1535,7 +1731,7 @@ TORCH_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "fft_aggregated": [{"aggtype": s} for s in ["centroid", "variance", "skew", "kurtosis"]],
     "spkt_welch_density": [{"coeff": coeff} for coeff in [2, 5, 8]],
     "cwt_coefficients": [
-        {"width": w, "coeff": coeff} for w in [2, 5, 10, 20] for coeff in range(15)
+        {"widths": (w,), "coeff": coeff, "w": w} for w in [2, 5, 10, 20] for coeff in range(15)
     ],
     # Trend/regression
     "linear_trend": [
@@ -1594,140 +1790,28 @@ TORCH_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "energy_ratio_by_chunks": [{"num_segments": 10, "segment_focus": i} for i in range(10)],
     "ratio_beyond_r_sigma": [{"r": x} for x in [0.5, 1, 1.5, 2, 2.5, 3, 5, 6, 7, 10]],
     "mean_n_absolute_max": [{"number_of_maxima": n} for n in [3, 5, 7]],
+    # Dynamical systems features
+    "lyapunov_r": [
+        {"emb_dim": 10, "lag": 1, "trajectory_len": 20, "tau": 1.0},
+    ],
+    "lyapunov_e": [
+        {"emb_dim": 10, "matrix_dim": 4, "min_nb": 8, "min_tsep": 0, "tau": 1.0},
+    ],
+    "correlation_dimension": [
+        {"emb_dim": 4, "lag": 1, "n_rvals": 50},
+    ],
 }
 
 # =============================================================================
 # GPU-FRIENDLY SUBSET (excludes features that are slower on GPU than CPU)
 # =============================================================================
 # Excluded features and why:
-# - permutation_entropy: Uses loops/CPU-bound operations, 1143ms on GPU
-# - percentage_of_reoccurring_*: Uses torch.unique which is slow on GPU (~575ms)
-# - sum_of_reoccurring_*: Uses torch.unique
-# - ratio_value_number_to_time_series_length: Uses torch.unique
-# - quantile: Sorting doesn't parallelize well on GPU (5x slower than CPU)
+# - permutation_entropy: Uses Python loops, extremely slow on GPU (~1143ms)
+
+GPU_EXCLUDED_FEATURES = {"permutation_entropy", "lempel_ziv_complexity"}
 
 TORCH_GPU_FC_PARAMETERS: FCParameters = {
-    # Minimal features (no parameters)
-    "sum_values": None,
-    "median": None,
-    "mean": None,
-    "length": None,
-    "standard_deviation": None,
-    "variance": None,
-    "root_mean_square": None,
-    "maximum": None,
-    "absolute_maximum": None,
-    "minimum": None,
-    # Simple statistics (excluding quantile - uses sorting)
-    "abs_energy": None,
-    "kurtosis": None,
-    "skewness": None,
-    # "quantile" - EXCLUDED: sorting is slow on GPU
-    "variation_coefficient": None,
-    # Change/difference
-    "absolute_sum_of_changes": None,
-    "mean_abs_change": None,
-    "mean_change": None,
-    "mean_second_derivative_central": None,
-    # Counting
-    "count_above_mean": None,
-    "count_below_mean": None,
-    "count_above": [{"t": 0}],
-    "count_below": [{"t": 0}],
-    # Boolean
-    "has_duplicate": None,
-    "has_duplicate_max": None,
-    "has_duplicate_min": None,
-    "has_variance_larger_than_standard_deviation": None,
-    "large_standard_deviation": [{"r": r * 0.05} for r in range(1, 20)],
-    # Location
-    "first_location_of_maximum": None,
-    "first_location_of_minimum": None,
-    "last_location_of_maximum": None,
-    "last_location_of_minimum": None,
-    "index_mass_quantile": [{"q": q} for q in [0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9]],
-    # Streak/pattern
-    "longest_strike_above_mean": None,
-    "longest_strike_below_mean": None,
-    "number_crossing_m": [{"m": 0}, {"m": -1}, {"m": 1}],
-    "number_peaks": [{"n": n} for n in [1, 3, 5, 10, 50]],
-    "number_cwt_peaks": [{"max_width": n} for n in [1, 5]],
-    # Autocorrelation
-    "autocorrelation": [{"lag": lag} for lag in range(10)],
-    "agg_autocorrelation": [{"f_agg": s, "maxlag": 40} for s in ["mean", "median", "var"]],
-    "partial_autocorrelation": [{"lag": lag} for lag in range(10)],
-    # Entropy/complexity (excluding permutation_entropy - slow loops)
-    "binned_entropy": [{"max_bins": 10}],
-    "fourier_entropy": [{"bins": x} for x in [2, 3, 5, 10, 100]],
-    # "permutation_entropy" - EXCLUDED: uses loops, extremely slow on GPU
-    "lempel_ziv_complexity": [{"bins": x} for x in [2, 3, 5, 10, 100]],
-    "cid_ce": [{"normalize": True}, {"normalize": False}],
-    # Frequency domain
-    "fft_coefficient": [
-        {"coeff": k, "attr": a} for a in ["real", "imag", "abs", "angle"] for k in range(100)
-    ],
-    "fft_aggregated": [{"aggtype": s} for s in ["centroid", "variance", "skew", "kurtosis"]],
-    "spkt_welch_density": [{"coeff": coeff} for coeff in [2, 5, 8]],
-    "cwt_coefficients": [
-        {"width": w, "coeff": coeff} for w in [2, 5, 10, 20] for coeff in range(15)
-    ],
-    # Trend/regression
-    "linear_trend": [
-        {"attr": "pvalue"},
-        {"attr": "rvalue"},
-        {"attr": "intercept"},
-        {"attr": "slope"},
-        {"attr": "stderr"},
-    ],
-    "agg_linear_trend": [
-        {"attr": attr, "chunk_size": i, "f_agg": f}
-        for attr in ["rvalue", "intercept", "slope", "stderr"]
-        for i in [5, 10, 50]
-        for f in ["max", "min", "mean", "var"]
-    ],
-    "augmented_dickey_fuller": [
-        {"attr": "teststat"},
-        {"attr": "pvalue"},
-        {"attr": "usedlag"},
-    ],
-    "ar_coefficient": [{"coeff": coeff, "k": 10} for coeff in range(11)],
-    "linear_trend_timewise": [
-        {"attr": "pvalue"},
-        {"attr": "rvalue"},
-        {"attr": "intercept"},
-        {"attr": "slope"},
-        {"attr": "stderr"},
-    ],
-    # Reoccurrence - ALL EXCLUDED: use torch.unique which is slow on GPU
-    # "percentage_of_reoccurring_datapoints_to_all_datapoints" - EXCLUDED
-    # "percentage_of_reoccurring_values_to_all_values" - EXCLUDED
-    # "sum_of_reoccurring_data_points" - EXCLUDED
-    # "sum_of_reoccurring_values" - EXCLUDED
-    # "ratio_value_number_to_time_series_length" - EXCLUDED
-    # Advanced
-    "benford_correlation": None,
-    "time_reversal_asymmetry_statistic": [{"lag": lag} for lag in range(1, 4)],
-    "c3": [{"lag": lag} for lag in range(1, 4)],
-    "symmetry_looking": [{"r": r * 0.05} for r in range(20)],
-    "change_quantiles": [
-        {"ql": ql, "qh": qh, "isabs": b, "f_agg": f}
-        for ql in [0.0, 0.2, 0.4, 0.6, 0.8]
-        for qh in [0.2, 0.4, 0.6, 0.8, 1.0]
-        for b in [False, True]
-        for f in ["mean", "var"]
-        if ql < qh
-    ],
-    "value_count": [{"value": value} for value in [0, 1, -1]],
-    "range_count": [
-        {"min_val": -1, "max_val": 1},
-        {"min_val": -1e12, "max_val": 0},
-        {"min_val": 0, "max_val": 1e12},
-    ],
-    "friedrich_coefficients": [{"coeff": coeff, "m": 3, "r": 30} for coeff in range(4)],
-    "max_langevin_fixed_point": [{"m": 3, "r": 30}],
-    "energy_ratio_by_chunks": [{"num_segments": 10, "segment_focus": i} for i in range(10)],
-    "ratio_beyond_r_sigma": [{"r": x} for x in [0.5, 1, 1.5, 2, 2.5, 3, 5, 6, 7, 10]],
-    "mean_n_absolute_max": [{"number_of_maxima": n} for n in [3, 5, 7]],
+    k: v for k, v in TORCH_COMPREHENSIVE_FC_PARAMETERS.items() if k not in GPU_EXCLUDED_FEATURES
 }
 
 # Custom features (PyTorch-only, not in tsfresh)
@@ -1748,7 +1832,20 @@ MINIMAL_FEATURE_NAMES: list[str] = [
     "maximum",
     "absolute_maximum",
     "minimum",
+    "delta",
+    "log_delta",
 ]
+
+# Minimal feature configuration (equivalent to tsfresh MinimalFCParameters + custom features)
+TORCH_MINIMAL_FC_PARAMETERS: FCParameters = dict.fromkeys(MINIMAL_FEATURE_NAMES)
+
+# Default configuration: minimal features + dynamical systems features
+DEFAULT_TORCH_FC_PARAMETERS: FCParameters = {
+    **TORCH_MINIMAL_FC_PARAMETERS,
+    "lyapunov_r": [{"emb_dim": 10, "lag": 1, "trajectory_len": 20, "tau": 1.0}],
+    "lyapunov_e": [{"emb_dim": 10, "matrix_dim": 4, "min_nb": 8, "min_tsep": 0, "tau": 1.0}],
+    "correlation_dimension": [{"emb_dim": 4, "lag": 1, "n_rvals": 50}],
+}
 
 
 # =============================================================================
