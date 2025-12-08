@@ -2,15 +2,10 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from pybasin.feature_extractors.jax_lyapunov_e import (
-    corr_dim_batch,
-    corr_dim_single,
-    delay_embedding,
-    lyap_e_batch,
-    lyap_e_single,
-    lyap_r_batch,
-    lyap_r_single,
-)
+from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch, corr_dim_single
+from pybasin.feature_extractors.jax_feature_utilities import delay_embedding
+from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch, lyap_e_single
+from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch, lyap_r_single
 
 
 class TestDelayEmbedding:

@@ -48,6 +48,7 @@ class FeatureSpaceOptions:
 
     x_feature: int = 0
     y_feature: int | None = 1
+    use_filtered: bool = True
     include_labels: list[str] | None = None
     exclude_labels: list[str] | None = None
 

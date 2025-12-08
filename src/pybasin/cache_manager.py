@@ -6,7 +6,7 @@ from typing import Any
 
 import torch
 
-from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol
 
 
 class CacheManager:
@@ -18,7 +18,7 @@ class CacheManager:
     def build_key(
         self,
         solver_name: str,
-        ode_system: ODESystem[Any],
+        ode_system: ODESystemProtocol,
         y0: torch.Tensor,
         t_eval: torch.Tensor,
         solver_config: dict[str, Any] | None = None,
@@ -31,9 +31,16 @@ class CacheManager:
         :param t_eval: Time evaluation points.
         :param solver_config: Dictionary of solver-specific parameters (rtol, atol, method, etc.).
         """
+        # Automatically include ODE system parameters in the cache key
+        # This ensures different parameter values produce different cache keys
+        params_tuple = (
+            tuple(sorted(ode_system.params.items())) if hasattr(ode_system, "params") else ()
+        )
+
         key_data = (
             solver_name,
             ode_system.get_str(),
+            params_tuple,
             y0.detach().cpu().numpy().tobytes(),
             t_eval.detach().cpu().numpy().tobytes(),
             tuple(sorted(solver_config.items())) if solver_config else (),

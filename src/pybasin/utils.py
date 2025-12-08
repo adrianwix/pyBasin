@@ -104,6 +104,29 @@ class NumpyEncoder(JSONEncoder):
         return super().default(o)
 
 
+def get_filtered_feature_names(selector: Any, original_names: list[str]) -> list[str]:
+    """Get feature names after applying a sklearn selector/transformer.
+
+    Args:
+        selector: Fitted sklearn transformer with get_support() method.
+        original_names: List of original feature names before filtering.
+
+    Returns:
+        List of feature names that passed the selector's filter.
+
+    Raises:
+        AttributeError: If selector doesn't have get_support() method.
+    """
+    if not hasattr(selector, "get_support"):
+        raise AttributeError(
+            f"Selector {type(selector).__name__} does not have get_support() method. "
+            "Cannot track feature names through this transformer."
+        )
+
+    mask = selector.get_support(indices=False)
+    return [name for name, keep in zip(original_names, mask, strict=True) if keep]
+
+
 def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
     Extract amplitudes by taking the maximum absolute value along the time dimension.

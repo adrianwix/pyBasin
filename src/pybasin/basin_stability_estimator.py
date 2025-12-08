@@ -8,15 +8,26 @@ from typing import Any
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import torch
+from sklearn.base import BaseEstimator
 
 from pybasin.cluster_classifier import ClusterClassifier, HDBSCANCluster, SupervisedClassifier
 from pybasin.feature_extractors import TorchFeatureExtractor
+from pybasin.feature_extractors.default_feature_selector import DefaultFeatureSelector
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
-from pybasin.utils import NumpyEncoder, extract_amplitudes, generate_filename, resolve_folder
+from pybasin.utils import (
+    NumpyEncoder,
+    extract_amplitudes,
+    generate_filename,
+    get_filtered_feature_names,
+    resolve_folder,
+)
+
+# Sentinel value to distinguish "not specified" from "None"
+_USE_DEFAULT = object()
 
 
 class BasinStabilityEstimator:
@@ -40,6 +51,7 @@ class BasinStabilityEstimator:
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor | None = None,
         cluster_classifier: ClusterClassifier | None = None,
+        feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
         save_to: str | None = None,
     ):
         """
@@ -53,6 +65,9 @@ class BasinStabilityEstimator:
                                  If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
         :param cluster_classifier: The ClusterClassifier object to assign labels. If None, defaults
                                   to HDBSCANCluster with auto_tune=True and assign_noise=True.
+        :param feature_selector: Feature filtering sklearn transformer with get_support() method.
+                                Defaults to DefaultFeatureSelector(). Pass None to disable filtering.
+                                Accepts any sklearn transformer (VarianceThreshold, SelectKBest, etc.) or Pipeline.
         :param save_to: Optional file path to save results.
         """
         self.n = int(
@@ -63,14 +78,27 @@ class BasinStabilityEstimator:
         self.solver = solver
         self.save_to = save_to
 
+        # Initialize feature selector
+        # Note: _USE_DEFAULT sentinel distinguishes "not specified" from "None" (disabled)
+        if feature_selector is _USE_DEFAULT:
+            # Default: use feature filtering with default thresholds
+            self._feature_selector: BaseEstimator | None = DefaultFeatureSelector()
+        else:
+            # User explicitly set it (could be None to disable, or a custom selector)
+            self._feature_selector = feature_selector
+
+        self._filtered_feature_names: list[str] | None = None
+
         if feature_extractor is None:
             time_steady = self.solver.time_span[0] + 0.85 * (
                 self.solver.time_span[1] - self.solver.time_span[0]
             )
+            # Get device string, with fallback to 'cpu'
+            device_str = str(getattr(self.solver, "_device_str", "cpu"))
             feature_extractor = TorchFeatureExtractor(
                 time_steady=time_steady,
                 features=DEFAULT_TORCH_FC_PARAMETERS,
-                device=self.solver._device_str,
+                device=device_str,  # type: ignore[arg-type]
             )
 
         self.feature_extractor = feature_extractor
@@ -91,6 +119,63 @@ class BasinStabilityEstimator:
         self.bs_vals: dict[str, float] | None = None
         self.y0: torch.Tensor | None = None
         self.solution: Solution | None = None
+
+    def _get_feature_names(self) -> list[str]:
+        """Get feature names from extractor.
+
+        :return: List of feature names.
+        """
+        return self.feature_extractor.feature_names
+
+    def _apply_feature_filtering(
+        self, features: torch.Tensor, feature_names: list[str]
+    ) -> tuple[torch.Tensor, list[str]]:
+        """Apply feature filtering using the configured selector.
+
+        :param features: Feature tensor of shape (n_samples, n_features).
+        :param feature_names: List of feature names.
+        :return: Tuple of (filtered features tensor, filtered feature names).
+        :raises ValueError: If filtering removes all features.
+        """
+        if self._feature_selector is None:
+            return features, feature_names
+
+        # Convert to numpy for sklearn
+        features_np = features.detach().cpu().numpy()
+
+        # Apply filtering
+        from typing import cast
+
+        features_filtered_np = cast(
+            np.ndarray[Any, np.dtype[np.floating[Any]]],
+            self._feature_selector.fit_transform(features_np),  # type: ignore[union-attr]
+        )
+
+        # Check if any features remain
+        if int(features_filtered_np.shape[1]) == 0:
+            raise ValueError(
+                f"Feature filtering removed all {features_np.shape[1]} features. "
+                "Consider lowering variance_threshold or correlation_threshold."
+            )
+
+        # Get filtered feature names using utility function
+        filtered_names = get_filtered_feature_names(self._feature_selector, feature_names)
+
+        # Convert back to tensor
+        features_filtered = torch.from_numpy(features_filtered_np).to(  # type: ignore[arg-type]
+            dtype=features.dtype, device=features.device
+        )
+
+        # Print filtering stats
+        n_original: int = int(features_np.shape[1])
+        n_filtered: int = int(features_filtered_np.shape[1])
+        reduction_pct: float = float((1 - n_filtered / n_original) * 100)
+        print(
+            f"  Feature Filtering: {n_original} → {n_filtered} features "
+            f"({reduction_pct:.1f}% reduction)"
+        )
+
+        return features_filtered, filtered_names
 
     def estimate_bs(self, parallel_integration: bool = True) -> dict[str, float]:
         """
@@ -192,7 +277,21 @@ class BasinStabilityEstimator:
         print("\nSTEP 4: Feature Extraction")
         t4 = time.perf_counter()
         features = self.feature_extractor.extract_features(self.solution)
-        self.solution.set_features(features)
+
+        # Get feature names and store extracted features
+        feature_names = self._get_feature_names()
+        self.solution.set_extracted_features(features, feature_names)
+
+        # Apply feature filtering if configured
+        if self._feature_selector is not None:
+            features_filtered, filtered_names = self._apply_feature_filtering(
+                features, feature_names
+            )
+            self.solution.set_features(features_filtered, filtered_names)
+            self._filtered_feature_names = filtered_names
+        else:
+            self.solution.set_features(features, feature_names)
+
         t4_elapsed = time.perf_counter() - t4
         print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
 
@@ -200,7 +299,10 @@ class BasinStabilityEstimator:
         if isinstance(self.cluster_classifier, SupervisedClassifier):  # type: ignore[type-arg]
             print("\nSTEP 4b: Fitting Classifier")
             t4b = time.perf_counter()
-            self.cluster_classifier.fit_with_features(self.feature_extractor)  # type: ignore[misc]
+            self.cluster_classifier.fit_with_features(  # type: ignore[misc]
+                self.feature_extractor,
+                feature_selector=self._feature_selector,
+            )
             t4b_elapsed = time.perf_counter() - t4b
             print(f"  Classifier fitted in {t4b_elapsed:.4f}s")
 
@@ -300,6 +402,31 @@ class BasinStabilityEstimator:
             ]
         )
 
+        # Feature selection information
+        feature_selection_info: dict[str, Any] = {
+            "enabled": self._feature_selector is not None,
+        }
+
+        if self._feature_selector is not None:
+            feature_selection_info["selector_type"] = type(self._feature_selector).__name__
+
+            # Add feature count information
+            if self.solution and self.solution.extracted_features is not None:
+                n_extracted = self.solution.extracted_features.shape[1]
+                n_filtered = (
+                    self.solution.features.shape[1] if self.solution.features is not None else 0
+                )
+                feature_selection_info["n_features_extracted"] = n_extracted
+                feature_selection_info["n_features_filtered"] = n_filtered
+                feature_selection_info["reduction_ratio"] = (
+                    (1 - n_filtered / n_extracted) if n_extracted > 0 else 0.0
+                )
+
+                if self._filtered_feature_names:
+                    feature_selection_info["filtered_feature_names"] = self._filtered_feature_names
+        else:
+            feature_selection_info["selector_type"] = "disabled"
+
         results: dict[str, Any] = {
             "basin_of_attractions": self.bs_vals,
             "region_of_interest": region_of_interest,
@@ -307,6 +434,7 @@ class BasinStabilityEstimator:
             "sampling_method": self.sampler.__class__.__name__,
             "solver": self.solver.__class__.__name__,
             "cluster_classifier": self.cluster_classifier.__class__.__name__,
+            "feature_selection": feature_selection_info,
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }
 

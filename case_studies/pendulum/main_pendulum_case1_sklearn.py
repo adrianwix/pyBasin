@@ -15,6 +15,7 @@ def main():
         feature_extractor=props["feature_extractor"],
         cluster_classifier=props["cluster_classifier"],
         save_to="results_case1_sklearn",
+        feature_selector=None,
     )
 
     basin_stability = bse.estimate_bs()

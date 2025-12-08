@@ -31,6 +31,7 @@ class StateSpaceStatsExtractor(FeatureExtractor):
         super().__init__(time_steady=time_steady)
         self.include_radius = include_radius
         self.include_pca = include_pca
+        self._num_states: int | None = None
 
     def extract_features(self, solution: Solution) -> torch.Tensor:
         """Extract state space statistical features.
@@ -48,6 +49,7 @@ class StateSpaceStatsExtractor(FeatureExtractor):
 
         # y_filtered shape: (N, B, S)
         # N = time steps, B = batch size, S = state dimensions
+        self._num_states = y_filtered.shape[2]
 
         feature_list: list[torch.Tensor] = []
 
@@ -98,3 +100,34 @@ class StateSpaceStatsExtractor(FeatureExtractor):
         features: torch.Tensor = torch.cat(feature_list, dim=1)  # (B, F_total)
 
         return features.to(y_filtered.device)
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names.
+
+        Returns:
+            List of feature names based on which features are enabled.
+
+        Raises:
+            RuntimeError: If extract_features has not been called yet.
+        """
+        if self._num_states is None:
+            raise RuntimeError("Number of states not initialized. Call extract_features first.")
+
+        names: list[str] = []
+
+        if self.include_radius:
+            names.extend(["mean_radius", "max_radius"])
+
+        if self.include_pca:
+            names.extend([f"pca_eigenvalue_{i}" for i in range(self._num_states)])
+
+        return names
+
+    def _get_num_states(self) -> int:
+        """Get the number of state dimensions from the last extraction.
+
+        This is a helper for feature_names. In practice, the number of PCA
+        eigenvalues equals the number of state dimensions.
+        """
+        return 2

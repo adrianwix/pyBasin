@@ -32,6 +32,7 @@ class TestPendulum:
             solver=props["solver"],
             feature_extractor=props["feature_extractor"],
             cluster_classifier=props["cluster_classifier"],
+            feature_selector=None,
         )
 
         basin_stability = bse.estimate_bs()
@@ -277,6 +278,7 @@ class TestPendulum:
             solver=props["solver"],
             feature_extractor=props["feature_extractor"],
             cluster_classifier=props["cluster_classifier"],
+            feature_selector=None,
         )
 
         basin_stability = bse.estimate_bs()

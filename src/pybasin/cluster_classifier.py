@@ -132,6 +132,7 @@ class SupervisedClassifier[P](ClusterClassifier):
     def fit_with_features(
         self,
         feature_extractor: FeatureExtractor,
+        feature_selector: Any | None = None,
     ) -> None:
         """
         Fit the classifier using pre-integrated template solutions.
@@ -139,12 +140,30 @@ class SupervisedClassifier[P](ClusterClassifier):
         Must call integrate_templates() first to populate self.solution.
 
         :param feature_extractor: Feature extractor to transform trajectories.
+        :param feature_selector: Optional feature selector (already fitted on main data).
+                                If provided, applies the same filtering to template features.
+        :raises ValueError: If filtering removes all template features.
         """
         if self.solution is None:
             raise RuntimeError("Must call integrate_templates() before fit_with_features()")
 
         # Extract features from pre-integrated solution
         features = feature_extractor.extract_features(self.solution)
+
+        # Apply feature filtering if selector provided
+        if feature_selector is not None:
+            features_np = features.detach().cpu().numpy()
+            features_filtered_np = feature_selector.transform(features_np)
+
+            if features_filtered_np.shape[1] == 0:
+                raise ValueError(
+                    f"Feature filtering removed all {features_np.shape[1]} template features. "
+                    "This should not happen if the selector was fitted on main data."
+                )
+
+            features = torch.from_numpy(features_filtered_np).to(
+                dtype=features.dtype, device=features.device
+            )
 
         train_x = features.detach().cpu().numpy()
         train_y = self.labels

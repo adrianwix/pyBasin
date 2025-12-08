@@ -49,6 +49,20 @@ class FeatureExtractor(ABC):
         """
         pass
 
+    @property
+    @abstractmethod
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names.
+
+        This property must be implemented by subclasses to provide human-readable
+        names for each feature dimension in the output of extract_features().
+
+        Returns:
+            List of feature names. Length must match the number of features (F)
+            in the output tensor from extract_features().
+        """
+        pass
+
     def filter_time(self, solution: Solution) -> torch.Tensor:
         """Filter out transient behavior by removing early time steps.
 

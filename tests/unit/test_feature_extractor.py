@@ -9,6 +9,10 @@ class MeanFeatureExtractor(FeatureExtractor):
         y_filtered = self.filter_time(solution)
         return y_filtered.mean(dim=0)
 
+    @property
+    def feature_names(self) -> list[str]:
+        return [f"mean_state_{i}" for i in range(2)]
+
 
 def test_feature_extractor_time_filtering():
     n_steps, n_batch, n_states = 100, 5, 2

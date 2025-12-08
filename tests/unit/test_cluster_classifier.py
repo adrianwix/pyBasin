@@ -28,6 +28,10 @@ class SimpleFeatureExtractor(FeatureExtractor):
     def extract_features(self, solution: Solution) -> torch.Tensor:
         return solution.y[-1, :, :]
 
+    @property
+    def feature_names(self) -> list[str]:
+        return [f"final_state_{i}" for i in range(solution.y.shape[-1])]
+
 
 def test_knn_classifier_fit_predict():
     params: SimpleParams = {"a": -1.0}

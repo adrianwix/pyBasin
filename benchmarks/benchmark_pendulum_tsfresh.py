@@ -128,6 +128,7 @@ def run_benchmark(n: int, extractor_type: str, comprehensive: bool = True) -> di
         solver=setup["solver"],
         feature_extractor=setup["feature_extractor"],
         cluster_classifier=setup["cluster_classifier"],
+        feature_selector=None,
     )
 
     t0 = time.perf_counter()

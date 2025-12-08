@@ -116,6 +116,7 @@ class ASBasinStabilityEstimator:
                 solver=context["solver"],
                 feature_extractor=context["feature_extractor"],
                 cluster_classifier=context["cluster_classifier"],
+                feature_selector=None,
             )
 
             basin_stability = bse.estimate_bs()

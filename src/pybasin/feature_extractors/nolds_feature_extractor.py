@@ -80,6 +80,8 @@ class LyapunovFeatureExtractor(FeatureExtractor):
         super().__init__(time_steady=time_steady)
         self.emb_dim = emb_dim
         self.matrix_dim = matrix_dim
+        self._num_states: int | None = None
+        self._num_states: int | None = None
 
     def extract_features(self, solution: Solution) -> torch.Tensor:
         """Extract Lyapunov exponent features.
@@ -97,6 +99,7 @@ class LyapunovFeatureExtractor(FeatureExtractor):
 
         # y_filtered shape: (N, B, S)
         _n, batch_size, num_states = y_filtered.shape
+        self._num_states = num_states
 
         # Convert to numpy for nolds
         y_np = y_filtered.cpu().numpy()
@@ -130,6 +133,20 @@ class LyapunovFeatureExtractor(FeatureExtractor):
 
         return features
 
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names.
+
+        Returns:
+            List of feature names in format 'lyapunov_state_X'.
+
+        Raises:
+            RuntimeError: If extract_features has not been called yet.
+        """
+        if self._num_states is None:
+            raise RuntimeError("Number of states not initialized. Call extract_features first.")
+        return [f"lyapunov_state_{s}" for s in range(self._num_states)]
+
 
 class CorrelationDimensionExtractor(FeatureExtractor):
     """Extract correlation dimension features using nolds.
@@ -153,6 +170,7 @@ class CorrelationDimensionExtractor(FeatureExtractor):
     ):
         super().__init__(time_steady=time_steady)
         self.emb_dim = emb_dim
+        self._num_states: int | None = None
 
     def extract_features(self, solution: Solution) -> torch.Tensor:
         """Extract correlation dimension features.
@@ -170,6 +188,7 @@ class CorrelationDimensionExtractor(FeatureExtractor):
 
         # y_filtered shape: (N, B, S)
         _n, batch_size, num_states = y_filtered.shape
+        self._num_states = num_states
 
         # Convert to numpy for nolds
         y_np = y_filtered.cpu().numpy()
@@ -198,3 +217,17 @@ class CorrelationDimensionExtractor(FeatureExtractor):
         features = impute_torch(features)
 
         return features
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names.
+
+        Returns:
+            List of feature names in format 'corr_dim_state_X'.
+
+        Raises:
+            RuntimeError: If extract_features has not been called yet.
+        """
+        if self._num_states is None:
+            raise RuntimeError("Number of states not initialized. Call extract_features first.")
+        return [f"corr_dim_state_{s}" for s in range(self._num_states)]

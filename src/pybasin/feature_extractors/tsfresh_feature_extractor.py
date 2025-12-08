@@ -101,7 +101,8 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         self.normalize = normalize
         self.scaler = StandardScaler() if normalize else None
         self._is_fitted = False
-        self._fit_lock = threading.Lock()  # Thread-safe fitting
+        self._fit_lock = threading.Lock()
+        self._feature_columns: list[str] | None = None
 
         # tsfresh doesn't handle n_jobs=-1 well, convert to actual number
         if n_jobs == -1:
@@ -218,6 +219,9 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         # This replaces NaN with 0 and inf with large finite values
         impute(features_df)
 
+        # Store feature column names
+        self._feature_columns = list(features_df.columns)
+
         # Convert to numpy array
         features_array = features_df.values
 
@@ -238,3 +242,17 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         features_tensor = torch.tensor(features_array, dtype=torch.float32)
 
         return features_tensor
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the list of feature names.
+
+        Returns:
+            List of feature names from tsfresh extraction.
+
+        Raises:
+            RuntimeError: If extract_features has not been called yet.
+        """
+        if self._feature_columns is None:
+            raise RuntimeError("Feature columns not initialized. Call extract_features first.")
+        return self._feature_columns

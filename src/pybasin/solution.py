@@ -20,7 +20,10 @@ class Solution:
         initial_condition (torch.Tensor): The initial condition used for integration (shape: B, S).
         time (torch.Tensor): Time points of the solution (shape: N).
         y (torch.Tensor): State values over time (shape: N, B, S).
-        features (torch.Tensor | None): Extracted features (e.g., steady-state properties).
+        features (torch.Tensor | None): Filtered features used for classification.
+        extracted_features (torch.Tensor | None): Original extracted features before filtering.
+        extracted_feature_names (list[str] | None): Names of extracted features.
+        filtered_feature_names (list[str] | None): Names of filtered features.
         labels (np.ndarray | None): Labels assigned to each solution in the batch.
         model_params (dict[str, float] | None): Parameters of the ODE model.
         bifurcation_amplitudes (torch.Tensor | None): Maximum absolute values along time dimension.
@@ -63,6 +66,9 @@ class Solution:
         self.time = time
         self.y = y  # shape: (N, B, S)
         self.features = features if features is not None else None
+        self.extracted_features: torch.Tensor | None = None
+        self.extracted_feature_names: list[str] | None = None
+        self.filtered_feature_names: list[str] | None = None
         self.labels = labels
         self.model_params = model_params
         self.bifurcation_amplitudes: torch.Tensor | None = None
@@ -79,13 +85,26 @@ class Solution:
 
         self.labels = labels
 
-    def set_features(self, features: torch.Tensor):
+    def set_extracted_features(self, features: torch.Tensor, names: list[str]):
+        """
+        Store extracted features before filtering.
+
+        :param features: Extracted feature tensor.
+        :param names: List of feature names.
+        """
+        self.extracted_features = features
+        self.extracted_feature_names = names
+
+    def set_features(self, features: torch.Tensor, names: list[str] | None = None):
         """
         Store features extracted from the trajectory.
 
-        :param features: A feature vector describing the solution.
+        :param features: A feature vector describing the solution (typically filtered).
+        :param names: Optional list of feature names (for filtered features).
         """
         self.features = features
+        if names is not None:
+            self.filtered_feature_names = names
 
     def get_summary(self) -> dict[str, Any]:
         """

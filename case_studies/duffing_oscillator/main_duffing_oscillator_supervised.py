@@ -17,6 +17,7 @@ def main():
         feature_extractor=setup["feature_extractor"],
         cluster_classifier=setup["cluster_classifier"],
         save_to="results",
+        feature_selector=None,
     )
 
     basin_stability = bse.estimate_bs()

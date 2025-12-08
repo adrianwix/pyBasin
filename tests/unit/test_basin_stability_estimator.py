@@ -28,6 +28,10 @@ class FinalStateExtractor(FeatureExtractor):
     def extract_features(self, solution: Solution) -> torch.Tensor:
         return solution.y[-1, :, :]
 
+    @property
+    def feature_names(self) -> list[str]:
+        return ["final_state_0"]
+
 
 def test_basin_stability_estimator_basic():
     params: LinearParams = {"k": -1.0}
@@ -52,6 +56,7 @@ def test_basin_stability_estimator_basic():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=knn,
+        feature_selector=None,
     )
 
     bs_vals = bse.estimate_bs(parallel_integration=False)
@@ -91,6 +96,7 @@ def test_basin_stability_multiple_classes():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=knn,
+        feature_selector=None,
     )
 
     bs_vals = bse.estimate_bs(parallel_integration=False)

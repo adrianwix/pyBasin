@@ -9,7 +9,6 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import Input, NoUpdate, Output, State, callback, dcc, html, no_update
 
-from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.plotters.base_page import BasePage
 from pybasin.plotters.ids import IDs
 from pybasin.plotters.trajectory_modal import SELECTED_SAMPLE_DATA, TrajectoryModal
@@ -30,6 +29,7 @@ class FeatureSpacePage(BasePage):
     Y_SELECT = IDs.id(IDs.FEATURE_SPACE, "y-select")
     Y_CONTAINER = IDs.id(IDs.FEATURE_SPACE, "y-container")
     LABEL_SELECT = IDs.id(IDs.FEATURE_SPACE, "label-select")
+    FEATURE_TYPE_SWITCH = IDs.id(IDs.FEATURE_SPACE, "feature-type-switch")
     PLOT = IDs.id(IDs.FEATURE_SPACE, "plot")
     CONTROLS = IDs.id(IDs.FEATURE_SPACE, "controls")
 
@@ -54,49 +54,59 @@ class FeatureSpacePage(BasePage):
     def nav_icon(self) -> str:
         return "📈"
 
-    def get_feature_options(self) -> list[dict[str, str]]:
+    def get_feature_options(self, use_filtered: bool = True) -> list[dict[str, str]]:
         """Get dropdown options for feature selection.
 
         Returns a list of options with human-readable labels combining
         state labels and feature names (e.g., "ω - log_delta").
+
+        Args:
+            use_filtered: If True, use filtered features. If False, use extracted features.
         """
-        extractor = self.bse.feature_extractor
+        if self.bse.solution is None:
+            return [{"value": "0", "label": "Feature 0"}]
 
-        if isinstance(extractor, JaxFeatureExtractor):
-            try:
-                raw_names = extractor.feature_names
-            except RuntimeError:
-                return [{"value": "0", "label": "Feature 0"}]
+        # Determine which feature names to use
+        if use_filtered and self.bse.solution.filtered_feature_names is not None:
+            feature_names = self.bse.solution.filtered_feature_names
+        elif not use_filtered and self.bse.solution.extracted_feature_names is not None:
+            feature_names = self.bse.solution.extracted_feature_names
+        else:
+            return [{"value": "0", "label": "Feature 0"}]
 
-            options: list[dict[str, str]] = []
-
-            for idx, raw_name in enumerate(raw_names):
-                parts = raw_name.split("__", 1)
-                if len(parts) == 2 and parts[0].startswith("state_"):
-                    try:
-                        state_idx = int(parts[0].replace("state_", ""))
-                        state_label = self.get_state_label(state_idx)
-                        feature_name = parts[1]
-                        display_label = f"{state_label} - {feature_name}"
-                    except ValueError:
-                        display_label = raw_name
-                else:
+        # Format feature names with state labels
+        options: list[dict[str, str]] = []
+        for idx, raw_name in enumerate(feature_names):
+            parts = raw_name.split("__", 1)
+            if len(parts) == 2 and parts[0].startswith("state_"):
+                try:
+                    state_idx = int(parts[0].replace("state_", ""))
+                    state_label = self.get_state_label(state_idx)
+                    feature_name = parts[1]
+                    display_label = f"{state_label} - {feature_name}"
+                except ValueError:
                     display_label = raw_name
+            else:
+                display_label = raw_name
 
-                options.append({"value": str(idx), "label": display_label})
+            options.append({"value": str(idx), "label": display_label})
 
-            return options if options else [{"value": "0", "label": "Feature 0"}]
+        return options if options else [{"value": "0", "label": "Feature 0"}]
 
-        if self.bse.solution is not None and self.bse.solution.features is not None:
-            n_features = self.bse.solution.features.shape[1]
-            return [{"value": str(i), "label": f"Feature {i}"} for i in range(n_features)]
+    def get_n_features(self, use_filtered: bool = True) -> int:
+        """Get the number of available features.
 
-        return [{"value": "0", "label": "Feature 0"}]
+        Args:
+            use_filtered: If True, count filtered features. If False, count extracted features.
+        """
+        if self.bse.solution is None:
+            return 0
 
-    def get_n_features(self) -> int:
-        """Get the number of available features."""
-        if self.bse.solution is not None and self.bse.solution.features is not None:
+        if use_filtered and self.bse.solution.features is not None:
             return self.bse.solution.features.shape[1]
+        elif not use_filtered and self.bse.solution.extracted_features is not None:
+            return self.bse.solution.extracted_features.shape[1]
+
         return 0
 
     def get_label_options(self) -> list[dict[str, str]]:
@@ -118,8 +128,9 @@ class FeatureSpacePage(BasePage):
 
         :return: Div containing controls and scatter plot.
         """
-        feature_options = self.get_feature_options()
-        n_features = self.get_n_features()
+        use_filtered = self.options.use_filtered
+        feature_options = self.get_feature_options(use_filtered=use_filtered)
+        n_features = self.get_n_features(use_filtered=use_filtered)
         all_labels = self.get_all_labels()
 
         # Apply label filtering from options
@@ -132,6 +143,13 @@ class FeatureSpacePage(BasePage):
         y_value = str(y_feature) if y_feature is not None and n_features > 1 else "0"
 
         feature_select_data = cast(Sequence[str], feature_options)
+
+        # Show feature type switch only if extracted features exist
+        show_feature_switch = (
+            self.bse.solution is not None
+            and self.bse.solution.extracted_features is not None
+            and self.bse.solution.features is not None
+        )
 
         return html.Div(
             [
@@ -165,6 +183,14 @@ class FeatureSpacePage(BasePage):
                                     value=selected_labels,
                                     w=300,
                                 ),
+                                dmc.Switch(
+                                    id=self.FEATURE_TYPE_SWITCH,
+                                    label="Use Filtered Features",
+                                    checked=use_filtered,
+                                    size="md",
+                                )
+                                if show_feature_switch
+                                else html.Div(),
                             ],
                             gap="md",
                         ),
@@ -237,6 +263,7 @@ class FeatureSpacePage(BasePage):
         x_feature: int = 0,
         y_feature: int | None = None,
         selected_labels: list[str] | None = None,
+        use_filtered: bool = True,
         **kwargs: object,
     ) -> go.Figure:
         """Build the feature space scatter plot.
@@ -245,11 +272,19 @@ class FeatureSpacePage(BasePage):
             x_feature: Feature index for x-axis.
             y_feature: Feature index for y-axis. If None, creates a 1D strip plot.
             selected_labels: List of label strings to display. If None, shows all.
+            use_filtered: If True, use filtered features. If False, use extracted features.
         """
-        if self.bse.solution is None or self.bse.solution.features is None:
+        if self.bse.solution is None:
             return go.Figure()
 
-        features = self.bse.solution.features.cpu().numpy()
+        # Select which features to use
+        if use_filtered and self.bse.solution.features is not None:
+            features = self.bse.solution.features.cpu().numpy()
+        elif not use_filtered and self.bse.solution.extracted_features is not None:
+            features = self.bse.solution.extracted_features.cpu().numpy()
+        else:
+            return go.Figure()
+
         labels = np.array(self.bse.solution.labels)
         unique_labels = np.unique(labels)
         n_features = features.shape[1]
@@ -260,7 +295,7 @@ class FeatureSpacePage(BasePage):
                 [label for label in unique_labels if str(label) in selected_labels]
             )
 
-        feature_options = self.get_feature_options()
+        feature_options = self.get_feature_options(use_filtered=use_filtered)
 
         x_label = (
             feature_options[x_feature]["label"]
@@ -385,22 +420,28 @@ def set_page_instance(page: FeatureSpacePage) -> None:
         Input(FeatureSpacePage.X_SELECT, "value"),
         Input(FeatureSpacePage.Y_SELECT, "value"),
         Input(FeatureSpacePage.LABEL_SELECT, "value"),
+        Input(FeatureSpacePage.FEATURE_TYPE_SWITCH, "checked"),
     ],
     prevent_initial_call=True,
 )
 def update_feature_space_figure(
-    x_feature: str, y_feature: str, selected_labels: list[str]
+    x_feature: str, y_feature: str, selected_labels: list[str], use_filtered: bool | None
 ) -> go.Figure:
     """Update figure when axis or label selection changes."""
     if _page_instance is None:
         return go.Figure()
 
-    n_features = _page_instance.get_n_features()
+    # Default to True if switch doesn't exist
+    if use_filtered is None:
+        use_filtered = True
+
+    n_features = _page_instance.get_n_features(use_filtered=use_filtered)
     y_feat = int(y_feature) if n_features > 1 else None
     return _page_instance.build_figure(
         x_feature=int(x_feature),
         y_feature=y_feat,
         selected_labels=selected_labels,
+        use_filtered=use_filtered,
     )
 
 
