@@ -48,6 +48,7 @@ class TemplateTimeSeriesPage(BasePage):
         bse: "BasinStabilityEstimator",
         state_labels: dict[int, str] | None = None,
         options: TemplateTimeSeriesOptions | None = None,
+        id_suffix: str | None = None,
     ):
         super().__init__(bse, state_labels)
         self.options = options or TemplateTimeSeriesOptions()

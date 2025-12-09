@@ -105,7 +105,31 @@ class TemplateTimeSeriesOptions(TemplateSelectionOptions):
     time_range_percent: float = 0.15
 
 
-ViewType = Literal["bs", "state", "feature", "phase-2d", "phase-3d", "template-ts"]
+@dataclass
+class ParamOverviewOptions:
+    """Options for the Parameter Overview page."""
+
+    x_scale: Literal["linear", "log"] = "linear"
+    selected_labels: list[str] | None = None
+
+
+@dataclass
+class ParamBifurcationOptions:
+    """Options for the Parameter Bifurcation page."""
+
+    selected_dofs: list[int] | None = None
+
+
+ViewType = Literal[
+    "bs",
+    "state",
+    "feature",
+    "phase-2d",
+    "phase-3d",
+    "template-ts",
+    "param-overview",
+    "param-bifurcation",
+]
 
 
 @dataclass
@@ -130,3 +154,5 @@ class InteractivePlotterOptions:
     feature_space: FeatureSpaceOptions = field(default_factory=FeatureSpaceOptions)
     phase_plot: PhasePlotOptions = field(default_factory=PhasePlotOptions)
     template_ts: TemplateTimeSeriesOptions = field(default_factory=TemplateTimeSeriesOptions)
+    param_overview: ParamOverviewOptions = field(default_factory=ParamOverviewOptions)
+    param_bifurcation: ParamBifurcationOptions = field(default_factory=ParamBifurcationOptions)

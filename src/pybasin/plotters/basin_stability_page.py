@@ -17,6 +17,20 @@ class BasinStabilityPage(BasePage):
     PLOT = IDs.id(IDs.BASIN_STABILITY, "plot")
     INFO_PANEL = IDs.id(IDs.BASIN_STABILITY, "info-panel")
 
+    def __init__(
+        self,
+        bse: object,
+        state_labels: dict[int, str] | None = None,
+        id_suffix: str = "",
+    ):
+        super().__init__(bse, state_labels)  # type: ignore[arg-type]
+        self.id_suffix = id_suffix
+
+        # Override class-level IDs with instance-specific ones
+        if id_suffix:
+            self.PLOT = f"{IDs.id(IDs.BASIN_STABILITY, 'plot')}-{id_suffix}"
+            self.INFO_PANEL = f"{IDs.id(IDs.BASIN_STABILITY, 'info-panel')}-{id_suffix}"
+
     @property
     def page_id(self) -> str:
         return IDs.BASIN_STABILITY

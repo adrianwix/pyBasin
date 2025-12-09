@@ -33,9 +33,18 @@ class StateSpacePage(BasePage):
         bse: object,
         state_labels: dict[int, str] | None = None,
         options: StateSpaceOptions | None = None,
+        id_suffix: str = "",
     ):
         super().__init__(bse, state_labels)  # type: ignore[arg-type]
         self.options = options or StateSpaceOptions()
+        self.id_suffix = id_suffix
+
+        # Override class-level IDs with instance-specific ones
+        if id_suffix:
+            self.X_SELECT = f"{IDs.id(IDs.STATE_SPACE, 'x-select')}-{id_suffix}"
+            self.Y_SELECT = f"{IDs.id(IDs.STATE_SPACE, 'y-select')}-{id_suffix}"
+            self.PLOT = f"{IDs.id(IDs.STATE_SPACE, 'plot')}-{id_suffix}"
+            self.CONTROLS = f"{IDs.id(IDs.STATE_SPACE, 'controls')}-{id_suffix}"
 
     @property
     def page_id(self) -> str:

@@ -57,6 +57,7 @@ class PhasePlotPage(BasePage):
         state_labels: dict[int, str] | None = None,
         is_3d: bool = False,
         options: PhasePlotOptions | None = None,
+        id_suffix: str | None = None,
     ):
         super().__init__(bse, state_labels)  # type: ignore[arg-type]
         self.is_3d = is_3d

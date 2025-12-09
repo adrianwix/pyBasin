@@ -27,6 +27,8 @@ class IDs:
     PHASE_2D = "phase-2d"
     PHASE_3D = "phase-3d"
     TEMPLATE_TS = "template-ts"
+    PARAM_OVERVIEW = "param-overview"
+    PARAM_BIFURCATION = "param-bifurcation"
 
     # Shared component prefixes
     TRAJECTORY_MODAL = "trajectory-modal"
