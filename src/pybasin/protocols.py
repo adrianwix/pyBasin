@@ -30,6 +30,24 @@ class ODESystemProtocol(Protocol):
 
     params: Any
 
+    def to(self, device: Any) -> "ODESystemProtocol":
+        """Move the ODE system to the specified device.
+
+        For PyTorch-based systems, this moves the module to the device.
+        For JAX systems, this is a no-op (returns self).
+
+        Parameters
+        ----------
+        device : Any
+            The target device.
+
+        Returns
+        -------
+        ODESystemProtocol
+            The ODE system on the target device.
+        """
+        ...
+
     def get_str(self) -> str:
         """
         Returns a string representation of the ODE system with its parameters.
@@ -70,7 +88,9 @@ class SolverProtocol(Protocol):
     device: torch.device
     use_cache: bool
 
-    def integrate(self, ode_system: Any, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def integrate(
+        self, ode_system: ODESystemProtocol, y0: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Solve the ODE system and return the evaluation time points and solution.
 

@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-20 00:38:28",
+  "timestamp": "2025-12-09 14:37:01",
   "solver": "torchdiffeq_dopri5",
   "device": "cuda",
   "parallel": true,
   "n_samples": 10000,
   "completed_samples": 10000,
-  "elapsed_seconds": 30.52657611900213,
-  "time_per_integration_ms": 3.052657611900213,
+  "elapsed_seconds": 31.161898973999996,
+  "time_per_integration_ms": 3.1161898973999995,
   "integration_complete": true,
   "rtol": 1e-08,
   "atol": 1e-06,
@@ -44,5 +44,6 @@
       "pass": true
     }
   },
-  "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b"
+  "basin_stability_succeeded": true,
+  "git_commit": "c1b0c510a341048c891957599596c72fc16967f3"
 }

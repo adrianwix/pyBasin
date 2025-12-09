@@ -9,7 +9,7 @@ using JAX-native ODE systems.
 """
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import jax
 import jax.numpy as jnp
@@ -27,6 +27,7 @@ from jax import Array
 from pybasin.cache_manager import CacheManager
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
+from pybasin.protocols import ODESystemProtocol
 from pybasin.utils import resolve_folder
 
 
@@ -160,7 +161,7 @@ class JaxSolver:
         }
 
     def integrate(
-        self, ode_system: JaxODESystem[Any], y0: torch.Tensor
+        self, ode_system: ODESystemProtocol, y0: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Solve the ODE system and return the evaluation time points and solution.
@@ -213,7 +214,9 @@ class JaxSolver:
         else:
             print(f"    [{self.__class__.__name__}] Cache disabled - integrating...")
 
-        t_result_jax, y_result_jax = self._integrate_jax(ode_system, y0_jax, t_eval_jax)
+        # Cast to concrete type for internal implementation
+        ode_system_concrete = cast(JaxODESystem[Any], ode_system)
+        t_result_jax, y_result_jax = self._integrate_jax(ode_system_concrete, y0_jax, t_eval_jax)
         print(f"    [{self.__class__.__name__}] Integration complete")
 
         # Convert back to PyTorch

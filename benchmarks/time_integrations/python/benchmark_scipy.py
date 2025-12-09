@@ -24,25 +24,25 @@ from basin_stability_utils import (
 from scipy.integrate import solve_ivp
 
 
-def ode_pendulum(t, y, alpha, capital_t, capital_k):
+def ode_pendulum(t, y, alpha, torque, stiffness):
     """
     Damped driven pendulum ODE system (Scipy version)
 
-    dy/dt = [y[1], -alpha*y[1] + capital_t - capital_k*sin(y[0])]
+    dy/dt = [y[1], -alpha*y[1] + torque - stiffness*sin(y[0])]
 
     Parameters:
         t: time (scalar)
         y: state vector [phi, omega]
         alpha: dissipation coefficient
-        capital_t: constant angular acceleration
-        capital_k: stiffness coefficient (g/l)
+        torque: constant angular acceleration
+        stiffness: stiffness coefficient (g/l)
 
     Returns:
         dydt: derivative vector
     """
     phi, omega = y
     dphi_dt = omega
-    domega_dt = -alpha * omega + capital_t - capital_k * np.sin(phi)
+    domega_dt = -alpha * omega + torque - stiffness * np.sin(phi)
     return np.array([dphi_dt, domega_dt])
 
 
@@ -84,8 +84,8 @@ def run_benchmark(config, method="DOP853", max_time=120):
 
     # System parameters
     alpha = config["ode_parameters"]["alpha"]
-    capital_t = config["ode_parameters"]["T"]
-    capital_k = config["ode_parameters"]["K"]
+    torque = config["ode_parameters"]["T"]
+    stiffness = config["ode_parameters"]["K"]
 
     # Time integration settings
     t_start = config["time_integration"]["t_start"]
@@ -123,7 +123,7 @@ def run_benchmark(config, method="DOP853", max_time=120):
     # Define ODE function wrapper (similar to SklearnParallelSolver)
     def ode_func(t, y):
         """Wrapper for ODE function to match scipy.integrate.solve_ivp signature"""
-        return ode_pendulum(float(t), np.asarray(y), alpha, capital_t, capital_k)
+        return ode_pendulum(float(t), np.asarray(y), alpha, torque, stiffness)
 
     # Run benchmark - serial execution similar to SklearnParallelSolver single trajectory mode
     print(f"Starting integration (method={method}, max_time={max_time}s)...")

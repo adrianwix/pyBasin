@@ -39,9 +39,9 @@ class TestFriction:
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=props.get("solver"),
+            feature_extractor=props.get("feature_extractor"),
+            cluster_classifier=props.get("cluster_classifier"),
             feature_selector=None,
         )
 
@@ -97,13 +97,20 @@ class TestFriction:
             adaptative_parameter_name='ode_system.params["v_d"]',
         )
 
+        solver = props.get("solver")
+        feature_extractor = props.get("feature_extractor")
+        cluster_classifier = props.get("cluster_classifier")
+        assert solver is not None
+        assert feature_extractor is not None
+        assert cluster_classifier is not None
+
         as_bse = ASBasinStabilityEstimator(
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=solver,
+            feature_extractor=feature_extractor,
+            cluster_classifier=cluster_classifier,
             as_params=as_params,
         )
 

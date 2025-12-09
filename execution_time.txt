@@ -160,3 +160,6 @@
 2025-12-02 17:59:35 - main_lorenz.py: 1.7503132820129395 seconds
 2025-12-02 18:00:00 - main_lorenz.py: 1.673166275024414 seconds
 2025-12-02 21:33:31 - main_lorenz.py: 5.7439188957214355 seconds
+2025-12-09 00:04:04 - main_pendulum_case_1_with_defaults.py: 33.35646033287048 seconds
+2025-12-09 00:09:51 - main_pendulum_case_1_with_defaults.py: 30.345778226852417 seconds
+2025-12-09 00:13:06 - main_pendulum_case_1_with_defaults.py: 29.539242267608643 seconds

@@ -758,7 +758,6 @@ class TestParameterizedAugmentedDickeyFuller:
     def test_augmented_dickey_fuller(self, sample_data, sample_data_jax, attr):
         result_list = list(fc.augmented_dickey_fuller(sample_data, [{"attr": attr}]))
         if result_list:
-            expected = result_list[0][1]
             result = float(jax_fc.augmented_dickey_fuller(sample_data_jax, attr)[0, 0])
             if attr == "usedlag":
                 assert result >= 0
@@ -805,8 +804,7 @@ class TestParameterizedSpktWelchDensity:
 
     @pytest.mark.parametrize("coeff", [2, 5, 8])
     def test_spkt_welch_density(self, sample_data, sample_data_jax, coeff):
-        result_list = list(fc.spkt_welch_density(sample_data, [{"coeff": coeff}]))
-        expected = result_list[0][1] if result_list else 0.0
+        list(fc.spkt_welch_density(sample_data, [{"coeff": coeff}]))
         result = float(jax_fc.spkt_welch_density(sample_data_jax, coeff)[0, 0])
         assert np.isfinite(result)
         assert result >= 0

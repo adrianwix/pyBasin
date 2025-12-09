@@ -33,9 +33,9 @@ class TestLorenz:
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=props.get("solver"),
+            feature_extractor=props.get("feature_extractor"),
+            cluster_classifier=props.get("cluster_classifier"),
             feature_selector=None,
         )
 
@@ -87,13 +87,20 @@ class TestLorenz:
             adaptative_parameter_name='ode_system.params["sigma"]',
         )
 
+        solver = props.get("solver")
+        feature_extractor = props.get("feature_extractor")
+        cluster_classifier = props.get("cluster_classifier")
+        assert solver is not None
+        assert feature_extractor is not None
+        assert cluster_classifier is not None
+
         as_bse = ASBasinStabilityEstimator(
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=solver,
+            feature_extractor=feature_extractor,
+            cluster_classifier=cluster_classifier,
             as_params=as_params,
         )
 
@@ -166,13 +173,20 @@ class TestLorenz:
             adaptative_parameter_name="n",  # Varying the number of samples
         )
 
+        solver = props.get("solver")
+        feature_extractor = props.get("feature_extractor")
+        cluster_classifier = props.get("cluster_classifier")
+        assert solver is not None
+        assert feature_extractor is not None
+        assert cluster_classifier is not None
+
         as_bse = ASBasinStabilityEstimator(
             n=props["n"],  # Initial value, will be overridden
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=solver,
+            feature_extractor=feature_extractor,
+            cluster_classifier=cluster_classifier,
             as_params=as_params,
         )
 
@@ -300,9 +314,9 @@ class TestLorenz:
             n=200,
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=props.get("solver"),
+            feature_extractor=props.get("feature_extractor"),
+            cluster_classifier=props.get("cluster_classifier"),
             feature_selector=None,
         )
 
@@ -379,14 +393,21 @@ class TestLorenz:
             adaptative_parameter_name="solver.rtol",
         )
 
+        solver = props.get("solver")
+        feature_extractor = props.get("feature_extractor")
+        cluster_classifier = props.get("cluster_classifier")
+        assert solver is not None
+        assert feature_extractor is not None
+        assert cluster_classifier is not None
+
         # Use N=20000 to match MATLAB study
         as_bse = ASBasinStabilityEstimator(
             n=20000,
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=solver,
+            feature_extractor=feature_extractor,
+            cluster_classifier=cluster_classifier,
             as_params=as_params,
             save_to=None,  # Don't save during test
         )

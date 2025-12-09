@@ -25,13 +25,24 @@ def main():
         adaptative_parameter_name="n",  # Varying the number of samples
     )
 
+    solver = props.get("solver")
+    feature_extractor = props.get("feature_extractor")
+    cluster_classifier = props.get("cluster_classifier")
+    assert solver is not None, "solver is required for ASBasinStabilityEstimator"
+    assert feature_extractor is not None, (
+        "feature_extractor is required for ASBasinStabilityEstimator"
+    )
+    assert cluster_classifier is not None, (
+        "cluster_classifier is required for ASBasinStabilityEstimator"
+    )
+
     bse = ASBasinStabilityEstimator(
         n=props["n"],  # Initial value, will be overridden by adaptive study
         ode_system=props["ode_system"],
         sampler=props["sampler"],
-        solver=props["solver"],
-        feature_extractor=props["feature_extractor"],
-        cluster_classifier=props["cluster_classifier"],
+        solver=solver,
+        feature_extractor=feature_extractor,
+        cluster_classifier=cluster_classifier,
         as_params=as_params,
         save_to="results_hyperparameters",
     )

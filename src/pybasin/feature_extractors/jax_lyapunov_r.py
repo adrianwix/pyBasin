@@ -368,11 +368,11 @@ def _ransac_line_fit(
 
     final_slope = jnp.where(
         jnp.sum(inlier_mask) >= 2,
-        _poly_line_fit(ks, div_traj, inlier_mask),
+        _poly_line_fit(ks, div_traj, inlier_mask),  # type: ignore[arg-type]
         best_slope,
     )
 
-    final_slope = jnp.where(n_finite >= 2, final_slope, jnp.nan)
+    final_slope = jnp.where(n_finite >= 2, final_slope, jnp.nan)  # type: ignore[arg-type]
 
     return final_slope
 

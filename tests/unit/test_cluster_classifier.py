@@ -30,7 +30,7 @@ class SimpleFeatureExtractor(FeatureExtractor):
 
     @property
     def feature_names(self) -> list[str]:
-        return [f"final_state_{i}" for i in range(solution.y.shape[-1])]
+        return [f"final_state_{i}" for i in range(2)]
 
 
 def test_knn_classifier_fit_predict():

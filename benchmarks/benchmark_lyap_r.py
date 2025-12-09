@@ -24,7 +24,6 @@ warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 
 import jax
 import jax.numpy as jnp
-from jax import random
 import nolds
 import numpy as np
 

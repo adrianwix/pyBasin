@@ -16,8 +16,8 @@ from jax import Array
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_extractors.jax_feature_calculators import (
     ALL_FEATURE_FUNCTIONS,
-    FCParameters,
     JAX_MINIMAL_FC_PARAMETERS,
+    FCParameters,
     get_feature_names_from_config,
 )
 from pybasin.feature_extractors.jax_feature_utilities import impute, impute_extreme
@@ -148,10 +148,10 @@ class JaxFeatureExtractor(FeatureExtractor):
 
             def extract_no_features(x: Array) -> Array:
                 batch_size = x.shape[1]
-                return jnp.zeros((batch_size, 0), dtype=jnp.float32)
+                return jnp.zeros((batch_size, 0), dtype=jnp.float32)  # type: ignore[misc]
 
             if self.use_jit:
-                return jax.jit(extract_no_features)
+                return jax.jit(extract_no_features)  # type: ignore[misc]
             return extract_no_features
 
         if self._is_uniform_config():
@@ -172,7 +172,7 @@ class JaxFeatureExtractor(FeatureExtractor):
                         feature_funcs.append((func, params))
 
             def extract_uniform(x: Array) -> Array:
-                x_selected = x[:, :, jnp.array(state_indices)]
+                x_selected = x[:, :, jnp.array(state_indices)]  # type: ignore[misc]
                 feature_values: list[Array] = []
 
                 for feature_func, params in feature_funcs:

@@ -15,9 +15,12 @@ from pybasin.feature_extractors import TorchFeatureExtractor
 from pybasin.feature_extractors.default_feature_selector import DefaultFeatureSelector
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
+from pybasin.jax_ode_system import JaxODESystem
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
+from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers.jax_solver import JaxSolver
 from pybasin.utils import (
     NumpyEncoder,
     extract_amplitudes,
@@ -48,7 +51,7 @@ class BasinStabilityEstimator:
         n: int,
         ode_system: ODESystemProtocol,
         sampler: Sampler,
-        solver: SolverProtocol,
+        solver: SolverProtocol | None = None,
         feature_extractor: FeatureExtractor | None = None,
         cluster_classifier: ClusterClassifier | None = None,
         feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
@@ -61,6 +64,9 @@ class BasinStabilityEstimator:
         :param ode_system: The ODE system model (ODESystem or JaxODESystem).
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
+                      If None, automatically instantiates JaxSolver for JaxODESystem or
+                      TorchDiffEqSolver for ODESystem with time_span=(0, 1000), n_steps=1000,
+                      and device from sampler.
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
                                  If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
         :param cluster_classifier: The ClusterClassifier object to assign labels. If None, defaults
@@ -70,13 +76,27 @@ class BasinStabilityEstimator:
                                 Accepts any sklearn transformer (VarianceThreshold, SelectKBest, etc.) or Pipeline.
         :param save_to: Optional file path to save results.
         """
-        self.n = int(
-            n
-        )  # Ensure n is always an int (handles numpy.float64 from adaptive parameters)
+        self.n = int(n)
         self.ode_system = ode_system
         self.sampler = sampler
-        self.solver = solver
         self.save_to = save_to
+
+        if solver is not None:
+            self.solver = solver
+        elif isinstance(ode_system, JaxODESystem):
+            self.solver = JaxSolver(
+                time_span=(0, 1000),
+                n_steps=1000,
+                device=str(sampler.device),
+                use_cache=True,
+            )
+        else:
+            self.solver = TorchDiffEqSolver(
+                time_span=(0, 1000),
+                n_steps=1000,
+                device=str(sampler.device),
+                use_cache=True,
+            )
 
         # Initialize feature selector
         # Note: _USE_DEFAULT sentinel distinguishes "not specified" from "None" (disabled)
@@ -219,12 +239,8 @@ class BasinStabilityEstimator:
             # Run ONLY integrations in parallel (not feature extraction)
             # This ensures the scaler is fitted on main data first for consistent normalization
             with ThreadPoolExecutor(max_workers=2) as executor:
-                # Submit main integration
-                main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)
+                main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)  # type: ignore[arg-type]
 
-                # Submit template integration only (not full classifier fitting)
-                # Note: integrate_templates uses classifier's own solver if available,
-                # otherwise falls back to the passed solver
                 template_future = executor.submit(
                     self.cluster_classifier.integrate_templates,  # type: ignore[arg-type,misc]
                     self.solver,
@@ -254,7 +270,7 @@ class BasinStabilityEstimator:
 
             print("  Step 2b: Integrating sampled initial conditions...")
             t2b_start = time.perf_counter()
-            t, y = self.solver.integrate(self.ode_system, self.y0)
+            t, y = self.solver.integrate(self.ode_system, self.y0)  # type: ignore[arg-type]
             t2b_elapsed = time.perf_counter() - t2b_start
             print(f"    Main trajectory shape: {y.shape}")
             print(f"    Main integration complete in {t2b_elapsed:.4f}s")
@@ -281,48 +297,69 @@ class BasinStabilityEstimator:
         # Get feature names and store extracted features
         feature_names = self._get_feature_names()
         self.solution.set_extracted_features(features, feature_names)
+        t4_elapsed = time.perf_counter() - t4
+        print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
 
-        # Apply feature filtering if configured
+        # Step 5: Feature filtering
+        print("\nSTEP 5: Feature Filtering")
+        t5 = time.perf_counter()
         if self._feature_selector is not None:
             features_filtered, filtered_names = self._apply_feature_filtering(
                 features, feature_names
             )
             self.solution.set_features(features_filtered, filtered_names)
             self._filtered_feature_names = filtered_names
+            features = features_filtered
         else:
             self.solution.set_features(features, feature_names)
+            print("  No feature filtering configured")
+        t5_elapsed = time.perf_counter() - t5
+        print(f"  Feature filtering complete in {t5_elapsed:.4f}s")
 
-        t4_elapsed = time.perf_counter() - t4
-        print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
+        # Show sample of filtered features (first IC, up to 10 features)
+        if self.solution.features is not None and self.solution.features.shape[0] > 0:
+            n_features_to_show = min(10, self.solution.features.shape[1])
+            if n_features_to_show > 0:
+                print(f"\n  Sample of first {n_features_to_show} filtered features (first IC):")
+                feature_names_filtered = (
+                    self.solution.filtered_feature_names[:n_features_to_show]
+                    if self.solution.filtered_feature_names
+                    else []
+                )
+                feature_values: list[float] = (
+                    self.solution.features[0, :n_features_to_show].cpu().numpy().tolist()
+                )
+                for name, value in zip(feature_names_filtered, feature_values, strict=False):
+                    print(f"    {name}: {value:.6f}")
 
-        # Step 4b: Fit classifier with template features (using already-fitted scaler)
+        # Step 5b: Fit classifier with template features (using already-fitted scaler)
         if isinstance(self.cluster_classifier, SupervisedClassifier):  # type: ignore[type-arg]
-            print("\nSTEP 4b: Fitting Classifier")
-            t4b = time.perf_counter()
+            print("\nSTEP 5b: Fitting Classifier")
+            t5b = time.perf_counter()
             self.cluster_classifier.fit_with_features(  # type: ignore[misc]
                 self.feature_extractor,
                 feature_selector=self._feature_selector,
             )
-            t4b_elapsed = time.perf_counter() - t4b
-            print(f"  Classifier fitted in {t4b_elapsed:.4f}s")
+            t5b_elapsed = time.perf_counter() - t5b
+            print(f"  Classifier fitted in {t5b_elapsed:.4f}s")
 
-        # Step 5: Classification
-        print("\nSTEP 5: Classification")
-        t5 = time.perf_counter()
+        # Step 6: Classification
+        print("\nSTEP 6: Classification")
+        t6 = time.perf_counter()
 
         # Convert features to numpy for classifier
-        t5_pred = time.perf_counter()
+        t6_pred = time.perf_counter()
         features_np = features.detach().cpu().numpy()
         labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
         self.solution.set_labels(labels)
-        t5_pred_elapsed = time.perf_counter() - t5_pred
-        t5_elapsed = time.perf_counter() - t5
-        print(f"  Classification complete in {t5_elapsed:.4f}s")
-        print(f"  Prediction time: {t5_pred_elapsed:.4f}s")
+        t6_pred_elapsed = time.perf_counter() - t6_pred
+        t6_elapsed = time.perf_counter() - t6
+        print(f"  Classification complete in {t6_elapsed:.4f}s")
+        print(f"  Prediction time: {t6_pred_elapsed:.4f}s")
 
-        # Step 6: Compute basin stability
-        print("\nSTEP 6: Computing Basin Stability")
-        t6 = time.perf_counter()
+        # Step 7: Computing Basin Stability
+        print("\nSTEP 7: Computing Basin Stability")
+        t7 = time.perf_counter()
         unique_labels, counts = np.unique(labels, return_counts=True)
 
         self.bs_vals = {str(label): 0.0 for label in unique_labels}
@@ -336,7 +373,7 @@ class BasinStabilityEstimator:
             self.bs_vals[str(label)] = fraction
             print(f"  {label}: {fraction:.4f}")
 
-        t6_elapsed = time.perf_counter() - t6
+        t7_elapsed = time.perf_counter() - t7
         print(f"  Basin stability computed in {t6_elapsed:.4f}s")
 
         # Summary
@@ -365,10 +402,13 @@ class BasinStabilityEstimator:
             f"  4. Features:           {t4_elapsed:8.4f}s  ({t4_elapsed / total_elapsed * 100:5.1f}%)"
         )
         print(
-            f"  5. Classification:     {t5_elapsed:8.4f}s  ({t5_elapsed / total_elapsed * 100:5.1f}%)"
+            f"  5. Filtering:          {t5_elapsed:8.4f}s  ({t5_elapsed / total_elapsed * 100:5.1f}%)"
         )
         print(
-            f"  6. BS Computation:     {t6_elapsed:8.4f}s  ({t6_elapsed / total_elapsed * 100:5.1f}%)"
+            f"  6. Classification:     {t6_elapsed:8.4f}s  ({t6_elapsed / total_elapsed * 100:5.1f}%)"
+        )
+        print(
+            f"  7. BS Computation:     {t7_elapsed:8.4f}s  ({t7_elapsed / total_elapsed * 100:5.1f}%)"
         )
 
         return self.bs_vals

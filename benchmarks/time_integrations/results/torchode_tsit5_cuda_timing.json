@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-20 00:09:46",
+  "timestamp": "2025-12-09 14:56:33",
   "solver": "torchode_tsit5",
   "device": "cuda",
   "parallel": true,
   "n_samples": 10000,
   "completed_samples": 10000,
-  "elapsed_seconds": 112.78531520799879,
-  "time_per_integration_ms": 11.278531520799879,
+  "elapsed_seconds": 113.43346291300008,
+  "time_per_integration_ms": 11.343346291300008,
   "integration_complete": true,
   "rtol": 1e-08,
   "atol": 1e-06,
@@ -44,5 +44,6 @@
       "pass": true
     }
   },
-  "git_commit": "4bc1a4b43d129b10af20966dac5c8f512710602b"
+  "basin_stability_succeeded": true,
+  "git_commit": "c1b0c510a341048c891957599596c72fc16967f3"
 }

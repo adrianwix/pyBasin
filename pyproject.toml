@@ -42,6 +42,7 @@ dependencies = [
     "dash>=2.14.0",
     "dash-mantine-components>=0.14.0",
     "hdbscan>=0.8.40",
+    "jaxtyping>=0.3.3",
 ]
 
 [project.optional-dependencies]
@@ -87,6 +88,18 @@ ignore = ["E501"] # Line length handled by formatter
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"] # Allow unused imports in __init__.py
+"benchmarks/*.py" = [
+    "E402",
+] # Allow module level imports after code for environment setup
+"src/pybasin/feature_extractors/correlation_selector.py" = [
+    "N803",
+] # X is standard for sklearn-compatible transformers
+"src/pybasin/feature_extractors/torch_batched_calculators.py" = [
+    "N806",
+] # V, VtV, Vtv are standard mathematical notation
+"src/pybasin/feature_extractors/torch_feature_calculators.py" = [
+    "N806",
+] # V, VtV, Vtv are standard mathematical notation
 
 [tool.ruff.format]
 # Use Ruff's formatter (similar to Black)

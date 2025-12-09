@@ -48,8 +48,8 @@ def benchmark_template_solving():
     props = setup_pendulum_system()
 
     ode_system = props["ode_system"]
-    solver = props["solver"]
-    cluster_classifier = cast(SupervisedClassifier, props["cluster_classifier"])
+    solver = props.get("solver")
+    cluster_classifier = cast(SupervisedClassifier, props.get("cluster_classifier"))
 
     print(f"\nDevice: {solver.device}")
     print(f"Number of templates: {len(cluster_classifier.initial_conditions)}")

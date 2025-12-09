@@ -161,7 +161,7 @@ class SupervisedClassifier[P](ClusterClassifier):
                     "This should not happen if the selector was fitted on main data."
                 )
 
-            features = torch.from_numpy(features_filtered_np).to(
+            features = torch.from_numpy(features_filtered_np).to(  # type: ignore[misc]
                 dtype=features.dtype, device=features.device
             )
 

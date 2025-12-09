@@ -867,7 +867,6 @@ def percentage_of_reoccurring_values_to_all_values(x: Array) -> Array:
     Vectorized: Uses sorting to count unique values that reoccur.
     This returns the fraction of unique values that appear more than once.
     """
-    n = x.shape[0]
     sorted_vals = jnp.sort(x, axis=0)
     # is_same: 1 if current equals previous
     is_same = sorted_vals[1:] == sorted_vals[:-1]  # (N-1, B, S)
@@ -1472,6 +1471,7 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "mean_n_absolute_max": [{"number_of_maxima": n} for n in [3, 5, 7]],
 }
 
+
 def _format_feature_name(feature_name: str, params: dict[str, object] | None) -> str:
     """Format feature name with parameters in tsfresh naming convention.
 
@@ -1545,7 +1545,7 @@ def get_feature_names_from_config(
     fc_parameters: FCParameters,
 ) -> list[str]:
     """
-    Get list of feature names that would be extracted with given configuration. 
+    Get list of feature names that would be extracted with given configuration.
     Used by the InteractivePlotter to display the features.
 
     Args:
@@ -1604,5 +1604,3 @@ JAX_MINIMAL_FC_PARAMETERS: FCParameters = {
     "delta": None,
     "log_delta": None,
 }
-
-

@@ -167,7 +167,7 @@ def main():
         if arg == "--tsfresh-only":
             run_jax = False
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  Samples (n): {n}")
     print(f"  Run JAX: {run_jax}")
     print(f"  Run tsfresh: {run_tsfresh}")

@@ -22,8 +22,8 @@ Usage:
 
 import os
 import sys
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 # Suppress pandas FutureWarning from tsfresh
 warnings.filterwarnings("ignore", category=FutureWarning, module="tsfresh")
@@ -41,8 +41,8 @@ import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 from tsfresh import extract_features
-from tsfresh.feature_extraction import feature_calculators as fc
 from tsfresh.feature_extraction import ComprehensiveFCParameters
+from tsfresh.feature_extraction import feature_calculators as fc
 
 from pybasin.feature_extractors.jax_feature_calculators import (
     ALL_FEATURE_FUNCTIONS,
@@ -335,9 +335,9 @@ def time_tsfresh_feature(func_name, x_np, kwargs, n_batches, n_runs=3):
         # Test call
         if "param" in kwargs:
             # Generator-style function
-            result = list(tsfresh_fn(x_np, kwargs["param"]))
+            list(tsfresh_fn(x_np, kwargs["param"]))
         else:
-            result = tsfresh_fn(x_np, **kwargs)
+            tsfresh_fn(x_np, **kwargs)
 
         # Time n_batches calls
         times = []

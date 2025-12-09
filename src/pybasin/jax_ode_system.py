@@ -6,7 +6,7 @@ enabling JIT compilation and efficient GPU execution without PyTorch callbacks.
 """
 
 from abc import ABC, abstractmethod
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from jax import Array
 
@@ -102,6 +102,23 @@ class JaxODESystem[P](ABC):
             A human-readable description of the ODE system and its parameters.
         """
         pass
+
+    def to(self, device: Any) -> "JaxODESystem[P]":
+        """No-op for JAX systems - device handling is done on tensors.
+
+        This method exists for API compatibility with PyTorch-based ODESystem.
+
+        Parameters
+        ----------
+        device : Any
+            Ignored for JAX systems.
+
+        Returns
+        -------
+        JaxODESystem[P]
+            Returns self.
+        """
+        return self
 
     def __call__(self, t: Array, y: Array, args: None = None) -> Array:
         """

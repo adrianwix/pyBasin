@@ -65,9 +65,9 @@ def benchmark_system(system_name: str, setup_fn) -> dict[str, float]:
 
     props = setup_fn()
     sampler = props["sampler"]
-    solver = props["solver"]
+    solver = props.get("solver")
     ode_system = props["ode_system"]
-    feature_extractor = props["feature_extractor"]
+    feature_extractor = props.get("feature_extractor")
 
     # Sample initial conditions
     print(f"  Sampling {N_SAMPLES} initial conditions...")

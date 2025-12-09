@@ -158,13 +158,15 @@ def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Name
     from pybasin.cluster_classifier import SupervisedClassifier
 
     props = setup_fn()
-    classifier = props["cluster_classifier"]
+    classifier = props.get("cluster_classifier")
     if not isinstance(classifier, SupervisedClassifier):
         print(f"  Skipping {system_name}: classifier is not SupervisedClassifier")
         return
-    solver = props["solver"]
+    solver = props.get("solver")
     ode_system = props["ode_system"]
-    feature_extractor = props["feature_extractor"]
+    feature_extractor = props.get("feature_extractor")
+    if feature_extractor is None:
+        raise RuntimeError("feature_extractor is required")
     classifier.integrate_templates(solver, ode_system)
     solution = classifier.solution
     if solution is None:

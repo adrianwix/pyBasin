@@ -271,9 +271,8 @@ def lyap_e_single_jax(
     init_carry = (jnp.eye(matrix_dim), jnp.zeros(matrix_dim), jnp.zeros(matrix_dim))
     _, final_lexp, final_counts = jax.lax.fori_loop(0, n_orbit, body_fn, init_carry)
 
-    # Normalize exponents
-    normalized = jnp.where(final_counts > 0, final_lexp / final_counts, jnp.inf)
-    normalized = normalized / tau / m
+    normalized = jnp.where(final_counts > 0, final_lexp / final_counts, jnp.inf)  # type: ignore[operator]
+    normalized = normalized / tau / m  # type: ignore[operator]
 
     return normalized
 

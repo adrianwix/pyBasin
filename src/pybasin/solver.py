@@ -1,6 +1,6 @@
 # pyright: reportUntypedBaseClass=false
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -11,6 +11,7 @@ from torchdiffeq import odeint  # type: ignore[import-untyped]
 
 from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
+from pybasin.protocols import ODESystemProtocol
 from pybasin.utils import resolve_folder
 
 
@@ -131,7 +132,7 @@ class Solver(ABC):
         return t_eval, y0
 
     def integrate(
-        self, ode_system: ODESystem[Any], y0: torch.Tensor
+        self, ode_system: ODESystemProtocol, y0: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Solve the ODE system and return the evaluation time points and solution.
@@ -176,7 +177,9 @@ class Solver(ABC):
             print(
                 f"    [{self.__class__.__name__}] Cache disabled - integrating on {self.device}..."
             )
-        t_result, y_result = self._integrate(ode_system, y0, t_eval)
+        # Cast to concrete type for internal implementation
+        ode_system_concrete = cast(ODESystem[Any], ode_system)
+        t_result, y_result = self._integrate(ode_system_concrete, y0, t_eval)
         print(f"    [{self.__class__.__name__}] Integration complete")
 
         # Save to cache if enabled

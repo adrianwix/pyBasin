@@ -28,17 +28,17 @@ def ode_pendulum(t, y, args):
     """
     Damped driven pendulum ODE system (JAX version)
 
-    dy/dt = [y[1], -alpha*y[1] + capital_t - capital_k*sin(y[0])]
+    dy/dt = [y[1], -alpha*y[1] + torque - stiffness*sin(y[0])]
 
     Parameters in args tuple:
         alpha: dissipation coefficient
-        capital_t: constant angular acceleration
-        capital_k: stiffness coefficient (g/l)
+        torque: constant angular acceleration
+        stiffness: stiffness coefficient (g/l)
     """
-    alpha, capital_t, capital_k = args
+    alpha, torque, stiffness = args
     phi, omega = y
     dphi_dt = omega
-    domega_dt = -alpha * omega + capital_t - capital_k * jnp.sin(phi)
+    domega_dt = -alpha * omega + torque - stiffness * jnp.sin(phi)
     return jnp.array([dphi_dt, domega_dt])
 
 
@@ -53,15 +53,14 @@ def get_git_commit():
         return "unknown"
 
 
-def run_benchmark(config, method="Dopri5", device="cpu", max_time=120):
+def run_benchmark(config, method="Dopri5", device="cpu"):
     """
-    Run integration benchmark for all initial conditions using JAX + Diffrax
+    Run integration benchmark for all initial conditions using JAX/Diffrax
 
     Parameters:
         config: Configuration dictionary
         method: Diffrax solver method ('Dopri5' or 'Tsit5')
-        device: 'cpu' or 'cuda'
-        max_time: Maximum time in seconds before timeout
+        device: 'cpu' or 'gpu'
     """
     print("=" * 50)
     print(f"JAX + Diffrax {method} Integration Benchmark")
@@ -90,9 +89,9 @@ def run_benchmark(config, method="Dopri5", device="cpu", max_time=120):
 
     # System parameters
     alpha = config["ode_parameters"]["alpha"]
-    capital_t = config["ode_parameters"]["T"]
-    capital_k = config["ode_parameters"]["K"]
-    args = (alpha, capital_t, capital_k)
+    torque = config["ode_parameters"]["T"]
+    stiffness = config["ode_parameters"]["K"]
+    args = (alpha, torque, stiffness)
 
     # Time integration settings
     t0 = config["time_integration"]["t_start"]
@@ -164,7 +163,7 @@ def run_benchmark(config, method="Dopri5", device="cpu", max_time=120):
     print()
 
     # Run benchmark
-    print(f"Starting integration (method={method}, device={device}, max_time={max_time}s)...")
+    print(f"Starting integration (method={method}, device={device})...")
     print(f"Integrating ALL {n_samples} samples in ONE BATCH (fully vectorized)...")
 
     integration_complete = True
@@ -311,7 +310,6 @@ def main():
         config = json.load(f)
 
     results_dir = Path(__file__).parent.parent / "results"
-    max_time = config["time_integration"]["max_integration_time_seconds"]
 
     # Detect available devices
     devices_to_test = ["cuda"]
@@ -324,14 +322,14 @@ def main():
         print("\n" + "=" * 50)
         print(f"Running PRIMARY method: Dopri5 on {device.upper()}")
         print("=" * 50 + "\n")
-        results = run_benchmark(config, method="Dopri5", device=device, max_time=max_time)
+        results = run_benchmark(config, method="Dopri5", device=device)
         save_results(results, results_dir)
 
         # Run with alternative method (Tsit5)
         # print("\n" + "=" * 50)
         # print(f"Running ALTERNATIVE method: Tsit5 on {device.upper()}")
         # print("=" * 50 + "\n")
-        # results_alt = run_benchmark(config, method="Tsit5", device=device, max_time=max_time)
+        # results_alt = run_benchmark(config, method="Tsit5", device=device)
         # save_results(results_alt, results_dir)
 
     print("\nAll JAX/Diffrax benchmarks complete!")

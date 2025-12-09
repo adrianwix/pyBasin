@@ -27,7 +27,7 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
     def __init__(self, threshold: float = 0.95):
         self.threshold = threshold
 
-    def fit(self, X: np.ndarray, y=None):
+    def fit(self, X: np.ndarray, y: np.ndarray | None = None):
         """Compute which features to keep.
 
         Parameters
@@ -46,7 +46,7 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
 
         corr_matrix = np.corrcoef(X.T)
 
-        to_drop = set()
+        to_drop: set[int] = set()
         for i in range(corr_matrix.shape[0]):
             for j in range(i + 1, corr_matrix.shape[1]):
                 if abs(corr_matrix[i, j]) > self.threshold:

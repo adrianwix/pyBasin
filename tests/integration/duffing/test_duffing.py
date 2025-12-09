@@ -38,9 +38,9 @@ class TestDuffing:
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            solver=props.get("solver"),
+            feature_extractor=props.get("feature_extractor"),
+            cluster_classifier=props.get("cluster_classifier"),
             feature_selector=None,
         )
 
@@ -102,8 +102,8 @@ class TestDuffing:
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
-            solver=props["solver"],
-            feature_extractor=props["feature_extractor"],
+            solver=props.get("solver"),
+            feature_extractor=props.get("feature_extractor"),
             cluster_classifier=cluster_classifier,
             feature_selector=None,
         )

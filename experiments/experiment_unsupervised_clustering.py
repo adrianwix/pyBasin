@@ -113,7 +113,7 @@ def select_features(
     )
 
     # Fit and transform features
-    print(f"   Applying feature selection pipeline:")
+    print("   Applying feature selection pipeline:")
     print(f"     - Variance threshold: {variance_threshold}")
     print(f"     - Correlation threshold: {correlation_threshold}")
 
@@ -450,7 +450,6 @@ def run_system_experiment(
         print(f"   Selection time: {t_selection:.3f}s")
     else:
         features_final = None
-        kept_names_final = []
         t_selection = 0.0
 
     # HDBSCAN clustering on bounded trajectories only

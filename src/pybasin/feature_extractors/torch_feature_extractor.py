@@ -119,30 +119,31 @@ class TorchFeatureExtractor(FeatureExtractor):
             self.features = features
         self.features_per_state = features_per_state or {}
 
-        self._state_feature_config: dict[int, FCParameters] | None = None
+        self._resulting_features_config: dict[int, FCParameters] | None = None
         self._num_states: int | None = None
+        self._extracted_feature_names: list[str] | None = None
 
-    def _configure_state_features(self, num_states: int) -> None:
+    def _configure_resulting_features_config(self, num_states: int) -> None:
         """Configure which features to compute for each state."""
-        if self._state_feature_config is not None and self._num_states == num_states:
+        if self._resulting_features_config is not None and self._num_states == num_states:
             return
 
         self._num_states = num_states
-        self._state_feature_config = {}
+        self._resulting_features_config = {}
 
         for state_idx in range(num_states):
             if state_idx in self.features_per_state:
                 fc_params = self.features_per_state[state_idx]
                 if fc_params is not None:
-                    self._state_feature_config[state_idx] = fc_params
+                    self._resulting_features_config[state_idx] = fc_params
             elif self.features is not None:
-                self._state_feature_config[state_idx] = self.features
+                self._resulting_features_config[state_idx] = self.features
 
     def _is_uniform_config(self) -> bool:
         """Check if all states use the same feature configuration."""
-        if not self._state_feature_config:
+        if not self._resulting_features_config:
             return True
-        configs = list(self._state_feature_config.values())
+        configs = list(self._resulting_features_config.values())
         if len(configs) <= 1:
             return True
         first = configs[0]
@@ -203,31 +204,39 @@ class TorchFeatureExtractor(FeatureExtractor):
         y = self.filter_time(solution)
 
         num_states = y.shape[2]
-        if self._state_feature_config is None:
-            self._configure_state_features(num_states)
+        if self._resulting_features_config is None:
+            self._configure_resulting_features_config(num_states)
 
-        assert self._state_feature_config is not None
+        assert self._resulting_features_config is not None
 
-        if not self._state_feature_config:
+        if not self._resulting_features_config:
             n_batches = y.shape[1]
             return torch.zeros((n_batches, 0), dtype=y.dtype, device=y.device)
 
         all_features: list[Tensor] = []
+        all_feature_names: list[str] = []
 
-        if self._is_uniform_config() and self._state_feature_config:
-            fc_params = next(iter(self._state_feature_config.values()))
-            state_indices = list(self._state_feature_config.keys())
+        if self._is_uniform_config() and self._resulting_features_config:
+            fc_params = next(iter(self._resulting_features_config.values()))
+            state_indices = list(self._resulting_features_config.keys())
             y_selected = y[:, :, state_indices]
 
             results = self._extract_all_states(y_selected, fc_params)
 
             feature_names = get_feature_names_from_config(fc_params, include_custom=False)
-            for state_pos, _state_idx in enumerate(state_indices):
+            for state_pos, state_idx in enumerate(state_indices):
                 for fname in feature_names:
                     if fname in results:
-                        all_features.append(results[fname][:, state_pos])
+                        feature_tensor = results[fname][:, state_pos]
+                        if feature_tensor.dim() > 1:
+                            for i in range(feature_tensor.shape[-1]):
+                                all_features.append(feature_tensor[:, i])
+                                all_feature_names.append(f"state_{state_idx}__{fname}__{i}")
+                        else:
+                            all_features.append(feature_tensor)
+                            all_feature_names.append(f"state_{state_idx}__{fname}")
         else:
-            for state_idx, fc_params in self._state_feature_config.items():
+            for state_idx, fc_params in self._resulting_features_config.items():
                 y_state = y[:, :, state_idx : state_idx + 1]
 
                 state_results = self._extract_for_state(y_state, fc_params)
@@ -235,12 +244,20 @@ class TorchFeatureExtractor(FeatureExtractor):
                 feature_names = get_feature_names_from_config(fc_params, include_custom=False)
                 for fname in feature_names:
                     if fname in state_results:
-                        all_features.append(state_results[fname])
+                        feature_tensor = state_results[fname]
+                        if feature_tensor.dim() > 1:
+                            for i in range(feature_tensor.shape[-1]):
+                                all_features.append(feature_tensor[:, i])
+                                all_feature_names.append(f"state_{state_idx}__{fname}__{i}")
+                        else:
+                            all_features.append(feature_tensor)
+                            all_feature_names.append(f"state_{state_idx}__{fname}")
 
         if not all_features:
             n_batches = y.shape[1]
             return torch.zeros((n_batches, 0), dtype=y.dtype, device=y.device)
 
+        self._extracted_feature_names = all_feature_names
         features = torch.stack(all_features, dim=1)
 
         if self.device == "gpu":
@@ -276,13 +293,6 @@ class TorchFeatureExtractor(FeatureExtractor):
     @property
     def feature_names(self) -> list[str]:
         """Return the list of feature names in the format 'state_X__feature_name'."""
-        if self._state_feature_config is None or self._num_states is None:
-            raise RuntimeError(
-                "Feature configuration not initialized. Call extract_features first."
-            )
-
-        names: list[str] = []
-        for state_idx, fc_params in self._state_feature_config.items():
-            for fname in get_feature_names_from_config(fc_params, include_custom=False):
-                names.append(f"state_{state_idx}__{fname}")
-        return names
+        if self._extracted_feature_names is None:
+            raise RuntimeError("Feature names not available. Call extract_features first.")
+        return self._extracted_feature_names
