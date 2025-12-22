@@ -66,51 +66,55 @@ class StateSpaceAIO(BseBasePageAIO):
 
         return html.Div(
             [
-                dmc.Paper(
+                dmc.Grid(
                     [
-                        dmc.Group(
+                        dmc.GridCol(
                             [
-                                dmc.Select(
-                                    id=aio_id("StateSpace", self.aio_id, "x-select"),
-                                    label="X Axis",
-                                    data=select_data,
-                                    value=str(x_var),
-                                    w=150,
-                                ),
-                                dmc.Select(
-                                    id=aio_id("StateSpace", self.aio_id, "y-select"),
-                                    label="Y Axis",
-                                    data=select_data,
-                                    value=str(y_var) if n_states > 1 else "0",
-                                    w=150,
+                                dmc.Flex(
+                                    [
+                                        dmc.Select(
+                                            id=aio_id("StateSpace", self.aio_id, "x-select"),
+                                            label="X Axis",
+                                            data=select_data,
+                                            value=str(x_var),
+                                        ),
+                                        dmc.Select(
+                                            id=aio_id("StateSpace", self.aio_id, "y-select"),
+                                            label="Y Axis",
+                                            data=select_data,
+                                            value=str(y_var) if n_states > 1 else "0",
+                                        ),
+                                    ],
+                                    direction={"base": "row", "md": "column"},
+                                    gap="md",
+                                    wrap="wrap",
+                                    style={
+                                        "padding": "16px 8px 16px 16px",
+                                        "@media (min-width: 992px)": {"padding": "16px"},
+                                    },
                                 ),
                             ],
-                            gap="md",
+                            span={"base": 12, "md": 2},
+                            style={"borderRight": "1px solid #373A40"},
+                        ),
+                        dmc.GridCol(
+                            [
+                                dcc.Graph(
+                                    id=aio_id("StateSpace", self.aio_id, "plot"),
+                                    figure=self.build_figure(x_var=x_var, y_var=y_var),
+                                    style={
+                                        "width": "100%",
+                                        "aspectRatio": "1 / 1",
+                                    },
+                                    config={
+                                        "displayModeBar": True,
+                                        "scrollZoom": True,
+                                    },
+                                ),
+                            ],
+                            span={"base": 12, "md": 10},
                         ),
                     ],
-                    p="md",
-                    mb="md",
-                    withBorder=True,
-                ),
-                dmc.Paper(
-                    [
-                        dcc.Graph(
-                            id=aio_id("StateSpace", self.aio_id, "plot"),
-                            figure=self.build_figure(x_var=x_var, y_var=y_var),
-                            style={
-                                "height": "70vh",
-                                "aspectRatio": "1 / 1",
-                                "maxWidth": "70vh",
-                                "margin": "0 auto",
-                            },
-                            config={
-                                "displayModeBar": True,
-                                "scrollZoom": True,
-                            },
-                        ),
-                    ],
-                    p="md",
-                    withBorder=True,
                 ),
                 self.trajectory_modal.render(),
             ]

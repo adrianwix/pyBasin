@@ -231,7 +231,7 @@ class InteractivePlotter:
                             [
                                 dmc.Box(
                                     pos="relative",
-                                    style={"minHeight": "100vh"},
+                                    style={"minHeight": "calc(100vh - 60px)"},
                                     children=[
                                         dmc.LoadingOverlay(
                                             id="page-loading-overlay",
@@ -248,7 +248,7 @@ class InteractivePlotter:
                                                 trajectory_modal_content,
                                             ],
                                             fluid=True,
-                                            p="md",
+                                            p=0,
                                         ),
                                     ],
                                 ),
@@ -257,7 +257,7 @@ class InteractivePlotter:
                     ],
                     header={"height": 60},
                     navbar={"width": 220, "breakpoint": "sm"},
-                    padding="md",
+                    padding=0,
                 ),
                 dcc.Store(id=self.CURRENT_VIEW, data=initial_view),
             ],

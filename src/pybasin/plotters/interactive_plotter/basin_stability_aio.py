@@ -91,7 +91,8 @@ class BasinStabilityAIO(BseBasePageAIO):
                     ],
                     gutter="md",
                 ),
-            ]
+            ],
+            style={"padding": "16px"},
         )
 
     def _build_info_panel(self) -> dmc.Paper:

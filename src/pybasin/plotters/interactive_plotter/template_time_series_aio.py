@@ -143,7 +143,8 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
                     p="md",
                     withBorder=True,
                 ),
-            ]
+            ],
+            style={"padding": "16px"},
         )
 
     def build_figure(
