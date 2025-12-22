@@ -82,8 +82,8 @@ def run_benchmark(config, method="dopri5", device="cpu"):
     # Check device availability
     if device == "cuda":
         if not torch.cuda.is_available():
-            print("WARNING: CUDA requested but not available, falling back to CPU")
-            device = "cpu"
+            print("WARNING: CUDA requested but not available. Skipping this benchmark run.")
+            return None
         else:
             print(f"Using GPU: {torch.cuda.get_device_name(0)}")
     else:
@@ -312,14 +312,16 @@ def main():
         print(f"Running PRIMARY method: dopri5 on {device.upper()}")
         print("=" * 50 + "\n")
         results = run_benchmark(config, method="dopri5", device=device)
-        save_results(results, results_dir)
+        if results is not None:
+            save_results(results, results_dir)
 
         # Run with alternative method (rk4)
         print("\n" + "=" * 50)
         print(f"Running ALTERNATIVE method: rk4 on {device.upper()}")
         print("=" * 50 + "\n")
         results_alt = run_benchmark(config, method="rk4", device=device)
-        save_results(results_alt, results_dir)
+        if results_alt is not None:
+            save_results(results_alt, results_dir)
 
     print("\nAll Torchdiffeq benchmarks complete!")
 

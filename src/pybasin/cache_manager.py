@@ -70,6 +70,9 @@ class CacheManager:
         """Save integration result to disk cache."""
         cache_file = os.path.join(self.cache_dir, f"{cache_key}.pkl")
 
+        # Ensure cache directory exists
+        os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+
         # Check available disk space
         usage = shutil.disk_usage(os.path.dirname(cache_file))
         free_gb = usage.free / (1024**3)

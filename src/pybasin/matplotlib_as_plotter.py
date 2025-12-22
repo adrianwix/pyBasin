@@ -1,7 +1,7 @@
 """Adaptive Study Basin Stability Estimator."""
 
 import os
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -12,13 +12,6 @@ from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
 
 matplotlib.use("Agg")
-
-
-class AdaptiveStudyParams(TypedDict):
-    # TODO: Delete mode
-    mode: Literal["hyper_parameter", "model_parameter"]
-    adaptative_parameter_values: list[Any]
-    adaptative_parameter_name: str
 
 
 class ASPlotter:

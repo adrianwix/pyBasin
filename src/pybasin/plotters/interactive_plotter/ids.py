@@ -24,14 +24,10 @@ class IDs:
     BASIN_STABILITY = "bs"
     STATE_SPACE = "state"
     FEATURE_SPACE = "feature"
-    PHASE_2D = "phase-2d"
-    PHASE_3D = "phase-3d"
+    PHASE_PLOT = "phase"
     TEMPLATE_TS = "template-ts"
     PARAM_OVERVIEW = "param-overview"
     PARAM_BIFURCATION = "param-bifurcation"
-
-    # Shared component prefixes
-    TRAJECTORY_MODAL = "trajectory-modal"
 
     @staticmethod
     def id(prefix: str, suffix: str) -> str:

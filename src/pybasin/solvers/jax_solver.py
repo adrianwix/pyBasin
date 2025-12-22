@@ -63,12 +63,12 @@ class JaxSolver:
 
     def __init__(
         self,
-        time_span: tuple[float, float],
-        n_steps: int | None = None,
+        time_span: tuple[float, float] = (0, 1000),
+        n_steps: int | None = 1000,
         device: str | None = None,
         solver: Any | None = None,
-        rtol: float = 1e-6,
-        atol: float = 1e-8,
+        rtol: float = 1e-8,
+        atol: float = 1e-6,
         max_steps: int = 16**5,
         use_cache: bool = True,
         event_fn: Callable[[Any, Array, Any], Array] | None = None,
@@ -77,14 +77,14 @@ class JaxSolver:
         """
         Initialize JaxSolver.
 
-        :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param time_span: Tuple (t_start, t_end) defining the integration interval. Defaults to (0, 1000).
+        :param n_steps: Number of evaluation points. Defaults to 1000.
         :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
-        :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). If None, defaults to Dopri5().
-        :param rtol: Relative tolerance for adaptive stepping.
-        :param atol: Absolute tolerance for adaptive stepping.
+        :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5().
+        :param rtol: Relative tolerance for adaptive stepping. Defaults to 1e-8.
+        :param atol: Absolute tolerance for adaptive stepping. Defaults to 1e-6.
         :param max_steps: Maximum number of steps for the integrator.
-        :param use_cache: Whether to use caching for integration results.
+        :param use_cache: Whether to use caching for integration results. Defaults to True.
         :param event_fn: Optional event function for early termination. Should return positive
                          when integration should continue, negative/zero to stop.
                          Signature: (t, y, args) -> scalar Array.
@@ -106,16 +106,18 @@ class JaxSolver:
         # Only create cache manager if caching is enabled
         # This avoids resolve_folder issues when called from threads
         self._cache_manager: CacheManager | None = None
+        self._cache_dir: str | None = None
         if use_cache:
-            self._cache_manager = CacheManager(resolve_folder("cache"))
+            self._cache_dir = resolve_folder("cache")
+            self._cache_manager = CacheManager(self._cache_dir)
 
     def _set_n_steps(self, n_steps: int | None) -> None:
         """
         Set the number of evaluation steps.
 
-        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         """
-        self.n_steps = n_steps if n_steps is not None else 500
+        self.n_steps = n_steps if n_steps is not None else 1000
 
     def _set_device(self, device: str | None) -> None:
         """
@@ -138,7 +140,7 @@ class JaxSolver:
         :param device: Target device ('cpu', 'cuda', 'gpu').
         :return: New JaxSolver instance with the same configuration but different device.
         """
-        return JaxSolver(
+        new_solver = JaxSolver(
             time_span=self.time_span,
             n_steps=self.n_steps,
             device=device,
@@ -150,6 +152,11 @@ class JaxSolver:
             event_fn=self.event_fn,
             **self.params,
         )
+        # Reuse the same cache directory to ensure consistency
+        if self._cache_dir is not None:
+            new_solver._cache_dir = self._cache_dir
+            new_solver._cache_manager = CacheManager(self._cache_dir)
+        return new_solver
 
     def _get_cache_config(self) -> dict[str, Any]:
         """Include solver type, rtol, atol, and max_steps in cache key."""
@@ -205,7 +212,8 @@ class JaxSolver:
             cached_result = self._cache_manager.load(cache_key, self.device)
 
             if cached_result is not None:
-                print(f"    [{self.__class__.__name__}] Loaded result from cache")
+                cache_path = f"{self._cache_manager.cache_dir}/{cache_key}.pkl"
+                print(f"    [{self.__class__.__name__}] Loaded result from cache: {cache_path}")
                 return cached_result
 
         # Compute integration

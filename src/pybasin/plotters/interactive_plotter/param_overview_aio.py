@@ -1,60 +1,70 @@
-# pyright: basic
-"""Parameter Overview page showing basin stability variation across parameters."""
+"""AIO Parameter Overview page showing basin stability across parameter values."""
+
+from typing import Any
 
 import dash_mantine_components as dmc  # pyright: ignore[reportMissingTypeStubs]
-import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc, html
+import plotly.graph_objects as go  # pyright: ignore[reportMissingTypeStubs]
+from dash import (
+    MATCH,
+    Input,
+    Output,
+    State,
+    callback,  # pyright: ignore[reportUnknownVariableType]
+    dcc,
+    html,
+)
 
 from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
-from pybasin.plotters.as_base_page import ASBasePage
-from pybasin.plotters.ids import IDs
-from pybasin.plotters.utils import get_color
-
-_page_instance: "ParamOverviewPage | None" = None
+from pybasin.plotters.interactive_plotter.ids_aio import aio_id
+from pybasin.plotters.interactive_plotter.utils import get_color
 
 
-def set_page_instance(page: "ParamOverviewPage") -> None:
-    """Set the global page instance for callbacks."""
-    global _page_instance
-    _page_instance = page
+class ParamOverviewAIO:
+    """
+    AIO component for parameter overview page.
 
+    Shows basin stability evolution across parameter sweep values.
+    """
 
-class ParamOverviewPage(ASBasePage):
-    """Parameter Overview page showing basin stability evolution across parameter values."""
+    _instances: dict[str, "ParamOverviewAIO"] = {}
 
-    PLOT = IDs.id(IDs.PARAM_OVERVIEW, "plot")
-    SCALE = IDs.id(IDs.PARAM_OVERVIEW, "scale")
-    LABELS = IDs.id(IDs.PARAM_OVERVIEW, "labels")
-    CONTROLS = IDs.id(IDs.PARAM_OVERVIEW, "controls")
+    @classmethod
+    def get_instance(cls, instance_id: str) -> "ParamOverviewAIO | None":
+        """Get instance by ID."""
+        return cls._instances.get(instance_id)
 
     def __init__(
         self,
         as_bse: ASBasinStabilityEstimator,
+        aio_id: str,
         state_labels: dict[int, str] | None = None,
     ):
-        super().__init__(as_bse, state_labels)
+        """
+        Initialize parameter overview AIO component.
 
-    @property
-    def page_id(self) -> str:
-        return IDs.PARAM_OVERVIEW
+        Args:
+            as_bse: Adaptive study basin stability estimator
+            aio_id: Unique identifier for this component instance
+            state_labels: Optional mapping of state indices to labels
+        """
+        self.as_bse = as_bse
+        self.aio_id = aio_id
+        self.state_labels = state_labels or {}
+        ParamOverviewAIO._instances[aio_id] = self
 
-    @property
-    def nav_label(self) -> str:
-        return "Overview"
-
-    @property
-    def nav_icon(self) -> str:
-        return "📊"
+    def get_parameter_name_short(self) -> str:
+        """Get short parameter name."""
+        return self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1]
 
     def _get_all_labels(self) -> list[str]:
         """Get all unique labels across all parameter values."""
-        all_labels = set()
+        all_labels: set[str] = set()
         for bs_dict in self.as_bse.basin_stabilities:
             all_labels.update(bs_dict.keys())
         return sorted(all_labels)
 
-    def build_layout(self) -> html.Div:
-        """Build the parameter overview page layout."""
+    def render(self) -> html.Div:
+        """Render complete page layout with controls and plot."""
         all_labels = self._get_all_labels()
         label_options = [{"value": label, "label": label} for label in all_labels]
 
@@ -65,17 +75,18 @@ class ParamOverviewPage(ASBasePage):
                         dmc.Group(
                             [
                                 dmc.SegmentedControl(
-                                    id=self.SCALE,
-                                    data=[
+                                    id=aio_id("ParamOverview", self.aio_id, "scale"),
+                                    data=[  # pyright: ignore[reportArgumentType]
                                         {"value": "linear", "label": "Linear"},
                                         {"value": "log", "label": "Log"},
                                     ],
                                     value="linear",
                                 ),
                                 dmc.MultiSelect(
-                                    id=self.LABELS,
+                                    id=aio_id("ParamOverview", self.aio_id, "labels"),
                                     label="Show Labels",
-                                    data=label_options,
+                                    # Typing is bad: https://www.dash-mantine-components.com/components/multiselect
+                                    data=label_options,  # pyright: ignore[reportArgumentType]
                                     value=all_labels,
                                     w=300,
                                 ),
@@ -86,12 +97,11 @@ class ParamOverviewPage(ASBasePage):
                     p="md",
                     mb="md",
                     withBorder=True,
-                    id=self.CONTROLS,
                 ),
                 dmc.Paper(
                     [
                         dcc.Graph(
-                            id=self.PLOT,
+                            id=aio_id("ParamOverview", self.aio_id, "plot"),
                             figure=self.build_figure(),
                             style={"height": "70vh"},
                             config={
@@ -109,12 +119,7 @@ class ParamOverviewPage(ASBasePage):
     def build_figure(
         self, x_scale: str = "linear", label_filter: list[str] | None = None
     ) -> go.Figure:
-        """Build the basin stability variation figure.
-
-        :param x_scale: X-axis scale type ("linear" or "log").
-        :param label_filter: List of labels to show (None = show all).
-        :return: Plotly figure object.
-        """
+        """Build basin stability variation figure."""
         all_labels = self._get_all_labels()
         labels_to_show = label_filter if label_filter else all_labels
 
@@ -127,7 +132,7 @@ class ParamOverviewPage(ASBasePage):
 
         for i, label in enumerate(all_labels):
             if label in labels_to_show:
-                fig.add_trace(
+                fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                     go.Scatter(
                         x=self.as_bse.parameter_values,
                         y=bs_values[label],
@@ -138,12 +143,12 @@ class ParamOverviewPage(ASBasePage):
                     )
                 )
 
-        fig.update_xaxes(
+        fig.update_xaxes(  # pyright: ignore[reportUnknownMemberType]
             type="log" if x_scale == "log" else "linear",
             title=self.get_parameter_name_short(),
         )
-        fig.update_yaxes(title="Basin Stability", range=[0, 1])
-        fig.update_layout(
+        fig.update_yaxes(title="Basin Stability", range=[0, 1])  # pyright: ignore[reportUnknownMemberType]
+        fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
             title="Basin Stability vs Parameter Variation",
             hovermode="x unified",
             template="plotly_dark",
@@ -160,15 +165,23 @@ class ParamOverviewPage(ASBasePage):
 
 
 @callback(
-    Output(ParamOverviewPage.PLOT, "figure"),
+    Output(aio_id("ParamOverview", MATCH, "plot"), "figure"),
     [
-        Input(ParamOverviewPage.SCALE, "value"),
-        Input(ParamOverviewPage.LABELS, "value"),
+        Input(aio_id("ParamOverview", MATCH, "scale"), "value"),
+        Input(aio_id("ParamOverview", MATCH, "labels"), "value"),
     ],
+    State(aio_id("ParamOverview", MATCH, "plot"), "id"),
     prevent_initial_call=True,
 )
-def update_param_overview_figure(x_scale: str, label_filter: list[str]) -> go.Figure:
-    """Update the parameter overview figure based on control inputs."""
-    if _page_instance is None:
+def update_param_overview_figure_aio(
+    x_scale: str,
+    label_filter: list[str],
+    plot_id: dict[str, Any],
+) -> go.Figure:
+    """Update parameter overview figure when controls change."""
+    instance_id = plot_id["aio_id"]
+    instance = ParamOverviewAIO.get_instance(instance_id)
+    if instance is None:
         return go.Figure()
-    return _page_instance.build_figure(x_scale=x_scale, label_filter=label_filter)
+
+    return instance.build_figure(x_scale=x_scale, label_filter=label_filter)

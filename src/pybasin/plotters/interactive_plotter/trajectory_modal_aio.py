@@ -1,54 +1,49 @@
-# pyright: basic
-"""Shared trajectory inspection modal component.
+"""AIO Trajectory Modal component with instance-scoped state."""
 
-This modal is used by State Space and Feature Space pages to display
-trajectory time series for clicked data points.
-"""
+from typing import Any
 
-from typing import TYPE_CHECKING, Any
+import dash_mantine_components as dmc  # pyright: ignore[reportMissingTypeStubs]
+import plotly.graph_objects as go  # pyright: ignore[reportMissingTypeStubs]
+from dash import Input, Output, State, callback, dcc  # pyright: ignore[reportUnknownVariableType]
 
-import dash_mantine_components as dmc
-import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc
-
-from pybasin.plotters.ids import IDs
-from pybasin.plotters.utils import get_color
-
-if TYPE_CHECKING:
-    from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotters.interactive_plotter.ids_aio import aio_id
+from pybasin.plotters.interactive_plotter.utils import get_color
 
 
-# Store ID for selected sample data (global)
-SELECTED_SAMPLE_DATA = "selected-sample-data"
+class TrajectoryModalAIO:
+    """
+    AIO component for trajectory inspection modal.
 
-
-class TrajectoryModal:
-    """Shared modal component for trajectory inspection.
-
-    This modal displays time series trajectories when a user clicks on
-    a data point in the State Space or Feature Space scatter plots.
+    Each instance maintains its own state using pattern-matching IDs,
+    eliminating the need for global SELECTED_SAMPLE_DATA store.
     """
 
-    # Component IDs using the centralized registry
-    MODAL = IDs.id(IDs.TRAJECTORY_MODAL, "modal")
-    MODAL_TITLE = IDs.id(IDs.TRAJECTORY_MODAL, "title")
-    MODAL_INFO = IDs.id(IDs.TRAJECTORY_MODAL, "info")
-    STATE_SELECT = IDs.id(IDs.TRAJECTORY_MODAL, "state-select")
-    TIME_RANGE = IDs.id(IDs.TRAJECTORY_MODAL, "time-range")
-    PLOT = IDs.id(IDs.TRAJECTORY_MODAL, "plot")
+    _instances: dict[str, "TrajectoryModalAIO"] = {}
+
+    @classmethod
+    def get_instance(cls, instance_id: str) -> "TrajectoryModalAIO | None":
+        """Get instance by ID."""
+        return cls._instances.get(instance_id)
 
     def __init__(
         self,
-        bse: "BasinStabilityEstimator",
+        bse: BasinStabilityEstimator,
+        instance_id: str,
         state_labels: dict[int, str] | None = None,
     ):
-        """Initialize the TrajectoryModal.
+        """
+        Initialize trajectory modal AIO component.
 
-        :param bse: BasinStabilityEstimator with computed results.
-        :param state_labels: Optional mapping of state indices to labels.
+        Args:
+            bse: Basin stability estimator with computed results
+            instance_id: Unique identifier for this modal instance
+            state_labels: Optional mapping of state indices to labels
         """
         self.bse = bse
+        self.instance_id = instance_id
         self.state_labels = state_labels or {}
+        TrajectoryModalAIO._instances[instance_id] = self
 
     def get_state_label(self, idx: int) -> str:
         """Get label for a state variable."""
@@ -61,20 +56,21 @@ class TrajectoryModal:
         return self.bse.y0.shape[1]
 
     def get_time_bounds(self) -> tuple[float, float]:
-        """Get the time bounds from the solution."""
+        """Get time bounds from solution."""
         if self.bse.solution is None:
             return 0.0, 1.0
         t = self.bse.solution.time.cpu().numpy()
         return float(t[0]), float(t[-1])
 
-    def build_layout(
-        self,
-        default_time_range_percent: float = 0.15,
-    ) -> dmc.Modal:
-        """Build the modal layout.
+    def render(self, default_time_range_percent: float = 0.15) -> dmc.Modal:
+        """
+        Render the modal layout with pattern-matching IDs.
 
-        :param default_time_range_percent: Default time range as percentage of total.
-        :return: Modal component with all controls and plot.
+        Args:
+            default_time_range_percent: Default time range as percentage of total
+
+        Returns:
+            Modal component with instance-scoped IDs
         """
         n_states = self.get_n_states()
         state_options = [
@@ -85,13 +81,17 @@ class TrajectoryModal:
         default_t_max = t_min + (t_max - t_min) * default_time_range_percent
 
         return dmc.Modal(
-            id=self.MODAL,
+            id=aio_id("TrajectoryModal", self.instance_id, "modal"),
             title="Trajectory Viewer",
             size="xl",
             centered=True,
             children=[
+                dcc.Store(
+                    id=aio_id("TrajectoryModal", self.instance_id, "sample-store"),
+                    data=None,
+                ),
                 dmc.Text(
-                    id=self.MODAL_INFO,
+                    id=aio_id("TrajectoryModal", self.instance_id, "info"),
                     size="sm",
                     c="gray",
                     mb="md",
@@ -99,7 +99,7 @@ class TrajectoryModal:
                 dmc.Group(
                     [
                         dmc.Select(
-                            id=self.STATE_SELECT,
+                            id=aio_id("TrajectoryModal", self.instance_id, "state-select"),
                             label="State Variable",
                             data=state_options,  # type: ignore[arg-type]
                             value="0",
@@ -111,7 +111,7 @@ class TrajectoryModal:
                 ),
                 dmc.Text("Time Range", size="sm", fw="normal"),
                 dmc.RangeSlider(
-                    id=self.TIME_RANGE,
+                    id=aio_id("TrajectoryModal", self.instance_id, "time-range"),
                     min=t_min,
                     max=t_max,
                     value=[t_min, default_t_max],  # type: ignore[arg-type]
@@ -124,7 +124,7 @@ class TrajectoryModal:
                     mb="md",
                 ),
                 dcc.Graph(
-                    id=self.PLOT,
+                    id=aio_id("TrajectoryModal", self.instance_id, "plot"),
                     figure=_build_empty_figure(),
                     style={"height": "40vh"},
                     config={"displayModeBar": True},
@@ -138,12 +138,16 @@ class TrajectoryModal:
         state_var: int = 0,
         time_span: tuple[float, float] | None = None,
     ) -> go.Figure:
-        """Build time series plot for a selected sample.
+        """
+        Build time series plot for a selected sample.
 
-        :param sample_idx: Index of the sample to plot.
-        :param state_var: State variable index to display.
-        :param time_span: Optional (t_min, t_max) to limit time range.
-        :return: Plotly figure with the trajectory.
+        Args:
+            sample_idx: Index of the sample to plot
+            state_var: State variable index to display
+            time_span: Optional (t_min, t_max) to limit time range
+
+        Returns:
+            Plotly figure with trajectory
         """
         if self.bse.solution is None:
             return _build_empty_figure()
@@ -157,7 +161,7 @@ class TrajectoryModal:
             if time_span is not None:
                 mask = (t >= time_span[0]) & (t <= time_span[1])
                 t = t[mask]
-                y = y[mask]
+                y = y[mask, :, :]
 
             trajectory = y[:, sample_idx, state_var]
             label = (
@@ -166,7 +170,7 @@ class TrajectoryModal:
                 else "Unknown"
             )
 
-            fig.add_trace(
+            fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                 go.Scatter(
                     x=t,
                     y=trajectory,
@@ -176,9 +180,9 @@ class TrajectoryModal:
                 )
             )
 
-            fig.update_layout(title=f"Trajectory: {self.get_state_label(state_var)}")
+            fig.update_layout(title=f"Trajectory: {self.get_state_label(state_var)}")  # pyright: ignore[reportUnknownMemberType]
         else:
-            fig.add_annotation(
+            fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
                 text="Click a point in the scatter plot to view its trajectory",
                 xref="paper",
                 yref="paper",
@@ -187,9 +191,9 @@ class TrajectoryModal:
                 showarrow=False,
                 font={"size": 14},
             )
-            fig.update_layout(title="Trajectory Viewer")
+            fig.update_layout(title="Trajectory Viewer")  # pyright: ignore[reportUnknownMemberType]
 
-        fig.update_layout(
+        fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
             xaxis_title="Time",
             yaxis_title=self.get_state_label(state_var),
             template="plotly_dark",
@@ -201,9 +205,9 @@ class TrajectoryModal:
 
 
 def _build_empty_figure() -> go.Figure:
-    """Build an empty placeholder figure."""
+    """Build empty placeholder figure."""
     fig = go.Figure()
-    fig.add_annotation(
+    fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
         text="Click a point in the scatter plot to view its trajectory",
         xref="paper",
         yref="paper",
@@ -212,7 +216,7 @@ def _build_empty_figure() -> go.Figure:
         showarrow=False,
         font={"size": 14},
     )
-    fig.update_layout(
+    fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
         title="Trajectory Viewer",
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -221,43 +225,44 @@ def _build_empty_figure() -> go.Figure:
     return fig
 
 
-# Global instance placeholder - will be set by InteractivePlotter
-_modal_instance: TrajectoryModal | None = None
-
-
-def set_modal_instance(modal: TrajectoryModal) -> None:
-    """Set the global modal instance for callbacks."""
-    global _modal_instance  # noqa: PLW0603
-    _modal_instance = modal
+from dash import MATCH  # noqa: E402
 
 
 @callback(
-    Output(TrajectoryModal.PLOT, "figure"),
+    Output(aio_id("TrajectoryModal", MATCH, "plot"), "figure"),
     [
-        Input(SELECTED_SAMPLE_DATA, "data"),
-        Input(TrajectoryModal.STATE_SELECT, "value"),
-        Input(TrajectoryModal.TIME_RANGE, "value"),
+        Input(aio_id("TrajectoryModal", MATCH, "sample-store"), "data"),
+        Input(aio_id("TrajectoryModal", MATCH, "state-select"), "value"),
+        Input(aio_id("TrajectoryModal", MATCH, "time-range"), "value"),
     ],
+    State(aio_id("TrajectoryModal", MATCH, "plot"), "id"),
 )
-def update_trajectory_plot(
+def update_trajectory_plot_aio(
     sample_data: dict[str, Any] | None,
     state_var: str,
     time_range: list[float],
+    plot_id: dict[str, Any],
 ) -> go.Figure:
-    """Update the trajectory plot when sample or controls change."""
-    if _modal_instance is None:
+    """
+    Update trajectory plot when sample or controls change.
+
+    Uses MATCH pattern to target only the specific modal instance.
+    The State parameter captures the aio_id for retrieving the correct BSE instance.
+    """
+    if sample_data is None:
         return _build_empty_figure()
 
-    if sample_data is None:
-        return _modal_instance.build_time_series_figure()
+    instance_id = plot_id["aio_id"]
+    instance = TrajectoryModalAIO.get_instance(instance_id)
+    if instance is None:
+        return _build_empty_figure()
 
     sample_idx = sample_data.get("sample_idx")
     if sample_idx is None:
-        return _modal_instance.build_time_series_figure()
+        return _build_empty_figure()
 
-    time_span = tuple(time_range) if time_range else None
-    return _modal_instance.build_time_series_figure(
-        sample_idx=int(sample_idx),
+    return instance.build_time_series_figure(
+        sample_idx=sample_idx,
         state_var=int(state_var),
-        time_span=time_span,  # type: ignore[arg-type]
+        time_span=(time_range[0], time_range[1]),
     )

@@ -1,0 +1,26 @@
+[
+    {
+        "label": "butterfly1",
+        "basinStability": 8.915,
+        "absNumMembers": 1783,
+        "standardError": 0.20149722695350647
+    },
+    {
+        "label": "butterfly2",
+        "basinStability": 8.905000000000001,
+        "absNumMembers": 1781,
+        "standardError": 0.20139524713158607
+    },
+    {
+        "label": "unbounded",
+        "basinStability": 82.17999999999999,
+        "absNumMembers": 16436,
+        "standardError": 0.27059633284807205
+    },
+    {
+        "label": "NaN",
+        "basinStability": 0.0,
+        "absNumMembers": 0,
+        "standardError": 0.0
+    }
+]

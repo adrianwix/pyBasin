@@ -20,7 +20,7 @@ def main():
         feature_extractor=props.get("feature_extractor"),
         cluster_classifier=props.get("cluster_classifier"),
         save_to="results_case1",
-        feature_selector=None,
+        # feature_selector=None,
     )
 
     basin_stability = bse.estimate_bs()

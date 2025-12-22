@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -11,9 +12,6 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.solution import Solution
-
-# TypeVar for ODE parameters
-P = TypeVar("P")
 
 
 class ClusterClassifier(ABC):
@@ -32,18 +30,19 @@ class ClusterClassifier(ABC):
         pass
 
 
-class SupervisedClassifier[P](ClusterClassifier):
+class SupervisedClassifier(ClusterClassifier):
     """Base class for supervised classifiers that require template data."""
 
     labels: list[str]
     template_y0: list[list[float]]  # Stored as list, converted to tensor during integration
     classifier: Any  # Type depends on subclass
+    ode_params: Mapping[str, Any]
 
     def __init__(
         self,
         template_y0: list[list[float]],
         labels: list[str],
-        ode_params: P,
+        ode_params: Mapping[str, Any],
         solver: SolverProtocol | None = None,
     ):
         """
@@ -52,7 +51,7 @@ class SupervisedClassifier[P](ClusterClassifier):
         :param template_y0: Template initial conditions as a list of lists (e.g., [[0.5, 0.0], [2.7, 0.0]]).
                            Will be converted to tensor with appropriate device during integration.
         :param labels: Ground truth labels for template conditions.
-        :param ode_params: ODE parameters to use for generating training data.
+        :param ode_params: ODE parameters mapping (dict or TypedDict with numeric values).
         :param solver: Optional solver for template integration. If provided, this solver
                        will be used instead of the main solver (useful for CPU-based
                        template integration when templates are few).
@@ -197,7 +196,7 @@ class SupervisedClassifier[P](ClusterClassifier):
         self.fit_with_features(feature_extractor)
 
 
-class KNNCluster[P](SupervisedClassifier[P]):
+class KNNCluster(SupervisedClassifier):
     """K-Nearest Neighbors classifier for basin stability analysis."""
 
     display_name: str = "KNN Classifier"
@@ -207,7 +206,7 @@ class KNNCluster[P](SupervisedClassifier[P]):
         classifier: KNeighborsClassifier | None,
         template_y0: list[list[float]],
         labels: list[str],
-        ode_params: P,
+        ode_params: Mapping[str, Any],
         solver: SolverProtocol | None = None,
         **kwargs: Any,
     ):
@@ -236,21 +235,21 @@ class KNNCluster[P](SupervisedClassifier[P]):
         return self.classifier.predict(features)
 
 
-class UnsupervisedClassifier[P](ClusterClassifier):
+class UnsupervisedClassifier(ClusterClassifier):
     """Base class for unsupervised clustering algorithms."""
 
-    def __init__(self, template_y0: torch.Tensor, ode_params: P):
+    def __init__(self, template_y0: torch.Tensor, ode_params: Mapping[str, Any] | None = None):
         """
         Initialize the unsupervised classifier.
 
         :param template_y0: Template initial conditions to cluster.
-        :param ode_params: ODE parameters.
+        :param ode_params: ODE parameters mapping (optional, not used by unsupervised methods).
         """
         self.template_y0 = template_y0
         self.ode_params = ode_params
 
 
-class DBSCANCluster(UnsupervisedClassifier[Any]):
+class DBSCANCluster(UnsupervisedClassifier):
     """DBSCAN clustering for basin stability analysis."""
 
     display_name: str = "DBSCAN Clustering"
@@ -278,7 +277,7 @@ class DBSCANCluster(UnsupervisedClassifier[Any]):
         return self.classifier.fit_predict(features)
 
 
-class HDBSCANCluster(UnsupervisedClassifier[Any]):
+class HDBSCANCluster(UnsupervisedClassifier):
     """HDBSCAN clustering for basin stability analysis with optional auto-tuning and noise assignment."""
 
     display_name: str = "HDBSCAN Clustering"

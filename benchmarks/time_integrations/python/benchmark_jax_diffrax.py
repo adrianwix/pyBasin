@@ -78,8 +78,8 @@ def run_benchmark(config, method="Dopri5", device="cpu"):
     # Set JAX device
     if device == "cuda":
         if not jax.devices("gpu"):
-            print("WARNING: CUDA requested but no GPU found, falling back to CPU")
-            device = "cpu"
+            print("WARNING: CUDA requested but no GPU found. Skipping this benchmark run.")
+            return None
         else:
             jax.config.update("jax_default_device", jax.devices("gpu")[0])
             print(f"Using GPU: {jax.devices('gpu')[0]}")
@@ -323,7 +323,8 @@ def main():
         print(f"Running PRIMARY method: Dopri5 on {device.upper()}")
         print("=" * 50 + "\n")
         results = run_benchmark(config, method="Dopri5", device=device)
-        save_results(results, results_dir)
+        if results is not None:
+            save_results(results, results_dir)
 
         # Run with alternative method (Tsit5)
         # print("\n" + "=" * 50)

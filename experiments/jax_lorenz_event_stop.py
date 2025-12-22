@@ -148,10 +148,8 @@ def extract_features_single(sol, t_steady=900.0, t_span_end=1000.0):
     Returns:
         feature vector [2] as one-hot encoding
     """
-    # Check if event was triggered - diffrax fills remaining points with inf/nan when event stops
-    # Check the final state for inf/nan values
     final_state = sol.ys[-1]
-    unbounded = jnp.any(jnp.isnan(final_state)) | jnp.any(jnp.isinf(final_state))
+    unbounded = jnp.any(jnp.isinf(final_state))
 
     # For bounded solutions, extract tail from the last 10% of REQUESTED time points
     # Since t_eval goes from 0 to 1000 with n_steps points, last 10% = last n_steps//10 points

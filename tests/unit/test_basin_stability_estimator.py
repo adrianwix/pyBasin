@@ -42,7 +42,7 @@ def test_basin_stability_estimator_basic():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[1.0]]
-    knn: KNNCluster[LinearParams] = KNNCluster(
+    knn: KNNCluster = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,
         labels=["stable"],
@@ -82,7 +82,7 @@ def test_basin_stability_multiple_classes():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[-1.0], [1.0]]
-    knn: KNNCluster[LinearParams] = KNNCluster(
+    knn: KNNCluster = KNNCluster(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,
         labels=["neg", "pos"],

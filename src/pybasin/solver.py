@@ -59,8 +59,10 @@ class Solver(ABC):
         # Only create cache manager if caching is enabled
         # This avoids resolve_folder issues when called from threads
         self._cache_manager: CacheManager | None = None
+        self._cache_dir: str | None = None
         if use_cache:
-            self._cache_manager = CacheManager(resolve_folder("cache"))
+            self._cache_dir = resolve_folder("cache")
+            self._cache_manager = CacheManager(self._cache_dir)
 
     def _set_n_steps(self, n_steps: int | None, fs: float | None) -> None:
         """
@@ -253,7 +255,7 @@ class TorchDiffEqSolver(Solver):
 
     def with_device(self, device: str) -> "TorchDiffEqSolver":
         """Create a copy of this solver configured for a different device."""
-        return TorchDiffEqSolver(
+        new_solver = TorchDiffEqSolver(
             time_span=self.time_span,
             fs=self.fs,
             n_steps=self.n_steps,
@@ -264,6 +266,11 @@ class TorchDiffEqSolver(Solver):
             use_cache=self.use_cache,
             **self.params,
         )
+        # Reuse the same cache directory to ensure consistency
+        if self._cache_dir is not None:
+            new_solver._cache_dir = self._cache_dir
+            new_solver._cache_manager = CacheManager(self._cache_dir)
+        return new_solver
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
@@ -334,7 +341,7 @@ class TorchOdeSolver(Solver):
 
     def with_device(self, device: str) -> "TorchOdeSolver":
         """Create a copy of this solver configured for a different device."""
-        return TorchOdeSolver(
+        new_solver = TorchOdeSolver(
             time_span=self.time_span,
             fs=self.fs,
             n_steps=self.n_steps,
@@ -346,6 +353,11 @@ class TorchOdeSolver(Solver):
             use_cache=self.use_cache,
             **self.params,
         )
+        # Reuse the same cache directory to ensure consistency
+        if self._cache_dir is not None:
+            new_solver._cache_dir = self._cache_dir
+            new_solver._cache_manager = CacheManager(self._cache_dir)
+        return new_solver
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
@@ -488,7 +500,7 @@ class SklearnParallelSolver(Solver):
         """
         if device and "cuda" in device:
             print("  Warning: SklearnParallelSolver does not support CUDA - using CPU")
-        return SklearnParallelSolver(
+        new_solver = SklearnParallelSolver(
             time_span=self.time_span,
             fs=self.fs,  # type: ignore[arg-type]
             device="cpu",
@@ -501,6 +513,11 @@ class SklearnParallelSolver(Solver):
             use_cache=self.use_cache,
             **self.params,
         )
+        # Reuse the same cache directory to ensure consistency
+        if self._cache_dir is not None:
+            new_solver._cache_dir = self._cache_dir
+            new_solver._cache_manager = CacheManager(self._cache_dir)
+        return new_solver
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor

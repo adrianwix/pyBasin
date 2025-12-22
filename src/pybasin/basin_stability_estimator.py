@@ -102,10 +102,10 @@ class BasinStabilityEstimator:
         # Note: _USE_DEFAULT sentinel distinguishes "not specified" from "None" (disabled)
         if feature_selector is _USE_DEFAULT:
             # Default: use feature filtering with default thresholds
-            self._feature_selector: BaseEstimator | None = DefaultFeatureSelector()
+            self.feature_selector: BaseEstimator | None = DefaultFeatureSelector()
         else:
             # User explicitly set it (could be None to disable, or a custom selector)
-            self._feature_selector = feature_selector
+            self.feature_selector = feature_selector
 
         self._filtered_feature_names: list[str] | None = None
 
@@ -157,7 +157,7 @@ class BasinStabilityEstimator:
         :return: Tuple of (filtered features tensor, filtered feature names).
         :raises ValueError: If filtering removes all features.
         """
-        if self._feature_selector is None:
+        if self.feature_selector is None:
             return features, feature_names
 
         # Convert to numpy for sklearn
@@ -168,7 +168,7 @@ class BasinStabilityEstimator:
 
         features_filtered_np = cast(
             np.ndarray[Any, np.dtype[np.floating[Any]]],
-            self._feature_selector.fit_transform(features_np),  # type: ignore[union-attr]
+            self.feature_selector.fit_transform(features_np),  # type: ignore[union-attr]
         )
 
         # Check if any features remain
@@ -179,7 +179,7 @@ class BasinStabilityEstimator:
             )
 
         # Get filtered feature names using utility function
-        filtered_names = get_filtered_feature_names(self._feature_selector, feature_names)
+        filtered_names = get_filtered_feature_names(self.feature_selector, feature_names)
 
         # Convert back to tensor
         features_filtered = torch.from_numpy(features_filtered_np).to(  # type: ignore[arg-type]
@@ -303,7 +303,7 @@ class BasinStabilityEstimator:
         # Step 5: Feature filtering
         print("\nSTEP 5: Feature Filtering")
         t5 = time.perf_counter()
-        if self._feature_selector is not None:
+        if self.feature_selector is not None:
             features_filtered, filtered_names = self._apply_feature_filtering(
                 features, feature_names
             )
@@ -338,7 +338,7 @@ class BasinStabilityEstimator:
             t5b = time.perf_counter()
             self.cluster_classifier.fit_with_features(  # type: ignore[misc]
                 self.feature_extractor,
-                feature_selector=self._feature_selector,
+                feature_selector=self.feature_selector,
             )
             t5b_elapsed = time.perf_counter() - t5b
             print(f"  Classifier fitted in {t5b_elapsed:.4f}s")
@@ -444,11 +444,11 @@ class BasinStabilityEstimator:
 
         # Feature selection information
         feature_selection_info: dict[str, Any] = {
-            "enabled": self._feature_selector is not None,
+            "enabled": self.feature_selector is not None,
         }
 
-        if self._feature_selector is not None:
-            feature_selection_info["selector_type"] = type(self._feature_selector).__name__
+        if self.feature_selector is not None:
+            feature_selection_info["selector_type"] = type(self.feature_selector).__name__
 
             # Add feature count information
             if self.solution and self.solution.extracted_features is not None:

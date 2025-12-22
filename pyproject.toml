@@ -109,3 +109,10 @@ line-ending = "auto"
 
 [tool.uv.sources]
 microsoft-python-type-stubs = { git = "https://github.com/microsoft/python-type-stubs.git" }
+
+[tool.vulture]
+ignore_decorators = ["@callback", "@app.callback", "@self.app.callback"]
+ignore_names = ["render", "layout"]
+
+[dependency-groups]
+dev = ["vulture>=2.14"]

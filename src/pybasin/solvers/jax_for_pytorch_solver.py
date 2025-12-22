@@ -20,6 +20,7 @@ from diffrax import (
     diffeqsolve,  # type: ignore[import-untyped]
 )
 
+from pybasin.cache_manager import CacheManager
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.ode_system import ODESystem
 from pybasin.solver import Solver
@@ -84,7 +85,7 @@ class JaxForPytorchSolver(Solver):
 
     def with_device(self, device: str) -> "JaxForPytorchSolver":
         """Create a copy of this solver configured for a different device."""
-        return JaxForPytorchSolver(
+        new_solver = JaxForPytorchSolver(
             time_span=self.time_span,
             fs=self.fs,
             n_steps=self.n_steps,
@@ -96,6 +97,11 @@ class JaxForPytorchSolver(Solver):
             use_cache=self.use_cache,
             **self.params,
         )
+        # Reuse the same cache directory to ensure consistency
+        if self._cache_dir is not None:
+            new_solver._cache_dir = self._cache_dir
+            new_solver._cache_manager = CacheManager(self._cache_dir)
+        return new_solver
 
     def _get_cache_config(self) -> dict[str, Any]:
         """Include solver type, rtol, atol, and max_steps in cache key."""

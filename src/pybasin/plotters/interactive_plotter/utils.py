@@ -16,16 +16,19 @@ COLORS = [
     "#17becf",  # cyan
 ]
 
-WEBGL_THRESHOLD = 5000
-
 
 def get_color(idx: int) -> str:
     """Get color from palette by index."""
     return COLORS[idx % len(COLORS)]
 
 
-def use_webgl(y0: torch.Tensor | None) -> bool:
-    """Determine if WebGL should be used based on dataset size."""
-    if y0 is None:
-        return False
-    return len(y0) > WEBGL_THRESHOLD
+def tensor_to_float_list(tensor: torch.Tensor) -> list[float]:
+    """Convert a torch tensor to a list of floats.
+
+    Args:
+        tensor: 1D torch tensor to convert
+
+    Returns:
+        List of float values from the tensor
+    """
+    return [float(x) for x in tensor.cpu().tolist()]
