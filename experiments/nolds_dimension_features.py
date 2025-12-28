@@ -13,33 +13,33 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
+try:
+    import nolds
+except ImportError as exc:
+    raise ImportError("nolds is required for this experiment (pip install nolds)") from exc
+
+from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
+    setup_duffing_oscillator_system,
+)
+from case_studies.friction.setup_friction_system import setup_friction_system
+from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
+from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
+from pybasin.predictors import ClassifierPredictor
+
+if TYPE_CHECKING:
+    from pybasin.solution import Solution
+    from pybasin.types import SetupProperties
+
 # Suppress nolds warnings about autocorrelation lag and RANSAC consensus
 warnings.filterwarnings(
     "ignore", message="autocorrelation declined too slowly", category=RuntimeWarning
 )
 warnings.filterwarnings("ignore", message="RANSAC did not reach consensus", category=RuntimeWarning)
 
-try:
-    import nolds
-except ImportError as exc:
-    raise ImportError("nolds is required for this experiment (pip install nolds)") from exc
-
-if TYPE_CHECKING:
-    from pybasin.solution import Solution
-    from pybasin.types import SetupProperties
-
-
 SetupFactory = Callable[[], "SetupProperties"]
 
 
 def get_system_setups() -> list[tuple[str, SetupFactory]]:
-    from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
-        setup_duffing_oscillator_system,
-    )
-    from case_studies.friction.setup_friction_system import setup_friction_system
-    from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-    from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-
     return [
         ("pendulum", setup_pendulum_system),
         ("lorenz", setup_lorenz_system),
@@ -155,12 +155,10 @@ def cluster_and_report(
 
 
 def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Namespace) -> None:
-    from pybasin.cluster_classifier import SupervisedClassifier
-
     props = setup_fn()
     classifier = props.get("cluster_classifier")
-    if not isinstance(classifier, SupervisedClassifier):
-        print(f"  Skipping {system_name}: classifier is not SupervisedClassifier")
+    if not isinstance(classifier, ClassifierPredictor):
+        print(f"  Skipping {system_name}: classifier is not ClassifierPredictor")
         return
     solver = props.get("solver")
     ode_system = props["ode_system"]

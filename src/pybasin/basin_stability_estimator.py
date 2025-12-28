@@ -3,19 +3,21 @@ import os
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import torch
 from sklearn.base import BaseEstimator
 
-from pybasin.cluster_classifier import ClusterClassifier, HDBSCANCluster, SupervisedClassifier
 from pybasin.feature_extractors import TorchFeatureExtractor
 from pybasin.feature_extractors.default_feature_selector import DefaultFeatureSelector
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.jax_ode_system import JaxODESystem
+from pybasin.predictors.base import ClassifierPredictor, LabelPredictor
+from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
+from pybasin.predictors.unboundedness_clusterer import UnboundednessClusterer
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
@@ -53,8 +55,9 @@ class BasinStabilityEstimator:
         sampler: Sampler,
         solver: SolverProtocol | None = None,
         feature_extractor: FeatureExtractor | None = None,
-        cluster_classifier: ClusterClassifier | None = None,
+        cluster_classifier: LabelPredictor | None = None,
         feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
+        detect_unbounded: bool = True,
         save_to: str | None = None,
     ):
         """
@@ -69,11 +72,15 @@ class BasinStabilityEstimator:
                       and device from sampler.
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
                                  If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
-        :param cluster_classifier: The ClusterClassifier object to assign labels. If None, defaults
-                                  to HDBSCANCluster with auto_tune=True and assign_noise=True.
+        :param cluster_classifier: The LabelPredictor object to assign labels. If None, defaults
+                                  to HDBSCANClusterer with auto_tune=True and assign_noise=True.
         :param feature_selector: Feature filtering sklearn transformer with get_support() method.
                                 Defaults to DefaultFeatureSelector(). Pass None to disable filtering.
                                 Accepts any sklearn transformer (VarianceThreshold, SelectKBest, etc.) or Pipeline.
+        :param detect_unbounded: Enable unboundedness detection before feature extraction (default: True).
+                                Only activates when solver has event_fn configured (e.g., JaxSolver with event_fn).
+                                When enabled, unbounded trajectories are separated and labeled as "unbounded"
+                                before feature extraction to prevent imputed Inf values from contaminating features.
         :param save_to: Optional file path to save results.
         """
         self.n = int(n)
@@ -109,6 +116,13 @@ class BasinStabilityEstimator:
 
         self._filtered_feature_names: list[str] | None = None
 
+        # Unboundedness detection: enabled only if detect_unbounded=True AND solver is JaxSolver with event_fn
+        self.detect_unbounded = (
+            detect_unbounded
+            and isinstance(self.solver, JaxSolver)
+            and self.solver.event_fn is not None
+        )
+
         if feature_extractor is None:
             time_steady = self.solver.time_span[0] + 0.85 * (
                 self.solver.time_span[1] - self.solver.time_span[0]
@@ -125,20 +139,31 @@ class BasinStabilityEstimator:
 
         if cluster_classifier is None:
             warnings.warn(
-                "No cluster_classifier provided. Using default HDBSCANCluster with auto_tune=True "
+                "No cluster_classifier provided. Using default HDBSCANClusterer with auto_tune=True "
                 "and assign_noise=True. For better performance with known attractors, pass a custom "
-                "supervised classifier (e.g., KNNCluster).",
+                "supervised classifier (e.g., KNNClassifier).",
                 UserWarning,
                 stacklevel=2,
             )
-            cluster_classifier = HDBSCANCluster(auto_tune=True, assign_noise=True)
-
+            cluster_classifier = UnboundednessClusterer(
+                HDBSCANClusterer(auto_tune=True, assign_noise=True)
+            )
         self.cluster_classifier = cluster_classifier
 
         # Attributes to be populated during estimation
         self.bs_vals: dict[str, float] | None = None
         self.y0: torch.Tensor | None = None
         self.solution: Solution | None = None
+
+    def _detect_unbounded_trajectories(self, y: torch.Tensor) -> torch.Tensor:
+        """Detect unbounded trajectories based on Inf values.
+
+        When JAX Diffrax integration stops due to an event, remaining timesteps are filled with Inf.
+
+        :param y: Trajectory tensor of shape (N, B, S) where N=timesteps, B=batch, S=states.
+        :return: Boolean tensor of shape (B,) indicating unbounded trajectories.
+        """
+        return torch.isinf(y).any(dim=(0, 2))
 
     def _get_feature_names(self) -> list[str]:
         """Get feature names from extractor.
@@ -164,8 +189,6 @@ class BasinStabilityEstimator:
         features_np = features.detach().cpu().numpy()
 
         # Apply filtering
-        from typing import cast
-
         features_filtered_np = cast(
             np.ndarray[Any, np.dtype[np.floating[Any]]],
             self.feature_selector.fit_transform(features_np),  # type: ignore[union-attr]
@@ -211,7 +234,7 @@ class BasinStabilityEstimator:
             - self.solution
             - self.bs_vals
 
-        :param parallel_integration: If True and using SupervisedClassifier, run main integration
+        :param parallel_integration: If True and using ClassifierPredictor, run main integration
                                      and template integration in parallel (default: True).
         :return: A dictionary of basin stability values per class.
         """
@@ -231,7 +254,7 @@ class BasinStabilityEstimator:
         t2a_elapsed = 0.0  # Template integration time
         t2b_elapsed = 0.0  # Main integration time
 
-        if parallel_integration and isinstance(self.cluster_classifier, SupervisedClassifier):
+        if parallel_integration and isinstance(self.cluster_classifier, ClassifierPredictor):
             print("  Mode: PARALLEL (integration only)")
             print("  • Main integration (sampled ICs)")
             print("  • Template integration (classifier ICs)")
@@ -257,7 +280,7 @@ class BasinStabilityEstimator:
             print(f"  Main trajectory shape: {y.shape}")
         else:
             # Sequential execution (original behavior)
-            if isinstance(self.cluster_classifier, SupervisedClassifier):
+            if isinstance(self.cluster_classifier, ClassifierPredictor):
                 print("  Mode: SEQUENTIAL")
                 print("  Step 2a: Integrating template initial conditions...")
                 t2a_start = time.perf_counter()
@@ -288,6 +311,55 @@ class BasinStabilityEstimator:
         self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
         t3_elapsed = time.perf_counter() - t3
         print(f"  Solution object created in {t3_elapsed:.4f}s")
+
+        # Step 3b: Detect and separate unbounded trajectories (if enabled)
+        unbounded_mask: torch.Tensor | None = None
+        n_unbounded = 0
+        total_samples = len(self.y0)
+        original_solution: Solution | None = None
+
+        if self.detect_unbounded:
+            print("\nSTEP 3b: Unboundedness Detection")
+            t3b = time.perf_counter()
+            unbounded_mask = self._detect_unbounded_trajectories(y)
+            n_unbounded = int(unbounded_mask.sum().item())
+            n_bounded = total_samples - n_unbounded
+            unbounded_pct = (n_unbounded / total_samples) * 100
+            t3b_elapsed = time.perf_counter() - t3b
+
+            print(
+                f"  Detected {n_unbounded}/{total_samples} unbounded trajectories ({unbounded_pct:.1f}%) in {t3b_elapsed:.4f}s"
+            )
+
+            if n_unbounded == total_samples:
+                print(
+                    "  All trajectories are unbounded. Skipping feature extraction and classification."
+                )
+                self.bs_vals = {"unbounded": 1.0}
+                labels = np.array(["unbounded"] * total_samples, dtype=object)
+                self.solution.set_labels(labels)
+
+                total_elapsed = time.perf_counter() - total_start
+                print("\nBASIN STABILITY ESTIMATION COMPLETE")
+                print(f"Total time: {total_elapsed:.4f}s")
+                return self.bs_vals
+
+            if n_unbounded > 0:
+                print(
+                    f"  Separating {n_bounded} bounded trajectories for feature extraction and classification"
+                )
+                bounded_mask = ~unbounded_mask
+
+                # Store original solution for later restoration
+                original_solution = self.solution
+
+                y0_bounded = self.y0[bounded_mask]
+                y_bounded = y[:, bounded_mask, :]
+
+                self.solution = Solution(initial_condition=y0_bounded, time=t, y=y_bounded)
+                self.solution.bifurcation_amplitudes = extract_amplitudes(t, y_bounded)
+        else:
+            print("\n  Unboundedness detection: DISABLED")
 
         # Step 4: Feature extraction (main data - fits scaler on large dataset)
         print("\nSTEP 4: Feature Extraction")
@@ -333,7 +405,7 @@ class BasinStabilityEstimator:
                     print(f"    {name}: {value:.6f}")
 
         # Step 5b: Fit classifier with template features (using already-fitted scaler)
-        if isinstance(self.cluster_classifier, SupervisedClassifier):  # type: ignore[type-arg]
+        if isinstance(self.cluster_classifier, ClassifierPredictor):  # type: ignore[type-arg]
             print("\nSTEP 5b: Fitting Classifier")
             t5b = time.perf_counter()
             self.cluster_classifier.fit_with_features(  # type: ignore[misc]
@@ -350,9 +422,24 @@ class BasinStabilityEstimator:
         # Convert features to numpy for classifier
         t6_pred = time.perf_counter()
         features_np = features.detach().cpu().numpy()
-        labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
-        self.solution.set_labels(labels)
+        bounded_labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
         t6_pred_elapsed = time.perf_counter() - t6_pred
+
+        # Reconstruct full label array if unbounded trajectories were separated
+        if self.detect_unbounded and unbounded_mask is not None and n_unbounded > 0:
+            labels = np.empty(total_samples, dtype=object)
+            labels[unbounded_mask.cpu().numpy()] = "unbounded"
+            labels[~unbounded_mask.cpu().numpy()] = bounded_labels
+            print(f"  Classified {len(bounded_labels)} bounded trajectories")
+            print(f"  Reconstructed full label array with {n_unbounded} unbounded labels")
+
+            # Restore original solution with full trajectories
+            if original_solution is not None:
+                self.solution = original_solution
+        else:
+            labels = bounded_labels
+
+        self.solution.set_labels(labels)
         t6_elapsed = time.perf_counter() - t6
         print(f"  Classification complete in {t6_elapsed:.4f}s")
         print(f"  Prediction time: {t6_pred_elapsed:.4f}s")
@@ -360,7 +447,10 @@ class BasinStabilityEstimator:
         # Step 7: Computing Basin Stability
         print("\nSTEP 7: Computing Basin Stability")
         t7 = time.perf_counter()
-        unique_labels, counts = np.unique(labels, return_counts=True)
+
+        # Convert all labels to strings to ensure consistent types (bounded labels may be int or str)
+        labels_str = np.array([str(label) for label in labels], dtype=object)
+        unique_labels, counts = np.unique(labels_str, return_counts=True)
 
         self.bs_vals = {str(label): 0.0 for label in unique_labels}
 
@@ -370,8 +460,9 @@ class BasinStabilityEstimator:
         fractions = counts / float(actual_n)
 
         for label, fraction in zip(unique_labels, fractions, strict=True):
-            self.bs_vals[str(label)] = fraction
-            print(f"  {label}: {fraction:.4f}")
+            basin_stability_fraction = float(fraction)
+            self.bs_vals[str(label)] = basin_stability_fraction
+            print(f"  {label}: {basin_stability_fraction * 100:.2f}%")
 
         t7_elapsed = time.perf_counter() - t7
         print(f"  Basin stability computed in {t6_elapsed:.4f}s")

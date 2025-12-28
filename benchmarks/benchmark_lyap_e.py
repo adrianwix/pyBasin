@@ -15,6 +15,7 @@ if _XLA_FLAG not in os.environ.get("XLA_FLAGS", ""):
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 import logging
+import multiprocessing
 import time
 import warnings
 from concurrent.futures import ProcessPoolExecutor
@@ -118,18 +119,12 @@ def nolds_worker(args):
 
 def jax_worker_init():
     """Initialize JAX to use CPU only in worker processes."""
-    import os
-
     os.environ["JAX_PLATFORMS"] = "cpu"
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def jax_worker(args):
     """Worker function for parallel JAX (each process runs JAX on CPU)."""
-    import jax.numpy as jnp
-
-    from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_single_jax
-
     data, emb_dim, matrix_dim, min_nb, min_tsep, tau = args
     result = lyap_e_single_jax(jnp.array(data), emb_dim, matrix_dim, min_nb, min_tsep, tau)
     return np.array(result)
@@ -139,8 +134,6 @@ def lyap_e_batch_jax_multiprocess(
     data, emb_dim=10, matrix_dim=4, min_nb=8, min_tsep=0, tau=1.0, n_workers=None
 ):
     """JAX with ProcessPoolExecutor (each worker runs JAX on CPU)."""
-    import multiprocessing
-
     if n_workers is None:
         n_workers = cpu_count()
 

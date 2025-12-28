@@ -6,7 +6,11 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array, vmap
 
-from pybasin.feature_extractors.jax_feature_utilities import delay_embedding, rowwise_euclidean
+from pybasin.feature_extractors.jax_feature_utilities import (
+    delay_embedding,
+    impute,
+    rowwise_euclidean,
+)
 
 # =============================================================================
 # Grassberger-Procaccia Algorithm (corr_dim) - Correlation Dimension
@@ -24,8 +28,6 @@ def logarithmic_r_numpy(min_r: float, max_r: float, factor: float) -> np.ndarray
     Returns:
         NumPy array of logarithmically spaced values from min_r to max_r
     """
-    import numpy as np
-
     max_i = int(np.floor(np.log(max_r / min_r) / np.log(factor)))
     return np.array([min_r * (factor**i) for i in range(max_i + 1)])
 
@@ -214,7 +216,5 @@ def corr_dim_batch_with_impute(
     Returns:
         Array of correlation dimensions, shape (B, S), with NaN/inf imputed
     """
-    from pybasin.feature_extractors.jax_feature_utilities import impute
-
     features = corr_dim_batch(data, emb_dim, lag, n_rvals)
     return impute(features)

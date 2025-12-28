@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pybasin.cluster_classifier import SupervisedClassifier
+from pybasin.predictors.base import ClassifierPredictor
 
 if TYPE_CHECKING:
     from pybasin.basin_stability_estimator import BasinStabilityEstimator
@@ -42,7 +42,7 @@ class TrajectoryCache:
         if bse_id in cls._cache:
             return cls._cache[bse_id]
 
-        if not isinstance(bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(bse.cluster_classifier, ClassifierPredictor):
             empty_time = np.array([0.0, 1.0])
             empty_traj = np.zeros((2, 1, 1))
             cls._cache[bse_id] = (empty_time, empty_traj)

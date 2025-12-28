@@ -31,6 +31,7 @@ class MyODEParams(TypedDict):
 ```
 
 **Benefits:**
+
 - Type checkers will enforce that all required keys are present
 - IDE will autocomplete parameter names
 - Docstrings on each field document what they mean
@@ -47,17 +48,17 @@ class MyODE(ODESystem[MyODEParams]):
     def __init__(self, params: MyODEParams):
         super().__init__(params)
         # self.params is now typed as MyODEParams!
-    
+
     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         # Type checker knows these keys exist
         alpha = self.params["alpha"]
         beta = self.params["beta"]
         omega = self.params["omega"]
-        
+
         # ... your ODE logic here ...
         dy_dt = -alpha * y + beta * torch.sin(omega * t)
         return dy_dt
-    
+
     def get_str(self) -> str:
         return f"My ODE with α={self.params['alpha']}"
 ```
@@ -67,7 +68,7 @@ class MyODE(ODESystem[MyODEParams]):
 When creating classifiers or other components, the generic type flows through:
 
 ```python
-from pybasin.cluster_classifier import KNNCluster
+from pybasin.classifiers.knncluster import KNNCluster
 from sklearn.neighbors import KNeighborsClassifier
 
 # Create your parameters with full type safety
@@ -111,21 +112,21 @@ import torch
 class PendulumODE(ODESystem[PendulumParams]):
     def __init__(self, params: PendulumParams):
         super().__init__(params)
-    
+
     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         # IDE autocompletes these parameter names!
         alpha = self.params["alpha"]
         T = self.params["T"]
         K = self.params["K"]
-        
+
         theta = y[..., 0]
         theta_dot = y[..., 1]
-        
+
         dtheta_dt = theta_dot
         dtheta_dot_dt = -alpha * theta_dot + T - K * torch.sin(theta)
-        
+
         return torch.stack([dtheta_dt, dtheta_dot_dt], dim=-1)
-    
+
     def get_str(self) -> str:
         return (
             f"Pendulum ODE:\n"
@@ -142,10 +143,10 @@ def setup_pendulum():
         "T": 0.5,
         "K": 1.0,
     }
-    
+
     # If you forget a parameter or misspell it, you'll get a type error!
     # params: PendulumParams = {"alpha": 0.1}  # ERROR: Missing 'T' and 'K'
-    
+
     ode = PendulumODE(params)
     return ode
 ```
@@ -155,22 +156,24 @@ def setup_pendulum():
 If you're familiar with TypeScript, here's how the concepts map:
 
 ### TypeScript:
+
 ```typescript
 interface PendulumParams {
-    alpha: number;
-    T: number;
-    K: number;
+  alpha: number;
+  T: number;
+  K: number;
 }
 
 class PendulumODE extends ODESystem<PendulumParams> {
-    constructor(params: PendulumParams) {
-        super(params);
-        // this.params is typed as PendulumParams
-    }
+  constructor(params: PendulumParams) {
+    super(params);
+    // this.params is typed as PendulumParams
+  }
 }
 ```
 
 ### Python (pyBasin):
+
 ```python
 class PendulumParams(TypedDict):
     alpha: float
@@ -242,6 +245,7 @@ class FlexibleODE(ODESystem[Union[ParamVariant1, ParamVariant2]]):
 ### "Type is not assignable to TypeVar"
 
 If you see this error, make sure:
+
 - Your parameter type is a `TypedDict` or plain `dict`
 - You're consistently using the same generic type throughout
 

@@ -18,19 +18,19 @@ from dash import (
 from dash.development.base_component import Component
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import SupervisedClassifier
 from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAIO
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.plotters.types import TemplateTimeSeriesOptions
+from pybasin.predictors.base import ClassifierPredictor
 
 
 class TemplateTimeSeriesAIO(BseBasePageAIO):
     """
     AIO component for template trajectory time series plots.
 
-    Displays time series for template trajectories from SupervisedClassifier.
+    Displays time series for template trajectories from ClassifierPredictor.
     """
 
     def __init__(
@@ -60,11 +60,11 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and time series plot."""
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
-                        "Template time series requires SupervisedClassifier",
+                        "Template time series requires ClassifierPredictor",
                         size="lg",
                         c="gray",
                     ),
@@ -154,10 +154,10 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build template time series plot."""
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
-                text="Template plot requires SupervisedClassifier",
+                text="Template plot requires ClassifierPredictor",
                 xref="paper",
                 yref="paper",
                 x=0.5,
@@ -176,7 +176,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
         fig = go.Figure()
 
-        # After isinstance check, type is narrowed to SupervisedClassifier
+        # After isinstance check, type is narrowed to ClassifierPredictor
         all_labels = self.bse.cluster_classifier.labels
         if selected_templates is None:
             selected_templates = list(all_labels)

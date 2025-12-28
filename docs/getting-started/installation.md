@@ -23,10 +23,10 @@ git clone https://github.com/adrianwix/pyBSTAB.git
 cd pyBasinWorkspace
 
 # Install with UV
-uv pip install -e .
+uv add -e .
 
 # Or install with all optional dependencies
-uv pip install -e ".[all]"
+uv add -e ".[all]"
 ```
 
 ### Using pip
@@ -50,10 +50,11 @@ pip install -e ".[all]"
 Install testing and linting tools:
 
 ```bash
-uv pip install -e ".[dev]"
+uv add -e ".[dev]"
 ```
 
 Includes:
+
 - pytest
 - pytest-cov
 - mypy
@@ -65,10 +66,11 @@ Includes:
 Install documentation building tools:
 
 ```bash
-uv pip install -e ".[docs]"
+uv add -e ".[docs]"
 ```
 
 Includes:
+
 - mkdocs-material
 - mkdocstrings
 - mkdocs-jupyter
@@ -78,10 +80,11 @@ Includes:
 Install additional dependencies for running case studies:
 
 ```bash
-uv pip install -e ".[case-studies]"
+uv add -e ".[case-studies]"
 ```
 
 Includes:
+
 - jupyter
 - openpyxl
 - notebook

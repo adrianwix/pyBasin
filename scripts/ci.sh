@@ -5,7 +5,7 @@ echo "Running CI checks..."
 echo ""
 
 echo "==> Running ruff linter..."
-uv run ruff check --fix
+uv run ruff check --fix --output-format=concise
 
 echo ""
 echo "==> Running ruff formatter..."

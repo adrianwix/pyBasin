@@ -70,23 +70,27 @@ extra_javascript:
 nav:
   - Home: index.md
   - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quickstart.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - Guides:
+      - Handling Unbounded Trajectories: guides/unbounded-trajectories.md
+      - TorchODE Solver: guides/torchode-solver.md
+      - Type Safety and Generics: guides/type-safety-generics.md
   - Theory:
-    - Basin Stability: theory/basin-stability.md
-    - Adaptive Sampling: theory/adaptive-sampling.md
+      - Basin Stability: theory/basin-stability.md
+      - Adaptive Sampling: theory/adaptive-sampling.md
   - API Reference:
-    - Basin Stability Estimator: api/basin-stability-estimator.md
-    - Adaptive Sampling: api/adaptive-sampling.md
-    - Solvers: api/solvers.md
-    - Plotting: api/plotting.md
-    - Feature Extraction: api/feature-extraction.md
+      - Basin Stability Estimator: api/basin-stability-estimator.md
+      - Adaptive Sampling: api/adaptive-sampling.md
+      - Solvers: api/solvers.md
+      - Plotting: api/plotting.md
+      - Feature Extraction: api/feature-extraction.md
   - Case Studies:
-    - Overview: case-studies/overview.md
-    - Duffing Oscillator: case-studies/duffing.md
-    - Lorenz System: case-studies/lorenz.md
-    - Pendulum: case-studies/pendulum.md
-    - Friction System: case-studies/friction.md
+      - Overview: case-studies/overview.md
+      - Duffing Oscillator: case-studies/duffing.md
+      - Lorenz System: case-studies/lorenz.md
+      - Pendulum: case-studies/pendulum.md
+      - Friction System: case-studies/friction.md
   - Development:
-    - Contributing: development/contributing.md
-    - Testing: development/testing.md
+      - Contributing: development/contributing.md
+      - Testing: development/testing.md

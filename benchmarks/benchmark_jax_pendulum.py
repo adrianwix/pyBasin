@@ -12,6 +12,7 @@ Key features:
 - Complete basin stability computation
 """
 
+import concurrent.futures
 import time
 from typing import NamedTuple
 
@@ -273,8 +274,6 @@ def main():
     print("Note: No explicit JIT compilation - direct function calls")
 
     t3 = time.perf_counter()
-
-    import concurrent.futures
 
     def integrate_fn(y0):
         return integrate_ode_batch(y0, params, t_span, n_steps, rtol, atol)

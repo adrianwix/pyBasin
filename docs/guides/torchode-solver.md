@@ -6,7 +6,7 @@ This document explains the `TorchOdeSolver` implementation, an alternative to `T
 
 `TorchOdeSolver` is a PyTorch-based ODE solver that uses the [torchode](https://github.com/martenlienen/torchode) library. It provides:
 
-- **JIT Compilation**: Optional PyTorch JIT compilation for better performance  
+- **JIT Compilation**: Optional PyTorch JIT compilation for better performance
 - **Batch Parallelization**: Efficient parallel solving across batches
 - **Multiple Methods**: Various integration methods (dopri5, tsit5, euler, etc.)
 - **GPU Support**: Full CUDA support like TorchDiffEqSolver
@@ -19,11 +19,13 @@ This document explains the `TorchOdeSolver` implementation, an alternative to `T
 - **TorchOdeSolver**: ~119 seconds for 10,000 samples (pendulum case study)
 
 This is because:
+
 1. The current architecture integrates one trajectory at a time (batch_size=1)
 2. torchode's batch parallelization doesn't help with batch_size=1
 3. torchdiffeq is more optimized for single-trajectory integration
 
 **When TorchOdeSolver would be faster**:
+
 - When integrating **multiple trajectories in parallel** (requires code restructuring)
 - When using **JIT compilation** with repeated solves of the same system
 - For problems where **variable step sizes per trajectory** are needed
@@ -37,7 +39,7 @@ To use `TorchOdeSolver`, you need to install the `torchode` package:
 pip install torchode
 
 # Using uv
-uv pip install torchode
+uv add torchode
 
 # Or install with the optional solvers dependency
 pip install -e ".[solvers]"
@@ -46,9 +48,10 @@ pip install -e ".[solvers]"
 ## Comparison: TorchDiffEqSolver vs TorchOdeSolver
 
 ### TorchDiffEqSolver (torchdiffeq)
+
 - **Default Solver**: dopri5 (Dormand-Prince 5(4))
 - **Similar to**: MATLAB's ode45
-- **Pros**: 
+- **Pros**:
   - Well-established, widely used
   - Adjoint method for memory-efficient backpropagation
   - Simple API
@@ -57,6 +60,7 @@ pip install -e ".[solvers]"
   - No JIT compilation support
 
 ### TorchOdeSolver (torchode)
+
 - **Default Solver**: dopri5 (Dormand-Prince 5(4))
 - **Pros**:
   - JIT compilation support for performance
@@ -70,10 +74,12 @@ pip install -e ".[solvers]"
 ## Available Methods
 
 ### Adaptive-Step Methods
+
 - **`dopri5`** (default): Dormand-Prince 5(4) - similar to MATLAB's ode45
 - **`tsit5`**: Tsitouras 5(4) - often more efficient than dopri5
 
 ### Fixed-Step Methods
+
 - **`euler`**: Explicit Euler (1st order)
 - **`midpoint`**: Explicit midpoint (2nd order)
 - **`heun`**: Heun's method (2nd order)
@@ -140,7 +146,7 @@ To test the TorchOdeSolver implementation:
 
 ```bash
 # First, install torchode
-uv pip install torchode
+uv add torchode
 
 # Run the pendulum case study with TorchOdeSolver
 python case_studies/pendulum/main_pendulum_case1_torchode.py
@@ -149,16 +155,19 @@ python case_studies/pendulum/main_pendulum_case1_torchode.py
 ## Performance Tips
 
 1. **Enable JIT Compilation**: Set `use_jit=True` for repeated solves with the same system
+
    ```python
    solver = TorchOdeSolver(time_span=(0, 1000), fs=25, use_jit=True)
    ```
 
 2. **Choose the Right Method**:
+
    - For general problems: `dopri5` (default)
    - For better efficiency: `tsit5`
    - For simple/fast problems: `euler` or `midpoint` (fixed step)
 
-3. **Adjust Tolerances**: 
+3. **Adjust Tolerances**:
+
    - Tighter tolerances (smaller rtol/atol) = more accurate but slower
    - Looser tolerances = faster but less accurate
 
@@ -167,6 +176,7 @@ python case_studies/pendulum/main_pendulum_case1_torchode.py
 ## Implementation Details
 
 The `TorchOdeSolver` class:
+
 - Inherits from the abstract `Solver` base class
 - Implements the `_integrate()` method
 - Handles batch dimension conversion (torchode expects batched inputs)
@@ -176,21 +186,27 @@ The `TorchOdeSolver` class:
 ## Troubleshooting
 
 ### Import Error
+
 ```
 ImportError: torchode is not installed
 ```
+
 **Solution**: Install torchode with `pip install torchode`
 
 ### Unknown Method Error
+
 ```
 ValueError: Unknown method: xyz
 ```
+
 **Solution**: Use one of the available methods: dopri5, tsit5, euler, midpoint, heun
 
 ### Integration Failed
+
 ```
 RuntimeError: torchode integration failed
 ```
+
 **Solution**: Try adjusting tolerances or using a different method
 
 ## References

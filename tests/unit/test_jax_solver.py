@@ -3,6 +3,7 @@ from typing import TypedDict
 import jax.numpy as jnp
 import pytest
 import torch
+from diffrax import Tsit5
 from jax import Array
 
 from pybasin.jax_ode_system import JaxODESystem
@@ -67,8 +68,6 @@ def test_jax_solver_y0_shape_validation(simple_jax_ode: ExponentialDecayJaxODE) 
 
 
 def test_jax_solver_custom_solver(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    from diffrax import Tsit5
-
     custom_solver = Tsit5()
     solver = JaxSolver(
         time_span=(0, 1), n_steps=10, device="cpu", solver=custom_solver, use_cache=False
@@ -103,13 +102,14 @@ def test_jax_solver_with_device(simple_jax_ode: ExponentialDecayJaxODE) -> None:
 def test_jax_solver_default_n_steps(simple_jax_ode: ExponentialDecayJaxODE) -> None:
     solver = JaxSolver(time_span=(0, 1), device="cpu", use_cache=False)
 
-    assert solver.n_steps == 500
+    steps = 1000
+    assert solver.n_steps == steps
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_jax_ode, y0)
 
-    assert t.shape == (500,)
-    assert y.shape == (500, 1, 1)
+    assert t.shape == (steps,)
+    assert y.shape == (steps, 1, 1)
 
 
 def test_jax_solver_2d_system() -> None:

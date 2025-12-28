@@ -1,7 +1,7 @@
 from typing import NotRequired, TypedDict
 
-from pybasin.cluster_classifier import ClusterClassifier
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 
@@ -19,4 +19,4 @@ class SetupProperties(TypedDict):
     sampler: Sampler
     solver: NotRequired[SolverProtocol]
     feature_extractor: NotRequired[FeatureExtractor]
-    cluster_classifier: NotRequired[ClusterClassifier]
+    cluster_classifier: NotRequired[LabelPredictor]

@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import SupervisedClassifier
+from pybasin.predictors.base import ClassifierPredictor
 from pybasin.utils import generate_filename, resolve_folder
 
 
@@ -125,9 +125,9 @@ class MatplotlibPlotter:
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             raise ValueError(
-                "plot_phase requires a SupervisedClassifier with template initial conditions."
+                "plot_phase requires a ClassifierPredictor with template initial conditions."
             )
 
         # Use classifier's solver if available, otherwise use main solver
@@ -186,9 +186,9 @@ class MatplotlibPlotter:
             plotted_var (int): Index of the variable to plot
             time_span (tuple, optional): Time range to plot (t_start, t_end)
         """
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             raise ValueError(
-                "plot_templates requires a SupervisedClassifier with template initial conditions."
+                "plot_templates requires a ClassifierPredictor with template initial conditions."
             )
 
         # Use classifier's solver if available, otherwise use main solver

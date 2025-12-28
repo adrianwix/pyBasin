@@ -85,7 +85,7 @@ class StateSpaceAIO(BseBasePageAIO):
                                             value=str(y_var) if n_states > 1 else "0",
                                         ),
                                     ],
-                                    direction={"base": "row", "md": "column"},
+                                    direction={"base": "row", "md": "column"},  # pyright: ignore[reportArgumentType]
                                     gap="md",
                                     wrap="wrap",
                                     style={
@@ -94,7 +94,7 @@ class StateSpaceAIO(BseBasePageAIO):
                                     },
                                 ),
                             ],
-                            span={"base": 12, "md": 2},
+                            span={"base": 12, "md": 2},  # pyright: ignore[reportArgumentType]
                             style={"borderRight": "1px solid #373A40"},
                         ),
                         dmc.GridCol(
@@ -112,7 +112,7 @@ class StateSpaceAIO(BseBasePageAIO):
                                     },
                                 ),
                             ],
-                            span={"base": 12, "md": 10},
+                            span={"base": 12, "md": 10},  # pyright: ignore[reportArgumentType]
                         ),
                     ],
                 ),

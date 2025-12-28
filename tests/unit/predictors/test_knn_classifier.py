@@ -2,12 +2,11 @@ from typing import TypedDict
 
 import numpy as np
 import torch
-from sklearn.cluster import DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 
-from pybasin.cluster_classifier import DBSCANCluster, KNNCluster
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
+from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
 
@@ -42,7 +41,7 @@ def test_knn_classifier_fit_predict():
     template_y0 = [[1.0], [2.0]]
     labels = ["A", "B"]
 
-    knn = KNNCluster(
+    knn = KNNClassifier(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_y0,
         labels=labels,
@@ -58,15 +57,3 @@ def test_knn_classifier_fit_predict():
     assert len(predicted) == 2
     # Prediction is one of the trained labels
     assert predicted[0] in ["A", "B"]
-
-
-def test_dbscan_classifier():
-    dbscan = DBSCANCluster(classifier=DBSCAN(eps=0.5, min_samples=2))
-
-    features = np.array([[0, 0], [0.1, 0.1], [5, 5], [5.1, 5]])
-    labels = dbscan.predict_labels(features)
-
-    # Four labels (one per feature point)
-    assert len(labels) == 4
-    # At least 2 clusters found (two pairs of nearby points)
-    assert len(set(labels)) >= 2

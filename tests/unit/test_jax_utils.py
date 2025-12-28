@@ -1,4 +1,5 @@
 import jax
+import jax.numpy as jnp
 import pytest
 import torch
 
@@ -100,8 +101,6 @@ class TestJaxToTorch:
 
     def test_cpu_array_conversion(self):
         """Test CPU array converts correctly."""
-        import jax.numpy as jnp
-
         # Explicitly place on CPU
         device = get_jax_device("cpu")
         x_jax = jax.device_put(jnp.array([[1.0, 2.0], [3.0, 4.0]]), device)  # type: ignore[arg-type]
@@ -112,8 +111,6 @@ class TestJaxToTorch:
 
     def test_cpu_array_to_explicit_device(self):
         """Test CPU array to explicit CPU device."""
-        import jax.numpy as jnp
-
         device = get_jax_device("cpu")
         x_jax = jax.device_put(jnp.array([[1.0, 2.0], [3.0, 4.0]]), device)  # type: ignore[arg-type]
         x_torch = jax_to_torch(x_jax, device="cpu")
@@ -123,8 +120,6 @@ class TestJaxToTorch:
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="No CUDA available")
     def test_gpu_array_conversion(self):
         """Test GPU array converts correctly."""
-        import jax.numpy as jnp
-
         device = get_jax_device("gpu")
         x_jax = jax.device_put(jnp.array([[1.0, 2.0], [3.0, 4.0]]), device)  # type: ignore[arg-type]
         x_torch = jax_to_torch(x_jax)
@@ -133,8 +128,6 @@ class TestJaxToTorch:
 
     def test_preserves_values(self):
         """Test values are preserved after conversion."""
-        import jax.numpy as jnp
-
         device = get_jax_device("cpu")
         x_jax = jax.device_put(jnp.array([1.0, 2.0, 3.0, 4.0, 5.0]), device)  # type: ignore[arg-type]
         x_torch = jax_to_torch(x_jax)

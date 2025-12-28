@@ -17,12 +17,12 @@ from dash import (
 )
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import SupervisedClassifier
 from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAIO
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.plotters.types import PhasePlotOptions
+from pybasin.predictors.base import ClassifierPredictor
 
 
 class TemplatePhasePlotAIO(BseBasePageAIO):
@@ -56,18 +56,18 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         TemplatePhasePlotAIO._instances[aio_id] = self
 
     def _get_template_labels(self) -> list[str]:
-        """Get list of template labels if using SupervisedClassifier."""
-        if isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        """Get list of template labels if using ClassifierPredictor."""
+        if isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             return list(self.bse.cluster_classifier.labels)
         return []
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and phase plot."""
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
-                        "Phase plot requires SupervisedClassifier with template ICs",
+                        "Phase plot requires ClassifierPredictor with template ICs",
                         size="lg",
                         c="gray",
                     ),
@@ -169,10 +169,10 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build phase plot figure."""
-        if not isinstance(self.bse.cluster_classifier, SupervisedClassifier):
+        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
-                text="Phase plot requires SupervisedClassifier with template ICs",
+                text="Phase plot requires ClassifierPredictor with template ICs",
                 xref="paper",
                 yref="paper",
                 x=0.5,

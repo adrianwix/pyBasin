@@ -19,6 +19,7 @@ Goal: Determine which features are best for unsupervised attractor discovery.
 import logging
 import sys
 import time
+import traceback
 import warnings
 from pathlib import Path
 from typing import Any, cast
@@ -434,8 +435,6 @@ def run_full_experiment() -> None:
             all_results.append(result)
         except Exception as e:
             print(f"\nError in {name}: {e}")
-            import traceback
-
             traceback.print_exc()
 
     print("\n" + "=" * 80)

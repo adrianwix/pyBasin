@@ -6,6 +6,7 @@ consistent with tsfresh's reference implementations. All tests use
 sequential tsfresh execution (n_jobs=0) for reproducibility.
 """
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 from tsfresh.feature_extraction import feature_calculators as fc
@@ -31,8 +32,6 @@ def sample_data():
 @pytest.fixture
 def sample_data_jax(sample_data):
     """Convert sample data to JAX format (N, B, S) = (100, 1, 1)."""
-    import jax.numpy as jnp
-
     return jnp.array(sample_data.reshape(-1, 1, 1))
 
 
@@ -46,8 +45,6 @@ def positive_data():
 @pytest.fixture
 def positive_data_jax(positive_data):
     """Convert positive data to JAX format."""
-    import jax.numpy as jnp
-
     return jnp.array(positive_data.reshape(-1, 1, 1))
 
 
@@ -61,8 +58,6 @@ def integer_data():
 @pytest.fixture
 def integer_data_jax(integer_data):
     """Convert integer data to JAX format."""
-    import jax.numpy as jnp
-
     return jnp.array(integer_data.reshape(-1, 1, 1))
 
 
@@ -545,8 +540,6 @@ class TestBatchProcessing:
 
     def test_batch_mean(self):
         """Test that batch processing produces correct results for each trajectory."""
-        import jax.numpy as jnp
-
         np.random.seed(42)
         data1 = np.random.randn(100)
         data2 = np.random.randn(100) + 5
@@ -562,8 +555,6 @@ class TestBatchProcessing:
 
     def test_multi_state_processing(self):
         """Test that multiple state variables are processed correctly."""
-        import jax.numpy as jnp
-
         np.random.seed(42)
         state1 = np.random.randn(100)
         state2 = np.random.randn(100) * 2
@@ -852,8 +843,6 @@ class TestExtractFeatures:
 
     def test_batch_feature_shape(self):
         """Test that batch features have correct shape."""
-        import jax.numpy as jnp
-
         x = jnp.ones((100, 5, 3))  # 100 timesteps, 5 trajectories, 3 states
         features = jax_fc.extract_features(x, {"mean": None})
         assert features["mean"].shape == (5, 3)

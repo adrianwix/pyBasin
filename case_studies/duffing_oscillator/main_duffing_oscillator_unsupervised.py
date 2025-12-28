@@ -2,15 +2,15 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import DBSCANCluster
 from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.predictors import DBSCANClusterer
 from pybasin.utils import time_execution
 
 
 def main():
     setup = setup_duffing_oscillator_system()
 
-    cluster_classifier = DBSCANCluster(eps=0.08)
+    cluster_classifier = DBSCANClusterer(eps=0.08)
 
     bse = BasinStabilityEstimator(
         n=setup["n"],

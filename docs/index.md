@@ -29,7 +29,7 @@ git clone https://github.com/adrianwix/pyBSTAB.git
 cd pyBasinWorkspace
 
 # Install with UV
-uv pip install -e ".[dev,docs]"
+uv add -e ".[dev,docs]"
 ```
 
 ## Quick Start
@@ -45,7 +45,7 @@ class MySystem(ODESystem):
         dx = -x + y
         dy = -y - x**3
         return np.array([dx, dy])
-    
+
     def classify_attractor(self, solution):
         # Classify final state
         final_state = solution.y[:, -1]
@@ -100,7 +100,7 @@ pyBasinWorkspace/
 
 ```bash
 # Install all dependencies including dev tools
-uv pip install -e ".[all]"
+uv add -e ".[all]"
 ```
 
 ### Running Tests

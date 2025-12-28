@@ -34,9 +34,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning, module="tsfresh")
 
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import KNNCluster
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.feature_extractors.tsfresh_feature_extractor import TsfreshFeatureExtractor
+from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import GridSampler
 from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
@@ -94,7 +94,7 @@ def create_pendulum_setup(
     classifier_labels = ["FP", "LC"]
 
     knn = KNeighborsClassifier(n_neighbors=1)
-    knn_cluster = KNNCluster(
+    knn_cluster = KNNClassifier(
         classifier=knn,
         template_y0=template_y0,
         labels=classifier_labels,

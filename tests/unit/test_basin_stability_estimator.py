@@ -4,9 +4,9 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import KNNCluster
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
+from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
@@ -42,7 +42,7 @@ def test_basin_stability_estimator_basic():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[1.0]]
-    knn: KNNCluster = KNNCluster(
+    knn: KNNClassifier = KNNClassifier(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,
         labels=["stable"],
@@ -82,7 +82,7 @@ def test_basin_stability_multiple_classes():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[-1.0], [1.0]]
-    knn: KNNCluster = KNNCluster(
+    knn: KNNClassifier = KNNClassifier(
         classifier=KNeighborsClassifier(n_neighbors=1),
         template_y0=template_ics,
         labels=["neg", "pos"],

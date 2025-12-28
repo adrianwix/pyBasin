@@ -5,7 +5,11 @@ import jax
 import jax.numpy as jnp
 from jax import Array, lax, random, vmap
 
-from pybasin.feature_extractors.jax_feature_utilities import delay_embedding, rowwise_euclidean
+from pybasin.feature_extractors.jax_feature_utilities import (
+    delay_embedding,
+    impute,
+    rowwise_euclidean,
+)
 
 
 @partial(jax.jit, static_argnums=(1, 2, 3, 5, 6, 7))
@@ -227,8 +231,6 @@ def lyap_r_batch_with_impute(
     Returns:
         Array of Lyapunov exponents, shape (B, S), with NaN/inf imputed
     """
-    from pybasin.feature_extractors.jax_feature_utilities import impute
-
     features = lyap_r_batch(data, emb_dim, lag, trajectory_len, tau)
     return impute(features)
 

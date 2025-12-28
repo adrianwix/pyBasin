@@ -1,5 +1,7 @@
 """Feature extractor using tsfresh library for time series feature extraction."""
 
+import multiprocessing
+import threading
 from typing import Any, cast
 
 import pandas as pd  # type: ignore[import-untyped]
@@ -95,8 +97,6 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         n_jobs: int = 1,
         normalize: bool = True,
     ):
-        import threading
-
         super().__init__(time_steady=time_steady)
         self.normalize = normalize
         self.scaler = StandardScaler() if normalize else None
@@ -106,8 +106,6 @@ class TsfreshFeatureExtractor(FeatureExtractor):
 
         # tsfresh doesn't handle n_jobs=-1 well, convert to actual number
         if n_jobs == -1:
-            import multiprocessing
-
             self.n_jobs = multiprocessing.cpu_count()
         elif n_jobs < 1:
             self.n_jobs = 1

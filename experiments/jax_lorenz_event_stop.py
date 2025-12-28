@@ -13,6 +13,7 @@ Expected results should match main_lorenz.json:
 """
 
 import json
+import time
 from typing import NamedTuple
 
 import diffrax as dfx
@@ -293,8 +294,6 @@ def main():
     print(f"\nProcessing ALL {n_samples} trajectories in ONE BATCH (fully vectorized)...")
 
     all_label_indices = []
-    import time
-
     start_time = time.time()
 
     # Process everything at once - no chunking!

@@ -1,5 +1,6 @@
 """Integration tests for the Lorenz system case study."""
 
+import csv
 import json
 from pathlib import Path
 
@@ -155,8 +156,6 @@ class TestLorenz:
         decreases for large N (low uncertainty). Only stores tolerance
         differences in CSV for convergence analysis.
         """
-        import csv
-
         # Load expected results from JSON
         json_path = Path(__file__).parent / "main_lorenz_hyperparameters.json"
         with open(json_path) as f:

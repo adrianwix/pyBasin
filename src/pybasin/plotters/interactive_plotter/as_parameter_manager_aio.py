@@ -81,8 +81,6 @@ class ASParameterManagerAIO:
         if self.compute_bse_callback is not None:
             bse = self.compute_bse_callback(param_index)
         else:
-            from pybasin.basin_stability_estimator import BasinStabilityEstimator
-
             param_value = self.as_bse.parameter_values[param_index]
             param_name = self.as_bse.as_params["adaptative_parameter_name"]
 

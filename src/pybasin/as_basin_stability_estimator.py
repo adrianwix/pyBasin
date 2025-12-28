@@ -9,8 +9,8 @@ import numpy as np
 import torch
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import ClusterClassifier
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
@@ -35,7 +35,7 @@ class ASBasinStabilityEstimator:
         sampler: Sampler,
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
-        cluster_classifier: ClusterClassifier,
+        cluster_classifier: LabelPredictor,
         as_params: AdaptiveStudyParams,
         save_to: str | None = "results",
     ):
@@ -47,7 +47,7 @@ class ASBasinStabilityEstimator:
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features.
-        :param cluster_classifier: The ClusterClassifier object to assign labels.
+        :param cluster_classifier: The LabelPredictor object to assign labels.
         :param as_params: The AdaptiveStudyParams object to vary the parameter.
         :param save_to: The folder where results will be saved.
         """

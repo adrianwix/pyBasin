@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import pytest
 import torch
+from diffrax import Dopri5
 
 from pybasin.ode_system import ODESystem
 from pybasin.solver import SklearnParallelSolver, TorchDiffEqSolver, TorchOdeSolver
@@ -171,8 +172,6 @@ def test_cache_behavior(simple_ode: ExponentialDecayODE) -> None:
 
 def test_jax_solver_custom_solver(simple_ode: ExponentialDecayODE) -> None:
     """Test that JaxForPytorchSolver accepts custom Diffrax solvers."""
-    from diffrax import Dopri5
-
     # Use custom Dopri5 solver instead of default Tsit5
     custom_solver = Dopri5()
     solver = JaxForPytorchSolver(

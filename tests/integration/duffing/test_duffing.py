@@ -9,7 +9,7 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import DBSCANCluster
+from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
 
 
 class TestDuffing:
@@ -96,7 +96,7 @@ class TestDuffing:
         props = setup_duffing_oscillator_system()
 
         # Use DBSCAN clustering for unsupervised approach
-        cluster_classifier = DBSCANCluster(eps=0.08)
+        cluster_classifier = DBSCANClusterer(eps=0.08)
 
         bse = BasinStabilityEstimator(
             n=props["n"],

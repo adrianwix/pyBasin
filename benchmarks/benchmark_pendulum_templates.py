@@ -13,7 +13,7 @@ from typing import cast
 import torch
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.cluster_classifier import SupervisedClassifier
+from pybasin.predictors import ClassifierPredictor
 
 
 def clear_cache():
@@ -49,7 +49,7 @@ def benchmark_template_solving():
 
     ode_system = props["ode_system"]
     solver = props.get("solver")
-    cluster_classifier = cast(SupervisedClassifier, props.get("cluster_classifier"))
+    cluster_classifier = cast(ClassifierPredictor, props.get("cluster_classifier"))
 
     print(f"\nDevice: {solver.device}")
     print(f"Number of templates: {len(cluster_classifier.initial_conditions)}")

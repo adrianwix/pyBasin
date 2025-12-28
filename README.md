@@ -39,10 +39,10 @@ uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in editable mode
-uv pip install -e .
+uv add -e .
 
 # Or install with all optional dependencies
-uv pip install -e ".[all]"
+uv add -e ".[all]"
 ```
 
 ## 🚀 Quick Start
@@ -61,7 +61,7 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.cluster_classifier import KNNCluster
+from pybasin.classifiers.knncluster import KNNCluster
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.sampler import GridSampler
@@ -182,12 +182,14 @@ print(f"Basin stability: {basin_stability}")
 ### Next Steps
 
 For complete working examples with visualization:
+
 - **Pendulum**: `case_studies/pendulum/` - Forced pendulum with multiple attractors
 - **Lorenz System**: `case_studies/lorenz/` - Chaotic attractor analysis
 - **Duffing Oscillator**: `case_studies/duffing_oscillator/` - Classic bistable system
 - **Friction System**: `case_studies/friction/` - Mechanical system with friction
 
 Run a case study:
+
 ```bash
 uv run python -m case_studies.pendulum.main_pendulum_case1
 ```
@@ -199,7 +201,7 @@ Full documentation is available at: **[https://adrianwix.github.io/pyBSTAB/](htt
 Or build locally:
 
 ```bash
-uv pip install -e ".[docs]"
+uv add -e ".[docs]"
 mkdocs serve
 ```
 
@@ -248,7 +250,7 @@ pyBasinWorkspace/
 
 ```bash
 # Install all dependencies including dev tools
-uv pip install -e ".[all]"
+uv add -e ".[all]"
 ```
 
 ### Running Tests

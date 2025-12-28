@@ -16,6 +16,7 @@ import os
 from collections.abc import Mapping
 from typing import Any
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -242,8 +243,6 @@ def extract_features_parallel(
     # Concatenate along batch dimension and convert back to tensors
     results: dict[str, Tensor] = {}
     for (feature_name, kwargs_str), arrays in combined.items():
-        import numpy as np
-
         concatenated = np.concatenate(arrays, axis=0)
         # Build proper feature name
         if kwargs_str and kwargs_str != "{}":

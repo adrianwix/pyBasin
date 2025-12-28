@@ -31,7 +31,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array
 
-from pybasin.feature_extractors.jax_feature_utilities import delay_embedding
+from pybasin.feature_extractors.jax_feature_utilities import delay_embedding, impute
 
 # =============================================================================
 # Eckmann Algorithm (lyap_e) - Multiple Lyapunov Exponents
@@ -391,8 +391,6 @@ def lyap_e_batch_with_impute(
     Returns:
         Array of Lyapunov exponents, shape (B, S, matrix_dim), with NaN/inf imputed
     """
-    from pybasin.feature_extractors.jax_feature_utilities import impute
-
     features = lyap_e_batch(data, emb_dim, matrix_dim, min_nb, min_tsep, tau)
     # Reshape to 2D for imputation, then reshape back
     original_shape = features.shape

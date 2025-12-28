@@ -11,6 +11,7 @@ Note: Unlike JAX, we don't use JIT compilation since features run one-off.
 PyTorch's eager execution with native batch operations should be efficient.
 """
 
+import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -534,8 +535,6 @@ def agg_autocorrelation(x: Tensor, maxlag: int = 40, f_agg: str = "mean") -> Ten
 @torch.no_grad()
 def permutation_entropy(x: Tensor, tau: int = 1, dimension: int = 3) -> Tensor:
     """Permutation entropy (fully vectorized GPU implementation)."""
-    import math
-
     n, batch_size, n_states = x.shape
     num_patterns = n - (dimension - 1) * tau
 
@@ -634,8 +633,6 @@ def fourier_entropy(x: Tensor, bins: int = 10) -> Tensor:
 @torch.no_grad()
 def lempel_ziv_complexity(x: Tensor, bins: int = 2) -> Tensor:
     """Lempel-Ziv complexity approximation (optimized)."""
-    import math
-
     n, batch_size, n_states = x.shape
     result = torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
 
@@ -1154,8 +1151,6 @@ def ratio_value_number_to_time_series_length(x: Tensor) -> Tensor:
 @torch.no_grad()
 def benford_correlation(x: Tensor) -> Tensor:
     """Correlation with Benford's law distribution (vectorized)."""
-    import math
-
     n, batch_size, n_states = x.shape
     benford = torch.tensor(
         [math.log10(1 + 1 / d) for d in range(1, 10)], dtype=x.dtype, device=x.device

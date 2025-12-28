@@ -42,11 +42,12 @@ Features implemented:
 """
 
 from collections.abc import Callable, Mapping
+from math import factorial
 from typing import Any
 
 import jax
 import jax.numpy as jnp
-from jax import Array
+from jax import Array, lax
 
 # =============================================================================
 # MINIMAL FEATURES (tsfresh MinimalFCParameters - 10 features)
@@ -483,8 +484,6 @@ def permutation_entropy(x: Array, tau: int = 1, dimension: int = 3) -> Array:
     Vectorized: Uses matrix operations to compute pattern indices for all
     positions and batches simultaneously, with one-hot counting.
     """
-    from math import factorial
-
     n = x.shape[0]
     n_patterns = n - (dimension - 1) * tau
 
@@ -1162,8 +1161,6 @@ def mean_n_absolute_max(x: Array, number_of_maxima: int = 1) -> Array:
 
     Optimized: Uses lax.top_k for partial sorting instead of full sort.
     """
-    from jax import lax
-
     abs_x = jnp.abs(x)
     # Transpose to (B, S, N) for top_k, then transpose back
     abs_x_t = jnp.moveaxis(abs_x, 0, -1)  # (B, S, N)

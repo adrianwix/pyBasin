@@ -83,6 +83,7 @@ select = [
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "SIM", # flake8-simplify
+    "PLC0415", # import-outside-toplevel (from Pylint via Ruff)
 ]
 ignore = ["E501"] # Line length handled by formatter
 
@@ -100,6 +101,14 @@ ignore = ["E501"] # Line length handled by formatter
 "src/pybasin/feature_extractors/torch_feature_calculators.py" = [
     "N806",
 ] # V, VtV, Vtv are standard mathematical notation
+"src/pybasin/predictors/*.py" = [
+    "N803",
+    "N806",
+] # X is standard for sklearn-compatible estimators
+"tests/*.py" = [
+    "N803",
+    "N806",
+] # X, y, X_train, X_test are standard ML conventions
 
 [tool.ruff.format]
 # Use Ruff's formatter (similar to Black)

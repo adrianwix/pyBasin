@@ -4,6 +4,7 @@ This module provides a high-performance feature extractor using JAX for GPU-acce
 time series feature extraction from ODE solutions.
 """
 
+import threading
 from collections.abc import Callable
 from typing import Literal
 
@@ -86,8 +87,6 @@ class JaxFeatureExtractor(FeatureExtractor):
         device: str | None = None,
         impute_method: Literal["extreme", "tsfresh"] = "extreme",
     ):
-        import threading
-
         super().__init__(time_steady=time_steady)
 
         self.normalize = normalize

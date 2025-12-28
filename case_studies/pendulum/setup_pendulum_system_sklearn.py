@@ -4,7 +4,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
-from pybasin.cluster_classifier import KNNCluster
+from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import GridSampler
 from pybasin.solver import SklearnParallelSolver
 from pybasin.types import SetupProperties
@@ -72,8 +72,8 @@ def setup_pendulum_system_sklearn() -> SetupProperties:
     # Create a KNeighborsClassifier with k=1.
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    # Instantiate the KNNCluster with the training data.
-    knn_cluster = KNNCluster(
+    # Instantiate the KNNClassifier with the training data.
+    knn_cluster = KNNClassifier(
         classifier=knn,
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,

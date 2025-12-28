@@ -18,6 +18,7 @@ performance. Uses MinimalFCParameters for distinguishing:
 
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import cast
 
@@ -30,8 +31,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from tsfresh.feature_extraction import MinimalFCParameters
 
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
-from pybasin.cluster_classifier import KNNCluster
 from pybasin.feature_extractors.tsfresh_feature_extractor import TsfreshFeatureExtractor
+from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import GridSampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
@@ -139,8 +140,6 @@ def test_tsfresh_extractor():
     except Exception as e:
         print("   ✗ Feature extraction failed!")
         print(f"   Error: {e}")
-        import traceback
-
         traceback.print_exc()
         return
 
@@ -180,7 +179,7 @@ def test_tsfresh_extractor():
 
     # Create and train KNN classifier
     knn = KNeighborsClassifier(n_neighbors=1)
-    knn_cluster = KNNCluster(
+    knn_cluster = KNNClassifier(
         classifier=knn,
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
@@ -270,8 +269,6 @@ def test_tsfresh_extractor():
     except Exception as e:
         print("   ✗ Classifier test failed!")
         print(f"   Error: {e}")
-        import traceback
-
         traceback.print_exc()
         return
 
