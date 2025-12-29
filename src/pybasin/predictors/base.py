@@ -1,7 +1,7 @@
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from copy import deepcopy
-import logging
 from typing import Any
 
 import numpy as np

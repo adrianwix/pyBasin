@@ -14,7 +14,7 @@ Reference:
 import torch
 from torch import Tensor
 
-from pybasin.feature_extractors.torch_feature_utilities import delay_embedding
+from pybasin.ts_torch.torch_feature_utilities import delay_embedding
 
 
 def compute_min_tsep(data: Tensor, n: int) -> Tensor:

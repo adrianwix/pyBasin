@@ -8,24 +8,61 @@ consistent with their loop-based counterparts.
 import pytest
 import torch
 
-from pybasin.feature_extractors import torch_feature_calculators as torch_fc
-from pybasin.feature_extractors.torch_batched_calculators import (
-    agg_autocorrelation_batched,
-    agg_linear_trend_batched,
-    augmented_dickey_fuller_batched,
+from pybasin.ts_torch.calculators.torch_features_advanced import (
+    c3,
     c3_batched,
-    change_quantiles_batched,
-    fft_aggregated_batched,
-    fourier_entropy_batched,
-    friedrich_coefficients_batched,
-    mean_n_absolute_max_batched,
-    number_crossing_m_batched,
-    number_peaks_batched,
-    partial_autocorrelation_batched,
-    range_count_batched,
-    spkt_welch_density_batched,
+    time_reversal_asymmetry_statistic,
     time_reversal_asymmetry_statistic_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_autocorrelation import (
+    agg_autocorrelation,
+    agg_autocorrelation_batched,
+    partial_autocorrelation,
+    partial_autocorrelation_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_change import (
+    change_quantiles,
+    change_quantiles_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_count import (
+    count_in_range as range_count,
+)
+from pybasin.ts_torch.calculators.torch_features_count import (
+    count_value as value_count,
+)
+from pybasin.ts_torch.calculators.torch_features_count import (
+    range_count_batched,
     value_count_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_dynamical import (
+    friedrich_coefficients,
+    friedrich_coefficients_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_entropy_complexity import (
+    fourier_entropy,
+    fourier_entropy_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_frequency import (
+    fft_aggregated,
+    fft_aggregated_batched,
+    spkt_welch_density,
+    spkt_welch_density_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_pattern import (
+    number_crossing_m,
+    number_crossing_m_batched,
+    number_peaks,
+    number_peaks_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_statistical import (
+    mean_n_absolute_max,
+    mean_n_absolute_max_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_trend import (
+    agg_linear_trend,
+    agg_linear_trend_batched,
+    augmented_dickey_fuller,
+    augmented_dickey_fuller_batched,
 )
 
 RTOL = 1e-5
@@ -53,9 +90,7 @@ class TestChangeQuantilesBatched:
         """Single parameter should match non-batched version."""
         params = [{"ql": 0.0, "qh": 0.2, "isabs": True, "f_agg": "mean"}]
         batched_result = change_quantiles_batched(sample_data_torch, params)
-        loop_result = torch_fc.change_quantiles(
-            sample_data_torch, ql=0.0, qh=0.2, isabs=True, f_agg="mean"
-        )
+        loop_result = change_quantiles(sample_data_torch, ql=0.0, qh=0.2, isabs=True, f_agg="mean")
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_params_match_loop(self, sample_data_torch):
@@ -70,7 +105,7 @@ class TestChangeQuantilesBatched:
         batched_result = change_quantiles_batched(sample_data_torch, params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.change_quantiles(
+            loop_result = change_quantiles(
                 sample_data_torch, ql=p["ql"], qh=p["qh"], isabs=p["isabs"], f_agg=p["f_agg"]
             )
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
@@ -92,7 +127,7 @@ class TestChangeQuantilesBatched:
         assert batched_result.shape == (2, 4, 3)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.change_quantiles(
+            loop_result = change_quantiles(
                 sample_data_torch_batched,
                 ql=p["ql"],
                 qh=p["qh"],
@@ -116,7 +151,7 @@ class TestChangeQuantilesBatched:
 
         for idx in range(0, len(params), 10):
             p = params[idx]
-            loop_result = torch_fc.change_quantiles(
+            loop_result = change_quantiles(
                 sample_data_torch, ql=p["ql"], qh=p["qh"], isabs=p["isabs"], f_agg=p["f_agg"]
             )
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL)
@@ -129,9 +164,7 @@ class TestAggLinearTrendBatched:
         """Single parameter should match non-batched version."""
         params = [{"chunk_size": 10, "f_agg": "mean", "attr": "slope"}]
         batched_result = agg_linear_trend_batched(sample_data_torch, params)
-        loop_result = torch_fc.agg_linear_trend(
-            sample_data_torch, chunk_size=10, f_agg="mean", attr="slope"
-        )
+        loop_result = agg_linear_trend(sample_data_torch, chunk_size=10, f_agg="mean", attr="slope")
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_params_match_loop(self, sample_data_torch):
@@ -145,7 +178,7 @@ class TestAggLinearTrendBatched:
         batched_result = agg_linear_trend_batched(sample_data_torch, params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.agg_linear_trend(
+            loop_result = agg_linear_trend(
                 sample_data_torch,
                 chunk_size=p["chunk_size"],
                 f_agg=p["f_agg"],
@@ -181,7 +214,7 @@ class TestAggLinearTrendBatched:
         assert batched_result.shape[0] == len(params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.agg_linear_trend(
+            loop_result = agg_linear_trend(
                 sample_data_torch,
                 chunk_size=p["chunk_size"],
                 f_agg=p["f_agg"],
@@ -204,7 +237,7 @@ class TestPartialAutocorrelationBatched:
         """Single lag should match non-batched version."""
         lags = [5]
         batched_result = partial_autocorrelation_batched(sample_data_torch, lags)
-        loop_result = torch_fc.partial_autocorrelation(sample_data_torch, lag=5)
+        loop_result = partial_autocorrelation(sample_data_torch, lag=5)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_lags_match_loop(self, sample_data_torch):
@@ -213,7 +246,7 @@ class TestPartialAutocorrelationBatched:
         batched_result = partial_autocorrelation_batched(sample_data_torch, lags)
 
         for idx, lag in enumerate(lags):
-            loop_result = torch_fc.partial_autocorrelation(sample_data_torch, lag=lag)
+            loop_result = partial_autocorrelation(sample_data_torch, lag=lag)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at lag {lag}"
             )
@@ -235,7 +268,7 @@ class TestPartialAutocorrelationBatched:
         assert batched_result.shape == (3, 4, 3)
 
         for idx, lag in enumerate(lags):
-            loop_result = torch_fc.partial_autocorrelation(sample_data_torch_batched, lag=lag)
+            loop_result = partial_autocorrelation(sample_data_torch_batched, lag=lag)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_all_10_lags(self, sample_data_torch):
@@ -245,7 +278,7 @@ class TestPartialAutocorrelationBatched:
         assert batched_result.shape[0] == 10
 
         for idx, lag in enumerate(lags):
-            loop_result = torch_fc.partial_autocorrelation(sample_data_torch, lag=lag)
+            loop_result = partial_autocorrelation(sample_data_torch, lag=lag)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at lag {lag}"
             )
@@ -306,7 +339,7 @@ class TestFourierEntropyBatched:
         """Single bins value should match non-batched version."""
         bins_list = [10]
         batched_result = fourier_entropy_batched(sample_data_torch, bins_list)
-        loop_result = torch_fc.fourier_entropy(sample_data_torch, bins=10)
+        loop_result = fourier_entropy(sample_data_torch, bins=10)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_bins_match_loop(self, sample_data_torch):
@@ -315,7 +348,7 @@ class TestFourierEntropyBatched:
         batched_result = fourier_entropy_batched(sample_data_torch, bins_list)
 
         for idx, bins in enumerate(bins_list):
-            loop_result = torch_fc.fourier_entropy(sample_data_torch, bins=bins)
+            loop_result = fourier_entropy(sample_data_torch, bins=bins)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at bins {bins}"
             )
@@ -333,7 +366,7 @@ class TestFftAggregatedBatched:
         """Single aggtype should match non-batched version."""
         aggtypes = ["centroid"]
         batched_result = fft_aggregated_batched(sample_data_torch, aggtypes)
-        loop_result = torch_fc.fft_aggregated(sample_data_torch, aggtype="centroid")
+        loop_result = fft_aggregated(sample_data_torch, aggtype="centroid")
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_all_aggtypes_match_loop(self, sample_data_torch):
@@ -342,7 +375,7 @@ class TestFftAggregatedBatched:
         batched_result = fft_aggregated_batched(sample_data_torch, aggtypes)
 
         for idx, aggtype in enumerate(aggtypes):
-            loop_result = torch_fc.fft_aggregated(sample_data_torch, aggtype=aggtype)
+            loop_result = fft_aggregated(sample_data_torch, aggtype=aggtype)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at aggtype {aggtype}"
             )
@@ -366,7 +399,7 @@ class TestSpktWelchDensityBatched:
         """Single coeff should match non-batched version."""
         coeffs = [0]
         batched_result = spkt_welch_density_batched(sample_data_torch, coeffs)
-        loop_result = torch_fc.spkt_welch_density(sample_data_torch, coeff=0)
+        loop_result = spkt_welch_density(sample_data_torch, coeff=0)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_coeffs_match_loop(self, sample_data_torch):
@@ -375,7 +408,7 @@ class TestSpktWelchDensityBatched:
         batched_result = spkt_welch_density_batched(sample_data_torch, coeffs)
 
         for idx, coeff in enumerate(coeffs):
-            loop_result = torch_fc.spkt_welch_density(sample_data_torch, coeff=coeff)
+            loop_result = spkt_welch_density(sample_data_torch, coeff=coeff)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at coeff {coeff}"
             )
@@ -394,7 +427,7 @@ class TestNumberPeaksBatched:
         """Single n should match non-batched version."""
         ns = [3]
         batched_result = number_peaks_batched(sample_data_torch, ns)
-        loop_result = torch_fc.number_peaks(sample_data_torch, n=3)
+        loop_result = number_peaks(sample_data_torch, n=3)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_ns_match_loop(self, sample_data_torch):
@@ -403,7 +436,7 @@ class TestNumberPeaksBatched:
         batched_result = number_peaks_batched(sample_data_torch, ns)
 
         for idx, n in enumerate(ns):
-            loop_result = torch_fc.number_peaks(sample_data_torch, n=n)
+            loop_result = number_peaks(sample_data_torch, n=n)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at n {n}"
             )
@@ -422,7 +455,7 @@ class TestFriedrichCoefficientsBatched:
         """Single param should match non-batched version."""
         params = [{"m": 3, "r": 30.0, "coeff": 0}]
         batched_result = friedrich_coefficients_batched(sample_data_torch, params)
-        loop_result = torch_fc.friedrich_coefficients(sample_data_torch, m=3, r=30.0, coeff=0)
+        loop_result = friedrich_coefficients(sample_data_torch, m=3, r=30.0, coeff=0)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_all_4_coeffs_match_loop(self, sample_data_torch):
@@ -436,7 +469,7 @@ class TestFriedrichCoefficientsBatched:
         batched_result = friedrich_coefficients_batched(sample_data_torch, params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.friedrich_coefficients(
+            loop_result = friedrich_coefficients(
                 sample_data_torch, m=p["m"], r=p["r"], coeff=p["coeff"]
             )
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
@@ -470,7 +503,7 @@ class TestNumberCrossingMBatched:
         """Single m value should match non-batched version."""
         ms = [0.0]
         batched_result = number_crossing_m_batched(sample_data_torch, ms)
-        loop_result = torch_fc.number_crossing_m(sample_data_torch, m=0.0)
+        loop_result = number_crossing_m(sample_data_torch, m=0.0)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_ms_match_loop(self, sample_data_torch):
@@ -479,7 +512,7 @@ class TestNumberCrossingMBatched:
         batched_result = number_crossing_m_batched(sample_data_torch, ms)
 
         for idx, m in enumerate(ms):
-            loop_result = torch_fc.number_crossing_m(sample_data_torch, m=m)
+            loop_result = number_crossing_m(sample_data_torch, m=m)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at m {m}"
             )
@@ -492,7 +525,7 @@ class TestC3Batched:
         """Single lag should match non-batched version."""
         lags = [1]
         batched_result = c3_batched(sample_data_torch, lags)
-        loop_result = torch_fc.c3(sample_data_torch, lag=1)
+        loop_result = c3(sample_data_torch, lag=1)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_lags_match_loop(self, sample_data_torch):
@@ -501,7 +534,7 @@ class TestC3Batched:
         batched_result = c3_batched(sample_data_torch, lags)
 
         for idx, lag in enumerate(lags):
-            loop_result = torch_fc.c3(sample_data_torch, lag=lag)
+            loop_result = c3(sample_data_torch, lag=lag)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at lag {lag}"
             )
@@ -514,7 +547,7 @@ class TestTimeReversalAsymmetryStatisticBatched:
         """Single lag should match non-batched version."""
         lags = [1]
         batched_result = time_reversal_asymmetry_statistic_batched(sample_data_torch, lags)
-        loop_result = torch_fc.time_reversal_asymmetry_statistic(sample_data_torch, lag=1)
+        loop_result = time_reversal_asymmetry_statistic(sample_data_torch, lag=1)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_lags_match_loop(self, sample_data_torch):
@@ -523,7 +556,7 @@ class TestTimeReversalAsymmetryStatisticBatched:
         batched_result = time_reversal_asymmetry_statistic_batched(sample_data_torch, lags)
 
         for idx, lag in enumerate(lags):
-            loop_result = torch_fc.time_reversal_asymmetry_statistic(sample_data_torch, lag=lag)
+            loop_result = time_reversal_asymmetry_statistic(sample_data_torch, lag=lag)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at lag {lag}"
             )
@@ -536,7 +569,7 @@ class TestValueCountBatched:
         """Single value should match non-batched version."""
         values = [0.0]
         batched_result = value_count_batched(sample_data_torch, values)
-        loop_result = torch_fc.value_count(sample_data_torch, value=0.0)
+        loop_result = value_count(sample_data_torch, value=0.0)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_values_match_loop(self, sample_data_torch):
@@ -545,7 +578,7 @@ class TestValueCountBatched:
         batched_result = value_count_batched(sample_data_torch, values)
 
         for idx, value in enumerate(values):
-            loop_result = torch_fc.value_count(sample_data_torch, value=value)
+            loop_result = value_count(sample_data_torch, value=value)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at value {value}"
             )
@@ -558,7 +591,7 @@ class TestRangeCountBatched:
         """Single range should match non-batched version."""
         params = [{"min_val": -1.0, "max_val": 1.0}]
         batched_result = range_count_batched(sample_data_torch, params)
-        loop_result = torch_fc.range_count(sample_data_torch, min_val=-1.0, max_val=1.0)
+        loop_result = range_count(sample_data_torch, min_val=-1.0, max_val=1.0)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_ranges_match_loop(self, sample_data_torch):
@@ -571,9 +604,7 @@ class TestRangeCountBatched:
         batched_result = range_count_batched(sample_data_torch, params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.range_count(
-                sample_data_torch, min_val=p["min_val"], max_val=p["max_val"]
-            )
+            loop_result = range_count(sample_data_torch, min_val=p["min_val"], max_val=p["max_val"])
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at range {p}"
             )
@@ -586,7 +617,7 @@ class TestMeanNAbsoluteMaxBatched:
         """Single n should match non-batched version."""
         ns = [1]
         batched_result = mean_n_absolute_max_batched(sample_data_torch, ns)
-        loop_result = torch_fc.mean_n_absolute_max(sample_data_torch, number_of_maxima=1)
+        loop_result = mean_n_absolute_max(sample_data_torch, number_of_maxima=1)
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_multiple_ns_match_loop(self, sample_data_torch):
@@ -595,7 +626,7 @@ class TestMeanNAbsoluteMaxBatched:
         batched_result = mean_n_absolute_max_batched(sample_data_torch, ns)
 
         for idx, n in enumerate(ns):
-            loop_result = torch_fc.mean_n_absolute_max(sample_data_torch, number_of_maxima=n)
+            loop_result = mean_n_absolute_max(sample_data_torch, number_of_maxima=n)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at n {n}"
             )
@@ -608,7 +639,7 @@ class TestAggAutocorrelationBatched:
         """Single param should match non-batched version."""
         params = [{"maxlag": 40, "f_agg": "mean"}]
         batched_result = agg_autocorrelation_batched(sample_data_torch, params)
-        loop_result = torch_fc.agg_autocorrelation(sample_data_torch, maxlag=40, f_agg="mean")
+        loop_result = agg_autocorrelation(sample_data_torch, maxlag=40, f_agg="mean")
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_all_aggs_match_loop(self, sample_data_torch):
@@ -621,7 +652,7 @@ class TestAggAutocorrelationBatched:
         batched_result = agg_autocorrelation_batched(sample_data_torch, params)
 
         for idx, p in enumerate(params):
-            loop_result = torch_fc.agg_autocorrelation(
+            loop_result = agg_autocorrelation(
                 sample_data_torch, maxlag=p["maxlag"], f_agg=p["f_agg"]
             )
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
@@ -636,7 +667,7 @@ class TestAugmentedDickeyFullerBatched:
         """Single attr should match non-batched version."""
         attrs = ["teststat"]
         batched_result = augmented_dickey_fuller_batched(sample_data_torch, attrs)
-        loop_result = torch_fc.augmented_dickey_fuller(sample_data_torch, attr="teststat")
+        loop_result = augmented_dickey_fuller(sample_data_torch, attr="teststat")
         assert torch.allclose(batched_result[0], loop_result, rtol=RTOL, atol=ATOL)
 
     def test_all_attrs_match_loop(self, sample_data_torch):
@@ -645,7 +676,7 @@ class TestAugmentedDickeyFullerBatched:
         batched_result = augmented_dickey_fuller_batched(sample_data_torch, attrs)
 
         for idx, attr in enumerate(attrs):
-            loop_result = torch_fc.augmented_dickey_fuller(sample_data_torch, attr=attr)
+            loop_result = augmented_dickey_fuller(sample_data_torch, attr=attr)
             assert torch.allclose(batched_result[idx], loop_result, rtol=RTOL, atol=ATOL), (
                 f"Mismatch at attr {attr}"
             )

@@ -51,7 +51,6 @@ import logging
 import sys
 import warnings
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -184,23 +183,21 @@ def validate_feature(feature_name: str, value: float, attractor_type: str) -> st
     if np.isnan(value):
         return "NaN"
 
-    if feature_name == "corr_dim":
-        if attractor_type == "fixed_point":
-            return "✓" if value < 0.5 else "✗"
-        elif attractor_type == "limit_cycle":
-            return "✓" if 0.7 < value < 1.5 else "✗"
-        elif attractor_type == "chaos":
-            return "✓" if value > 1.5 else "✗"
-    elif feature_name == "lyap_r":
-        if attractor_type == "fixed_point":
-            # Fixed point: clearly negative
-            return "✓" if value < -0.005 else "✗"
-        elif attractor_type == "limit_cycle":
-            # Limit cycle: near zero (between -0.005 and 0.005)
-            return "✓" if -0.005 <= value <= 0.005 else "✗"
-        elif attractor_type == "chaos":
-            # Chaos: clearly positive
-            return "✓" if value > 0.005 else "✗"
+    validators = {
+        "corr_dim": {
+            "fixed_point": lambda v: "✓" if v < 0.5 else "✗",
+            "limit_cycle": lambda v: "✓" if 0.7 < v < 1.5 else "✗",
+            "chaos": lambda v: "✓" if v > 1.5 else "✗",
+        },
+        "lyap_r": {
+            "fixed_point": lambda v: "✓" if v < -0.005 else "✗",
+            "limit_cycle": lambda v: "✓" if -0.005 <= v <= 0.005 else "✗",
+            "chaos": lambda v: "✓" if v > 0.005 else "✗",
+        },
+    }
+
+    if feature_name in validators and attractor_type in validators[feature_name]:
+        return validators[feature_name][attractor_type](value)
 
     return "-"
 
@@ -274,7 +271,7 @@ def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Name
         print("  Error: setup did not provide a solver")
         sys.exit(1)
 
-    if hasattr(solver, "with_device") and callable(getattr(solver, "with_device")):
+    if hasattr(solver, "with_device") and callable(solver.with_device):
         solver_cpu = solver.with_device("cpu")
     else:
         print("  Error: solver has no with_device() method - cannot ensure CPU execution. Exiting.")

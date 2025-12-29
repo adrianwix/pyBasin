@@ -20,36 +20,50 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from pybasin.feature_extractors.torch_batched_calculators import (
+from pybasin.ts_torch.calculators.torch_features_advanced import (
+    c3_batched,
+    energy_ratio_by_chunks_batched,
+    time_reversal_asymmetry_statistic_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_autocorrelation import (
     agg_autocorrelation_batched,
+    autocorrelation_batched,
+    partial_autocorrelation_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_change import change_quantiles_batched
+from pybasin.ts_torch.calculators.torch_features_count import (
+    range_count_batched,
+    value_count_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_dynamical import friedrich_coefficients_batched
+from pybasin.ts_torch.calculators.torch_features_entropy_complexity import (
+    fourier_entropy_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_frequency import (
+    cwt_coefficients_batched,
+    fft_aggregated_batched,
+    fft_coefficient_batched,
+    spkt_welch_density_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_location import index_mass_quantile_batched
+from pybasin.ts_torch.calculators.torch_features_pattern import (
+    number_crossing_m_batched,
+    number_peaks_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_statistical import (
+    large_standard_deviation_batched,
+    mean_n_absolute_max_batched,
+    quantile_batched,
+    ratio_beyond_r_sigma_batched,
+    symmetry_looking_batched,
+)
+from pybasin.ts_torch.calculators.torch_features_trend import (
     agg_linear_trend_batched,
     ar_coefficient_batched,
     augmented_dickey_fuller_batched,
-    autocorrelation_batched,
-    c3_batched,
-    change_quantiles_batched,
-    cwt_coefficients_batched,
-    energy_ratio_by_chunks_batched,
-    fft_aggregated_batched,
-    fft_coefficient_batched,
-    fourier_entropy_batched,
-    friedrich_coefficients_batched,
-    index_mass_quantile_batched,
-    large_standard_deviation_batched,
     linear_trend_batched,
-    mean_n_absolute_max_batched,
-    number_crossing_m_batched,
-    number_peaks_batched,
-    partial_autocorrelation_batched,
-    quantile_batched,
-    range_count_batched,
-    ratio_beyond_r_sigma_batched,
-    spkt_welch_density_batched,
-    symmetry_looking_batched,
-    time_reversal_asymmetry_statistic_batched,
-    value_count_batched,
 )
-from pybasin.feature_extractors.torch_feature_calculators import (
+from pybasin.ts_torch.settings import (
     ALL_FEATURE_FUNCTIONS,
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
     TORCH_GPU_FC_PARAMETERS,

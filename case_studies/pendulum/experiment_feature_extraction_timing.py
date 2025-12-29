@@ -1,9 +1,10 @@
 import time
 
-from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.feature_extractors.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.feature_extractors.torch_feature_processors import extract_features_parallel
+
+from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.solution import Solution
 
 

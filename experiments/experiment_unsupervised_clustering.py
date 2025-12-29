@@ -30,6 +30,8 @@ from sklearn.pipeline import Pipeline
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from pybasin.feature_extractors.torch_feature_extractor import TorchFeatureExtractor
+
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
@@ -40,7 +42,6 @@ from pybasin.feature_extractors.correlation_selector import CorrelationSelector
 from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch_with_impute
-from pybasin.feature_extractors.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.solution import Solution
 
 # ==============================================================================

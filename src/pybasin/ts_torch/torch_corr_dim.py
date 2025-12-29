@@ -12,24 +12,29 @@ Reference:
 import torch
 from torch import Tensor
 
-from pybasin.feature_extractors.torch_feature_utilities import delay_embedding
+from pybasin.ts_torch.torch_feature_utilities import delay_embedding
 
 
-def logarithmic_r(min_r: float, max_r: float, n_rvals: int, device: torch.device) -> Tensor:
-    """Create logarithmically spaced radius values.
+def _logarithmic_r(min_r: Tensor, max_r: Tensor, n_rvals: int, device: torch.device) -> Tensor:
+    """Create logarithmically spaced radius values (vmap-compatible).
 
     Args:
-        min_r: Minimum radius value
-        max_r: Maximum radius value
+        min_r: Minimum radius value (tensor)
+        max_r: Maximum radius value (tensor)
         n_rvals: Number of values
         device: Device to create tensor on
 
     Returns:
         Tensor of logarithmically spaced values from min_r to max_r
+        Shape: (n_rvals,)
     """
-    log_min = torch.log(torch.tensor(min_r + 1e-10, device=device))
-    log_max = torch.log(torch.tensor(max_r + 1e-10, device=device))
-    return torch.exp(torch.linspace(log_min, log_max, n_rvals, device=device))
+    log_min = torch.log(min_r + 1e-10)
+    log_max = torch.log(max_r + 1e-10)
+    # Create interpolation weights [0, 1]
+    alphas = torch.linspace(0, 1, n_rvals, device=device)
+    # Interpolate in log space: log_min + alpha * (log_max - log_min)
+    log_vals = log_min + alphas * (log_max - log_min)
+    return torch.exp(log_vals)
 
 
 @torch.no_grad()
@@ -67,13 +72,10 @@ def corr_dim_single(
     sd = torch.std(data, correction=1)
     min_r = 0.1 * sd
     max_r = 0.5 * sd
-    rvals = logarithmic_r(min_r.item(), max_r.item(), n_rvals, data.device)
+    rvals = _logarithmic_r(min_r, max_r, n_rvals, data.device)
 
-    # Compute correlation sums for each radius
-    csums = torch.zeros(n_rvals, device=data.device)
-    for i, r in enumerate(rvals):
-        count = (dists <= r).sum()
-        csums[i] = count / (n * (n - 1))
+    # Vectorized: compare all distances against all radii at once
+    csums = (dists.unsqueeze(0) <= rvals.view(-1, 1, 1)).sum(dim=(1, 2)) / (n * (n - 1))
 
     # Filter out zero csums and fit line in log-log space
     nonzero_mask = csums > 0
@@ -128,14 +130,11 @@ def corr_dim_batch(
     """
     n_time, batch_size, n_states = data.shape
 
-    # Transpose to (B, S, N)
-    data_transposed = data.permute(1, 2, 0)
+    # Reshape to (B*S, N) to flatten batch and state dimensions
+    data_flat = data.permute(1, 2, 0).reshape(batch_size * n_states, n_time)
 
-    results = torch.zeros(batch_size, n_states, device=data.device)
+    # Use vmap to vectorize corr_dim_single over the batch dimension
+    results_flat = torch.vmap(lambda x: corr_dim_single(x, emb_dim, lag, n_rvals))(data_flat)
 
-    for b in range(batch_size):
-        for s in range(n_states):
-            series = data_transposed[b, s]
-            results[b, s] = corr_dim_single(series, emb_dim, lag, n_rvals)
-
-    return results
+    # Reshape back to (B, S)
+    return results_flat.reshape(batch_size, n_states)

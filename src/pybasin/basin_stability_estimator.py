@@ -13,7 +13,6 @@ from sklearn.base import BaseEstimator
 from pybasin.feature_extractors import TorchFeatureExtractor
 from pybasin.feature_extractors.default_feature_selector import DefaultFeatureSelector
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.feature_extractors.torch_feature_calculators import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.predictors.base import ClassifierPredictor, LabelPredictor
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
@@ -23,6 +22,7 @@ from pybasin.sampler import Sampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchDiffEqSolver
 from pybasin.solvers.jax_solver import JaxSolver
+from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.utils import (
     NumpyEncoder,
     extract_amplitudes,

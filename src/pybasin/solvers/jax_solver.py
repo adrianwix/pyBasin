@@ -8,8 +8,8 @@ defined using pure JAX operations. This is the fastest solver option when
 using JAX-native ODE systems.
 """
 
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 from typing import Any, cast
 
 import jax

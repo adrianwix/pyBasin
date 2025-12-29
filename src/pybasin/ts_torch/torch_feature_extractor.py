@@ -14,18 +14,18 @@ import torch
 from torch import Tensor
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.feature_extractors.torch_feature_calculators import (
+from pybasin.solution import Solution
+from pybasin.ts_torch.settings import (
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
     TORCH_MINIMAL_FC_PARAMETERS,
     FCParameters,
-    get_feature_names_from_config,
 )
-from pybasin.feature_extractors.torch_feature_processors import (
+from pybasin.ts_torch.torch_feature_processors import (
     extract_features_gpu_batched,
     extract_features_parallel,
 )
-from pybasin.feature_extractors.torch_feature_utilities import impute, impute_extreme
-from pybasin.solution import Solution
+from pybasin.ts_torch.torch_feature_utilities import impute, impute_extreme
+from pybasin.ts_torch.utils import get_feature_names_from_config
 
 
 class TorchFeatureExtractor(FeatureExtractor):

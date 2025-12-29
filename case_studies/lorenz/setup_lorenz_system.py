@@ -60,7 +60,7 @@ def setup_lorenz_system() -> SetupProperties:
         [10.0, 50.0, 0.0],
     ]
 
-    classifier_labels = ["chaos ȳ₁", "chaos ȳ₂", "unbounded"]
+    classifier_labels = ["chaos y_1", "chaos y_2", "unbounded"]
 
     knn = KNeighborsClassifier(n_neighbors=1)
 

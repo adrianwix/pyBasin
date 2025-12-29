@@ -47,11 +47,11 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     ]
 
     classifier_labels = [
-        "period-1 LC (ȳ₁)",
-        "period-1 LC (ȳ₂)",
-        "period-2 LC (ȳ₃)",
-        "period-2 LC (ȳ₄)",
-        "period-3 LC (ȳ₅)",
+        "period-1 LC y_1",
+        "period-1 LC y_2",
+        "period-2 LC y_3",
+        "period-2 LC y_4",
+        "period-3 LC y_5",
     ]
 
     knn = KNeighborsClassifier(n_neighbors=1)

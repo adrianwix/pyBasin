@@ -26,11 +26,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import numpy as np
 import pandas as pd
 import torch
-from tsfresh import extract_features
-from tsfresh.feature_extraction import EfficientFCParameters
-from tsfresh.feature_extraction import feature_calculators as fc
-
-from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.feature_extractors.torch_feature_calculators import (
     ALL_FEATURE_FUNCTIONS,
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
@@ -43,6 +38,11 @@ from pybasin.feature_extractors.torch_feature_processors import (
     extract_features_parallel,
     extract_features_sequential,
 )
+from tsfresh import extract_features
+from tsfresh.feature_extraction import EfficientFCParameters
+from tsfresh.feature_extraction import feature_calculators as fc
+
+from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.sampler import GridSampler
 from pybasin.solvers import JaxSolver
 

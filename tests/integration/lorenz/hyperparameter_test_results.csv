@@ -1,4 +1,4 @@
-N,actual_grid_points,tolerance_diff_butterfly1,tolerance_diff_butterfly2,tolerance_diff_unbounded,adaptive_tolerance,test_passed
+N,actual_grid_points,tolerance_diff_chaos_y_1,tolerance_diff_chaos_y_2,tolerance_diff_unbounded,adaptive_tolerance,test_passed
 200,200,0.15,0.2,0.0363636363636364,0.65,True
 219.70822839751168,219,0.24657534246575344,0.004566210045662093,0.031864204883859513,0.6381757642471588,True
 241.35852812786578,241,0.6220874561123523,0.2072504913736624,0.01975894092076667,0.6257038859267339,True

@@ -20,13 +20,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 import torch
-from torch import Tensor
-from torch.func import vmap
-
 from pybasin.feature_extractors.torch_feature_calculators import (
     _change_quantiles_core,
     change_quantiles,
 )
+from torch import Tensor
+from torch.func import vmap
 
 # Check if GPU available
 USE_CPU = "--cpu" in sys.argv
