@@ -33,7 +33,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     )
 
     feature_extractor = JaxFeatureExtractor(
-        time_steady=950.0,
+        time_steady=900.0,
         normalize=False,
         features={"maximum": None, "standard_deviation": None},
     )
@@ -47,11 +47,11 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     ]
 
     classifier_labels = [
-        "y1",
-        "y2",
-        "y3",
-        "y4",
-        "y5",
+        "period-1 LC (ȳ₁)",
+        "period-1 LC (ȳ₂)",
+        "period-2 LC (ȳ₃)",
+        "period-2 LC (ȳ₄)",
+        "period-3 LC (ȳ₅)",
     ]
 
     knn = KNeighborsClassifier(n_neighbors=1)

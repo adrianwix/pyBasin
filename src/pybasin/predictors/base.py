@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from copy import deepcopy
+import logging
 from typing import Any
 
 import numpy as np
@@ -9,6 +10,8 @@ import torch
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.solution import Solution
+
+logger = logging.getLogger(__name__)
 
 
 class LabelPredictor(ABC):
@@ -100,31 +103,34 @@ class ClassifierPredictor(LabelPredictor):
         if self.solver is not None:
             # User provided a dedicated solver - use it as-is
             effective_solver = self.solver
-            solver_source = "dedicated"
+            solver_source = type(effective_solver).__name__
         elif solver is not None:
             # No dedicated solver - auto-create CPU variant for better performance
             # GPU has overhead that hurts small batch sizes (templates are typically 2-5 samples)
             if hasattr(solver, "with_device") and str(solver.device) != "cpu":
                 effective_solver = solver.with_device("cpu")
-                solver_source = "auto-cpu"
-                print(
-                    "    [ClassifierPredictor] Auto-created CPU solver for templates "
-                    "(faster for small batch sizes)"
+                solver_source = type(effective_solver).__name__
+                logger.info(
+                    "[%s] Auto-created CPU solver for templates (faster for small batch sizes)",
+                    type(self).__name__,
                 )
             else:
                 effective_solver = solver
-                solver_source = "fallback"
+                solver_source = type(effective_solver).__name__
         else:
             raise ValueError(
                 "No solver available. Either pass a solver to integrate_templates() "
                 "or provide one during classifier initialization."
             )
 
-        print(f"    [ClassifierPredictor] ODE params: {classifier_ode_system.params}")
-        print(f"    [ClassifierPredictor] Template ICs: {len(self.template_y0)} templates")
-        print(f"    [ClassifierPredictor] Labels: {self.labels}")
-        print(
-            f"    [ClassifierPredictor] Using solver: {type(effective_solver).__name__} ({solver_source})"
+        logger.info("[%s] ODE params: %s", type(self).__name__, classifier_ode_system.params)
+        logger.info("[%s] Template ICs: %d templates", type(self).__name__, len(self.template_y0))
+        logger.info("[%s] Labels: %s", type(self).__name__, self.labels)
+        logger.info(
+            "[%s] Using solver: %s (%s)",
+            type(self).__name__,
+            type(effective_solver).__name__,
+            solver_source,
         )
 
         # Convert template_y0 to tensor on the solver's device
@@ -174,8 +180,8 @@ class ClassifierPredictor(LabelPredictor):
         train_x = features.detach().cpu().numpy()
         train_y = self.labels
 
-        print(
-            f"    Training classifier with {train_x.shape[0]} samples, {train_x.shape[1]} features"
+        logger.info(
+            "Training classifier with %d samples, %d features", train_x.shape[0], train_x.shape[1]
         )
 
         self.classifier.fit(train_x, train_y)

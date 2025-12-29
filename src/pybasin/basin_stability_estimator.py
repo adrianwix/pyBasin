@@ -435,7 +435,22 @@ class BasinStabilityEstimator:
 
             # Restore original solution with full trajectories
             if original_solution is not None:
+                # Preserve extracted and filtered features from bounded solution
+                bounded_extracted_features = self.solution.extracted_features
+                bounded_extracted_feature_names = self.solution.extracted_feature_names
+                bounded_features = self.solution.features
+                bounded_filtered_feature_names = self.solution.filtered_feature_names
+
+                # Restore original solution
                 self.solution = original_solution
+
+                # Transfer feature data (features are computed only from bounded trajectories)
+                if bounded_extracted_features is not None:
+                    self.solution.extracted_features = bounded_extracted_features
+                    self.solution.extracted_feature_names = bounded_extracted_feature_names
+                if bounded_features is not None:
+                    self.solution.features = bounded_features
+                    self.solution.filtered_feature_names = bounded_filtered_feature_names
         else:
             labels = bounded_labels
 

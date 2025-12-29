@@ -9,6 +9,7 @@ using JAX-native ODE systems.
 """
 
 from collections.abc import Callable
+import logging
 from typing import Any, cast
 
 import jax
@@ -29,6 +30,8 @@ from pybasin.jax_ode_system import JaxODESystem
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.protocols import ODESystemProtocol
 from pybasin.utils import resolve_folder
+
+logger = logging.getLogger(__name__)
 
 
 class JaxSolver:
@@ -213,19 +216,21 @@ class JaxSolver:
 
             if cached_result is not None:
                 cache_path = f"{self._cache_manager.cache_dir}/{cache_key}.pkl"
-                print(f"    [{self.__class__.__name__}] Loaded result from cache: {cache_path}")
+                logger.info(
+                    "[%s] Loaded result from cache: %s", self.__class__.__name__, cache_path
+                )
                 return cached_result
 
         # Compute integration
         if self.use_cache:
-            print(f"    [{self.__class__.__name__}] Cache miss - integrating...")
+            logger.info("[%s] Cache miss - integrating...", self.__class__.__name__)
         else:
-            print(f"    [{self.__class__.__name__}] Cache disabled - integrating...")
+            logger.info("[%s] Cache disabled - integrating...", self.__class__.__name__)
 
         # Cast to concrete type for internal implementation
         ode_system_concrete = cast(JaxODESystem[Any], ode_system)
         t_result_jax, y_result_jax = self._integrate_jax(ode_system_concrete, y0_jax, t_eval_jax)
-        print(f"    [{self.__class__.__name__}] Integration complete")
+        logger.info("[%s] Integration complete", self.__class__.__name__)
 
         # Convert back to PyTorch
         torch_device = str(y0.device)

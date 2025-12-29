@@ -170,9 +170,12 @@ class FeatureSpaceAIO(BseBasePageAIO):
                                                 ),
                                             ],
                                             gap="xs",
-                                        )
-                                        if show_feature_switch
-                                        else html.Div(),
+                                            style={
+                                                "display": "block"
+                                                if show_feature_switch
+                                                else "none"
+                                            },
+                                        ),
                                     ],
                                     direction={"base": "row", "md": "column"},  # pyright: ignore[reportArgumentType]
                                     gap="md",
@@ -236,11 +239,37 @@ class FeatureSpaceAIO(BseBasePageAIO):
             )
             return fig
 
+        print(f"[FeatureSpaceAIO] Building figure: use_filtered={use_filtered}")
+        print(f"[FeatureSpaceAIO] features available: {self.bse.solution.features is not None}")
+        print(
+            f"[FeatureSpaceAIO] extracted_features available: {self.bse.solution.extracted_features is not None}"
+        )
+        if self.bse.solution.features is not None:
+            print(f"[FeatureSpaceAIO] features shape: {self.bse.solution.features.shape}")
+        if self.bse.solution.extracted_features is not None:
+            print(
+                f"[FeatureSpaceAIO] extracted_features shape: {self.bse.solution.extracted_features.shape}"
+            )
+
         if use_filtered and self.bse.solution.features is not None:
             features = self.bse.solution.features.cpu().numpy()
         elif not use_filtered and self.bse.solution.extracted_features is not None:
             features = self.bse.solution.extracted_features.cpu().numpy()
         else:
+            error_msg = "No features available. "
+            if use_filtered:
+                error_msg += "Filtered features not found."
+            else:
+                error_msg += "Extracted features not found."
+            fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
+                text=error_msg,
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font={"size": 14},
+            )
             return fig
 
         labels = None
@@ -249,6 +278,37 @@ class FeatureSpaceAIO(BseBasePageAIO):
 
         if labels is None:
             return fig
+
+        # Filter out unbounded trajectories (features are only computed for bounded ones)
+        bounded_mask = labels != "unbounded"
+        if bounded_mask.sum() == 0:
+            fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
+                text="All trajectories are unbounded. No features to display.",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font={"size": 14},
+            )
+            return fig
+
+        # Check if features array matches bounded trajectory count
+        n_bounded = int(bounded_mask.sum())
+        if features.shape[0] != n_bounded:
+            fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
+                text=f"Feature array size mismatch: {features.shape[0]} features vs {n_bounded} bounded trajectories",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font={"size": 14},
+            )
+            return fig
+
+        # Filter labels to only bounded trajectories (features are already filtered)
+        labels = labels[bounded_mask]
 
         unique_labels = np.unique(labels)
 
