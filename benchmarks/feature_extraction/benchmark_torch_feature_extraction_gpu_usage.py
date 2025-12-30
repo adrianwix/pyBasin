@@ -20,16 +20,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 import torch
-from pybasin.feature_extractors.torch_feature_calculators import (
+from torch.profiler import ProfilerActivity, profile
+
+from pybasin.ts_torch.settings import (
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
     TORCH_GPU_FC_PARAMETERS,
 )
-from pybasin.feature_extractors.torch_feature_processors import (
+from pybasin.ts_torch.torch_feature_processors import (
     count_features,
     extract_features_gpu,
     extract_features_gpu_batched,
 )
-from torch.profiler import ProfilerActivity, profile
 
 
 def profile_gpu_extraction(

@@ -26,18 +26,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import numpy as np
 import pandas as pd
 import torch
-from pybasin.feature_extractors.torch_feature_calculators import (
-    ALL_FEATURE_FUNCTIONS,
-    TORCH_COMPREHENSIVE_FC_PARAMETERS,
-    TORCH_GPU_FC_PARAMETERS,
-)
-from pybasin.feature_extractors.torch_feature_processors import (
-    count_features,
-    extract_features_gpu,
-    extract_features_gpu_batched,
-    extract_features_parallel,
-    extract_features_sequential,
-)
 from tsfresh import extract_features
 from tsfresh.feature_extraction import EfficientFCParameters
 from tsfresh.feature_extraction import feature_calculators as fc
@@ -45,6 +33,18 @@ from tsfresh.feature_extraction import feature_calculators as fc
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.sampler import GridSampler
 from pybasin.solvers import JaxSolver
+from pybasin.ts_torch.settings import (
+    ALL_FEATURE_FUNCTIONS,
+    TORCH_COMPREHENSIVE_FC_PARAMETERS,
+    TORCH_GPU_FC_PARAMETERS,
+)
+from pybasin.ts_torch.torch_feature_processors import (
+    count_features,
+    extract_features_gpu,
+    extract_features_gpu_batched,
+    extract_features_parallel,
+    extract_features_sequential,
+)
 
 # Suppress pandas FutureWarning from tsfresh
 warnings.filterwarnings("ignore", category=FutureWarning, module="tsfresh")
@@ -127,8 +127,7 @@ def generate_sample(
 
     # Filter to steady state portion (t >= time_steady)
     # t has shape (n_steps,), y has shape (n_steps, n_batches, n_states)
-    t_np = t.cpu().numpy()
-    steady_mask = t_np >= time_steady
+    steady_mask = t >= time_steady
     y_steady = y[steady_mask, :, :]
 
     # Trim or pad to exactly n_timesteps
@@ -908,7 +907,7 @@ def run_batch_benchmark(
             n_batches,
             n_states,
             torch_n_features,
-            torch_time * 1000,
+            float(torch_time * 1000),
         )
         save_batch_result(
             "pytorch",
@@ -918,7 +917,7 @@ def run_batch_benchmark(
             n_batches,
             n_states,
             torch_n_features,
-            torch_parallel_time * 1000,
+            float(torch_parallel_time * 1000),
         )
     if torch_gpu_time is not None:
         save_batch_result(
@@ -929,7 +928,7 @@ def run_batch_benchmark(
             n_batches,
             n_states,
             gpu_n_features,
-            torch_gpu_time * 1000,
+            float(torch_gpu_time * 1000),
         )
     if torch_gpu_batched_time is not None:
         save_batch_result(
@@ -940,7 +939,7 @@ def run_batch_benchmark(
             n_batches,
             n_states,
             gpu_n_features,
-            torch_gpu_batched_time * 1000,
+            float(torch_gpu_batched_time * 1000),
         )
     if tsfresh_time > 0:
         save_batch_result(
@@ -951,7 +950,7 @@ def run_batch_benchmark(
             n_batches,
             n_states,
             tsfresh_n_features,
-            tsfresh_time * 1000,
+            float(tsfresh_time * 1000),
         )
 
 

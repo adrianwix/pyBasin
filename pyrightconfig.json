@@ -1,19 +1,15 @@
 {
-    "include": [
-        "src",
-        "tests"
-    ],
-    "exclude": [
-        "**/__pycache__",
-        "**/node_modules",
-        "**/.venv",
-        "cache",
-        "artifacts",
-        "benchmarks",
-        "src/pybasin/plotters"
-    ],
-    "venvPath": ".",
-    "venv": ".venv",
-    "pythonVersion": "3.12",
-    "typeCheckingMode": "strict"
+  "include": ["src", "tests", "benchmarks"],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv",
+    "cache",
+    "artifacts",
+    "src/pybasin/plotters"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "strict"
 }

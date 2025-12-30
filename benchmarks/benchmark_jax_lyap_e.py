@@ -1,5 +1,16 @@
 # pyright: basic
-"""Benchmark lyap_e implementations: nolds, JAX, and parallel numpy."""
+"""Deep dive benchmark for lyap_e (Eckmann's method) parallelization strategies.
+
+Compares 6 different implementations to find optimal parallel execution strategy:
+- nolds sequential (baseline)
+- nolds parallel (ProcessPoolExecutor)
+- JAX vmap (single-threaded, vectorized)
+- JAX pmap (multi-core CPU parallelization)
+- JAX multiprocess (ProcessPoolExecutor with JAX workers)
+- Parallel numpy (custom implementation)
+
+Focuses on performance optimization for batch Lyapunov exponent computation.
+"""
 
 # Must set XLA_FLAGS BEFORE any JAX import - this must be at the very top
 import os

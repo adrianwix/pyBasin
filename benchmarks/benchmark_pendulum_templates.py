@@ -51,13 +51,16 @@ def benchmark_template_solving():
     solver = props.get("solver")
     cluster_classifier = cast(ClassifierPredictor, props.get("cluster_classifier"))
 
+    if solver is None:
+        raise ValueError("Solver not found in setup properties")
+
     print(f"\nDevice: {solver.device}")
-    print(f"Number of templates: {len(cluster_classifier.initial_conditions)}")
-    print(f"Template initial conditions:\n{cluster_classifier.initial_conditions}")
+    print(f"Number of templates: {len(cluster_classifier.template_y0)}")
+    print(f"Template initial conditions:\n{cluster_classifier.template_y0}")
     print(f"Template labels: {cluster_classifier.labels}")
     print(f"Integration time span: {solver.time_span}")
-    print(f"Sampling frequency: {solver.fs} Hz")
-    print(f"Number of time steps: {solver.n_steps}")
+    print(f"Sampling frequency: {solver.fs} Hz")  # type: ignore[attr-defined]
+    print(f"Number of time steps: {solver.n_steps}")  # type: ignore[attr-defined]
 
     print("\n" + "-" * 80)
     print("BENCHMARKING TEMPLATE INTEGRATION (Cache Disabled)")
@@ -71,7 +74,10 @@ def benchmark_template_solving():
     # It integrates the template initial conditions
     # Use no_grad() to disable gradient computation for faster inference
     with torch.no_grad():
-        t, y = solver.integrate(ode_system, cluster_classifier.initial_conditions)
+        template_tensor = torch.tensor(
+            cluster_classifier.template_y0, dtype=torch.float32, device=solver.device
+        )
+        _, y = solver.integrate(ode_system, template_tensor)
 
     integration_time = time.perf_counter() - start_time
 

@@ -1,5 +1,15 @@
 # pyright: basic
-"""Benchmark lyap_r implementations: nolds parallel vs JAX."""
+"""Deep dive benchmark for lyap_r (Rosenstein's method) fitting algorithms.
+
+Compares 4 implementations with emphasis on fitting methods:
+- nolds parallel RANSAC (robust to outliers, default sklearn behavior)
+- nolds parallel poly (polynomial least squares fitting)
+- JAX batch poly (vectorized polynomial least squares)
+- JAX batch RANSAC (vectorized robust fitting)
+
+Focuses on comparing RANSAC vs polynomial fitting for accuracy and performance
+tradeoffs in batch Lyapunov exponent computation from trajectories.
+"""
 
 # Must set XLA_FLAGS BEFORE any JAX import - this must be at the very top
 import os
@@ -27,7 +37,7 @@ import jax.numpy as jnp
 import nolds
 import numpy as np
 
-from pybasin.feature_extractors.jax_lyapunov_e import lyap_r_batch
+from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch
 
 # Suppress other warnings
 warnings.filterwarnings("ignore")
@@ -180,10 +190,10 @@ def run_benchmark(n_samples=100, n_workers=16):
     print(f"  JAX poly:     {float(le_jax_poly[0, 0]):.6f}  (least squares)")
     print(f"  JAX RANSAC:   {float(le_jax_ransac[0, 0]):.6f}  (robust to outliers)")
     print(
-        f"\n  JAX poly matches nolds poly: {np.isclose(le_nolds_poly[0], float(le_jax_poly[0, 0]), rtol=1e-3)}"
+        f"\n  JAX poly matches nolds poly: {np.isclose(le_nolds_poly[0], float(le_jax_poly[0, 0]), rtol=1e-3)}"  # type: ignore[arg-type]
     )
     print(
-        f"  JAX RANSAC close to nolds RANSAC: {np.isclose(le_nolds_ransac[0], float(le_jax_ransac[0, 0]), rtol=0.5)}"
+        f"  JAX RANSAC close to nolds RANSAC: {np.isclose(le_nolds_ransac[0], float(le_jax_ransac[0, 0]), rtol=0.5)}"  # type: ignore[arg-type]
     )
 
 

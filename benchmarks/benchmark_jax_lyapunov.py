@@ -1,5 +1,12 @@
 # pyright: basic
-"""Benchmark JAX Lyapunov exponent and correlation dimension calculators vs nolds."""
+"""General overview benchmark for JAX feature extractors vs nolds.
+
+Compares JAX implementations of lyap_r, lyap_e, and corr_dim against nolds
+baseline on logistic map and pendulum systems. Useful for validating correctness
+and getting initial performance metrics. For detailed performance analysis, see
+benchmark_jax_lyap_e.py (parallelization strategies) and benchmark_jax_lyap_r.py
+(fitting methods comparison).
+"""
 
 import time
 
@@ -10,11 +17,9 @@ import numpy as np
 
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.feature_extractors.jax_lyapunov_e import (
-    corr_dim_batch,
-    lyap_e_batch,
-    lyap_r_batch,
-)
+from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch
+from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch
+from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch
 from pybasin.solvers import JaxSolver
 
 
