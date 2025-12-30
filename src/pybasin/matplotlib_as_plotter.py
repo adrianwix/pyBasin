@@ -1,5 +1,6 @@
 """Adaptive Study Basin Stability Estimator."""
 
+import logging
 import os
 from typing import Any, Literal
 
@@ -12,6 +13,8 @@ from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
 
 matplotlib.use("Agg")
+
+logger = logging.getLogger(__name__)
 
 
 class ASPlotter:
@@ -35,7 +38,7 @@ class ASPlotter:
         file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
 
-        print("Saving plots to: ", full_path)
+        logger.info("Saving plots to: %s", full_path)
         plt.savefig(full_path, dpi=300)  # type: ignore[func-returns-value]
 
     def plot_basin_stability_variation(self, interval: Literal["linear", "log"] = "linear"):

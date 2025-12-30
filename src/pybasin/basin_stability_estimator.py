@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 import warnings
@@ -33,6 +34,8 @@ from pybasin.utils import (
 
 # Sentinel value to distinguish "not specified" from "None"
 _USE_DEFAULT = object()
+
+logger = logging.getLogger(__name__)
 
 
 class BasinStabilityEstimator:
@@ -209,13 +212,15 @@ class BasinStabilityEstimator:
             dtype=features.dtype, device=features.device
         )
 
-        # Print filtering stats
+        # Log filtering stats
         n_original: int = int(features_np.shape[1])
         n_filtered: int = int(features_filtered_np.shape[1])
         reduction_pct: float = float((1 - n_filtered / n_original) * 100)
-        print(
-            f"  Feature Filtering: {n_original} → {n_filtered} features "
-            f"({reduction_pct:.1f}% reduction)"
+        logger.info(
+            "Feature Filtering: %d → %d features (%.1f%% reduction)",
+            n_original,
+            n_filtered,
+            reduction_pct,
         )
 
         return features_filtered, filtered_names
@@ -238,26 +243,26 @@ class BasinStabilityEstimator:
                                      and template integration in parallel (default: True).
         :return: A dictionary of basin stability values per class.
         """
-        print("\nStarting Basin Stability Estimation...")
+        logger.info("Starting Basin Stability Estimation...")
         total_start = time.perf_counter()
 
         # Step 1: Sampling
-        print("\nSTEP 1: Sampling Initial Conditions")
+        logger.info("STEP 1: Sampling Initial Conditions")
         t1 = time.perf_counter()
         self.y0 = self.sampler.sample(self.n)
         t1_elapsed = time.perf_counter() - t1
-        print(f"  Generated grid with {len(self.y0)} initial conditions in {t1_elapsed:.4f}s")
+        logger.info("Generated grid with %d initial conditions in %.4fs", len(self.y0), t1_elapsed)
 
         # Step 2: Integration (possibly parallel with classifier fitting)
-        print("\nSTEP 2: ODE Integration")
+        logger.info("STEP 2: ODE Integration")
         t2_start = time.perf_counter()  # Track total integration time
         t2a_elapsed = 0.0  # Template integration time
         t2b_elapsed = 0.0  # Main integration time
 
         if parallel_integration and isinstance(self.cluster_classifier, ClassifierPredictor):
-            print("  Mode: PARALLEL (integration only)")
-            print("  • Main integration (sampled ICs)")
-            print("  • Template integration (classifier ICs)")
+            logger.info("  Mode: PARALLEL (integration only)")
+            logger.info("  • Main integration (sampled ICs)")
+            logger.info("  • Template integration (classifier ICs)")
 
             # Run ONLY integrations in parallel (not feature extraction)
             # This ensures the scaler is fitted on main data first for consistent normalization
@@ -276,41 +281,41 @@ class BasinStabilityEstimator:
 
             t2_elapsed = time.perf_counter() - t2_start
             # In parallel mode, we can't separate the times accurately
-            print(f"  Both integrations complete in {t2_elapsed:.4f}s")
-            print(f"  Main trajectory shape: {y.shape}")
+            logger.info("Both integrations complete in %.4fs", t2_elapsed)
+            logger.info("Main trajectory shape: %s", y.shape)
         else:
             # Sequential execution (original behavior)
             if isinstance(self.cluster_classifier, ClassifierPredictor):
-                print("  Mode: SEQUENTIAL")
-                print("  Step 2a: Integrating template initial conditions...")
+                logger.info("  Mode: SEQUENTIAL")
+                logger.info("  Step 2a: Integrating template initial conditions...")
                 t2a_start = time.perf_counter()
                 self.cluster_classifier.integrate_templates(  # type: ignore[misc]
                     solver=self.solver,
                     ode_system=self.ode_system,
                 )
                 t2a_elapsed = time.perf_counter() - t2a_start
-                print(f"    Template integration in {t2a_elapsed:.4f}s")
+                logger.info("    Template integration in %.4fs", t2a_elapsed)
 
-            print("  Step 2b: Integrating sampled initial conditions...")
+            logger.info("  Step 2b: Integrating sampled initial conditions...")
             t2b_start = time.perf_counter()
             t, y = self.solver.integrate(self.ode_system, self.y0)  # type: ignore[arg-type]
             t2b_elapsed = time.perf_counter() - t2b_start
-            print(f"    Main trajectory shape: {y.shape}")
-            print(f"    Main integration complete in {t2b_elapsed:.4f}s")
+            logger.info("    Main trajectory shape: %s", y.shape)
+            logger.info("    Main integration complete in %.4fs", t2b_elapsed)
 
             # Total integration time includes both template and main
             t2_elapsed = time.perf_counter() - t2_start
-            print(f"    Total integration time: {t2_elapsed:.4f}s")
+            logger.info("    Total integration time: %.4fs", t2_elapsed)
 
         # Step 3: Create Solution object
-        print("\nSTEP 3: Creating Solution Object")
+        logger.info("STEP 3: Creating Solution Object")
         t3 = time.perf_counter()
         self.solution = Solution(initial_condition=self.y0, time=t, y=y)
 
         # Always compute bifurcation amplitudes
         self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
         t3_elapsed = time.perf_counter() - t3
-        print(f"  Solution object created in {t3_elapsed:.4f}s")
+        logger.info("  Solution object created in %.4fs", t3_elapsed)
 
         # Step 3b: Detect and separate unbounded trajectories (if enabled)
         unbounded_mask: torch.Tensor | None = None
@@ -319,7 +324,7 @@ class BasinStabilityEstimator:
         original_solution: Solution | None = None
 
         if self.detect_unbounded:
-            print("\nSTEP 3b: Unboundedness Detection")
+            logger.info("STEP 3b: Unboundedness Detection")
             t3b = time.perf_counter()
             unbounded_mask = self._detect_unbounded_trajectories(y)
             n_unbounded = int(unbounded_mask.sum().item())
@@ -327,12 +332,16 @@ class BasinStabilityEstimator:
             unbounded_pct = (n_unbounded / total_samples) * 100
             t3b_elapsed = time.perf_counter() - t3b
 
-            print(
-                f"  Detected {n_unbounded}/{total_samples} unbounded trajectories ({unbounded_pct:.1f}%) in {t3b_elapsed:.4f}s"
+            logger.info(
+                "  Detected %d/%d unbounded trajectories (%.1f%%) in %.4fs",
+                n_unbounded,
+                total_samples,
+                unbounded_pct,
+                t3b_elapsed,
             )
 
             if n_unbounded == total_samples:
-                print(
+                logger.info(
                     "  All trajectories are unbounded. Skipping feature extraction and classification."
                 )
                 self.bs_vals = {"unbounded": 1.0}
@@ -340,13 +349,14 @@ class BasinStabilityEstimator:
                 self.solution.set_labels(labels)
 
                 total_elapsed = time.perf_counter() - total_start
-                print("\nBASIN STABILITY ESTIMATION COMPLETE")
-                print(f"Total time: {total_elapsed:.4f}s")
+                logger.info("BASIN STABILITY ESTIMATION COMPLETE")
+                logger.info("Total time: %.4fs", total_elapsed)
                 return self.bs_vals
 
             if n_unbounded > 0:
-                print(
-                    f"  Separating {n_bounded} bounded trajectories for feature extraction and classification"
+                logger.info(
+                    "  Separating %d bounded trajectories for feature extraction and classification",
+                    n_bounded,
                 )
                 bounded_mask = ~unbounded_mask
 
@@ -359,10 +369,10 @@ class BasinStabilityEstimator:
                 self.solution = Solution(initial_condition=y0_bounded, time=t, y=y_bounded)
                 self.solution.bifurcation_amplitudes = extract_amplitudes(t, y_bounded)
         else:
-            print("\n  Unboundedness detection: DISABLED")
+            logger.info("Unboundedness detection: DISABLED")
 
         # Step 4: Feature extraction (main data - fits scaler on large dataset)
-        print("\nSTEP 4: Feature Extraction")
+        logger.info("STEP 4: Feature Extraction")
         t4 = time.perf_counter()
         features = self.feature_extractor.extract_features(self.solution)
 
@@ -370,10 +380,10 @@ class BasinStabilityEstimator:
         feature_names = self._get_feature_names()
         self.solution.set_extracted_features(features, feature_names)
         t4_elapsed = time.perf_counter() - t4
-        print(f"  Extracted features with shape {features.shape} in {t4_elapsed:.4f}s")
+        logger.info("  Extracted features with shape %s in %.4fs", features.shape, t4_elapsed)
 
         # Step 5: Feature filtering
-        print("\nSTEP 5: Feature Filtering")
+        logger.info("STEP 5: Feature Filtering")
         t5 = time.perf_counter()
         if self.feature_selector is not None:
             features_filtered, filtered_names = self._apply_feature_filtering(
@@ -384,15 +394,15 @@ class BasinStabilityEstimator:
             features = features_filtered
         else:
             self.solution.set_features(features, feature_names)
-            print("  No feature filtering configured")
+            logger.info("  No feature filtering configured")
         t5_elapsed = time.perf_counter() - t5
-        print(f"  Feature filtering complete in {t5_elapsed:.4f}s")
+        logger.info("Feature filtering complete in %.4fs", t5_elapsed)
 
         # Show sample of filtered features (first IC, up to 10 features)
         if self.solution.features is not None and self.solution.features.shape[0] > 0:
             n_features_to_show = min(10, self.solution.features.shape[1])
             if n_features_to_show > 0:
-                print(f"\n  Sample of first {n_features_to_show} filtered features (first IC):")
+                logger.debug("Sample of first %d filtered features (first IC):", n_features_to_show)
                 feature_names_filtered = (
                     self.solution.filtered_feature_names[:n_features_to_show]
                     if self.solution.filtered_feature_names
@@ -402,21 +412,21 @@ class BasinStabilityEstimator:
                     self.solution.features[0, :n_features_to_show].cpu().numpy().tolist()
                 )
                 for name, value in zip(feature_names_filtered, feature_values, strict=False):
-                    print(f"    {name}: {value:.6f}")
+                    logger.debug("    %s: %.6f", name, value)
 
         # Step 5b: Fit classifier with template features (using already-fitted scaler)
         if isinstance(self.cluster_classifier, ClassifierPredictor):  # type: ignore[type-arg]
-            print("\nSTEP 5b: Fitting Classifier")
+            logger.info("STEP 5b: Fitting Classifier")
             t5b = time.perf_counter()
             self.cluster_classifier.fit_with_features(  # type: ignore[misc]
                 self.feature_extractor,
                 feature_selector=self.feature_selector,
             )
             t5b_elapsed = time.perf_counter() - t5b
-            print(f"  Classifier fitted in {t5b_elapsed:.4f}s")
+            logger.info("  Classifier fitted in %.4fs", t5b_elapsed)
 
         # Step 6: Classification
-        print("\nSTEP 6: Classification")
+        logger.info("STEP 6: Classification")
         t6 = time.perf_counter()
 
         # Convert features to numpy for classifier
@@ -430,8 +440,8 @@ class BasinStabilityEstimator:
             labels = np.empty(total_samples, dtype=object)
             labels[unbounded_mask.cpu().numpy()] = "unbounded"
             labels[~unbounded_mask.cpu().numpy()] = bounded_labels
-            print(f"  Classified {len(bounded_labels)} bounded trajectories")
-            print(f"  Reconstructed full label array with {n_unbounded} unbounded labels")
+            logger.info("  Classified %d bounded trajectories", len(bounded_labels))
+            logger.info("  Reconstructed full label array with %d unbounded labels", n_unbounded)
 
             # Restore original solution with full trajectories
             if original_solution is not None:
@@ -456,11 +466,11 @@ class BasinStabilityEstimator:
 
         self.solution.set_labels(labels)
         t6_elapsed = time.perf_counter() - t6
-        print(f"  Classification complete in {t6_elapsed:.4f}s")
-        print(f"  Prediction time: {t6_pred_elapsed:.4f}s")
+        logger.info("  Classification complete in %.4fs", t6_elapsed)
+        logger.info("    Prediction time: %.4fs", t6_pred_elapsed)
 
         # Step 7: Computing Basin Stability
-        print("\nSTEP 7: Computing Basin Stability")
+        logger.info("STEP 7: Computing Basin Stability")
         t7 = time.perf_counter()
 
         # Convert all labels to strings to ensure consistent types (bounded labels may be int or str)
@@ -477,44 +487,62 @@ class BasinStabilityEstimator:
         for label, fraction in zip(unique_labels, fractions, strict=True):
             basin_stability_fraction = float(fraction)
             self.bs_vals[str(label)] = basin_stability_fraction
-            print(f"  {label}: {basin_stability_fraction * 100:.2f}%")
+            logger.info("    %s: %.2f%%", label, basin_stability_fraction * 100)
 
         t7_elapsed = time.perf_counter() - t7
-        print(f"  Basin stability computed in {t6_elapsed:.4f}s")
+        logger.info("  Basin stability computed in %.4fs", t6_elapsed)
 
         # Summary
         total_elapsed = time.perf_counter() - total_start
-        print("\nBASIN STABILITY ESTIMATION COMPLETE")
-        print(f"Total time: {total_elapsed:.4f}s")
-        print("\nTiming Breakdown:")
-        print(
-            f"  1. Sampling:           {t1_elapsed:8.4f}s  ({t1_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info("BASIN STABILITY ESTIMATION COMPLETE")
+        logger.info("Total time: %.4fs", total_elapsed)
+        logger.info("Timing Breakdown:")
+        logger.info(
+            "  1. Sampling:           %8.4fs  (%5.1f%%)",
+            t1_elapsed,
+            t1_elapsed / total_elapsed * 100,
         )
-        print(
-            f"  2. Integration:        {t2_elapsed:8.4f}s  ({t2_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  2. Integration:        %8.4fs  (%5.1f%%)",
+            t2_elapsed,
+            t2_elapsed / total_elapsed * 100,
         )
         if t2a_elapsed > 0:
-            print(
-                f"     - Template:         {t2a_elapsed:8.4f}s  ({t2a_elapsed / total_elapsed * 100:5.1f}%)"
+            logger.info(
+                "     - Template:         %8.4fs  (%5.1f%%)",
+                t2a_elapsed,
+                t2a_elapsed / total_elapsed * 100,
             )
         if t2b_elapsed > 0:
-            print(
-                f"     - Main:             {t2b_elapsed:8.4f}s  ({t2b_elapsed / total_elapsed * 100:5.1f}%)"
+            logger.info(
+                "     - Main:             %8.4fs  (%5.1f%%)",
+                t2b_elapsed,
+                t2b_elapsed / total_elapsed * 100,
             )
-        print(
-            f"  3. Solution/Amps:      {t3_elapsed:8.4f}s  ({t3_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  3. Solution/Amps:      %8.4fs  (%5.1f%%)",
+            t3_elapsed,
+            t3_elapsed / total_elapsed * 100,
         )
-        print(
-            f"  4. Features:           {t4_elapsed:8.4f}s  ({t4_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  4. Features:           %8.4fs  (%5.1f%%)",
+            t4_elapsed,
+            t4_elapsed / total_elapsed * 100,
         )
-        print(
-            f"  5. Filtering:          {t5_elapsed:8.4f}s  ({t5_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  5. Filtering:          %8.4fs  (%5.1f%%)",
+            t5_elapsed,
+            t5_elapsed / total_elapsed * 100,
         )
-        print(
-            f"  6. Classification:     {t6_elapsed:8.4f}s  ({t6_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  6. Classification:     %8.4fs  (%5.1f%%)",
+            t6_elapsed,
+            t6_elapsed / total_elapsed * 100,
         )
-        print(
-            f"  7. BS Computation:     {t7_elapsed:8.4f}s  ({t7_elapsed / total_elapsed * 100:5.1f}%)"
+        logger.info(
+            "  7. BS Computation:     %8.4fs  (%5.1f%%)",
+            t7_elapsed,
+            t7_elapsed / total_elapsed * 100,
         )
 
         return self.bs_vals
@@ -587,7 +615,7 @@ class BasinStabilityEstimator:
         with open(full_path, "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
-        print(f"Results saved to {full_path}")
+        logger.info("Results saved to %s", full_path)
 
     def save_to_excel(self) -> None:
         """

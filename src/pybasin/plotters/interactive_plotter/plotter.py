@@ -361,9 +361,9 @@ class InteractivePlotter:
         # Register navigation callbacks (using @self.app.callback for view switching)
         self._register_navigation_callbacks()
 
-        print("\n🚀 Starting Basin Stability Visualization Server")
-        print(f"   Open http://localhost:{port} in your browser")
-        print("   Press Ctrl+C to stop the server\n")
+        logger.info("\n🚀 Starting Basin Stability Visualization Server")
+        logger.info("   Open http://localhost:%d in your browser", port)
+        logger.info("   Press Ctrl+C to stop the server\n")
 
         self.app.run(host="0.0.0.0", port=port, debug=debug)
 

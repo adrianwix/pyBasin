@@ -2,6 +2,7 @@
 
 import gc
 import json
+import logging
 import os
 from typing import Any, TypedDict
 
@@ -14,6 +15,8 @@ from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
+
+logger = logging.getLogger(__name__)
 
 
 class AdaptiveStudyParams(TypedDict):
@@ -38,6 +41,7 @@ class ASBasinStabilityEstimator:
         cluster_classifier: LabelPredictor,
         as_params: AdaptiveStudyParams,
         save_to: str | None = "results",
+        verbose: bool = False,
     ):
         """
         Initialize the ASBasinStabilityEstimator.
@@ -50,6 +54,7 @@ class ASBasinStabilityEstimator:
         :param cluster_classifier: The LabelPredictor object to assign labels.
         :param as_params: The AdaptiveStudyParams object to vary the parameter.
         :param save_to: The folder where results will be saved.
+        :param verbose: If True, show detailed logs from BasinStabilityEstimator (default: False).
         """
         self.n = n
         self.ode_system = ode_system
@@ -59,11 +64,42 @@ class ASBasinStabilityEstimator:
         self.cluster_classifier = cluster_classifier
         self.as_params = as_params
         self.save_to = save_to
+        self.verbose = verbose
 
         # Add storage for parameter study results
         self.parameter_values: list[float] = []
         self.basin_stabilities: list[dict[str, float]] = []
         self.results: list[dict[str, Any]] = []
+
+    def _suppress_verbose_logs(self) -> dict[str, int]:
+        """Suppress verbose logs from BasinStabilityEstimator and related components.
+
+        :return: Dictionary mapping logger names to their original log levels.
+        """
+        original_levels: dict[str, int] = {}
+
+        if self.verbose:
+            return original_levels
+
+        loggers_to_suppress = [
+            "pybasin.basin_stability_estimator",
+            "pybasin.predictors.base",
+            "pybasin.solvers.jax_solver",
+        ]
+        for logger_name in loggers_to_suppress:
+            log = logging.getLogger(logger_name)
+            original_levels[logger_name] = log.level
+            log.setLevel(logging.WARNING)
+
+        return original_levels
+
+    def _restore_log_levels(self, original_levels: dict[str, int]) -> None:
+        """Restore original log levels.
+
+        :param original_levels: Dictionary mapping logger names to their original log levels.
+        """
+        for logger_name, level in original_levels.items():
+            logging.getLogger(logger_name).setLevel(level)
 
     def estimate_as_bs(
         self,
@@ -79,16 +115,24 @@ class ASBasinStabilityEstimator:
         self.basin_stabilities = []
         self.results = []
 
-        print(
-            f"\nEstimating Basin Stability for parameter: {self.as_params['adaptative_parameter_name']}"
+        param_values_list = self.as_params["adaptative_parameter_values"]
+        total_params = len(param_values_list)
+
+        logger.info("\n" + "=" * 80)
+        logger.info("PARAMETER STUDY: %s", self.as_params["adaptative_parameter_name"])
+        logger.info(
+            "Parameter range: [%.4f, %.4f] (%d values)",
+            param_values_list[0],
+            param_values_list[-1],
+            total_params,
         )
-        print(f"Parameter values: {self.as_params['adaptative_parameter_values']}")
+        logger.info("=" * 80)
 
         # Check if GPU is available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"Computing device: {device}")
+        logger.info("Computing device: %s\n", device)
 
-        for param_value in self.as_params["adaptative_parameter_values"]:
+        for idx, param_value in enumerate(param_values_list, 1):
             # Update parameter using eval
             assignment = f"{self.as_params['adaptative_parameter_name']} = {param_value}"
 
@@ -107,7 +151,9 @@ class ASBasinStabilityEstimator:
             variable_name = self.as_params["adaptative_parameter_name"]
             updated_value = eval(variable_name, context, context)
 
-            print(f"\nCurrent {variable_name} value: {updated_value}")
+            logger.info("\n" + "-" * 80)
+            logger.info("[%d/%d] %s = %.4f", idx, total_params, variable_name, updated_value)
+            logger.info("-" * 80)
 
             bse = BasinStabilityEstimator(
                 n=context["n"],
@@ -119,7 +165,9 @@ class ASBasinStabilityEstimator:
                 feature_selector=None,
             )
 
+            original_levels = self._suppress_verbose_logs()
             basin_stability = bse.estimate_bs()
+            self._restore_log_levels(original_levels)
 
             # Store only essential results (not the full solution to save memory)
             self.parameter_values.append(param_value)
@@ -151,7 +199,10 @@ class ASBasinStabilityEstimator:
 
             self.results.append(solution_summary)
 
-            print(f"Basin Stability: {basin_stability} for parameter value {param_value}")
+            # Format basin stability output
+            bs_str = ", ".join([f"{k}: {v:.4f}" for k, v in basin_stability.items()])
+            logger.info("Result: {%s}", bs_str)
+            logger.info("-" * 80 + "\n")
 
             # Explicitly free memory after each iteration
             del bse
@@ -209,4 +260,4 @@ class ASBasinStabilityEstimator:
         with open(full_path, "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
-        print(f"Results saved to {full_path}")
+        logger.info("Results saved to %s", full_path)

@@ -3,7 +3,7 @@ import numpy as np
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
-from pybasin.utils import time_execution  # Import the utility function
+from pybasin.utils import time_execution
 
 
 def main():

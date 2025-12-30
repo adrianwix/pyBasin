@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import pickle
 import shutil
@@ -7,6 +8,8 @@ from typing import Any
 import torch
 
 from pybasin.protocols import ODESystemProtocol
+
+logger = logging.getLogger(__name__)
 
 
 class CacheManager:
@@ -62,7 +65,7 @@ class CacheManager:
                 t_cached, y_cached = pickle.load(f)
                 return t_cached.to(device), y_cached.to(device)
         except EOFError:
-            print("Warning: Cache file corrupted. Deleting and recomputing.")
+            logger.warning("Cache file corrupted. Deleting and recomputing.")
             os.remove(cache_file)
             return None
 
@@ -77,12 +80,12 @@ class CacheManager:
         usage = shutil.disk_usage(os.path.dirname(cache_file))
         free_gb = usage.free / (1024**3)
         if free_gb < 1:
-            print(f"Warning: Only {free_gb:.2f}GB free space available.")
+            logger.warning("Only %.2fGB free space available.", free_gb)
 
         try:
             # Move to CPU before caching to avoid device issues
             with open(cache_file, "wb") as f:
                 pickle.dump((t.cpu(), y.cpu()), f)
         except OSError as e:
-            print(f"Error saving to cache: {e}")
+            logger.error("Error saving to cache: %s", e)
             raise

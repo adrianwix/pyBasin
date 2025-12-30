@@ -1,5 +1,6 @@
 """AIO Feature Space scatter plot page with trajectory inspection."""
 
+import logging
 from collections.abc import Sequence
 from typing import Any, cast
 
@@ -25,6 +26,8 @@ from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_modal_aio import TrajectoryModalAIO
 from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.plotters.types import FeatureSpaceOptions
+
+logger = logging.getLogger(__name__)
 
 
 class FeatureSpaceAIO(BseBasePageAIO):
@@ -69,11 +72,11 @@ class FeatureSpaceAIO(BseBasePageAIO):
             feature_names = self.bse.solution.extracted_feature_names
 
         if feature_names is None:
-            print(
-                f"[FeatureSpaceAIO] Warning: No {'filtered' if use_filtered else 'extracted'} "
-                f"feature names available. Filtered names: "
-                f"{self.bse.solution.filtered_feature_names is not None}, "
-                f"Extracted names: {self.bse.solution.extracted_feature_names is not None}"
+            logger.warning(
+                "No %s feature names available. Filtered names: %s, Extracted names: %s",
+                "filtered" if use_filtered else "extracted",
+                self.bse.solution.filtered_feature_names is not None,
+                self.bse.solution.extracted_feature_names is not None,
             )
             return [{"value": "0", "label": "Feature 0"}]
 
@@ -93,10 +96,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
 
             options.append({"value": str(idx), "label": display_label})
 
-        print(
-            f"[FeatureSpaceAIO] Generated {len(options)} feature options "
-            f"(use_filtered={use_filtered})"
-        )
+        logger.debug("Generated %d feature options (use_filtered=%s)", len(options), use_filtered)
         return options if options else [{"value": "0", "label": "Feature 0"}]
 
     def get_all_labels(self) -> list[str]:
@@ -239,17 +239,16 @@ class FeatureSpaceAIO(BseBasePageAIO):
             )
             return fig
 
-        print(f"[FeatureSpaceAIO] Building figure: use_filtered={use_filtered}")
-        print(f"[FeatureSpaceAIO] features available: {self.bse.solution.features is not None}")
-        print(
-            f"[FeatureSpaceAIO] extracted_features available: {self.bse.solution.extracted_features is not None}"
+        logger.debug("Building figure: use_filtered=%s", use_filtered)
+        logger.debug("features available: %s", self.bse.solution.features is not None)
+        logger.debug(
+            "extracted_features available: %s",
+            self.bse.solution.extracted_features is not None,
         )
         if self.bse.solution.features is not None:
-            print(f"[FeatureSpaceAIO] features shape: {self.bse.solution.features.shape}")
+            logger.debug("features shape: %s", self.bse.solution.features.shape)
         if self.bse.solution.extracted_features is not None:
-            print(
-                f"[FeatureSpaceAIO] extracted_features shape: {self.bse.solution.extracted_features.shape}"
-            )
+            logger.debug("extracted_features shape: %s", self.bse.solution.extracted_features.shape)
 
         if use_filtered and self.bse.solution.features is not None:
             features = self.bse.solution.features.cpu().numpy()

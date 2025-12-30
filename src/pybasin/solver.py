@@ -1,4 +1,5 @@
 # pyright: reportUntypedBaseClass=false
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, cast
 
@@ -13,6 +14,8 @@ from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
 from pybasin.protocols import ODESystemProtocol
 from pybasin.utils import resolve_folder
+
+logger = logging.getLogger(__name__)
 
 
 class Solver(ABC):
@@ -76,8 +79,10 @@ class Solver(ABC):
         elif fs is not None:
             # Legacy behavior: compute from fs (not recommended)
             self.n_steps = int((self.time_span[1] - self.time_span[0]) * fs) + 1
-            print(
-                f"Warning: Using fs={fs} results in {self.n_steps} steps. Consider using n_steps parameter directly."
+            logger.warning(
+                "Using fs=%s results in %d steps. Consider using n_steps parameter directly.",
+                fs,
+                self.n_steps,
             )
         else:
             # Default: use 500 evaluation points (sufficient for most ODEs)
@@ -127,9 +132,11 @@ class Solver(ABC):
 
         # Warn if y0 is on wrong device or has wrong dtype
         if y0.device != self.device:
-            print(f"  Warning: y0 is on device {y0.device} but solver expects {self.device}")
+            logger.warning(
+                "  Warning: y0 is on device %s but solver expects %s", y0.device, self.device
+            )
         if y0.dtype != torch.float32:
-            print(f"  Warning: y0 has dtype {y0.dtype} but solver expects torch.float32")
+            logger.warning("  Warning: y0 has dtype %s but solver expects torch.float32", y0.dtype)
 
         return t_eval, y0
 
@@ -169,20 +176,22 @@ class Solver(ABC):
             cached_result = self._cache_manager.load(cache_key, self.device)
 
             if cached_result is not None:
-                print(f"    [{self.__class__.__name__}] Loaded result from cache")
+                logger.debug("[%s] Loaded result from cache", self.__class__.__name__)
                 return cached_result
 
         # Compute integration if not cached or cache disabled
         if self.use_cache:
-            print(f"    [{self.__class__.__name__}] Cache miss - integrating on {self.device}...")
+            logger.debug(
+                "[%s] Cache miss - integrating on %s...", self.__class__.__name__, self.device
+            )
         else:
-            print(
-                f"    [{self.__class__.__name__}] Cache disabled - integrating on {self.device}..."
+            logger.debug(
+                "[%s] Cache disabled - integrating on %s...", self.__class__.__name__, self.device
             )
         # Cast to concrete type for internal implementation
         ode_system_concrete = cast(ODESystem[Any], ode_system)
         t_result, y_result = self._integrate(ode_system_concrete, y0, t_eval)
-        print(f"    [{self.__class__.__name__}] Integration complete")
+        logger.debug("[%s] Integration complete", self.__class__.__name__)
 
         # Save to cache if enabled
         if self.use_cache and cache_key is not None and self._cache_manager is not None:
@@ -472,7 +481,9 @@ class SklearnParallelSolver(Solver):
         :param max_step: Maximum step size for the solver.
         """
         if device and "cuda" in device:
-            print("  Warning: SklearnParallelSolver does not support CUDA - falling back to CPU")
+            logger.warning(
+                "  Warning: SklearnParallelSolver does not support CUDA - falling back to CPU"
+            )
             device = "cpu"
 
         super().__init__(time_span, fs, device="cpu", **kwargs)
@@ -499,7 +510,7 @@ class SklearnParallelSolver(Solver):
         Note: SklearnParallelSolver only supports CPU, so this always returns a CPU solver.
         """
         if device and "cuda" in device:
-            print("  Warning: SklearnParallelSolver does not support CUDA - using CPU")
+            logger.warning("  Warning: SklearnParallelSolver does not support CUDA - using CPU")
         new_solver = SklearnParallelSolver(
             time_span=self.time_span,
             fs=self.fs,  # type: ignore[arg-type]

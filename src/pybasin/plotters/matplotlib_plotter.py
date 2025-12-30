@@ -1,5 +1,6 @@
 # pyright: basic
 
+import logging
 import os
 
 import numpy as np
@@ -10,6 +11,8 @@ from matplotlib.axes import Axes
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.predictors.base import ClassifierPredictor
 from pybasin.utils import generate_filename, resolve_folder
+
+logger = logging.getLogger(__name__)
 
 
 class MatplotlibPlotter:
@@ -28,7 +31,7 @@ class MatplotlibPlotter:
         file_name = generate_filename(plot_name, "png")
         full_path = os.path.join(full_folder, file_name)
 
-        print("Saving plots to: ", full_path)
+        logger.info("Saving plots to: %s", full_path)
         plt.savefig(full_path, dpi=300)  # type: ignore[misc]
 
     def plot_bse_results(self):
