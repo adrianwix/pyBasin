@@ -7,6 +7,10 @@ PendulumOHE = {"FP": [1, 0], "LC": [0, 1]}
 
 
 class PendulumFeatureExtractor(FeatureExtractor):
+    @property
+    def feature_names(self) -> list[str]:
+        return ["FP", "LC"]
+
     def extract_features(self, solution: Solution):
         y_filtered = self.filter_time(solution)  # shape: (N_after, B, S)
 

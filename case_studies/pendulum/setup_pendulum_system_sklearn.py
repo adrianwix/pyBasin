@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
@@ -58,25 +57,17 @@ def setup_pendulum_system_sklearn() -> SetupProperties:
     # Instantiate the feature extractor with a steady state time.
     feature_extractor = PendulumFeatureExtractor(time_steady=950)
 
-    # Define template initial conditions and labels (e.g., for Fixed Point and Limit Cycle).
-    classifier_initial_conditions = torch.tensor(
-        [
-            [0.5, 0.0],  # FP: fixed point
-            [2.7, 0.0],  # LC: limit cycle
-        ],
-        dtype=torch.float32,
-        device=device,
-    )
-    classifier_labels = ["FP", "LC"]
-
     # Create a KNeighborsClassifier with k=1.
     knn = KNeighborsClassifier(n_neighbors=1)
 
     # Instantiate the KNNClassifier with the training data.
     knn_cluster = KNNClassifier(
         classifier=knn,
-        template_y0=classifier_initial_conditions,
-        labels=classifier_labels,
+        template_y0=[
+            [0.5, 0.0],  # FP: fixed point
+            [2.7, 0.0],  # LC: limit cycle
+        ],
+        labels=["FP", "LC"],
         ode_params=params,
     )
 

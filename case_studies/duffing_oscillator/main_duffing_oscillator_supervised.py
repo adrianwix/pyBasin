@@ -13,9 +13,9 @@ def main():
         n=setup["n"],
         ode_system=setup["ode_system"],
         sampler=setup["sampler"],
-        solver=setup["solver"],
-        feature_extractor=setup["feature_extractor"],
-        cluster_classifier=setup["cluster_classifier"],
+        solver=setup.get("solver"),
+        feature_extractor=setup.get("feature_extractor"),
+        cluster_classifier=setup.get("cluster_classifier"),
         save_to="results",
         feature_selector=None,
     )
