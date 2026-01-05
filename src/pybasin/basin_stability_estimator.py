@@ -217,7 +217,7 @@ class BasinStabilityEstimator:
         n_filtered: int = int(features_filtered_np.shape[1])
         reduction_pct: float = float((1 - n_filtered / n_original) * 100)
         logger.info(
-            "Feature Filtering: %d → %d features (%.1f%% reduction)",
+            "  Feature Filtering: %d → %d features (%.1f%% reduction)",
             n_original,
             n_filtered,
             reduction_pct,
@@ -396,7 +396,14 @@ class BasinStabilityEstimator:
             self.solution.set_features(features, feature_names)
             logger.info("  No feature filtering configured")
         t5_elapsed = time.perf_counter() - t5
-        logger.info("Feature filtering complete in %.4fs", t5_elapsed)
+        logger.info("  Feature filtering complete in %.4fs", t5_elapsed)
+
+        # Show top 10 features that remained
+        if self._filtered_feature_names and len(self._filtered_feature_names) > 0:
+            n_features_to_show = min(10, len(self._filtered_feature_names))
+            logger.info("  Top %d features:", n_features_to_show)
+            for i, feature_name in enumerate(self._filtered_feature_names[:n_features_to_show]):
+                logger.info("    %d. %s", i + 1, feature_name)
 
         # Show sample of filtered features (first IC, up to 10 features)
         if self.solution.features is not None and self.solution.features.shape[0] > 0:
@@ -430,10 +437,8 @@ class BasinStabilityEstimator:
         t6 = time.perf_counter()
 
         # Convert features to numpy for classifier
-        t6_pred = time.perf_counter()
         features_np = features.detach().cpu().numpy()
         bounded_labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
-        t6_pred_elapsed = time.perf_counter() - t6_pred
 
         # Reconstruct full label array if unbounded trajectories were separated
         if self.detect_unbounded and unbounded_mask is not None and n_unbounded > 0:
@@ -467,7 +472,6 @@ class BasinStabilityEstimator:
         self.solution.set_labels(labels)
         t6_elapsed = time.perf_counter() - t6
         logger.info("  Classification complete in %.4fs", t6_elapsed)
-        logger.info("    Prediction time: %.4fs", t6_pred_elapsed)
 
         # Step 7: Computing Basin Stability
         logger.info("STEP 7: Computing Basin Stability")

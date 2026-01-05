@@ -4,13 +4,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.duffing_oscillator.duffing_jax_ode import DuffingJaxODE, DuffingParams
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.predictors.knn_classifier import KNNClassifier
-from pybasin.sampler import GridSampler
+from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
 
 
 def setup_duffing_oscillator_system() -> SetupProperties:
-    n = 10000
+    n = 5000
 
     # Auto-detect device (use GPU if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -21,7 +21,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     ode_system = DuffingJaxODE(params)
 
     # Instantiate sampler, solver, feature extractor, and cluster classifier
-    sampler = GridSampler(min_limits=[-1, -0.5], max_limits=[1, 1], device=device)
+    sampler = UniformRandomSampler(min_limits=[-1, -0.5], max_limits=[1, 1], device=device)
 
     solver = JaxSolver(
         time_span=(0, 1000),

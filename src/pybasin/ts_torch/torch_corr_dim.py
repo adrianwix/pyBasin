@@ -66,7 +66,8 @@ def corr_dim_single(
     dists = torch.cdist(orbit, orbit, p=2)
 
     # Zero out diagonal (self-distances)
-    dists.fill_diagonal_(float("inf"))
+    mask = torch.eye(n, dtype=torch.bool, device=data.device)
+    dists = dists.masked_fill(mask, float("inf"))
 
     # Compute rvals based on data statistics
     sd = torch.std(data, correction=1)

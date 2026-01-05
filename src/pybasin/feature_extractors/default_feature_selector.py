@@ -39,14 +39,19 @@ class DefaultFeatureSelector(Pipeline):
         self,
         variance_threshold: float = 0.01,
         correlation_threshold: float = 0.95,
+        min_features: int = 2,
     ):
         self.variance_threshold = variance_threshold
         self.correlation_threshold = correlation_threshold
+        self.min_features = min_features
 
         super().__init__(  # type: ignore[misc]
             [
                 ("variance", VarianceThreshold(threshold=variance_threshold)),
-                ("correlation", CorrelationSelector(threshold=correlation_threshold)),
+                (
+                    "correlation",
+                    CorrelationSelector(threshold=correlation_threshold, min_features=min_features),
+                ),
             ]
         )
 

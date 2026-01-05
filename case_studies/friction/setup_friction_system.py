@@ -10,7 +10,7 @@ from pybasin.types import SetupProperties
 
 
 def setup_friction_system() -> SetupProperties:
-    n = 1 * 10**3  # Number of samples as in setup_friction.m
+    n = 5000  # Number of samples as in setup_friction.m
 
     # Auto-detect device (use GPU if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"

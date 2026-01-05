@@ -15,6 +15,9 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
     threshold : float, default=0.95
         Correlation threshold. Features with absolute correlation above
         this value will be considered redundant.
+    min_features : int, default=2
+        Minimum number of features to keep. If removing correlated features
+        would result in fewer than this many, some correlated features are retained.
 
     Attributes
     ----------
@@ -24,8 +27,9 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
         Number of input features.
     """
 
-    def __init__(self, threshold: float = 0.95):
+    def __init__(self, threshold: float = 0.95, min_features: int = 2):
         self.threshold = threshold
+        self.min_features = min_features
 
     def fit(self, X: np.ndarray, y: np.ndarray | None = None):
         """Compute which features to keep.
@@ -44,12 +48,19 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
         """
         self.n_features_in_ = X.shape[1]
 
+        if self.n_features_in_ <= self.min_features:
+            self.support_ = np.ones(self.n_features_in_, dtype=bool)
+            return self
+
         corr_matrix = np.corrcoef(X.T)
 
         to_drop: set[int] = set()
         for i in range(corr_matrix.shape[0]):
             for j in range(i + 1, corr_matrix.shape[1]):
-                if abs(corr_matrix[i, j]) > self.threshold:
+                if (
+                    abs(corr_matrix[i, j]) > self.threshold
+                    and self.n_features_in_ - len(to_drop) > self.min_features
+                ):
                     to_drop.add(j)
 
         self.support_ = np.array([i not in to_drop for i in range(self.n_features_in_)])

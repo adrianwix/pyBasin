@@ -368,10 +368,10 @@ TORCH_CUSTOM_FC_PARAMETERS: FCParameters = {
 
 # Minimal feature names
 MINIMAL_FEATURE_NAMES: list[str] = [
-    "sum_values",
+    # "sum_values",
     "median",
     "mean",
-    "length",
+    # "length",
     "standard_deviation",
     "variance",
     "root_mean_square",
@@ -385,10 +385,5 @@ MINIMAL_FEATURE_NAMES: list[str] = [
 # Minimal feature configuration (equivalent to tsfresh MinimalFCParameters + custom features)
 TORCH_MINIMAL_FC_PARAMETERS: FCParameters = dict.fromkeys(MINIMAL_FEATURE_NAMES)
 
-# Default configuration: minimal features + dynamical systems features
-DEFAULT_TORCH_FC_PARAMETERS: FCParameters = {
-    **TORCH_MINIMAL_FC_PARAMETERS,
-    "lyapunov_r": [{"emb_dim": 10, "lag": 1, "trajectory_len": 20, "tau": 1.0}],
-    "lyapunov_e": [{"emb_dim": 10, "matrix_dim": 4, "min_nb": 8, "min_tsep": 0, "tau": 1.0}],
-    "correlation_dimension": [{"emb_dim": 4, "lag": 1, "n_rvals": 50}],
-}
+# Default configuration: minimal features
+DEFAULT_TORCH_FC_PARAMETERS: FCParameters = {**TORCH_MINIMAL_FC_PARAMETERS}
