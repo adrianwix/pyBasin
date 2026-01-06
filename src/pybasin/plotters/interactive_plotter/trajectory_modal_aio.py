@@ -3,6 +3,7 @@
 from typing import Any
 
 import dash_mantine_components as dmc  # pyright: ignore[reportMissingTypeStubs]
+import numpy as np
 import plotly.graph_objects as go  # pyright: ignore[reportMissingTypeStubs]
 from dash import Input, Output, State, callback, dcc  # pyright: ignore[reportUnknownVariableType]
 
@@ -62,7 +63,7 @@ class TrajectoryModalAIO:
         t = self.bse.solution.time.cpu().numpy()
         return float(t[0]), float(t[-1])
 
-    def render(self, default_time_range_percent: float = 0.15) -> dmc.Modal:
+    def render(self, default_time_range_percent: float = 1.0) -> dmc.Modal:
         """
         Render the modal layout with pattern-matching IDs.
 
@@ -164,6 +165,10 @@ class TrajectoryModalAIO:
                 y = y[mask, :, :]
 
             trajectory = y[:, sample_idx, state_var]
+
+            valid_mask = np.isfinite(trajectory)
+            t = t[valid_mask]
+            trajectory = trajectory[valid_mask]
             label = (
                 self.bse.solution.labels[sample_idx]
                 if self.bse.solution.labels is not None

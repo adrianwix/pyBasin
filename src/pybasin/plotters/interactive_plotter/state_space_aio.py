@@ -139,7 +139,7 @@ class StateSpaceAIO(BseBasePageAIO):
         y0_np = self.bse.y0.cpu().numpy()
         labels = None
         if self.bse.solution.labels is not None and len(self.bse.solution.labels) > 0:
-            labels = np.array(self.bse.solution.labels)
+            labels = np.array([str(lbl) for lbl in self.bse.solution.labels])
 
         if labels is None:
             return fig
@@ -148,16 +148,21 @@ class StateSpaceAIO(BseBasePageAIO):
 
         for i, label in enumerate(unique_labels):
             mask = labels == label
+            indices = np.where(mask)[0]
             x_data = y0_np[mask, x_var]
             y_data = y0_np[mask, y_var]
 
-            scatter_constructor = go.Scattergl if len(x_data) > 10000 else go.Scatter
+            # customdata must be 2D array - each point gets a list of values
+            customdata_2d = [[idx] for idx in indices]
+
+            scatter_constructor = go.Scattergl if len(x_data) > 5000 else go.Scatter
             fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                 scatter_constructor(
                     x=x_data,
                     y=y_data,
                     mode="markers",
                     name=str(label),
+                    customdata=customdata_2d,
                     marker={
                         "size": 4,
                         "color": get_color(i),
@@ -251,9 +256,13 @@ def open_trajectory_modal_from_state_space_aio(
 
     try:
         point = click_data["points"][0]
-        sample_idx = point.get("pointIndex")
-        if sample_idx is None:
+        customdata = point.get("customdata")
+
+        # customdata is a list like [sample_idx], extract the first element
+        if customdata is None or not isinstance(customdata, list) or len(customdata) == 0:  # pyright: ignore[reportUnknownArgumentType]
             return no_update, no_update, no_update, no_update
+
+        sample_idx = int(customdata[0])  # type: ignore[arg-type]
 
         state_labels = instance.state_labels or {}
         x_label = state_labels.get(int(x_var), f"State {x_var}")

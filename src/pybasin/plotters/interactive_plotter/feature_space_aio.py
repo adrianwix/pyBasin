@@ -103,7 +103,8 @@ class FeatureSpaceAIO(BseBasePageAIO):
         """Get all unique labels as strings."""
         if self.bse.solution is None or self.bse.solution.labels is None:
             return []
-        unique_labels = np.unique(self.bse.solution.labels)
+        labels_as_str = [str(lbl) for lbl in self.bse.solution.labels]
+        unique_labels = np.unique(labels_as_str)
         return [str(label) for label in unique_labels]
 
     def render(self) -> html.Div:
@@ -307,6 +308,8 @@ class FeatureSpaceAIO(BseBasePageAIO):
             return fig
 
         # Filter labels to only bounded trajectories (features are already filtered)
+        # Keep track of original indices for click handling
+        original_indices = np.where(bounded_mask)[0]
         labels = labels[bounded_mask]
 
         unique_labels = np.unique(labels)
@@ -340,16 +343,21 @@ class FeatureSpaceAIO(BseBasePageAIO):
             rng = np.random.default_rng(42)
             for i, label in enumerate(unique_labels):
                 mask = labels == label
+                indices = original_indices[mask]
                 x_data = features[mask, x_feature]
                 y_data = rng.uniform(-0.4, 0.4, size=len(x_data))
 
-                scatter_constructor = go.Scattergl if len(x_data) > 10000 else go.Scatter
+                # customdata must be 2D array - each point gets a list of values
+                customdata_2d = [[idx] for idx in indices]
+
+                scatter_constructor = go.Scattergl if len(x_data) > 5000 else go.Scatter
                 fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                     scatter_constructor(
                         x=x_data,
                         y=y_data,
                         mode="markers",
                         name=str(label),
+                        customdata=customdata_2d,
                         marker={
                             "size": 8,
                             "color": get_color(i),
@@ -381,16 +389,21 @@ class FeatureSpaceAIO(BseBasePageAIO):
         else:
             for i, label in enumerate(unique_labels):
                 mask = labels == label
+                indices = original_indices[mask]
                 x_data = features[mask, x_feature]
                 y_data = features[mask, y_feature]
 
-                scatter_constructor = go.Scattergl if len(x_data) > 10000 else go.Scatter
+                # customdata must be 2D array - each point gets a list of values
+                customdata_2d = [[idx] for idx in indices]
+
+                scatter_constructor = go.Scattergl if len(x_data) > 5000 else go.Scatter
                 fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                     scatter_constructor(
                         x=x_data,
                         y=y_data,
                         mode="markers",
                         name=str(label),
+                        customdata=customdata_2d,
                         marker={
                             "size": 4,
                             "color": get_color(i),
@@ -517,23 +530,27 @@ def open_trajectory_modal_from_feature_space_aio(
 
     try:
         point = click_data["points"][0]
-        sample_idx = point.get("pointIndex")
-        if sample_idx is None:
+        customdata = point.get("customdata")
+
+        # customdata is a list like [sample_idx], extract the first element
+        if customdata is None or not isinstance(customdata, list) or len(customdata) == 0:  # pyright: ignore[reportUnknownArgumentType]
             return no_update, no_update, no_update, no_update
 
-        x_value = point.get("x")
-        y_value = point.get("y")
-        x_label = (
+        sample_idx = int(customdata[0])  # type: ignore[arg-type]
+
+        x_value: float = point.get("x", 0.0)
+        y_value: float = point.get("y", 0.0)
+        x_label: str = (
             click_data.get("points", [{}])[0].get("xaxis", {}).get("title", {}).get("text", "X")
         )
-        y_label = (
+        y_label: str = (
             click_data.get("points", [{}])[0].get("yaxis", {}).get("title", {}).get("text", "Y")
         )
 
         title = f"Trajectory {sample_idx}"
         info = f"Clicked on {x_label} = {x_value:.4f}, {y_label} = {y_value:.4f}"
 
-        sample_data = {
+        sample_data: dict[str, Any] = {
             "sample_idx": sample_idx,
             "x_label": x_label,
             "y_label": y_label,

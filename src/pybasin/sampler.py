@@ -65,22 +65,39 @@ class UniformRandomSampler(Sampler):
 
 
 class GridSampler(Sampler):
-    """Generates evenly spaced samples in a grid pattern within the specified range."""
+    """Generates evenly spaced samples in a grid pattern within the specified range.
+
+    Handles fixed dimensions (where min == max) by only distributing grid points
+    along varying dimensions. For example, with limits [-10, 10], [-20, 20], [0, 0]
+    and n=20000, the grid uses n^(1/2) ≈ 142 points per varying dimension (x, y)
+    and a single point for the fixed dimension (z), yielding 142 x 142 x 1 = 20164
+    unique samples instead of 28 x 28 x 28 = 21952 with many duplicates.
+    """
 
     display_name: str = "Grid Sampler"
 
     def sample(self, n: int) -> torch.Tensor:
-        # Use ceiling to match MATLAB implementation
-        # This ensures we get at least N points (actually N_per_dim^state_dim points)
-        n_per_dim = int(np.ceil(n ** (1 / self.state_dim)))
-
-        grid_points = [
-            torch.linspace(min_val.item(), max_val.item(), n_per_dim, device=self.device)
-            for min_val, max_val in zip(self.min_limits, self.max_limits, strict=True)
+        varying_dims = [
+            i for i in range(self.state_dim) if self.min_limits[i] != self.max_limits[i]
         ]
+        n_varying = len(varying_dims)
+
+        if n_varying == 0:
+            return torch.stack([self.min_limits] * n, dim=0)
+
+        n_per_dim = int(np.ceil(n ** (1 / n_varying)))
+
+        grid_points: list[torch.Tensor] = []
+        for i in range(self.state_dim):
+            min_val = self.min_limits[i].item()
+            max_val = self.max_limits[i].item()
+            if i in varying_dims:
+                grid_points.append(torch.linspace(min_val, max_val, n_per_dim, device=self.device))
+            else:
+                grid_points.append(torch.tensor([min_val], device=self.device))
 
         grid_matrices = torch.meshgrid(*grid_points, indexing="ij")
-        points = torch.stack([grid.t().flatten() for grid in grid_matrices], dim=1)
+        points = torch.stack([grid.flatten() for grid in grid_matrices], dim=1)
 
         return points
 

@@ -59,4 +59,4 @@ if __name__ == "__main__":
         feature_space=FeatureSpaceOptions(exclude_labels=["unbounded"]),
     )
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y", 2: "z"}, options=options)
-    # plotter.run(port=8050)
+    plotter.run(port=8050)
