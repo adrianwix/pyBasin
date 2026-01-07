@@ -348,3 +348,9 @@
 2026-01-06 16:36:55 - main_lorenz.py: 1.6573033332824707 seconds
 2026-01-06 16:40:39 - main_lorenz.py: 1.596055269241333 seconds
 2026-01-06 16:52:08 - main_lorenz.py: 1.7127552032470703 seconds
+2026-01-06 18:14:30 - main_lorenz.py: 1.8606693744659424 seconds
+2026-01-07 15:24:38 - main_duffing_oscillator_supervised.py: 0.6937301158905029 seconds
+2026-01-07 15:38:47 - main_pendulum_case1.py: 0.6616249084472656 seconds
+2026-01-07 15:41:44 - main_friction.py: 6.621563911437988 seconds
+2026-01-07 16:39:14 - main_lorenz.py: 1.288316011428833 seconds
+2026-01-07 16:39:20 - main_lorenz.py: 2.198713779449463 seconds

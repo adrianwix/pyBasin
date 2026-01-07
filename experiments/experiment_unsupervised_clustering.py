@@ -3,7 +3,8 @@
 
 Tests TorchFeatureExtractor with HDBSCAN+KNN and KMeans on:
 - Pendulum system (2 attractors: FP, LC)
-- Duffing oscillator (5 attractors)
+- Duffing oscillator (5 attractors, 1 limit cycles ¯y1, ¯y2, two period-2 limit cycles
+¯y3, ¯y4 and one period-3 limit cycle ¯y5.)
 - Friction system (2 attractors: FP, LC)
 - Lorenz system (3 attractors: butterfly1, butterfly2, unbounded)
 
@@ -30,8 +31,6 @@ from sklearn.pipeline import Pipeline
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pybasin.feature_extractors.torch_feature_extractor import TorchFeatureExtractor
-
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
@@ -43,6 +42,7 @@ from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch_with_impute
 from pybasin.solution import Solution
+from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 
 # ==============================================================================
 # Utility Functions
@@ -341,7 +341,7 @@ def run_system_experiment(
     print("\n4. Feature Extraction with TorchFeatureExtractor (bounded only)")
     print("-" * 40)
 
-    if n_bounded > 0:
+    if n_bounded > 0 and solution is not None:
         print(f"   Processing {n_bounded} bounded trajectories")
         feature_extractor = TorchFeatureExtractor(
             time_steady=950.0,
@@ -372,7 +372,7 @@ def run_system_experiment(
     print("\n5. Adding JAX Dynamical Features (bounded only)")
     print("-" * 40)
 
-    if n_bounded > 0:
+    if n_bounded > 0 and features_np is not None and feature_extractor is not None:
         t_jax_start = time.perf_counter()
 
         # Use only steady-state data (last 100 time points if we have 1000 total)
@@ -438,7 +438,7 @@ def run_system_experiment(
     print("\n6. Feature Selection (on tsfresh+JAX features, bounded only)")
     print("-" * 40)
 
-    if n_bounded > 0:
+    if n_bounded > 0 and all_features is not None:
         t_selection_start = time.perf_counter()
         features_final, kept_names_final = select_features(
             all_features,
@@ -456,7 +456,7 @@ def run_system_experiment(
     # HDBSCAN clustering on bounded trajectories only
     print("\n7. HDBSCAN Clustering (on bounded trajectories only)")
     print("-" * 40)
-    if n_bounded > 0:
+    if n_bounded > 0 and features_final is not None:
         (
             labels_h_raw_bounded,
             labels_h_assigned_bounded,
@@ -509,7 +509,7 @@ def run_system_experiment(
     kmeans_n_clusters = expected_n_clusters - 1 if n_unbounded > 0 else expected_n_clusters
     print(f"\n8. KMeans Clustering (n_clusters={kmeans_n_clusters}, bounded only)")
     print("-" * 40)
-    if n_bounded > 0:
+    if n_bounded > 0 and features_final is not None:
         labels_k_bounded, bs_k_bounded, t_kmeans = run_kmeans_clustering(
             features_final, kmeans_n_clusters
         )
