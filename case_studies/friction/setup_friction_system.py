@@ -30,8 +30,8 @@ def setup_friction_system() -> SetupProperties:
 
     # Sampling limits from setup_friction.m
     sampler = UniformRandomSampler(
-        min_limits=[0.5, -2.0],  # [disp, vel]
-        max_limits=[2.5, 0.0],  # [disp, vel]
+        min_limits=[-2.0, 0.0],  # [disp, vel]
+        max_limits=[2.0, 2.0],  # [disp, vel]
         device=device,
     )
 
