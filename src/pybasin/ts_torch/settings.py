@@ -12,6 +12,7 @@ from pybasin.ts_torch.calculators.torch_features_advanced import (
 from pybasin.ts_torch.calculators.torch_features_autocorrelation import (
     agg_autocorrelation,
     autocorrelation,
+    autocorrelation_periodicity,
     partial_autocorrelation,
 )
 from pybasin.ts_torch.calculators.torch_features_boolean import (
@@ -56,6 +57,7 @@ from pybasin.ts_torch.calculators.torch_features_frequency import (
     cwt_coefficients,
     fft_aggregated,
     fft_coefficient,
+    spectral_frequency_ratio,
     spkt_welch_density,
 )
 from pybasin.ts_torch.calculators.torch_features_location import (
@@ -82,6 +84,7 @@ from pybasin.ts_torch.calculators.torch_features_reocurrance import (
 from pybasin.ts_torch.calculators.torch_features_statistical import (
     abs_energy,
     absolute_maximum,
+    amplitude,
     delta,
     kurtosis,
     length,
@@ -158,10 +161,11 @@ ALL_FEATURE_FUNCTIONS: dict[str, Callable[..., Tensor]] = {
     "number_crossing_m": number_crossing_m,
     "number_peaks": number_peaks,
     "number_cwt_peaks": number_cwt_peaks,
-    # Autocorrelation (3)
+    # Autocorrelation (4)
     "autocorrelation": autocorrelation,
     "partial_autocorrelation": partial_autocorrelation,
     "agg_autocorrelation": agg_autocorrelation,
+    "autocorrelation_periodicity": autocorrelation_periodicity,
     # Entropy/complexity (7 - 2 not implemented: approximate_entropy, sample_entropy)
     "permutation_entropy": permutation_entropy,
     "binned_entropy": binned_entropy,
@@ -201,10 +205,12 @@ ALL_FEATURE_FUNCTIONS: dict[str, Callable[..., Tensor]] = {
     "symmetry_looking": symmetry_looking,
     "count_in_range": count_in_range,
     "count_value": count_value,
-    # Dynamical systems (3)
+    # Dynamical systems (5)
     "lyapunov_r": lyapunov_r,
     "lyapunov_e": lyapunov_e,
     "correlation_dimension": correlation_dimension,
+    "amplitude": amplitude,
+    "spectral_frequency_ratio": spectral_frequency_ratio,
 }
 
 FCParameters = Mapping[str, list[dict[str, Any]] | None]
@@ -387,3 +393,25 @@ TORCH_MINIMAL_FC_PARAMETERS: FCParameters = dict.fromkeys(MINIMAL_FEATURE_NAMES)
 
 # Default configuration: minimal features
 DEFAULT_TORCH_FC_PARAMETERS: FCParameters = {**TORCH_MINIMAL_FC_PARAMETERS}
+
+# =============================================================================
+# DYNAMICAL SYSTEM CLASSIFICATION FEATURES
+# =============================================================================
+# Features optimized for hierarchical attractor type classification:
+# - variance: distinguishes fixed points (very low) from oscillating attractors
+# - amplitude: distinguishes limit cycles with different oscillation sizes
+# - mean: distinguishes fixed points/attractors at different locations
+# - linear_trend (slope): detects drifting/rotating solutions
+# - autocorrelation_periodicity: detects periodic vs chaotic behavior
+
+DYNAMICAL_SYSTEM_FC_PARAMETERS: FCParameters = {
+    "variance": None,
+    "amplitude": None,
+    "mean": None,
+    "linear_trend": [{"attr": "slope"}],
+    "autocorrelation_periodicity": [
+        {"output": "strength"},
+        {"output": "period"},
+    ],
+    "spectral_frequency_ratio": None,
+}

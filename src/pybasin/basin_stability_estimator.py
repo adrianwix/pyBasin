@@ -438,8 +438,7 @@ class BasinStabilityEstimator:
 
         # Convert features to numpy for classifier
         features_np = features.detach().cpu().numpy()
-        bounded_labels = self.cluster_classifier.predict_labels(features_np)  # type: ignore[misc]
-
+        bounded_labels = self.cluster_classifier.predict_labels(features_np)
         # Reconstruct full label array if unbounded trajectories were separated
         if self.detect_unbounded and unbounded_mask is not None and n_unbounded > 0:
             labels = np.empty(total_samples, dtype=object)

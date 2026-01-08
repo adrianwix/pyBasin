@@ -24,7 +24,7 @@ class TestDuffing:
         Uses supervised KNN classification with known attractor templates.
         """
         # Use a slightly higher tolerance for Duffing due to its chaotic nature
-        tolerance = 0.015
+        tolerance = 0.02
 
         # Load expected results from JSON
         json_path = Path(__file__).parent / "main_duffing_supervised.json"

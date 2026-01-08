@@ -64,7 +64,6 @@ import numpy as np
 import torch
 from scipy import signal
 from scipy.fft import fft, fftfreq
-from sklearn.cluster import HDBSCAN, KMeans  # pyright: ignore[reportAttributeAccessIssue]
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -75,6 +74,7 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 from case_studies.friction.setup_friction_system import setup_friction_system
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
+from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
 from pybasin.solution import Solution
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 
@@ -441,14 +441,15 @@ def classify_attractor_type(
 def sub_classify_fixed_points(
     indices: np.ndarray,
     features: dict[str, np.ndarray],
-    n_clusters: int | None = None,
+    single_cluster_range_threshold: float = 0.01,
 ) -> np.ndarray:
     """Sub-classify fixed points by their steady-state values.
 
     Args:
         indices: Indices of trajectories classified as fixed points
         features: Feature dictionary from classify_attractor_type
-        n_clusters: Number of expected FP clusters (None for auto-detect)
+        single_cluster_range_threshold: If range (max-min) of steady_mean values
+            is below this threshold for all dimensions, treat as single cluster
 
     Returns:
         Sub-cluster labels for the fixed point trajectories
@@ -456,25 +457,28 @@ def sub_classify_fixed_points(
     if len(indices) == 0:
         return np.array([], dtype=int)
 
-    steady_vals = features["steady_mean"][indices]
+    steady_vals = features["steady_mean"][indices].copy()
+    drifting_dims = features.get("drifting_dims", [])
 
-    if n_clusters is not None and n_clusters > 0:
-        scaler = StandardScaler()
-        steady_scaled = scaler.fit_transform(steady_vals)
+    dims_to_use = [d for d in range(steady_vals.shape[1]) if d not in drifting_dims]
 
-        n_clusters_actual = min(n_clusters, len(indices))
-        if n_clusters_actual < 2:
-            return np.zeros(len(indices), dtype=int)
+    if len(dims_to_use) == 0:
+        return np.zeros(len(indices), dtype=int)
 
-        kmeans = KMeans(n_clusters=n_clusters_actual, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(steady_scaled)
-    else:
-        scaler = StandardScaler()
-        steady_scaled = scaler.fit_transform(steady_vals)
+    steady_vals = steady_vals[:, dims_to_use]
 
-        clusterer = HDBSCAN(min_cluster_size=max(5, len(indices) // 20), min_samples=3)
-        labels = clusterer.fit_predict(steady_scaled)
-        labels = np.where(labels == -1, 0, labels)
+    data_range = np.max(steady_vals, axis=0) - np.min(steady_vals, axis=0)
+    if np.all(data_range < single_cluster_range_threshold):
+        return np.zeros(len(indices), dtype=int)
+
+    scaler = StandardScaler()
+    steady_scaled = scaler.fit_transform(steady_vals)
+
+    min_cluster_size = max(50, len(indices) // 10)
+    clusterer = HDBSCANClusterer(
+        min_cluster_size=min_cluster_size, auto_tune=False, assign_noise=True
+    )
+    labels = clusterer.predict_labels(steady_scaled)
 
     return labels
 
@@ -482,17 +486,20 @@ def sub_classify_fixed_points(
 def sub_classify_limit_cycles(
     indices: np.ndarray,
     features: dict[str, np.ndarray],
-    n_clusters: int | None = None,
+    amp_cv_threshold: float = 0.1,
+    mean_range_threshold: float = 0.05,
 ) -> np.ndarray:
-    """Sub-classify limit cycles using spectral and period-based features.
+    """Sub-classify limit cycles using hierarchical period-based approach.
 
-    Uses dominant frequency, peaks per period, and spectral entropy to
-    distinguish different n-period cycles.
+    Two-level hierarchical clustering:
+    1. First level: Group by period-n (freq_ratio rounded to nearest integer)
+    2. Second level: Within each period group, cluster by amplitude and mean
 
     Args:
         indices: Indices of trajectories classified as limit cycles
         features: Feature dictionary from classify_attractor_type
-        n_clusters: Number of expected LC clusters (None for auto-detect)
+        amp_cv_threshold: Min coefficient of variation for amplitude to cluster
+        mean_range_threshold: Min range for signal_mean to cluster
 
     Returns:
         Sub-cluster labels for the limit cycle trajectories
@@ -500,41 +507,127 @@ def sub_classify_limit_cycles(
     if len(indices) == 0:
         return np.array([], dtype=int)
 
-    # Use only the 3 most discriminative features for LC sub-classification:
-    # - freq_ratio: distinguishes period-1 (~1.0) vs period-2 (2.0) vs period-3 (~2.9)
-    # - amplitude: distinguishes y1 (0.41) vs y2 (2.54)
-    # - signal_mean: distinguishes y3 (+0.09) vs y4 (-0.09)
-    lc_features = np.column_stack(
-        [
-            features["freq_ratio"][indices],
-            features["amplitude"][indices],
-            features["signal_mean"][indices],
-        ]
-    )
+    freq_ratios = features["freq_ratio"][indices]
+    amplitudes = features["amplitude"][indices]
+    signal_means = features["signal_mean"][indices]
 
-    finite_mask = np.all(np.isfinite(lc_features), axis=1)
+    finite_mask = np.isfinite(freq_ratios) & np.isfinite(amplitudes) & np.isfinite(signal_means)
     if not np.any(finite_mask):
         return np.zeros(len(indices), dtype=int)
 
-    scaler = StandardScaler()
-    lc_features_clean = lc_features.copy()
-    lc_features_clean[~finite_mask] = 0
-    lc_scaled = scaler.fit_transform(lc_features_clean)
+    period_n = np.round(freq_ratios).astype(int)
+    period_n = np.clip(period_n, 1, 10)
 
-    if n_clusters is not None and n_clusters > 0:
-        n_clusters_actual = min(n_clusters, len(indices))
-        if n_clusters_actual < 2:
-            return np.zeros(len(indices), dtype=int)
+    unique_periods = np.unique(period_n[finite_mask])
+    labels = np.zeros(len(indices), dtype=int)
+    current_label = 0
 
-        kmeans = KMeans(n_clusters=n_clusters_actual, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(lc_scaled)
+    for period in unique_periods:
+        period_mask = (period_n == period) & finite_mask
+        period_indices = np.where(period_mask)[0]
+
+        if len(period_indices) == 0:
+            continue
+
+        period_amps = amplitudes[period_mask]
+        period_means = signal_means[period_mask]
+
+        amp_cv = np.std(period_amps) / (np.mean(period_amps) + 1e-10)
+        mean_range = np.max(period_means) - np.min(period_means)
+
+        amp_varies = amp_cv > amp_cv_threshold
+        mean_varies = mean_range > mean_range_threshold
+
+        if not amp_varies and not mean_varies:
+            labels[period_mask] = current_label
+            current_label += 1
+        else:
+            if amp_varies and mean_varies:
+                sub_features = np.column_stack([period_amps, period_means])
+            elif amp_varies:
+                sub_features = period_amps.reshape(-1, 1)
+            else:
+                sub_features = period_means.reshape(-1, 1)
+
+            sub_labels = _cluster_1d_or_2d(sub_features, len(period_indices))
+
+            for sub_label in np.unique(sub_labels):
+                sub_mask = sub_labels == sub_label
+                full_mask = np.zeros(len(indices), dtype=bool)
+                full_mask[period_indices[sub_mask]] = True
+                labels[full_mask] = current_label
+                current_label += 1
+
+    labels[~finite_mask] = 0
+
+    return labels
+
+
+def _cluster_1d_or_2d(data: np.ndarray, n_samples: int) -> np.ndarray:
+    """Cluster 1D or 2D data using appropriate method.
+
+    For 1D data: detect natural gaps/modes
+    For 2D data: use HDBSCAN
+    """
+    if data.shape[1] == 1:
+        return _cluster_1d_with_gaps(data.ravel())
     else:
-        clusterer = HDBSCAN(
-            min_cluster_size=max(10, len(indices) // 10),
-            min_samples=5,
+        scaler = StandardScaler()
+        scaled = scaler.fit_transform(data)
+
+        min_cluster_size = max(15, n_samples // 20)
+        use_auto_tune = n_samples >= 500
+        clusterer = HDBSCANClusterer(
+            min_cluster_size=min_cluster_size,
+            auto_tune=use_auto_tune,
+            assign_noise=True,
         )
-        labels = clusterer.fit_predict(lc_scaled)
-        labels = np.where(labels == -1, 0, labels)
+        return clusterer.predict_labels(scaled)
+
+
+def _cluster_1d_with_gaps(
+    data: np.ndarray, min_gap_ratio: float = 5.0, max_clusters: int = 5
+) -> np.ndarray:
+    """Cluster 1D data by detecting the largest natural gap(s).
+
+    Finds gaps in sorted data that are significantly larger than typical spacing.
+    Only creates up to max_clusters to avoid over-splitting.
+    """
+    n = len(data)
+    if n < 4:
+        return np.zeros(n, dtype=int)
+
+    sorted_indices = np.argsort(data)
+    sorted_data = data[sorted_indices]
+
+    gaps = np.diff(sorted_data)
+
+    if np.max(gaps) < 1e-6:
+        return np.zeros(n, dtype=int)
+
+    gap_threshold = np.median(gaps) * min_gap_ratio
+    gap_threshold = max(gap_threshold, np.max(gaps) * 0.3)
+
+    significant_gap_indices = np.where(gaps > gap_threshold)[0]
+
+    if len(significant_gap_indices) == 0:
+        return np.zeros(n, dtype=int)
+
+    if len(significant_gap_indices) >= max_clusters:
+        gap_values = gaps[significant_gap_indices]
+        top_gaps = np.argsort(gap_values)[-(max_clusters - 1) :]
+        significant_gap_indices = sorted(significant_gap_indices[top_gaps])
+
+    labels_sorted = np.zeros(n, dtype=int)
+    current_label = 0
+    for i in range(n - 1):
+        labels_sorted[i] = current_label
+        if i in significant_gap_indices:
+            current_label += 1
+    labels_sorted[n - 1] = current_label
+
+    labels = np.zeros(n, dtype=int)
+    labels[sorted_indices] = labels_sorted
 
     return labels
 
@@ -545,7 +638,6 @@ def sub_classify_chaos(
     features: dict[str, np.ndarray] | None = None,
     device: Literal["cpu", "gpu"] = "cpu",
     n_jobs: int | None = None,
-    n_clusters: int | None = None,
 ) -> np.ndarray:
     """Sub-classify chaotic trajectories using steady-state spatial mean.
 
@@ -559,7 +651,6 @@ def sub_classify_chaos(
         features: Pre-computed features dict with 'steady_mean'
         device: Device for feature extraction
         n_jobs: Number of workers
-        n_clusters: Number of expected chaos clusters
 
     Returns:
         Sub-cluster labels for chaotic trajectories
@@ -576,19 +667,15 @@ def sub_classify_chaos(
         if np.sum(finite_mask) > 1:
             steady_clean = steady_vals[finite_mask]
 
-            if n_clusters is not None and n_clusters > 0:
-                n_clusters_actual = min(n_clusters, np.sum(finite_mask))
-                if n_clusters_actual >= 2:
-                    scaler = StandardScaler()
-                    steady_scaled = scaler.fit_transform(steady_clean)
+            scaler = StandardScaler()
+            steady_scaled = scaler.fit_transform(steady_clean)
 
-                    kmeans = KMeans(n_clusters=n_clusters_actual, random_state=42, n_init=10)
-                    labels_clean = kmeans.fit_predict(steady_scaled)
+            clusterer = HDBSCANClusterer(auto_tune=True, assign_noise=True)
+            labels_clean = clusterer.predict_labels(steady_scaled)
 
-                    # Map back to full indices
-                    labels = np.zeros(len(indices), dtype=int)
-                    labels[finite_mask] = labels_clean
-                    return labels
+            labels = np.zeros(len(indices), dtype=int)
+            labels[finite_mask] = labels_clean
+            return labels
 
     # Fallback to statistical features
     y_chaos = y[:, indices, :]
@@ -608,17 +695,8 @@ def sub_classify_chaos(
 
     features_extracted = extractor.extract_features(solution).numpy()
 
-    if n_clusters is not None and n_clusters > 0:
-        n_clusters_actual = min(n_clusters, len(indices))
-        if n_clusters_actual < 2:
-            return np.zeros(len(indices), dtype=int)
-
-        kmeans = KMeans(n_clusters=n_clusters_actual, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(features_extracted)
-    else:
-        clusterer = HDBSCAN(min_cluster_size=max(5, len(indices) // 10), min_samples=3)
-        labels = clusterer.fit_predict(features_extracted)
-        labels = np.where(labels == -1, 0, labels)
+    clusterer = HDBSCANClusterer(auto_tune=True, assign_noise=True)
+    labels = clusterer.predict_labels(features_extracted)
 
     return labels
 
@@ -630,9 +708,6 @@ def hierarchical_clustering(
     n_jobs: int | None = None,
     fp_variance_threshold: float = 1e-6,
     lc_periodicity_threshold: float = 0.5,
-    expected_fp_clusters: int | None = None,
-    expected_lc_clusters: int | None = None,
-    expected_chaos_clusters: int | None = None,
 ) -> tuple[np.ndarray, dict]:
     """Perform hierarchical clustering with specialized sub-classifiers.
 
@@ -643,9 +718,6 @@ def hierarchical_clustering(
         n_jobs: Number of workers
         fp_variance_threshold: Threshold for FP detection
         lc_periodicity_threshold: Threshold for LC detection
-        expected_fp_clusters: Expected number of FP sub-clusters
-        expected_lc_clusters: Expected number of LC sub-clusters
-        expected_chaos_clusters: Expected number of chaos sub-clusters
 
     Returns:
         Tuple of (final_labels, info_dict)
@@ -687,7 +759,7 @@ def hierarchical_clustering(
 
     if n_fp > 0:
         fp_indices = np.where(type_labels == 0)[0]
-        fp_sub_labels = sub_classify_fixed_points(fp_indices, features, expected_fp_clusters)
+        fp_sub_labels = sub_classify_fixed_points(fp_indices, features)
         n_fp_clusters = len(np.unique(fp_sub_labels))
         logging.info(f"   Fixed Points → {n_fp_clusters} sub-cluster(s)")
 
@@ -695,15 +767,28 @@ def hierarchical_clustering(
             mask = fp_sub_labels == sub_label
             final_labels[fp_indices[mask]] = current_label
             count = np.sum(mask)
-            label_info[current_label] = {"type": "FP", "sub_label": sub_label, "count": count}
+
+            steady_mean_cluster = features["steady_mean"][fp_indices[mask]]
+            median_steady = np.median(steady_mean_cluster, axis=0)
+            std_steady = np.std(steady_mean_cluster, axis=0)
+            label_info[current_label] = {
+                "type": "FP",
+                "sub_label": sub_label,
+                "count": count,
+                "median_steady_mean": median_steady.tolist(),
+                "std_steady_mean": std_steady.tolist(),
+            }
+            steady_str = ", ".join([f"{v:.3f}" for v in median_steady])
+            std_str = ", ".join([f"{v:.3f}" for v in std_steady])
             logging.info(
-                f"     FP sub-cluster {sub_label} → Cluster {current_label} ({count} samples)"
+                f"     FP sub-cluster {sub_label} → Cluster {current_label} "
+                f"({count} samples, steady=[{steady_str}], std=[{std_str}])"
             )
             current_label += 1
 
     if n_lc > 0:
         lc_indices = np.where(type_labels == 1)[0]
-        lc_sub_labels = sub_classify_limit_cycles(lc_indices, features, expected_lc_clusters)
+        lc_sub_labels = sub_classify_limit_cycles(lc_indices, features)
         n_lc_clusters = len(np.unique(lc_sub_labels))
         logging.info(f"   Limit Cycles → {n_lc_clusters} sub-cluster(s)")
 
@@ -731,9 +816,7 @@ def hierarchical_clustering(
 
     if n_chaos > 0:
         chaos_indices = np.where(type_labels == 2)[0]
-        chaos_sub_labels = sub_classify_chaos(
-            chaos_indices, y, features, device, n_jobs, expected_chaos_clusters
-        )
+        chaos_sub_labels = sub_classify_chaos(chaos_indices, y, features, device, n_jobs)
         n_chaos_clusters = len(np.unique(chaos_sub_labels))
         logging.info(f"   Chaos/Other → {n_chaos_clusters} sub-cluster(s)")
 
@@ -760,7 +843,6 @@ def hierarchical_clustering(
 def run_system_experiment(
     system_name: str,
     setup_fn,
-    expected_clusters: dict[str, int],
     device: Literal["cpu", "gpu"] = "cpu",
     n_jobs: int | None = None,
     fp_variance_threshold: float = 1e-6,
@@ -781,7 +863,6 @@ def run_system_experiment(
 
     logging.info(f"   System: {system_name}")
     logging.info(f"   Samples: {n}")
-    logging.info(f"   Expected clusters by type: {expected_clusters}")
 
     logging.info("\n2. Sampling and Integration")
     logging.info("-" * 40)
@@ -811,9 +892,6 @@ def run_system_experiment(
         n_jobs=n_jobs,
         fp_variance_threshold=fp_variance_threshold,
         lc_periodicity_threshold=lc_periodicity_threshold,
-        expected_fp_clusters=expected_clusters.get("FP"),
-        expected_lc_clusters=expected_clusters.get("LC"),
-        expected_chaos_clusters=expected_clusters.get("chaos"),
     )
 
     t_cluster = time.perf_counter() - t_cluster_start
@@ -887,22 +965,10 @@ def main():
         logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     systems = {
-        "pendulum": (
-            setup_pendulum_system,
-            {"FP": 1, "LC": 1},
-        ),
-        "duffing": (
-            setup_duffing_oscillator_system,
-            {"LC": 5},
-        ),
-        "friction": (
-            setup_friction_system,
-            {"FP": 1, "LC": 1},
-        ),
-        "lorenz": (
-            setup_lorenz_system,
-            {"chaos": 2, "unbounded": 1},
-        ),
+        "pendulum": setup_pendulum_system,
+        "duffing": setup_duffing_oscillator_system,
+        "friction": setup_friction_system,
+        "lorenz": setup_lorenz_system,
     }
 
     # Expected basin stability from supervised methods
@@ -935,11 +1001,10 @@ def main():
         systems_to_run = [(args.system, systems[args.system])]
 
     results = []
-    for system_name, (setup_fn, expected_clusters) in systems_to_run:
+    for system_name, setup_fn in systems_to_run:
         result = run_system_experiment(
             system_name=system_name,
             setup_fn=setup_fn,
-            expected_clusters=expected_clusters,
             device=args.device,
             n_jobs=args.n_jobs,
             fp_variance_threshold=args.fp_variance_threshold,

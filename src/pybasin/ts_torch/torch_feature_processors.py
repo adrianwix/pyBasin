@@ -257,7 +257,13 @@ def extract_features_parallel(
     # Concatenate along batch dimension and convert back to tensors
     results: dict[str, Tensor] = {}
     for (feature_name, kwargs_str), arrays in combined.items():
-        concatenated = np.concatenate(arrays, axis=0)
+        # Determine concatenation axis based on output dimensionality
+        # Normal features: (B, S) -> concatenate along axis 0
+        # Multi-output features: (K, B, S) -> concatenate along axis 1
+        if arrays[0].ndim > 2:
+            concatenated = np.concatenate(arrays, axis=1)
+        else:
+            concatenated = np.concatenate(arrays, axis=0)
         # Build proper feature name
         if kwargs_str and kwargs_str != "{}":
             kwargs_dict = eval(kwargs_str)  # noqa: S307

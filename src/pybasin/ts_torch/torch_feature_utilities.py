@@ -145,3 +145,79 @@ def rowwise_chebyshev(x: Tensor, y: Tensor) -> Tensor:
         Distances of shape (M,)
     """
     return torch.max(torch.abs(x - y), dim=1).values
+
+
+@torch.no_grad()
+def local_maxima_1d(x: Tensor) -> Tensor:
+    """Find local maxima in batched 1D signals.
+
+    This is a vectorized PyTorch implementation equivalent to scipy's _local_maxima_1d.
+    It finds all local maxima (including plateaus) and returns a boolean mask with True
+    at the midpoint of each maximum.
+
+    A maximum is defined as one or more samples of equal value that are surrounded
+    on both sides by at least one smaller sample. For plateaus, the midpoint
+    (rounded down for even sizes) is marked as the peak.
+
+    Args:
+        x: Input tensor of shape (N, B, S) where N is timesteps, B is batch size,
+           and S is number of states/signals.
+
+    Returns:
+        Boolean mask of shape (N, B, S) with True at peak positions (midpoints for plateaus).
+        First and last samples are always False (cannot be maxima by definition).
+    """
+    n_timesteps, batch_size, n_states = x.shape
+    device = x.device
+
+    peaks_mask = torch.zeros(n_timesteps, batch_size, n_states, dtype=torch.bool, device=device)
+
+    if n_timesteps < 3:
+        return peaks_mask
+
+    rising = x[:-1] < x[1:]
+    falling = x[:-1] > x[1:]
+    equal = x[:-1] == x[1:]
+
+    rising_edge = torch.zeros(n_timesteps, batch_size, n_states, dtype=torch.bool, device=device)
+    rising_edge[1:] = rising
+
+    falling_edge = torch.zeros(n_timesteps, batch_size, n_states, dtype=torch.bool, device=device)
+    falling_edge[:-1] = falling
+
+    equal_pad = torch.zeros(n_timesteps, batch_size, n_states, dtype=torch.bool, device=device)
+    equal_pad[:-1] = equal
+
+    plateau_start = rising_edge & ~torch.roll(rising_edge, 1, dims=0)
+    plateau_start[0] = False
+
+    in_plateau = torch.zeros_like(peaks_mask)
+    for t in range(1, n_timesteps - 1):
+        still_equal = equal_pad[t]
+        was_rising = rising_edge[t]
+        continues = in_plateau[t - 1] & still_equal
+        in_plateau[t] = was_rising | continues
+
+    plateau_end = in_plateau & falling_edge
+    plateau_end[-1] = False
+
+    flat_x = x.reshape(n_timesteps, -1)
+    flat_peaks = peaks_mask.reshape(n_timesteps, -1)
+
+    for signal_idx in range(flat_x.shape[1]):
+        signal = flat_x[:, signal_idx]
+        i = 1
+        i_max = n_timesteps - 1
+
+        while i < i_max:
+            if signal[i - 1] < signal[i]:
+                i_ahead = i + 1
+                while i_ahead < i_max and signal[i_ahead] == signal[i]:
+                    i_ahead += 1
+                if signal[i_ahead] < signal[i]:
+                    midpoint = (i + i_ahead - 1) // 2
+                    flat_peaks[midpoint, signal_idx] = True
+                    i = i_ahead
+            i += 1
+
+    return flat_peaks.reshape(n_timesteps, batch_size, n_states)

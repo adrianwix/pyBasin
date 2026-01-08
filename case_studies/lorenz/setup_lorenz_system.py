@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.lorenz.lorenz_jax_ode import LorenzJaxODE, LorenzParams
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.predictors.knn_classifier import KNNClassifier
-from pybasin.sampler import GridSampler
+from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
 
@@ -38,7 +38,7 @@ def setup_lorenz_system() -> SetupProperties:
 
     ode_system = LorenzJaxODE(params)
 
-    sampler = GridSampler(
+    sampler = UniformRandomSampler(
         min_limits=[-10.0, -20.0, 0.0], max_limits=[10.0, 20.0, 0.0], device=device
     )
 

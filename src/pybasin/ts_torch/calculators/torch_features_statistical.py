@@ -274,3 +274,18 @@ def mean_n_absolute_max_batched(x: Tensor, ns: list[int]) -> Tensor:
         results.append(top_vals[:k].mean(dim=0))
 
     return torch.stack(results, dim=0)
+
+
+@torch.no_grad()
+def amplitude(x: Tensor) -> Tensor:
+    """Peak-to-peak amplitude (max - min) of the time series.
+
+    Useful for distinguishing limit cycles with different oscillation amplitudes.
+
+    Args:
+        x: Input tensor of shape (N, B, S) where N is timesteps, B is batch, S is states.
+
+    Returns:
+        Tensor of shape (B, S) with the amplitude for each batch/state.
+    """
+    return x.max(dim=0).values - x.min(dim=0).values

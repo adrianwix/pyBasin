@@ -2,6 +2,8 @@
 import torch
 from torch import Tensor
 
+from pybasin.ts_torch.torch_feature_utilities import local_maxima_1d
+
 # =============================================================================
 # AUTOCORRELATION FEATURES (3 features)
 # =============================================================================
@@ -260,3 +262,66 @@ def agg_autocorrelation_batched(x: Tensor, params: list[dict]) -> Tensor:
                 results[param_idx] = acf.mean(dim=0)
 
     return results
+
+
+@torch.no_grad()
+def autocorrelation_periodicity(
+    x: Tensor, min_lag: int = 2, peak_threshold: float = 0.3, output: str = "strength"
+) -> Tensor:
+    """Compute autocorrelation-based periodicity measures.
+
+    TODO: Support returning multiple outputs (K, B, S) instead of requiring separate calls.
+          This would require updating torch_feature_extractor.py and torch_feature_processors.py
+          to handle 3D output tensors properly.
+
+    Returns either the periodicity strength (height of first significant autocorrelation
+    peak) or the period estimate (lag of that peak). This is useful for detecting
+    limit cycles vs chaos vs fixed points.
+
+    Uses FFT for efficient autocorrelation computation and local_maxima_1d for
+    robust peak detection.
+
+    Args:
+        x: Input tensor of shape (N, B, S) where N is timesteps, B is batch, S is states.
+        min_lag: Minimum lag to search for peaks (to skip lag-0 peak). Default 2.
+        peak_threshold: Minimum autocorrelation value to consider as a peak. Default 0.3.
+        output: Which value to return - "strength" or "period". Default "strength".
+
+    Returns:
+        Tensor of shape (B, S) with either periodicity strength or period estimate.
+    """
+
+    n, batch_size, n_states = x.shape
+
+    x_centered = x - x.mean(dim=0, keepdim=True)
+    x_std = x.std(dim=0, keepdim=True)
+    x_normalized = x_centered / (x_std + 1e-10)
+
+    n_fft = 2 * n
+    fft_x = torch.fft.rfft(x_normalized, n=n_fft, dim=0)
+    power_spectrum = fft_x.real**2 + fft_x.imag**2
+    autocorr_full = torch.fft.irfft(power_spectrum, n=n_fft, dim=0)
+
+    autocorr = autocorr_full[:n] / (autocorr_full[0:1] + 1e-10)
+
+    peaks_mask = local_maxima_1d(autocorr)
+
+    peaks_mask[:min_lag] = False
+
+    above_threshold = autocorr > peak_threshold
+    valid_peaks = peaks_mask & above_threshold
+
+    periodicity_strength = torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
+    period_estimate = torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
+
+    for b in range(batch_size):
+        for s in range(n_states):
+            peak_indices = torch.where(valid_peaks[:, b, s])[0]
+            if len(peak_indices) > 0:
+                first_peak_idx = peak_indices[0]
+                periodicity_strength[b, s] = autocorr[first_peak_idx, b, s]
+                period_estimate[b, s] = first_peak_idx.float()
+
+    if output == "period":
+        return period_estimate
+    return periodicity_strength

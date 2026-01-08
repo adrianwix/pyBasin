@@ -384,3 +384,58 @@ def cwt_coefficients_batched(x: Tensor, params: list[dict]) -> Tensor:
         results[invalid_mask] = 0.0
 
     return results
+
+
+@torch.no_grad()
+def spectral_frequency_ratio(x: Tensor) -> Tensor:
+    """Compute the ratio of 2nd to 1st dominant frequency.
+
+    This feature is critical for distinguishing period-doubling bifurcations:
+    - Period-1 limit cycle: ratio ≈ 2.0 (2nd peak is harmonic at 2f)
+    - Period-2 limit cycle: ratio ≈ 0.5 (2nd peak is subharmonic at f/2)
+    - Period-3 limit cycle: ratio ≈ 0.33 (2nd peak is subharmonic at f/3)
+
+    The function finds the two highest peaks in the power spectrum and returns
+    the ratio of the 2nd dominant frequency to the 1st dominant frequency.
+
+    Args:
+        x: Input tensor of shape (N, B, S) where N is timesteps, B is batch, S is states.
+
+    Returns:
+        Tensor of shape (B, S) with the frequency ratio. Returns 0 if only one peak found.
+    """
+    n, batch_size, n_states = x.shape
+
+    x_centered = x - x.mean(dim=0, keepdim=True)
+
+    fft_result = torch.fft.rfft(x_centered, dim=0)
+    power = fft_result.real**2 + fft_result.imag**2
+
+    power[0] = 0
+
+    result = torch.zeros(batch_size, n_states, dtype=x.dtype, device=x.device)
+
+    for b in range(batch_size):
+        for s in range(n_states):
+            psd = power[:, b, s]
+
+            if psd.max() < 1e-10:
+                continue
+
+            sorted_indices = torch.argsort(psd, descending=True)
+
+            first_idx = sorted_indices[0]
+
+            second_idx = None
+            for idx in sorted_indices[1:]:
+                if abs(idx - first_idx) >= 2:
+                    second_idx = idx
+                    break
+
+            if second_idx is not None:
+                freq_1st = float(first_idx)
+                freq_2nd = float(second_idx)
+                if freq_1st > 0:
+                    result[b, s] = freq_2nd / freq_1st
+
+    return result
