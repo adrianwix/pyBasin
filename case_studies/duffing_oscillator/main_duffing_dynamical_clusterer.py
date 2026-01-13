@@ -15,7 +15,7 @@ from pybasin.utils import time_execution
 
 
 def main():
-    n = 5000
+    n = 2000
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Duffing oscillator system on device: {device}")
@@ -45,10 +45,7 @@ def main():
         normalize=False,
     )
 
-    clusterer = DynamicalSystemClusterer(
-        fp_variance_threshold=1e-6,
-        lc_periodicity_threshold=0.5,
-    )
+    clusterer = DynamicalSystemClusterer(fp_variance_threshold=1e-6, lc_periodicity_threshold=0.5)
 
     bse = BasinStabilityEstimator(
         n=n,
@@ -84,8 +81,20 @@ if __name__ == "__main__":
         / "main_duffing_supervised.json"
     )
 
+    unsupervised_mapping = {
+        "LC_0": "y3",
+        "LC_1": "y4",
+        "LC_2": "y5",
+        "LC_3": "y2",
+        "LC_4": "y1",
+    }
+    unsupervised_file = expected_file.parent / "main_duffing_unsupervised.json"
+
     if bse.bs_vals is not None:
+        print("\n\nMatlab supervised results:")
         compare_with_expected(bse.bs_vals, label_mapping, expected_file)
+        print("Matlab unsupervised results:")
+        compare_with_expected(bse.bs_vals, unsupervised_mapping, unsupervised_file)
 
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
     # plotter.run(port=8050)

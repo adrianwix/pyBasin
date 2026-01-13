@@ -432,6 +432,14 @@ class BasinStabilityEstimator:
             t5b_elapsed = time.perf_counter() - t5b
             logger.info("  Classifier fitted in %.4fs", t5b_elapsed)
 
+        # Set feature names for predictors that require them
+        final_feature_names = self._filtered_feature_names or feature_names
+        if self.cluster_classifier.needs_feature_names():
+            logger.info(
+                "  Setting feature names for classifier (%d features)", len(final_feature_names)
+            )
+            self.cluster_classifier.set_feature_names(final_feature_names)
+
         # Step 6: Classification
         logger.info("STEP 6: Classification")
         t6 = time.perf_counter()

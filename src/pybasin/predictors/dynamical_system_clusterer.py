@@ -6,26 +6,73 @@ from sklearn.preprocessing import StandardScaler
 
 from pybasin.predictors.base import ClustererPredictor, LabelPredictor
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
+from pybasin.utils import get_feature_indices_by_base_name, validate_feature_names
 
 
 class DynamicalSystemClusterer(ClustererPredictor):
     """Two-stage hierarchical clustering for dynamical systems.
 
-    Stage 1: Classify trajectories by attractor TYPE using physics-based thresholds:
-        - Fixed Point (FP): Very low variance in steady state
-        - Limit Cycle (LC): Periodic oscillations with high autocorrelation periodicity
-        - Chaos: Aperiodic oscillations (not FP, not LC)
+    This clusterer uses physics-based heuristics to classify trajectories into
+    attractor types (Stage 1) and then sub-classifies within each type (Stage 2).
 
-    Stage 2: Sub-classify within each type using specialized features and sub-classifiers.
+    Stage 1: Attractor Type Classification
+    =======================================
 
-    Required features (must be present in feature_names):
-        - variance: For FP detection
-        - amplitude: For LC amplitude distinction
-        - mean: For FP/attractor location
-        - linear_trend__attr_slope: For drift/rotation detection
-        - autocorrelation_periodicity__output_strength: For LC vs chaos detection
-        - autocorrelation_periodicity__output_period: For period estimation
-        - spectral_frequency_ratio: For period-1/2/3 LC distinction
+    **Fixed Point (FP) Detection:**
+        Heuristic: variance < fp_variance_threshold
+
+        A trajectory is classified as converging to a fixed point if the variance
+        of its steady-state values is extremely low. The threshold should be set
+        based on the expected numerical precision of your integration.
+
+        IMPORTANT: If features are normalized/scaled (e.g., StandardScaler), the
+        variance values will be transformed. For normalized features with unit
+        variance, use a threshold relative to 1.0 (e.g., 1e-4). For unnormalized
+        features, use absolute thresholds based on your system's scale.
+
+    **Limit Cycle (LC) Detection:**
+        Heuristic: (periodicity_strength > lc_periodicity_threshold AND
+                   variance < chaos_variance_threshold) OR has_drift
+
+        A trajectory is classified as a limit cycle if:
+        1. It shows strong periodic behavior (high autocorrelation periodicity)
+           AND has bounded variance (not chaotic), OR
+        2. It shows monotonic drift (rotating solutions like pendulum rotations)
+
+        The periodicity_strength comes from autocorrelation analysis and ranges
+        from 0 (no periodicity) to 1 (perfect periodicity). Values above 0.5
+        typically indicate clear periodic behavior.
+
+    **Chaos Detection:**
+        Heuristic: NOT FP AND NOT LC (default fallback)
+
+        Trajectories that don't meet FP or LC criteria are classified as chaotic.
+        High variance combined with low periodicity strength indicates chaos.
+
+    Stage 2: Sub-classification
+    ===========================
+
+    Within each attractor type, trajectories are further clustered:
+    - FP: Clustered by steady-state location (mean values)
+    - LC: Hierarchically clustered by period number, then amplitude/mean
+    - Chaos: Clustered by spatial mean location
+
+    Required Features
+    =================
+    Feature names must follow the convention: state_X__feature_name
+
+    Required base features:
+        - variance: Steady-state variance (FP detection)
+        - amplitude: Peak-to-peak amplitude (LC sub-classification)
+        - mean: Steady-state mean (FP/chaos sub-classification)
+        - linear_trend__attr_slope: Linear drift rate (rotating LC detection)
+        - autocorrelation_periodicity__output_strength: Periodicity measure [0-1]
+        - autocorrelation_periodicity__output_period: Detected period
+        - spectral_frequency_ratio: Ratio for period-n detection
+
+    Note: This clusterer requires feature names to be set via set_feature_names()
+    before calling predict_labels(). The BasinStabilityEstimator handles this
+    automatically during the estimation process.
     """
 
     display_name: str = "Dynamical System Clustering"
@@ -42,70 +89,125 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
     def __init__(
         self,
-        feature_names: list[str],
-        fp_variance_threshold: float = 1e-6,
-        lc_periodicity_threshold: float = 0.5,
-        chaos_variance_threshold: float = 5.0,
+        # General settings
         drift_threshold: float = 0.1,
         tiers: list[str] | None = None,
+        # Fixed Point (FP) settings
+        fp_variance_threshold: float = 1e-6,
         fp_sub_classifier: LabelPredictor | None = None,
+        # Limit Cycle (LC) settings
+        lc_periodicity_threshold: float = 0.5,
         lc_sub_classifier: LabelPredictor | None = None,
+        # Chaos settings
+        chaos_variance_threshold: float = 5.0,
         chaos_sub_classifier: LabelPredictor | None = None,
     ):
         """Initialize the dynamical system clusterer.
 
         Args:
-            feature_names: List of feature names matching the feature array columns.
+            drift_threshold: Minimum |slope| to consider a dimension as drifting.
+                Drifting dimensions (e.g., pendulum angle during rotation) are
+                excluded from variance/mean calculations for FP and chaos
+                sub-classification to avoid spurious splits. Also used to detect
+                rotating limit cycles. Units: [state_units / time_units].
+                Default: 0.1.
+            tiers: List of attractor types to detect, in priority order.
+                First matching tier wins. Options: "FP", "LC", "chaos".
+                Default: ["FP", "LC", "chaos"].
+
             fp_variance_threshold: Maximum variance to classify as fixed point.
-            lc_periodicity_threshold: Minimum periodicity strength for limit cycle.
-            chaos_variance_threshold: Maximum variance for limit cycle (above = chaos).
-            drift_threshold: Minimum slope magnitude to consider as drifting.
-            tiers: List of attractor types to detect. Default: ["FP", "LC", "chaos"].
-                   Order matters: first match wins.
-            fp_sub_classifier: Sub-classifier for fixed points. Default: KMeans.
-            lc_sub_classifier: Sub-classifier for limit cycles. Default: HDBSCAN.
-            chaos_sub_classifier: Sub-classifier for chaotic attractors. Default: HDBSCAN.
+                For unnormalized features, set based on expected steady-state
+                fluctuations (e.g., 1e-6 for well-converged integrations).
+                For normalized features (unit variance), use relative threshold
+                (e.g., 1e-4 meaning 0.01% of typical variance).
+                Default: 1e-6 (assumes unnormalized features).
+            fp_sub_classifier: Custom sub-classifier for fixed points.
+                Input: mean values per non-drifting dimension.
+                Default: HDBSCAN with min_cluster_size=50.
+
+            lc_periodicity_threshold: Minimum periodicity strength [0-1] to
+                classify as limit cycle. The periodicity strength measures how
+                well the autocorrelation matches periodic behavior:
+                - 0.0: No periodic pattern detected
+                - 0.3-0.5: Weak/noisy periodicity
+                - 0.5-0.8: Clear periodic behavior
+                - 0.8-1.0: Strong/clean limit cycle
+                Default: 0.5.
+            lc_sub_classifier: Custom sub-classifier for limit cycles.
+                Input: [freq_ratio, amplitude, mean] features.
+                Default: Hierarchical period-based clustering.
+
+            chaos_variance_threshold: Maximum variance for limit cycle.
+                Trajectories with variance above this AND low periodicity are
+                classified as chaotic. Set based on expected LC amplitude range.
+                For normalized features, typical LC variance is ~0.5-2.0.
+                Default: 5.0.
+            chaos_sub_classifier: Custom sub-classifier for chaotic attractors.
+                Input: mean values per dimension.
+                Default: HDBSCAN with auto_tune=True.
         """
-        self.feature_names = feature_names
-        self.fp_variance_threshold = fp_variance_threshold
-        self.lc_periodicity_threshold = lc_periodicity_threshold
-        self.chaos_variance_threshold = chaos_variance_threshold
+        self.feature_names: list[str] | None = None
+
+        # General settings
         self.drift_threshold = drift_threshold
         self.tiers = tiers or ["FP", "LC", "chaos"]
 
+        # FP settings
+        self.fp_variance_threshold = fp_variance_threshold
         self.fp_sub_classifier = fp_sub_classifier
+
+        # LC settings
+        self.lc_periodicity_threshold = lc_periodicity_threshold
         self.lc_sub_classifier = lc_sub_classifier
+
+        # Chaos settings
+        self.chaos_variance_threshold = chaos_variance_threshold
         self.chaos_sub_classifier = chaos_sub_classifier
+
+        # General settings
+        self.tiers = tiers or ["FP", "LC", "chaos"]
 
         self._feature_indices: dict[str, list[int]] = {}
         self._drifting_dims: list[int] = []
         self._non_drifting_dims: list[int] = []
+        self._initialized = False
 
+    def needs_feature_names(self) -> bool:
+        """This clusterer requires feature names to parse physics-based features."""
+        return True
+
+    def set_feature_names(self, feature_names: list[str]) -> None:
+        """Set feature names and build feature indices.
+
+        Args:
+            feature_names: List of feature names matching the feature array columns.
+        """
+        self.feature_names = feature_names
         self._build_feature_indices(feature_names)
+        self._initialized = True
 
     def _build_feature_indices(self, feature_names: list[str]) -> None:
         """Build mapping from feature base names to column indices.
 
-        Handles multi-dimensional features with naming convention:
-            - state_X__feature_name -> single value
-            - state_X__feature_name__idx -> multi-value (e.g., autocorrelation_periodicity)
+        Uses the pybasin.utils feature name parsing utilities.
 
         Args:
             feature_names: List of feature names.
 
         Raises:
-            ValueError: If required features are missing.
+            ValueError: If required features are missing or names are invalid.
         """
+        all_valid, invalid_names = validate_feature_names(feature_names)
+        if not all_valid:
+            raise ValueError(
+                f"Feature names do not follow the 'state_X__feature_name' convention. "
+                f"Invalid names: {invalid_names[:5]}{'...' if len(invalid_names) > 5 else ''}"
+            )
+
         self._feature_indices = {}
 
         for base_feature in self.REQUIRED_FEATURES:
-            matching_indices = []
-            for idx, name in enumerate(feature_names):
-                parts = name.split("__")
-                if len(parts) >= 2:
-                    feature_part = "__".join(parts[1:])
-                    if feature_part == base_feature or feature_part.startswith(base_feature + "__"):
-                        matching_indices.append(idx)
+            matching_indices = get_feature_indices_by_base_name(feature_names, base_feature)
 
             if not matching_indices:
                 raise ValueError(
@@ -140,26 +242,45 @@ class DynamicalSystemClusterer(ClustererPredictor):
         if not self._non_drifting_dims:
             self._non_drifting_dims = list(range(n_dims))
 
-    def _get_feature_values(
-        self, features: np.ndarray, base_feature: str, state_idx: int = 0
-    ) -> np.ndarray:
-        """Get feature values for a specific base feature.
+    def _get_feature_values(self, features: np.ndarray, base_feature: str) -> np.ndarray:
+        """Get feature values from the first non-drifting dimension.
+
+        If all dimensions are drifting, falls back to the first dimension.
 
         Args:
             features: Full feature array (n_samples, n_features).
             base_feature: Base feature name (e.g., "variance").
-            state_idx: Which state's feature to use (for multi-state systems).
 
         Returns:
             Feature values array of shape (n_samples,).
         """
         indices = self._feature_indices[base_feature]
-        if state_idx < len(indices):
-            return features[:, indices[state_idx]]
+
+        for dim in self._non_drifting_dims:
+            if dim < len(indices):
+                return features[:, indices[dim]]
+
         return features[:, indices[0]]
+
+    def _get_non_drifting_feature_indices(self, base_feature: str) -> list[int]:
+        """Get feature column indices for non-drifting dimensions only.
+
+        Args:
+            base_feature: Base feature name (e.g., "mean", "variance").
+
+        Returns:
+            List of column indices for non-drifting dimensions.
+            Falls back to all indices if no non-drifting dimensions exist.
+        """
+        indices = self._feature_indices[base_feature]
+        non_drifting_indices = [indices[d] for d in self._non_drifting_dims if d < len(indices)]
+        return non_drifting_indices if non_drifting_indices else indices
 
     def _classify_attractor_type(self, features: np.ndarray) -> np.ndarray:
         """Classify trajectories by attractor type (Stage 1).
+
+        Uses only non-drifting dimensions for classification to avoid
+        noise from rotating/drifting state variables.
 
         Args:
             features: Feature array (n_samples, n_features).
@@ -171,18 +292,15 @@ class DynamicalSystemClusterer(ClustererPredictor):
         type_labels = np.empty(n_samples, dtype=object)
         type_labels[:] = "chaos"
 
-        variance_indices = self._feature_indices["variance"]
-        non_drifting_var_indices = [
-            variance_indices[d] for d in self._non_drifting_dims if d < len(variance_indices)
-        ]
-        if not non_drifting_var_indices:
-            non_drifting_var_indices = variance_indices
+        non_drifting_var_indices = self._get_non_drifting_feature_indices("variance")
         variance = np.mean(features[:, non_drifting_var_indices], axis=1)
 
         periodicity_strength = self._get_feature_values(
             features, "autocorrelation_periodicity__output_strength"
         )
-        drift_slope = self._get_feature_values(features, "linear_trend__attr_slope")
+
+        slope_indices = self._feature_indices["linear_trend__attr_slope"]
+        max_abs_slope = np.max(np.abs(features[:, slope_indices]), axis=1)
 
         for tier in self.tiers:
             if tier == "FP":
@@ -192,7 +310,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
             elif tier == "LC":
                 has_periodicity = periodicity_strength > self.lc_periodicity_threshold
                 not_high_variance = variance < self.chaos_variance_threshold
-                has_drift = np.abs(drift_slope) > self.drift_threshold
+                has_drift = max_abs_slope > self.drift_threshold
                 lc_periodic = has_periodicity & not_high_variance
                 lc_rotating = has_drift & (variance > self.fp_variance_threshold)
                 lc_mask = (lc_periodic | lc_rotating) & (type_labels == "chaos")
@@ -222,13 +340,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
         if len(indices) == 0:
             return np.array([], dtype=int)
 
-        mean_indices = self._feature_indices["mean"]
-        non_drifting_mean_indices = [
-            mean_indices[d] for d in self._non_drifting_dims if d < len(mean_indices)
-        ]
-        if not non_drifting_mean_indices:
-            non_drifting_mean_indices = mean_indices
-
+        non_drifting_mean_indices = self._get_non_drifting_feature_indices("mean")
         fp_features = features[indices][:, non_drifting_mean_indices]
 
         if self.fp_sub_classifier is not None:
@@ -438,6 +550,8 @@ class DynamicalSystemClusterer(ClustererPredictor):
     def _sub_classify_chaos(self, features: np.ndarray, indices: np.ndarray) -> np.ndarray:
         """Sub-classify chaotic trajectories by spatial mean.
 
+        Excludes drifting dimensions from clustering to avoid spurious splits.
+
         Args:
             features: Full feature array.
             indices: Indices of chaos trajectories.
@@ -448,8 +562,8 @@ class DynamicalSystemClusterer(ClustererPredictor):
         if len(indices) == 0:
             return np.array([], dtype=int)
 
-        mean_indices = self._feature_indices["mean"]
-        chaos_features = features[indices][:, mean_indices]
+        non_drifting_mean_indices = self._get_non_drifting_feature_indices("mean")
+        chaos_features = features[indices][:, non_drifting_mean_indices]
 
         if self.chaos_sub_classifier is not None:
             return self.chaos_sub_classifier.predict_labels(chaos_features)
@@ -475,7 +589,17 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         Returns:
             Array of predicted labels with format "TYPE_subcluster".
+
+        Raises:
+            RuntimeError: If set_feature_names() was not called before prediction.
         """
+        if not self._initialized:
+            raise RuntimeError(
+                f"{type(self).__name__} requires feature names before prediction. "
+                "Call set_feature_names() first, or use with BasinStabilityEstimator "
+                "which handles this automatically."
+            )
+
         self._detect_drifting_dims(features)
 
         n_samples = features.shape[0]
