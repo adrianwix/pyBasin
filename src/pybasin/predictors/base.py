@@ -34,6 +34,35 @@ class LabelPredictor(ABC):
         """
         pass
 
+    def needs_feature_names(self) -> bool:
+        """Check if this predictor requires feature names to be set before prediction.
+
+        Override this method and return True if your predictor needs to parse
+        feature names (e.g., to identify specific features like 'variance' or 'amplitude').
+
+        :return: True if set_feature_names() must be called before predict_labels().
+        """
+        return False
+
+    def set_feature_names(self, feature_names: list[str]) -> None:
+        """Set feature names for predictors that require them.
+
+        Called automatically by BasinStabilityEstimator if needs_feature_names() returns True.
+        Override this method to parse and store feature name indices.
+
+        :param feature_names: List of feature names matching the feature array columns.
+        :raises NotImplementedError: If called on a predictor that doesn't need feature names.
+        """
+        if self.needs_feature_names():
+            raise NotImplementedError(
+                f"{type(self).__name__} requires feature names but set_feature_names() "
+                "was not implemented. Override this method to handle feature names."
+            )
+        logger.debug(
+            "%s.set_feature_names() called but predictor doesn't need feature names",
+            type(self).__name__,
+        )
+
 
 class ClassifierPredictor(LabelPredictor):
     """

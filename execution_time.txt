@@ -369,3 +369,12 @@
 2026-01-08 14:56:31 - main_lorenz_dynamical_clusterer.py: 1.8483023643493652 seconds
 2026-01-08 14:57:12 - main_lorenz_dynamical_clusterer.py: 1.9130282402038574 seconds
 2026-01-08 14:57:39 - main_lorenz.py: 1.5892648696899414 seconds
+2026-01-12 15:08:29 - main_duffing_dynamical_clusterer.py: 23.433823108673096 seconds
+2026-01-12 15:38:45 - main_duffing_dynamical_clusterer.py: 0.9115071296691895 seconds
+2026-01-12 15:41:28 - main_duffing_dynamical_clusterer.py: 0.900022029876709 seconds
+2026-01-13 14:27:17 - main_duffing_dynamical_clusterer.py: 1.0012545585632324 seconds
+2026-01-13 14:27:57 - main_duffing_dynamical_clusterer.py: 0.7657206058502197 seconds
+2026-01-13 14:29:48 - main_duffing_dynamical_clusterer.py: 0.7423851490020752 seconds
+2026-01-13 14:30:58 - main_duffing_dynamical_clusterer.py: 0.7353909015655518 seconds
+2026-01-13 14:31:26 - main_duffing_dynamical_clusterer.py: 0.7290995121002197 seconds
+2026-01-13 14:34:46 - main_duffing_dynamical_clusterer.py: 0.7337954044342041 seconds

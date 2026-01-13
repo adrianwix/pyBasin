@@ -1,5 +1,6 @@
 import inspect
 import os
+import re
 import sys
 import time
 from collections.abc import Callable
@@ -14,6 +15,83 @@ from pybasin.solution import Solution
 
 P = ParamSpec("P")
 R = TypeVar("R")
+
+FEATURE_NAME_PATTERN = re.compile(r"^state_(\d+)__(.+)$")
+
+
+def parse_feature_name(feature_name: str) -> tuple[int, str] | None:
+    """Parse a feature name into state index and feature identifier.
+
+    Feature names follow the convention: state_X__feature_name
+    where X is the state dimension index (0-based).
+
+    Examples:
+        - "state_0__variance" -> (0, "variance")
+        - "state_1__mean" -> (1, "mean")
+        - "state_0__autocorrelation_periodicity__output_strength" -> (0, "autocorrelation_periodicity__output_strength")
+        - "invalid_name" -> None
+
+    Args:
+        feature_name: Feature name string to parse.
+
+    Returns:
+        Tuple of (state_index, feature_identifier) if valid, None if invalid.
+    """
+    match = FEATURE_NAME_PATTERN.match(feature_name)
+    if match:
+        state_idx = int(match.group(1))
+        feature_id = match.group(2)
+        return (state_idx, feature_id)
+    return None
+
+
+def validate_feature_names(feature_names: list[str]) -> tuple[bool, list[str]]:
+    """Validate that all feature names follow the naming convention.
+
+    Feature names must follow: state_X__feature_name
+    where X is a non-negative integer.
+
+    Args:
+        feature_names: List of feature names to validate.
+
+    Returns:
+        Tuple of (all_valid, invalid_names) where:
+            - all_valid: True if all names are valid
+            - invalid_names: List of names that don't match the convention
+    """
+    invalid_names: list[str] = []
+    for name in feature_names:
+        if parse_feature_name(name) is None:
+            invalid_names.append(name)
+    return (len(invalid_names) == 0, invalid_names)
+
+
+def get_feature_indices_by_base_name(feature_names: list[str], base_feature: str) -> list[int]:
+    """Get column indices for features matching a base feature name.
+
+    Finds all features that have the given base name (after the state_X__ prefix).
+    Useful for predictors that need to access specific features across multiple states.
+
+    Examples:
+        Given feature_names = ["state_0__variance", "state_1__variance", "state_0__mean"]:
+        - get_feature_indices_by_base_name(feature_names, "variance") -> [0, 1]
+        - get_feature_indices_by_base_name(feature_names, "mean") -> [2]
+
+    Args:
+        feature_names: List of feature names.
+        base_feature: Base feature name to search for (e.g., "variance", "mean").
+
+    Returns:
+        List of column indices where the base feature appears.
+    """
+    indices: list[int] = []
+    for idx, name in enumerate(feature_names):
+        parsed = parse_feature_name(name)
+        if parsed is not None:
+            _, feature_id = parsed
+            if feature_id == base_feature or feature_id.startswith(base_feature + "__"):
+                indices.append(idx)
+    return indices
 
 
 def time_execution(script_name: str, func: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:

@@ -124,4 +124,7 @@ ignore_decorators = ["@callback", "@app.callback", "@self.app.callback"]
 ignore_names = ["render", "layout"]
 
 [dependency-groups]
-dev = ["vulture>=2.14"]
+dev = [
+    "pyright>=1.1.408",
+    "vulture>=2.14",
+]
