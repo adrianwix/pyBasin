@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from case_studies.comparison_utils import compare_with_expected_by_size
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
@@ -33,5 +36,18 @@ def main():
 
 if __name__ == "__main__":
     bse = time_execution("main_duffing_oscillator_unsupervised.py", main)
+
+    expected_file = (
+        Path(__file__).parent.parent.parent
+        / "tests"
+        / "integration"
+        / "duffing"
+        / "main_duffing_unsupervised.json"
+    )
+
+    if bse.bs_vals is not None:
+        errors = bse.get_errors()
+        compare_with_expected_by_size(bse.bs_vals, expected_file, errors)
+
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
-    plotter.run(port=8050)
+    # plotter.run(port=8050)

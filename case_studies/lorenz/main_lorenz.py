@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from case_studies.comparison_utils import compare_with_expected_by_size
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
@@ -33,9 +36,22 @@ def main():
 
 if __name__ == "__main__":
     bse = time_execution("main_lorenz.py", main)
+
+    expected_file = (
+        Path(__file__).parent.parent.parent
+        / "tests"
+        / "integration"
+        / "lorenz"
+        / "main_lorenz.json"
+    )
+
+    if bse.bs_vals is not None:
+        errors = bse.get_errors()
+        compare_with_expected_by_size(bse.bs_vals, expected_file, errors)
+
     options = InteractivePlotterOptions(
         phase_plot=PhasePlotOptions(x_var=1, y_var=2, exclude_templates=["unbounded"]),
         feature_space=FeatureSpaceOptions(exclude_labels=["unbounded"]),
     )
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y", 2: "z"}, options=options)
-    plotter.run(port=8050, debug=True)
+    # plotter.run(port=8050, debug=True)

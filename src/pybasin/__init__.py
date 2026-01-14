@@ -14,6 +14,7 @@ from pybasin.plotters.types import (
     TemplateSelectionOptions,
     TemplateTimeSeriesOptions,
 )
+from pybasin.types import ErrorInfo
 
 # Configure library logger with default handler
 _logger = logging.getLogger("pybasin")
@@ -25,6 +26,7 @@ if not _logger.handlers:
 
 __all__ = [
     "BasinStabilityEstimator",
+    "ErrorInfo",
     "FeatureSpaceOptions",
     "InteractivePlotter",
     "InteractivePlotterOptions",

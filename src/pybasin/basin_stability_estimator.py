@@ -24,6 +24,7 @@ from pybasin.solution import Solution
 from pybasin.solver import TorchDiffEqSolver
 from pybasin.solvers.jax_solver import JaxSolver
 from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
+from pybasin.types import ErrorInfo
 from pybasin.utils import (
     NumpyEncoder,
     extract_amplitudes,
@@ -557,6 +558,35 @@ class BasinStabilityEstimator:
         )
 
         return self.bs_vals
+
+    def get_errors(self) -> dict[str, ErrorInfo]:
+        """
+        Compute absolute and relative errors for basin stability estimates.
+
+        The errors are based on the Bernoulli experiment statistics:
+        - e_abs = sqrt(S_B(A) * (1 - S_B(A)) / N) - absolute standard error
+        - e_rel = 1 / sqrt(N * S_B(A)) - relative error
+
+        Returns:
+            Dictionary mapping each label to an ErrorInfo with 'e_abs' and 'e_rel' keys.
+
+        Raises:
+            ValueError: If estimate_bs() has not been called yet.
+        """
+        if self.bs_vals is None:
+            raise ValueError("No results available. Please run estimate_bs() first.")
+
+        errors: dict[str, ErrorInfo] = {}
+        n = self.n
+
+        for label, s_b in self.bs_vals.items():
+            e_abs = np.sqrt(s_b * (1 - s_b) / n)
+
+            e_rel = 1 / np.sqrt(n * s_b) if s_b > 0 else float("inf")
+
+            errors[label] = ErrorInfo(e_abs=float(e_abs), e_rel=float(e_rel))
+
+        return errors
 
     def save(self) -> None:
         """

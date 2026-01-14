@@ -378,3 +378,17 @@
 2026-01-13 14:30:58 - main_duffing_dynamical_clusterer.py: 0.7353909015655518 seconds
 2026-01-13 14:31:26 - main_duffing_dynamical_clusterer.py: 0.7290995121002197 seconds
 2026-01-13 14:34:46 - main_duffing_dynamical_clusterer.py: 0.7337954044342041 seconds
+2026-01-13 16:37:18 - main_duffing_oscillator_supervised.py: 0.7718877792358398 seconds
+2026-01-13 16:39:52 - main_duffing_oscillator_supervised.py: 0.8162517547607422 seconds
+2026-01-13 16:42:55 - main_duffing_oscillator_supervised.py: 55.37049698829651 seconds
+2026-01-13 16:48:09 - main_duffing_oscillator_supervised.py: 47.61826181411743 seconds
+2026-01-13 17:01:46 - main_duffing_oscillator_supervised.py: 4.893054485321045 seconds
+2026-01-13 17:04:35 - main_duffing_oscillator_supervised.py: 4.464599609375 seconds
+2026-01-13 17:05:40 - main_duffing_oscillator_supervised.py: 3.8447232246398926 seconds
+2026-01-13 17:17:35 - main_duffing_oscillator_supervised.py: 4.612551689147949 seconds
+2026-01-13 17:23:40 - main_duffing_oscillator_unsupervised.py: 4.194964170455933 seconds
+2026-01-13 17:28:56 - main_duffing_oscillator_unsupervised.py: 4.353246212005615 seconds
+2026-01-13 17:32:48 - main_pendulum_case1.py: 0.8198802471160889 seconds
+2026-01-13 17:33:04 - main_friction.py: 1.0043742656707764 seconds
+2026-01-13 17:34:57 - main_lorenz.py: 1.4259226322174072 seconds
+2026-01-13 17:39:35 - main_duffing_oscillator_supervised.py: 5.822781324386597 seconds

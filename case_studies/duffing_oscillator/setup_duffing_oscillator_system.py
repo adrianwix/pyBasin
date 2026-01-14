@@ -2,10 +2,10 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.duffing_oscillator.duffing_jax_ode import DuffingJaxODE, DuffingParams
-from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.types import SetupProperties
 
 
@@ -25,17 +25,20 @@ def setup_duffing_oscillator_system() -> SetupProperties:
 
     solver = JaxSolver(
         time_span=(0, 1000),
-        n_steps=1000,
+        n_steps=50000,
         device=device,
         rtol=1e-8,
         atol=1e-6,
         use_cache=True,
     )
 
-    feature_extractor = JaxFeatureExtractor(
+    feature_extractor = TorchFeatureExtractor(
         time_steady=900.0,
         normalize=False,
-        features={"maximum": None, "standard_deviation": None},
+        features=None,
+        features_per_state={
+            0: {"maximum": None, "standard_deviation": None},
+        },
     )
 
     classifier_initial_conditions = [

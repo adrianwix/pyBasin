@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from case_studies.comparison_utils import compare_with_expected_by_size
 from case_studies.friction.setup_friction_system import setup_friction_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
@@ -28,5 +31,18 @@ def main():
 
 if __name__ == "__main__":
     bse = time_execution("main_friction.py", main)
+
+    expected_file = (
+        Path(__file__).parent.parent.parent
+        / "tests"
+        / "integration"
+        / "friction"
+        / "main_friction_case1.json"
+    )
+
+    if bse.bs_vals is not None:
+        errors = bse.get_errors()
+        compare_with_expected_by_size(bse.bs_vals, expected_file, errors)
+
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
-    plotter.run(port=8050)
+    # plotter.run(port=8050)

@@ -6,6 +6,11 @@ from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 
 
+class ErrorInfo(TypedDict):
+    e_abs: float
+    e_rel: float
+
+
 class SetupProperties(TypedDict):
     """
     Standard properties returned by setup functions for case studies.
