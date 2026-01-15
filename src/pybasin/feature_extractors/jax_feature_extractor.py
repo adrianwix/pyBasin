@@ -12,7 +12,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import torch
-from jax import Array
+from jax import Array, lax
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_extractors.jax_feature_calculators import (
@@ -126,18 +126,13 @@ class JaxFeatureExtractor(FeatureExtractor):
 
         self._extract_fn = self._build_extract_function()
 
-    def _is_uniform_config(self) -> bool:
-        """Check if all states use the same feature configuration."""
-        if not self._state_feature_config:
-            return True
-        configs = list(self._state_feature_config.values())
-        if len(configs) <= 1:
-            return True
-        first = configs[0]
-        return all(c is first for c in configs[1:])
-
     def _build_extract_function(self) -> Callable[[Array], Array]:
-        """Build the feature extraction function based on per-state FCParameters."""
+        """Build the feature extraction function with per-feature JIT compilation.
+
+        This approach JIT-compiles each unique (function, params) combination separately
+        to avoid the massive computation graph that causes infinite compile times when
+        using comprehensive feature sets like JAX_COMPREHENSIVE_FC_PARAMETERS.
+        """
         if self._state_feature_config is None or self._num_states is None:
             raise RuntimeError(
                 "Must call _configure_state_features before building extract function"
@@ -153,44 +148,9 @@ class JaxFeatureExtractor(FeatureExtractor):
                 return jax.jit(extract_no_features)  # type: ignore[misc]
             return extract_no_features
 
-        if self._is_uniform_config():
-            fc_params = next(iter(self._state_feature_config.values()))
-            state_indices = list(self._state_feature_config.keys())
-
-            feature_funcs: list[tuple[Callable[..., Array], dict[str, object] | None]] = []
-            for feature_name, param_list in fc_params.items():
-                if feature_name not in ALL_FEATURE_FUNCTIONS:
-                    available = list(ALL_FEATURE_FUNCTIONS.keys())
-                    raise ValueError(f"Unknown feature: {feature_name}. Available: {available}")
-
-                func = ALL_FEATURE_FUNCTIONS[feature_name]
-                if param_list is None:
-                    feature_funcs.append((func, None))
-                else:
-                    for params in param_list:
-                        feature_funcs.append((func, params))
-
-            def extract_uniform(x: Array) -> Array:
-                x_selected = x[:, :, jnp.array(state_indices)]  # type: ignore[misc]
-                feature_values: list[Array] = []
-
-                for feature_func, params in feature_funcs:
-                    feat = (
-                        feature_func(x_selected)
-                        if params is None
-                        else feature_func(x_selected, **params)
-                    )
-                    for state_pos in range(len(state_indices)):
-                        feature_values.append(feat[:, state_pos])
-
-                stacked = jnp.stack(feature_values, axis=0)
-                return jnp.transpose(stacked, (1, 0))
-
-            if self.use_jit:
-                return jax.jit(extract_uniform)  # pyright: ignore[reportUnknownMemberType]
-            return extract_uniform
-
-        state_feature_funcs: list[tuple[int, Callable[..., Array], dict[str, object] | None]] = []
+        jitted_features: dict[
+            tuple[str, tuple[tuple[str, object], ...] | None], Callable[[Array], Array]
+        ] = {}
 
         for state_idx, fc_params in self._state_feature_config.items():
             for feature_name, param_list in fc_params.items():
@@ -201,24 +161,63 @@ class JaxFeatureExtractor(FeatureExtractor):
                 func = ALL_FEATURE_FUNCTIONS[feature_name]
 
                 if param_list is None:
-                    state_feature_funcs.append((state_idx, func, None))
+                    key = (feature_name, None)
+                    if key not in jitted_features:
+                        if self.use_jit:
+                            jitted_features[key] = jax.jit(func)  # pyright: ignore[reportUnknownMemberType]
+                        else:
+                            jitted_features[key] = func
                 else:
                     for params in param_list:
-                        state_feature_funcs.append((state_idx, func, params))
+                        key = (feature_name, tuple(sorted(params.items())))
+                        if key not in jitted_features:
+                            if self.use_jit:
+                                jitted_features[key] = jax.jit(
+                                    lambda x, f=func, p=params: f(x, **p)
+                                )  # pyright: ignore[reportUnknownMemberType]
+                            else:
+                                jitted_features[key] = lambda x, f=func, p=params: f(x, **p)
 
-        def extract_all_features(x: Array) -> Array:
-            feature_values: list[Array] = []
-            for state_idx, feature_func, params in state_feature_funcs:
-                x_state = x[:, :, state_idx : state_idx + 1]
-                feat = feature_func(x_state) if params is None else feature_func(x_state, **params)
-                feature_values.append(feat.squeeze(-1))
+        feature_list: list[tuple[int, tuple[str, tuple[tuple[str, object], ...] | None]]] = []
 
-            stacked = jnp.stack(feature_values, axis=0)
-            return jnp.transpose(stacked, (1, 0))
+        for state_idx, fc_params in self._state_feature_config.items():
+            for feature_name, param_list in fc_params.items():
+                if param_list is None:
+                    key = (feature_name, None)
+                    feature_list.append((state_idx, key))
+                else:
+                    for params in param_list:
+                        key = (feature_name, tuple(sorted(params.items())))
+                        feature_list.append((state_idx, key))
 
-        if self.use_jit:
-            return jax.jit(extract_all_features)  # pyright: ignore[reportUnknownMemberType]
-        return extract_all_features
+        n_features = len(feature_list)
+        state_indices = jnp.array([state_idx for state_idx, _ in feature_list])
+
+        feature_funcs_ordered = [jitted_features[key] for _, key in feature_list]
+
+        def extract_split_jit(x: Array) -> Array:
+            batch_size = x.shape[1]
+
+            def compute_feature(i: int, result: Array) -> Array:
+                state_idx = state_indices[i]
+                start_indices = jnp.array([0, 0, state_idx])
+                slice_sizes = (x.shape[0], x.shape[1], 1)
+                x_state = lax.dynamic_slice(x, start_indices, slice_sizes)
+
+                # Use lax.switch to select the feature function by index
+                branches = [
+                    lambda xs, func=func: func(xs).squeeze(-1) for func in feature_funcs_ordered
+                ]
+                feat = lax.switch(i, branches, x_state)
+
+                return result.at[i, :].set(feat)
+
+            features_array = jnp.zeros((n_features, batch_size), dtype=jnp.float32)
+            features_array = jax.lax.fori_loop(0, n_features, compute_feature, features_array)
+
+            return jnp.transpose(features_array, (1, 0))
+
+        return extract_split_jit
 
     def extract_features(self, solution: Solution) -> torch.Tensor:
         """Extract features from an ODE solution using JAX."""

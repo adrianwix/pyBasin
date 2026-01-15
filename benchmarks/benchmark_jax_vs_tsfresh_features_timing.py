@@ -7,23 +7,24 @@ It uses the same arguments for both implementations to ensure a fair comparison.
 
 Feature Counts:
 - MINIMAL_BATCH_FEATURES: 41 features (default, fast benchmarking)
-- JAX_COMPREHENSIVE_FC_PARAMETERS (--all): 72 base features, 783 total with all permutations
-- tsfresh ComprehensiveFCParameters (--comprehensive): 788 total feature calls
-  (matrix_profile excluded due to missing stumpy dependency)
+- --all: JAX_COMPREHENSIVE_FC_PARAMETERS (JAX) vs EfficientFCParameters (tsfresh)
+  Both exclude sample_entropy and approximate_entropy.
 
 Usage:
     uv run python benchmarks/benchmark_jax_features_timing.py --individual-only
     uv run python benchmarks/benchmark_jax_features_timing.py --batch-only
     uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --gpu
     uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --batches=10000
-    uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --all  # Use all 783 JAX feature permutations
-    uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --comprehensive  # Use tsfresh ComprehensiveFCParameters (788 features)
+    uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --all
 """
 
 import os
 import sys
 import warnings
 from pathlib import Path
+
+# Add parent directory to path for imports when running as script
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Suppress pandas FutureWarning from tsfresh
 warnings.filterwarnings("ignore", category=FutureWarning, module="tsfresh")
@@ -33,21 +34,37 @@ USE_GPU = "--gpu" in sys.argv
 if not USE_GPU:
     os.environ["JAX_PLATFORMS"] = "cpu"
 
+# Disable internal multithreading for numerical libraries
+# This prevents thread contention when using multiprocessing
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+
 import time
+import csv
 from concurrent.futures import ThreadPoolExecutor
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
+
+# Suppress numpy RankWarning from polyfit in tsfresh (must be after numpy import)
+warnings.filterwarnings("ignore", category=np.exceptions.RankWarning)
 from tsfresh import extract_features
-from tsfresh.feature_extraction import ComprehensiveFCParameters
+from tsfresh.feature_extraction import EfficientFCParameters
 from tsfresh.feature_extraction import feature_calculators as fc
 
+# Import pendulum ODE system
+from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.feature_extractors.jax_feature_calculators import (
     ALL_FEATURE_FUNCTIONS,
     JAX_COMPREHENSIVE_FC_PARAMETERS,
 )
+from pybasin.sampler import GridSampler
+from pybasin.solvers import JaxSolver
 
 # Enable persistent compilation cache to speed up subsequent runs
 cache_dir = Path(__file__).parent / "cache" / "jax_cache"
@@ -57,8 +74,68 @@ jax.config.update("jax_compilation_cache_dir", str(cache_dir))
 # Parse --all flag
 USE_ALL_FEATURES = "--all" in sys.argv
 
-# Parse --comprehensive flag (use tsfresh ComprehensiveFCParameters)
-USE_COMPREHENSIVE = "--comprehensive" in sys.argv
+# Parse --multiprocessing flag
+USE_MULTIPROCESSING = "--multiprocessing" in sys.argv
+
+
+# =============================================================================
+# DATA GENERATION
+# =============================================================================
+def generate_sample(
+    n_timesteps: int,
+    n_batches: int,
+    time_steady: float = 900.0,
+    total_time: float = 1000.0,
+) -> jax.Array:
+    """Generate pendulum ODE trajectories for benchmarking.
+
+    Only returns the steady-state portion of the trajectory (t >= time_steady).
+
+    Args:
+        n_timesteps: Number of integration steps (evenly spaced in [0, total_time])
+        n_batches: Number of batches (trajectories)
+        time_steady: Time threshold for filtering transients (time, not step)
+        total_time: Total integration time
+
+    Returns:
+        JAX array of shape (steady_steps, n_batches, 2) where steady_steps
+        is the number of points with t >= time_steady
+    """
+    print(f"  Generating {n_batches} pendulum trajectories...")
+
+    # Define pendulum parameters
+    params: PendulumParams = {"alpha": 0.1, "T": 0.5, "K": 1.0}
+    ode_system = PendulumJaxODE(params)
+
+    # Create sampler with pendulum-appropriate limits (GridSampler is deterministic)
+    sampler = GridSampler(
+        min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
+        max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
+        device="cpu",
+    )
+
+    # Sample initial conditions
+    y0 = sampler.sample(n_batches)
+
+    solver = JaxSolver(
+        time_span=(0, total_time),
+        n_steps=n_timesteps,
+        device="cpu",
+        rtol=1e-8,
+        atol=1e-6,
+        use_cache=True,
+    )
+
+    # Integrate ODE system
+    t, y = solver.integrate(ode_system, y0)
+
+    # Filter to steady state portion (t >= time_steady)
+    steady_mask = t >= time_steady
+    y_steady = y[steady_mask, :, :]
+
+    print(f"  Generated trajectory shape: {y_steady.shape} (t >= {time_steady})")
+    return jnp.array(y_steady)
+
 
 # =============================================================================
 # MINIMAL FEATURE SET FOR FAST BATCH BENCHMARKS
@@ -304,113 +381,168 @@ INDIVIDUAL_FEATURE_CONFIGS: list[tuple[str, dict, str, dict]] = [
 ]
 
 
-def time_jax_feature(func, x_jax, kwargs, n_runs=3):
-    """Time a JAX feature function."""
+def time_jax_feature(func, x_jax, kwargs):
+    """Time a JAX feature function.
+
+    Returns:
+        Tuple of (warmup_time, post_warmup_time, error_msg)
+        warmup_time includes JIT compilation
+        post_warmup_time is a single post-warmup run
+    """
     try:
-        # Warmup
+        # Warmup (includes JIT compilation)
+        t0_warmup = time.perf_counter()
         result = func(x_jax, **kwargs)
         jax.block_until_ready(result)
+        warmup_time = time.perf_counter() - t0_warmup
 
-        # Time
-        times = []
-        for _ in range(n_runs):
-            t0 = time.perf_counter()
-            result = func(x_jax, **kwargs)
-            jax.block_until_ready(result)
-            times.append(time.perf_counter() - t0)
+        # Single post-warmup run
+        t0 = time.perf_counter()
+        result = func(x_jax, **kwargs)
+        jax.block_until_ready(result)
+        run_time = time.perf_counter() - t0
 
-        return np.mean(times), None
+        return warmup_time, run_time, None
     except Exception as e:
-        return None, str(e)
+        return None, None, str(e)
 
 
-def time_tsfresh_feature(func_name, x_np, kwargs, n_batches, n_runs=3):
-    """Time a tsfresh feature function over n_batches calls."""
+def _tsfresh_worker(args):
+    """Worker function for multiprocessing tsfresh feature extraction."""
+    func_name, x_series, kwargs = args
+    tsfresh_fn = getattr(fc, func_name)
+    if "param" in kwargs:
+        return list(tsfresh_fn(x_series, kwargs["param"]))
+    elif kwargs:
+        return tsfresh_fn(x_series, **kwargs)
+    else:
+        return tsfresh_fn(x_series)
+
+
+def time_tsfresh_feature(func_name, x_np_batches, kwargs, n_batches, use_multiprocessing=False):
+    """Time a tsfresh feature function.
+
+    Args:
+        func_name: Name of the tsfresh feature function
+        x_np_batches: Array of shape (n_timesteps, n_batches) with all series
+        kwargs: Arguments for the feature function
+        n_batches: Number of series to process
+        use_multiprocessing: If True, use multiprocessing pool
+    """
     if not hasattr(fc, func_name):
         return None, f"Function {func_name} not found in tsfresh"
 
     tsfresh_fn = getattr(fc, func_name)
 
     try:
-        # Test call
-        if "param" in kwargs:
-            # Generator-style function
-            list(tsfresh_fn(x_np, kwargs["param"]))
-        else:
-            tsfresh_fn(x_np, **kwargs)
+        if use_multiprocessing:
+            import multiprocessing as mp
 
-        # Time n_batches calls
-        times = []
-        for _ in range(n_runs):
+            work_items = [(func_name, x_np_batches[:, i], kwargs) for i in range(n_batches)]
+            n_workers = os.cpu_count() or 1
             t0 = time.perf_counter()
-            for _ in range(n_batches):
+            with mp.Pool(n_workers) as pool:
+                _ = pool.map(_tsfresh_worker, work_items)
+            run_time = time.perf_counter() - t0
+        else:
+            t0 = time.perf_counter()
+            for i in range(n_batches):
+                x_series = x_np_batches[:, i]
                 if "param" in kwargs:
-                    _ = list(tsfresh_fn(x_np, kwargs["param"]))
+                    _ = list(tsfresh_fn(x_series, kwargs["param"]))
+                elif kwargs:
+                    _ = tsfresh_fn(x_series, **kwargs)
                 else:
-                    _ = tsfresh_fn(x_np, **kwargs)
-            times.append(time.perf_counter() - t0)
+                    _ = tsfresh_fn(x_series)
+            run_time = time.perf_counter() - t0
 
-        return np.mean(times), None
+        return run_time, None
     except Exception as e:
         return None, str(e)
 
 
-def run_individual_benchmark(n_timesteps: int, n_batches: int, n_states: int, n_runs: int = 3):
+def run_individual_benchmark(n_timesteps: int, n_batches: int):
     """Run individual feature benchmarks comparing JAX vs tsfresh."""
     print("\n" + "=" * 100)
     print("INDIVIDUAL FEATURE BENCHMARK")
     print("=" * 100)
 
     device = jax.devices()[0]
+    n_states = 2  # Pendulum has 2 states
     total_series = n_batches * n_states
 
     print(f"\nDevice: {device}")
     print(
         f"Data: {n_timesteps} timesteps, {n_batches} batches x {n_states} states = {total_series} series"
     )
-    print(
-        f"JAX processes all {total_series} series at once, tsfresh runs {total_series}x per feature"
+    mp_str = f"multiprocessing ({os.cpu_count()} workers)" if USE_MULTIPROCESSING else "sequential"
+    print(f"JAX processes all {total_series} series at once, tsfresh uses {mp_str}")
+
+    # Create test data from pendulum ODE
+    x_jax = generate_sample(n_timesteps, n_batches)
+    # Reshape to (n_timesteps, total_series) for tsfresh - flatten batch and state dims
+    x_np_batches = np.array(x_jax.reshape(x_jax.shape[0], -1))
+    actual_timesteps = x_np_batches.shape[0]
+    actual_series = x_np_batches.shape[1]
+    print(f"Actual data shape: {actual_timesteps} timesteps x {actual_series} series")
+
+    # Setup CSV file for incremental results
+    csv_path = Path(__file__).parent / "individual_benchmark_results.csv"
+    csv_file = open(csv_path, "w", newline="")
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(
+        [
+            "feature",
+            "jax_kwargs",
+            "jax_warmup_ms",
+            "jax_run_ms",
+            "tsfresh_ms",
+            "speedup_with_compile",
+            "speedup_without_compile",
+        ]
     )
-    print(f"Timing: {n_runs} runs per feature\n")
+    csv_file.flush()
+    print(f"Writing results to: {csv_path}\n")
 
-    # Create test data
-    np.random.seed(42)
-    x_jax = jnp.array(np.random.randn(n_timesteps, n_batches, n_states))
-    x_np = np.random.randn(n_timesteps)  # Single series for tsfresh
-
-    print("-" * 100)
-    print(f"{'Feature':<45} {'JAX':>12} {'tsfresh':>12} {'Speedup':>12} {'Status'}")
-    print("-" * 100)
+    print("-" * 120)
+    print(
+        f"{'Feature':<40} {'JAX warmup':>12} {'JAX run':>10} {'tsfresh':>12} {'w/ compile':>12} {'w/o compile':>12}"
+    )
+    print("-" * 120)
 
     results = []
-    jax_total = 0.0
+    jax_warmup_total = 0.0
+    jax_run_total = 0.0
     tsfresh_total = 0.0
     n_success = 0
-    n_jax_faster = 0
-    n_tsfresh_faster = 0
+    n_jax_faster_with_compile = 0
+    n_jax_faster_without_compile = 0
 
     for jax_name, jax_kwargs, tsfresh_name, tsfresh_kwargs in INDIVIDUAL_FEATURE_CONFIGS:
         # Get JAX function
         if jax_name not in ALL_FEATURE_FUNCTIONS:
-            print(f"  {jax_name:<45} {'SKIP':>12} {'':>12} {'':>12} JAX func not found")
+            print(f"  {jax_name:<40} {'SKIP':>12} {'':>10} {'':>12} {'':>12} {'':>12}")
             continue
 
         jax_func = ALL_FEATURE_FUNCTIONS[jax_name]
 
-        # Time JAX
-        jax_time, jax_err = time_jax_feature(jax_func, x_jax, jax_kwargs, n_runs)
+        # Time JAX (returns warmup_time, run_time, error)
+        jax_warmup, jax_run, jax_err = time_jax_feature(jax_func, x_jax, jax_kwargs)
 
         # Time tsfresh
         tsfresh_time, tsfresh_err = time_tsfresh_feature(
-            tsfresh_name, x_np, tsfresh_kwargs, total_series, n_runs
+            tsfresh_name, x_np_batches, tsfresh_kwargs, actual_series, USE_MULTIPROCESSING
         )
 
         # Format results
-        if jax_time is not None:
-            jax_str = f"{jax_time * 1000:8.2f}ms"
-            jax_total += jax_time
+        if jax_warmup is not None and jax_run is not None:
+            jax_warmup_str = f"{jax_warmup * 1000:8.2f}ms"
+            jax_run_str = f"{jax_run * 1000:6.2f}ms"
+            jax_warmup_total += jax_warmup
+            jax_run_total += jax_run
         else:
-            jax_str = "ERROR"
+            jax_warmup_str = "ERROR"
+            jax_run_str = "ERROR"
 
         if tsfresh_time is not None:
             tsfresh_str = f"{tsfresh_time * 1000:8.2f}ms"
@@ -418,92 +550,146 @@ def run_individual_benchmark(n_timesteps: int, n_batches: int, n_states: int, n_
         else:
             tsfresh_str = "ERROR"
 
-        if jax_time is not None and tsfresh_time is not None:
-            speedup = tsfresh_time / jax_time
-            if speedup >= 1:
-                speedup_str = f"{speedup:8.1f}x"
-                n_jax_faster += 1
-            else:
-                speedup_str = f"{1 / speedup:7.1f}x slower"
-                n_tsfresh_faster += 1
-            status = "OK"
+        if jax_warmup is not None and tsfresh_time is not None and jax_run is not None:
+            # Speedup = tsfresh_time / jax_time
+            # >1 means JAX is faster, <1 means JAX is slower
+            speedup_with = tsfresh_time / jax_warmup
+            speedup_without = tsfresh_time / jax_run
+
+            speedup_with_str = f"{speedup_with:8.2f}x"
+            speedup_without_str = f"{speedup_without:8.2f}x"
+
+            if speedup_with >= 1:
+                n_jax_faster_with_compile += 1
+            if speedup_without >= 1:
+                n_jax_faster_without_compile += 1
+
             n_success += 1
         else:
-            speedup_str = "N/A"
-            status = jax_err or tsfresh_err or "ERROR"
-            status = status[:20] if len(status) > 20 else status
+            speedup_with_str = "N/A"
+            speedup_without_str = "N/A"
 
         # Display name with params
         display_name = jax_name
         if jax_kwargs:
             param_str = ", ".join(f"{k}={v}" for k, v in list(jax_kwargs.items())[:2])
             display_name = f"{jax_name}({param_str})"
-        display_name = display_name[:44]
+        display_name = display_name[:39]
 
-        print(f"  {display_name:<45} {jax_str:>12} {tsfresh_str:>12} {speedup_str:>12} {status}")
+        print(
+            f"  {display_name:<40} {jax_warmup_str:>12} {jax_run_str:>10} {tsfresh_str:>12} {speedup_with_str:>12} {speedup_without_str:>12}"
+        )
 
         results.append(
             {
                 "feature": jax_name,
                 "jax_kwargs": jax_kwargs,
-                "jax_time": jax_time,
+                "jax_warmup": jax_warmup,
+                "jax_run": jax_run,
                 "tsfresh_time": tsfresh_time,
-                "speedup": tsfresh_time / jax_time if jax_time and tsfresh_time else None,
+                "speedup_with_compile": tsfresh_time / jax_warmup
+                if jax_warmup and tsfresh_time
+                else None,
+                "speedup_without_compile": tsfresh_time / jax_run
+                if jax_run and tsfresh_time
+                else None,
             }
         )
 
-    print("-" * 100)
-    print(f"\n{'TOTALS':<45} {jax_total * 1000:8.2f}ms {tsfresh_total * 1000:8.2f}ms")
+        # Write to CSV immediately
+        csv_writer.writerow(
+            [
+                jax_name,
+                str(jax_kwargs) if jax_kwargs else "",
+                f"{jax_warmup * 1000:.4f}" if jax_warmup else "",
+                f"{jax_run * 1000:.4f}" if jax_run else "",
+                f"{tsfresh_time * 1000:.4f}" if tsfresh_time else "",
+                f"{tsfresh_time / jax_warmup:.4f}" if jax_warmup and tsfresh_time else "",
+                f"{tsfresh_time / jax_run:.4f}" if jax_run and tsfresh_time else "",
+            ]
+        )
+        csv_file.flush()
+
+    csv_file.close()
+    print("-" * 120)
+    print(
+        f"  {'TOTALS':<40} {jax_warmup_total * 1000:8.2f}ms {jax_run_total * 1000:6.2f}ms {tsfresh_total * 1000:8.2f}ms"
+    )
 
     # Summary
-    print("\n" + "=" * 100)
+    print("\n" + "=" * 120)
     print("INDIVIDUAL BENCHMARK SUMMARY")
-    print("=" * 100)
+    print("=" * 120)
     print(f"  Features tested: {len(INDIVIDUAL_FEATURE_CONFIGS)}")
     print(f"  Successful comparisons: {n_success}")
-    print(f"  JAX faster: {n_jax_faster}")
-    print(f"  tsfresh faster: {n_tsfresh_faster}")
-    if jax_total > 0:
-        print(f"  Overall speedup: {tsfresh_total / jax_total:.1f}x")
+    print(f"\n  With compile time (single-run workflow):")
+    print(f"    JAX faster: {n_jax_faster_with_compile}/{n_success}")
+    if jax_warmup_total > 0:
+        print(f"    Overall speedup: {tsfresh_total / jax_warmup_total:.1f}x")
+    print(f"\n  Without compile time (repeated-run workflow):")
+    print(f"    JAX faster: {n_jax_faster_without_compile}/{n_success}")
+    if jax_run_total > 0:
+        print(f"    Overall speedup: {tsfresh_total / jax_run_total:.1f}x")
 
-    # Top 10 slowest JAX features
-    print("\n" + "-" * 60)
-    print("TOP 10 SLOWEST JAX FEATURES")
-    print("-" * 60)
-    sorted_by_jax = sorted(
-        [r for r in results if r["jax_time"] is not None], key=lambda x: x["jax_time"], reverse=True
+    # Top 10 slowest JAX features (by warmup time, as that's the bottleneck)
+    print("\n" + "-" * 80)
+    print("TOP 10 SLOWEST JAX FEATURES (including compile time)")
+    print("-" * 80)
+    sorted_by_warmup = sorted(
+        [r for r in results if r["jax_warmup"] is not None],
+        key=lambda x: x["jax_warmup"],
+        reverse=True,
     )
-    for i, r in enumerate(sorted_by_jax[:10], 1):
-        pct = r["jax_time"] / jax_total * 100 if jax_total > 0 else 0
-        print(f"  {i:2}. {r['feature']:<35} {r['jax_time'] * 1000:8.2f}ms ({pct:5.1f}%)")
+    for i, r in enumerate(sorted_by_warmup[:10], 1):
+        pct = r["jax_warmup"] / jax_warmup_total * 100 if jax_warmup_total > 0 else 0
+        print(f"  {i:2}. {r['feature']:<35} {r['jax_warmup'] * 1000:8.2f}ms ({pct:5.1f}%)")
 
-    # Top 10 where tsfresh is faster
-    print("\n" + "-" * 60)
-    print("FEATURES WHERE TSFRESH IS FASTER")
-    print("-" * 60)
-    tsfresh_faster = [r for r in results if r["speedup"] is not None and r["speedup"] < 1]
-    if tsfresh_faster:
-        tsfresh_faster.sort(key=lambda x: x["speedup"])
-        for i, r in enumerate(tsfresh_faster[:10], 1):
-            print(f"  {i:2}. {r['feature']:<35} JAX {1 / r['speedup']:.1f}x slower")
+    # Top 10 where tsfresh is faster (with compile time - single run scenario)
+    print("\n" + "-" * 80)
+    print("FEATURES WHERE TSFRESH IS FASTER (with compile time)")
+    print("-" * 80)
+    tsfresh_faster_with = [
+        r
+        for r in results
+        if r["speedup_with_compile"] is not None and r["speedup_with_compile"] < 1
+    ]
+    if tsfresh_faster_with:
+        tsfresh_faster_with.sort(key=lambda x: x["speedup_with_compile"])
+        for i, r in enumerate(tsfresh_faster_with[:10], 1):
+            print(f"  {i:2}. {r['feature']:<35} JAX {1 / r['speedup_with_compile']:.1f}x slower")
+    else:
+        print("  None - JAX is faster for all features!")
+
+    # Top 10 where tsfresh is faster (without compile time - repeated runs)
+    print("\n" + "-" * 80)
+    print("FEATURES WHERE TSFRESH IS FASTER (without compile time)")
+    print("-" * 80)
+    tsfresh_faster_without = [
+        r
+        for r in results
+        if r["speedup_without_compile"] is not None and r["speedup_without_compile"] < 1
+    ]
+    if tsfresh_faster_without:
+        tsfresh_faster_without.sort(key=lambda x: x["speedup_without_compile"])
+        for i, r in enumerate(tsfresh_faster_without[:10], 1):
+            print(f"  {i:2}. {r['feature']:<35} JAX {1 / r['speedup_without_compile']:.1f}x slower")
     else:
         print("  None - JAX is faster for all features!")
 
     return results
 
 
-def time_all_features_jax(x_jax, n_runs=3, parallel=False, use_jit_wrapper=False, use_all=False):
+def time_all_features_jax(x_jax, parallel=False, use_jit_wrapper=False, use_all=False):
     """Time extracting all features at once using JAX.
 
     Args:
         x_jax: Input data
-        n_runs: Number of timing runs
         parallel: If True, use ThreadPoolExecutor (CPU only)
         use_jit_wrapper: If True, wrap all feature extraction in a single JIT call (GPU optimal)
         use_all: If True, use all features from JAX_COMPREHENSIVE_FC_PARAMETERS
 
     Returns:
-        Tuple of (warmup_time, mean_run_time, n_features)
+        Tuple of (warmup_time, run_time, n_features)
     """
     feature_calls = []
 
@@ -566,31 +752,20 @@ def time_all_features_jax(x_jax, n_runs=3, parallel=False, use_jit_wrapper=False
     _ = extract_fn()
     warmup_time = time.perf_counter() - t0_warmup
 
-    # Time
-    times = []
-    for _ in range(n_runs):
-        t0 = time.perf_counter()
-        _ = extract_fn()
-        times.append(time.perf_counter() - t0)
+    # Single run
+    t0 = time.perf_counter()
+    _ = extract_fn()
+    run_time = time.perf_counter() - t0
 
-    return warmup_time, np.mean(times), len(feature_calls)
+    return warmup_time, run_time, len(feature_calls)
 
 
 def time_all_features_tsfresh(
     n_timesteps: int,
     n_batches: int,
     use_all: bool,
-    use_comprehensive: bool = False,
-    n_runs: int = 3,
 ):
     """Time extracting features using tsfresh extract_features API."""
-    # If comprehensive mode, use tsfresh's ComprehensiveFCParameters (~800 features)
-    if use_comprehensive:
-        fc_parameters = ComprehensiveFCParameters()
-        n_features = len(fc_parameters)  # type: ignore[arg-type]
-    else:
-        fc_parameters = {}
-
     # Parameter name mappings from JAX to tsfresh
     param_remap = {
         "number_cwt_peaks": {"max_width": "n"},
@@ -603,27 +778,12 @@ def time_all_features_tsfresh(
         "has_variance_larger_than_standard_deviation": "variance_larger_than_standard_deviation",
     }
 
-    if use_comprehensive:
-        pass  # Already set fc_parameters above
-    elif use_all:
-        # Use all features from JAX_COMPREHENSIVE_FC_PARAMETERS
-        source_features = JAX_COMPREHENSIVE_FC_PARAMETERS
-        for feature_name, param_list in source_features.items():
-            tsfresh_name = name_remap.get(feature_name, feature_name)
-
-            if param_list is None:
-                fc_parameters[tsfresh_name] = None
-            else:
-                params = param_list[0].copy()
-
-                # Apply parameter name remapping
-                if feature_name in param_remap:
-                    for jax_key, tsfresh_key in param_remap[feature_name].items():
-                        if jax_key in params:
-                            params[tsfresh_key] = params.pop(jax_key)
-
-                fc_parameters[tsfresh_name] = [params]
+    if use_all:
+        fc_parameters = EfficientFCParameters()
+        # Exclude features not implemented in JAX
+        fc_parameters.pop("query_similarity_count", None)
     else:
+        fc_parameters = {}
         # Use minimal feature subset
         for feature_name, kwargs in MINIMAL_BATCH_FEATURES.items():
             tsfresh_name = name_remap.get(feature_name, feature_name)
@@ -639,8 +799,8 @@ def time_all_features_tsfresh(
                             params[tsfresh_key] = params.pop(jax_key)
                 fc_parameters[tsfresh_name] = [params]
 
-    if not use_comprehensive:
-        n_features = len(fc_parameters)
+    # Count total feature calls (including all permutations)
+    n_features = sum(len(params) if params is not None else 1 for params in fc_parameters.values())
 
     # Create DataFrame
     np.random.seed(42)
@@ -652,31 +812,27 @@ def time_all_features_tsfresh(
 
     df = pd.DataFrame(data_rows)
 
-    # Time
+    # Single timed run
     n_jobs = os.cpu_count() or 1
-    times = []
-    for _ in range(n_runs):
-        t0 = time.perf_counter()
-        _ = extract_features(
-            df,
-            column_id="id",
-            column_sort="time",
-            default_fc_parameters=fc_parameters,
-            disable_progressbar=True,
-            n_jobs=n_jobs,
-        )
-        times.append(time.perf_counter() - t0)
+    t0 = time.perf_counter()
+    _ = extract_features(
+        df,
+        column_id="id",
+        column_sort="time",
+        default_fc_parameters=fc_parameters,
+        disable_progressbar=True,
+        n_jobs=n_jobs,
+    )
+    run_time = time.perf_counter() - t0
 
-    return np.mean(times), n_features
+    return run_time, n_features
 
 
 def run_batch_benchmark(
     n_timesteps: int,
     n_batches: int,
-    n_states: int,
     use_gpu: bool,
     use_all: bool,
-    use_comprehensive: bool = False,
 ):
     """Benchmark extracting all features at once (batch mode)."""
     print("\n" + "=" * 100)
@@ -684,12 +840,11 @@ def run_batch_benchmark(
     print("=" * 100)
 
     device = jax.devices()[0]
+    n_states = 2  # Pendulum has 2 states
     total_series = n_batches * n_states
 
-    if use_comprehensive:
-        feature_set = "comprehensive (JAX 72 vs tsfresh ~800 features)"
-    elif use_all:
-        feature_set = "all (72 JAX features)"
+    if use_all:
+        feature_set = "all (EfficientFCParameters)"
     else:
         feature_set = "minimal (41 features)"
 
@@ -700,19 +855,16 @@ def run_batch_benchmark(
     print(f"Feature set: {feature_set}")
     print(f"tsfresh n_jobs={os.cpu_count()}")
 
-    # Create test data
-    np.random.seed(42)
-    x_jax = jnp.array(np.random.randn(n_timesteps, n_batches, n_states))
+    # Create test data from pendulum ODE
+    x_jax = generate_sample(n_timesteps, n_batches)
 
     print("Timing tsfresh bulk extraction...")
-    tsfresh_time, tsfresh_n_features = time_all_features_tsfresh(
-        n_timesteps, total_series, use_all, use_comprehensive
-    )
+    tsfresh_time, tsfresh_n_features = time_all_features_tsfresh(n_timesteps, total_series, use_all)
 
     if use_gpu:
         print("\nTiming JAX bulk extraction (parallel on GPU)...")
         jax_warmup, jax_time, jax_n_features = time_all_features_jax(
-            x_jax, parallel=True, use_jit_wrapper=False, use_all=use_all or use_comprehensive
+            x_jax, parallel=True, use_jit_wrapper=False, use_all=use_all
         )
 
         print("\n" + "-" * 80)
@@ -738,7 +890,7 @@ def run_batch_benchmark(
     else:
         print("\nTiming JAX bulk extraction (parallel)...")
         jax_warmup_par, jax_time_par, jax_n_features = time_all_features_jax(
-            x_jax, parallel=True, use_all=use_all or use_comprehensive
+            x_jax, parallel=True, use_all=use_all
         )
 
         print("\n" + "-" * 80)
@@ -773,35 +925,33 @@ def main():
     batch_only = "--batch-only" in sys.argv
     use_gpu = USE_GPU  # Already parsed at module level
     use_all = USE_ALL_FEATURES  # Already parsed at module level
-    use_comprehensive = USE_COMPREHENSIVE  # Already parsed at module level
 
-    # Parse --batches and --states
-    n_batches = 1000
-    n_states = 1
+    # Parse --batches
+    n_batches = 10000
     for arg in sys.argv:
         if arg.startswith("--batches="):
             n_batches = int(arg.split("=")[1])
-        if arg.startswith("--states="):
-            n_states = int(arg.split("=")[1])
 
-    n_timesteps = 200
+    n_timesteps = 10000
+    n_states = 2  # Pendulum always has 2 states
 
     print("\nConfiguration:")
     print(f"  Timesteps: {n_timesteps}")
     print(f"  Batches: {n_batches}")
-    print(f"  States: {n_states}")
+    print(f"  States: {n_states} (pendulum)")
     print(f"  Total series: {n_batches * n_states}")
+    print(f"  CPU cores: {os.cpu_count()}")
     print(f"  GPU mode: {use_gpu}")
     print(f"  All features: {use_all}")
-    print(f"  Comprehensive (tsfresh): {use_comprehensive}")
+    print(f"  Multiprocessing: {USE_MULTIPROCESSING}")
     print(f"  Individual benchmark: {not batch_only}")
     print(f"  Batch benchmark: {not individual_only}")
 
     if not batch_only:
-        run_individual_benchmark(n_timesteps, n_batches, n_states)
+        run_individual_benchmark(n_timesteps, n_batches)
 
     if not individual_only:
-        run_batch_benchmark(n_timesteps, n_batches, n_states, use_gpu, use_all, use_comprehensive)
+        run_batch_benchmark(n_timesteps, n_batches, use_gpu, use_all)
 
     print("\n" + "=" * 100)
 

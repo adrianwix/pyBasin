@@ -358,13 +358,18 @@ def number_peaks(x: Array, n: int) -> Array:
     """Calculate number of peaks with support n."""
 
     def is_peak(arr: Array, support: int) -> Array:
-        result = jnp.ones(arr.shape, dtype=jnp.bool_)
-        for i in range(1, support + 1):
+        def check_peak(i: int, result: Array) -> Array:
             left = jnp.roll(arr, i, axis=0)
             right = jnp.roll(arr, -i, axis=0)
-            result = result & (arr > left) & (arr > right)
-        result = result.at[:support].set(False)
-        result = result.at[-support:].set(False)
+            return result & (arr > left) & (arr > right)
+
+        result = jnp.ones(arr.shape, dtype=jnp.bool_)
+        result = lax.fori_loop(1, support + 1, check_peak, result)
+
+        # Use mask instead of dynamic slicing for JIT compatibility
+        indices = jnp.arange(arr.shape[0]).reshape(-1, 1, 1)
+        edge_mask = (indices >= support) & (indices < arr.shape[0] - support)
+        result = result & edge_mask
         return result
 
     peaks = is_peak(x, n)
@@ -376,10 +381,14 @@ def number_cwt_peaks(x: Array, max_width: int = 5) -> Array:
 
     Simplified version using multi-scale peak detection.
     """
-    total_peaks = jnp.zeros(x.shape[1:], dtype=jnp.float32)
-    for width in range(1, max_width + 1):
+
+    def accumulate_peaks(width: int, total: Array) -> Array:
         peaks = number_peaks(x, width)
-        total_peaks = total_peaks + peaks
+        return total + peaks
+
+    total_peaks = lax.fori_loop(
+        1, max_width + 1, accumulate_peaks, jnp.zeros(x.shape[1:], dtype=jnp.float32)
+    )
     return total_peaks / max_width
 
 
@@ -414,19 +423,42 @@ def partial_autocorrelation(x: Array, lag: int) -> Array:
     if lag == 1:
         return acf[1]
 
+    def durbin_levinson_step(k: int, phi: Array) -> Array:
+        j_range = jnp.arange(1, lag + 1)
+        mask = j_range < k
+
+        phi_vals = phi[k - 1, j_range]
+        phi_prev = jnp.where(mask.reshape(-1, *([1] * (phi.ndim - 2))), phi_vals, 0.0)
+
+        acf_rev_indices = jnp.clip(k - j_range, 0, lag)
+        acf_rev = jnp.take(acf, acf_rev_indices, axis=0)
+        acf_rev = jnp.where(mask.reshape(-1, *([1] * (acf.ndim - 1))), acf_rev, 0.0)
+
+        acf_fwd = jnp.take(acf, jnp.clip(j_range, 0, lag), axis=0)
+        acf_fwd = jnp.where(mask.reshape(-1, *([1] * (acf.ndim - 1))), acf_fwd, 0.0)
+
+        acf_k = lax.dynamic_slice(acf, (k, 0, 0), (1, acf.shape[1], acf.shape[2]))
+        acf_k = acf_k.reshape(acf.shape[1:])
+
+        num = acf_k - jnp.sum(phi_prev * acf_rev, axis=0, keepdims=False)
+        denom = 1 - jnp.sum(phi_prev * acf_fwd, axis=0, keepdims=False)
+
+        phi_kk = num / (denom + 1e-12)
+        phi = phi.at[k, k].set(phi_kk)
+
+        phi_k_minus_1 = phi[k - 1, j_range]
+        phi_k_minus_1_reverse = phi[k - 1, jnp.clip(k - j_range, 0, lag)]
+
+        phi_k_j = phi_k_minus_1 - phi_kk.reshape(*([1] * 1), *phi_kk.shape) * phi_k_minus_1_reverse
+        phi_k_j = jnp.where(mask.reshape(-1, *([1] * (phi.ndim - 2))), phi_k_j, phi[k, j_range])
+
+        phi = phi.at[k, j_range].set(phi_k_j)
+
+        return phi
+
     phi = jnp.zeros((lag + 1, lag + 1) + x.shape[1:])
     phi = phi.at[1, 1].set(acf[1])
-
-    for k in range(2, lag + 1):
-        num = acf[k] - jnp.sum(
-            jnp.stack([phi[k - 1, j] * acf[k - j] for j in range(1, k)], axis=0), axis=0
-        )
-        denom = 1 - jnp.sum(
-            jnp.stack([phi[k - 1, j] * acf[j] for j in range(1, k)], axis=0), axis=0
-        )
-        phi = phi.at[k, k].set(num / (denom + 1e-12))
-        for j in range(1, k):
-            phi = phi.at[k, j].set(phi[k - 1, j] - phi[k, k] * phi[k - 1, k - j])
+    phi = lax.fori_loop(2, lag + 1, durbin_levinson_step, phi)
 
     return phi[lag, lag]
 
@@ -605,21 +637,19 @@ def fft_coefficient(x: Array, coeff: int = 0, attr: str = "abs") -> Array:
     """Calculate FFT coefficient attributes."""
     fft_vals = jnp.fft.rfft(x, axis=0)
 
-    if coeff >= fft_vals.shape[0]:
-        return jnp.zeros(x.shape[1:])
+    coeff_val = jnp.where(
+        coeff >= fft_vals.shape[0], 0.0, fft_vals[jnp.minimum(coeff, fft_vals.shape[0] - 1)]
+    )
 
-    coeff_val = fft_vals[coeff]
+    # Compute all possible results
+    results = {
+        "abs": jnp.abs(coeff_val),
+        "real": jnp.real(coeff_val),
+        "imag": jnp.imag(coeff_val),
+        "angle": jnp.angle(coeff_val),
+    }
 
-    if attr == "abs":
-        return jnp.abs(coeff_val)
-    elif attr == "real":
-        return jnp.real(coeff_val)
-    elif attr == "imag":
-        return jnp.imag(coeff_val)
-    elif attr == "angle":
-        return jnp.angle(coeff_val)
-    else:
-        return jnp.abs(coeff_val)
+    return results.get(attr, jnp.abs(coeff_val))
 
 
 def fft_aggregated(x: Array, aggtype: str = "centroid") -> Array:
@@ -632,21 +662,21 @@ def fft_aggregated(x: Array, aggtype: str = "centroid") -> Array:
 
     total = jnp.sum(spectrum, axis=0) + 1e-12
 
-    if aggtype == "centroid":
-        return jnp.sum(freqs * spectrum, axis=0) / total
-    elif aggtype == "variance":
-        centroid = jnp.sum(freqs * spectrum, axis=0) / total
-        return jnp.sum(((freqs - centroid) ** 2) * spectrum, axis=0) / total
-    elif aggtype == "skew":
-        centroid = jnp.sum(freqs * spectrum, axis=0) / total
-        var = jnp.sum(((freqs - centroid) ** 2) * spectrum, axis=0) / total
-        return jnp.sum(((freqs - centroid) ** 3) * spectrum, axis=0) / (total * (var**1.5 + 1e-12))
-    elif aggtype == "kurtosis":
-        centroid = jnp.sum(freqs * spectrum, axis=0) / total
-        var = jnp.sum(((freqs - centroid) ** 2) * spectrum, axis=0) / total
-        return jnp.sum(((freqs - centroid) ** 4) * spectrum, axis=0) / (total * (var**2 + 1e-12))
-    else:
-        return jnp.sum(freqs * spectrum, axis=0) / total
+    # Compute all needed intermediate values
+    centroid = jnp.sum(freqs * spectrum, axis=0) / total
+    var = jnp.sum(((freqs - centroid) ** 2) * spectrum, axis=0) / total
+
+    # Precompute all possible results
+    results = {
+        "centroid": centroid,
+        "variance": var,
+        "skew": jnp.sum(((freqs - centroid) ** 3) * spectrum, axis=0)
+        / (total * (var**1.5 + 1e-12)),
+        "kurtosis": jnp.sum(((freqs - centroid) ** 4) * spectrum, axis=0)
+        / (total * (var**2 + 1e-12)),
+    }
+
+    return results.get(aggtype, centroid)
 
 
 def spkt_welch_density(x: Array, coeff: int = 0) -> Array:
@@ -728,25 +758,23 @@ def linear_trend(x: Array, attr: str = "slope") -> Array:
     slope = ss_tx / (ss_tt + 1e-12)
     intercept = x_mean.squeeze(0) - slope * t_mean
 
-    if attr == "slope":
-        return slope
-    elif attr == "intercept":
-        return intercept
-    elif attr == "rvalue":
-        ss_xx = jnp.sum((x - x_mean) ** 2, axis=0)
-        r = ss_tx / (jnp.sqrt(ss_tt * ss_xx) + 1e-12)
-        return r
-    elif attr == "pvalue":
-        ss_xx = jnp.sum((x - x_mean) ** 2, axis=0)
-        r = ss_tx / (jnp.sqrt(ss_tt * ss_xx) + 1e-12)
-        return 1 - jnp.abs(r)
-    elif attr == "stderr":
-        y_pred = intercept + slope * t
-        residuals = x - y_pred
-        mse = jnp.sum(residuals**2, axis=0) / (n - 2 + 1e-12)
-        return jnp.sqrt(mse / (ss_tt + 1e-12))
-    else:
-        return slope
+    # Compute all attributes
+    ss_xx = jnp.sum((x - x_mean) ** 2, axis=0)
+    r = ss_tx / (jnp.sqrt(ss_tt * ss_xx) + 1e-12)
+    y_pred = intercept + slope * t
+    residuals = x - y_pred
+    mse = jnp.sum(residuals**2, axis=0) / (n - 2 + 1e-12)
+    stderr = jnp.sqrt(mse / (ss_tt + 1e-12))
+
+    results = {
+        "slope": slope,
+        "intercept": intercept,
+        "rvalue": r,
+        "pvalue": 1 - jnp.abs(r),
+        "stderr": stderr,
+    }
+
+    return results.get(attr, slope)
 
 
 def linear_trend_timewise(x: Array, attr: str = "slope") -> Array:
@@ -766,20 +794,31 @@ def agg_linear_trend(
 
     chunks = x[: n_chunks * chunk_size].reshape(n_chunks, chunk_size, x.shape[1], x.shape[2])
 
-    if f_agg == "mean":
-        agg_chunks = jnp.mean(chunks, axis=1)
-    elif f_agg == "var":
-        agg_chunks = jnp.var(chunks, axis=1)
-    elif f_agg == "std":
-        agg_chunks = jnp.std(chunks, axis=1)
-    elif f_agg == "min":
-        agg_chunks = jnp.min(chunks, axis=1)
-    elif f_agg == "max":
-        agg_chunks = jnp.max(chunks, axis=1)
-    elif f_agg == "median":
-        agg_chunks = jnp.median(chunks, axis=1)
-    else:
-        agg_chunks = jnp.mean(chunks, axis=1)
+    # Precompute all aggregations
+    agg_functions = {
+        "mean": lambda: jnp.mean(chunks, axis=1),
+        "var": lambda: jnp.var(chunks, axis=1),
+        "std": lambda: jnp.std(chunks, axis=1),
+        "min": lambda: jnp.min(chunks, axis=1),
+        "max": lambda: jnp.max(chunks, axis=1),
+        "median": lambda: jnp.median(chunks, axis=1),
+    }
+
+    agg_chunks = agg_functions.get(f_agg, agg_functions["mean"])()
+
+    return linear_trend(agg_chunks, attr)
+
+    # Precompute all aggregations
+    agg_functions = {
+        "mean": lambda: jnp.mean(chunks, axis=1),
+        "var": lambda: jnp.var(chunks, axis=1),
+        "std": lambda: jnp.std(chunks, axis=1),
+        "min": lambda: jnp.min(chunks, axis=1),
+        "max": lambda: jnp.max(chunks, axis=1),
+        "median": lambda: jnp.median(chunks, axis=1),
+    }
+
+    agg_chunks = agg_functions.get(f_agg, agg_functions["mean"])()
 
     return linear_trend(agg_chunks, attr)
 
@@ -791,22 +830,23 @@ def ar_coefficient(x: Array, k: int = 1, coeff: int = 0) -> Array:
 
     acf = jnp.stack([autocorrelation(x, i) for i in range(k + 1)], axis=0)
 
-    corr_matrix = jnp.zeros((k, k) + x.shape[1:])
-    for i in range(k):
-        for j in range(k):
-            corr_matrix = corr_matrix.at[i, j].set(acf[abs(i - j)])
+    # Build correlation matrix using broadcasting
+    i_idx, j_idx = jnp.meshgrid(jnp.arange(k), jnp.arange(k), indexing="ij")
+    corr_matrix = acf[jnp.abs(i_idx - j_idx)]  # Shape: (k, k, B, S)
 
-    r = acf[1 : k + 1]
+    r = acf[1 : k + 1]  # Shape: (k, B, S)
 
-    result = jnp.zeros(x.shape[1:])
-    for b in range(x.shape[1]):
-        for s in range(x.shape[2]):
-            r_elem = corr_matrix[:, :, b, s]
-            r_vec = r[:, b, s]
-            r_reg = r_elem + 1e-6 * jnp.eye(k)
-            coeffs = jnp.linalg.solve(r_reg, r_vec)
-            if coeff < k:
-                result = result.at[b, s].set(coeffs[coeff])
+    # Vectorize over batch and state dimensions
+    def solve_for_one(corr_mat: Array, r_vec: Array) -> Array:
+        r_reg = corr_mat + 1e-6 * jnp.eye(k)
+        coeffs = jnp.linalg.solve(r_reg, r_vec)
+        coeff_val = coeffs.at[coeff].get()
+        zero = jnp.zeros_like(coeff_val)
+        return jnp.asarray(jnp.where(coeff < k, coeff_val, zero))
+
+    # Apply vmap over both batch and state dimensions
+    solve_batch = jax.vmap(jax.vmap(solve_for_one, in_axes=(2, 1)), in_axes=(2, 1))
+    result = solve_batch(corr_matrix, r)
 
     return result
 
@@ -832,14 +872,13 @@ def augmented_dickey_fuller(x: Array, attr: str = "teststat") -> Array:
 
     test_stat = gamma / (se_gamma + 1e-12)
 
-    if attr == "teststat":
-        return test_stat
-    elif attr == "pvalue":
-        return 1 - jnp.abs(jnp.tanh(test_stat))
-    elif attr == "usedlag":
-        return jnp.ones(x.shape[1:])
-    else:
-        return test_stat
+    results = {
+        "teststat": test_stat,
+        "pvalue": 1 - jnp.abs(jnp.tanh(test_stat)),
+        "usedlag": jnp.ones(x.shape[1:]),
+    }
+
+    return results.get(attr, test_stat)
 
 
 # =============================================================================
@@ -1011,21 +1050,19 @@ def change_quantiles(
     mask = (x >= q_low) & (x <= q_high)
 
     diff = jnp.diff(x, axis=0)
-    if isabs:
-        diff = jnp.abs(diff)
+    diff = jnp.where(isabs, jnp.abs(diff), diff)
 
     mask_diff = mask[:-1] & mask[1:]
 
     masked_diff = jnp.where(mask_diff, diff, jnp.nan)
 
-    if f_agg == "mean":
-        return jnp.nanmean(masked_diff, axis=0)
-    elif f_agg == "var":
-        return jnp.nanvar(masked_diff, axis=0)
-    elif f_agg == "std":
-        return jnp.nanstd(masked_diff, axis=0)
-    else:
-        return jnp.nanmean(masked_diff, axis=0)
+    agg_functions = {
+        "mean": jnp.nanmean(masked_diff, axis=0),
+        "var": jnp.nanvar(masked_diff, axis=0),
+        "std": jnp.nanstd(masked_diff, axis=0),
+    }
+
+    return agg_functions.get(f_agg, jnp.nanmean(masked_diff, axis=0))
 
 
 def energy_ratio_by_chunks(x: Array, num_segments: int = 10, segment_focus: int = 0) -> Array:
@@ -1054,21 +1091,22 @@ def friedrich_coefficients(x: Array, m: int = 3, r: float = 30.0, coeff: int = 0
     delta_x = jnp.diff(x, axis=0)
     x_vals = x[:-1]
 
-    result = jnp.zeros(x.shape[1:])
+    def compute_coeff(x_v: Array, dx: Array) -> Array:
+        # Build design matrix using broadcasting
+        powers = jnp.arange(m + 1)
+        design_matrix = x_v[:, None] ** powers[None, :]
 
-    for b in range(x.shape[1]):
-        for s in range(x.shape[2]):
-            x_v = x_vals[:, b, s]
-            dx = delta_x[:, b, s]
+        xtx = design_matrix.T @ design_matrix + 1e-6 * jnp.eye(m + 1)
+        xty = design_matrix.T @ dx
+        coeffs = jnp.linalg.solve(xtx, xty)
 
-            design_matrix = jnp.stack([x_v**i for i in range(m + 1)], axis=1)
+        coeff_val = coeffs.at[coeff].get()
+        zero = jnp.zeros_like(coeff_val)
+        return jnp.asarray(jnp.where(coeff <= m, coeff_val, zero))
 
-            xtx = design_matrix.T @ design_matrix + 1e-6 * jnp.eye(m + 1)
-            xty = design_matrix.T @ dx
-            coeffs = jnp.linalg.solve(xtx, xty)
-
-            if coeff <= m:
-                result = result.at[b, s].set(coeffs[coeff])
+    # Vectorize over batch and state dimensions
+    compute_batch = jax.vmap(jax.vmap(compute_coeff, in_axes=(1, 1)), in_axes=(1, 1))
+    result = compute_batch(x_vals, delta_x)
 
     return result
 
@@ -1113,45 +1151,51 @@ def matrix_profile(x: Array, m: int = 10, feature: str = "min") -> Array:
 
     n_subsequences = n - m + 1
 
-    result = jnp.zeros(x.shape[1:])
+    def compute_for_series(series: Array) -> Array:
+        # Extract all subsequences at once using advanced indexing
+        indices = jnp.arange(n_subsequences)[:, None] + jnp.arange(m)[None, :]
+        subsequences = series[indices]  # (n_subsequences, m)
 
-    for b in range(x.shape[1]):
-        for s in range(x.shape[2]):
-            series = x[:, b, s]
+        # Normalize all subsequences
+        means = jnp.mean(subsequences, axis=1, keepdims=True)
+        stds = jnp.std(subsequences, axis=1, keepdims=True) + 1e-12
+        subseqs_norm = (subsequences - means) / stds
 
-            distances = jnp.zeros(n_subsequences)
-            for i in range(n_subsequences):
-                subseq_i = series[i : i + m]
-                subseq_i_norm = (subseq_i - jnp.mean(subseq_i)) / (jnp.std(subseq_i) + 1e-12)
+        # Compute pairwise distances with exclusion zone
+        def compute_min_dist(i: int) -> Array:
+            # Compute distances to all other subsequences
+            diffs = subseqs_norm - subseqs_norm[i : i + 1, :]
+            dists = jnp.sqrt(jnp.sum(diffs**2, axis=1))
 
-                min_dist = jnp.inf
-                for j in range(n_subsequences):
-                    if abs(i - j) >= m // 2:
-                        subseq_j = series[j : j + m]
-                        subseq_j_norm = (subseq_j - jnp.mean(subseq_j)) / (
-                            jnp.std(subseq_j) + 1e-12
-                        )
-                        dist = jnp.sqrt(jnp.sum((subseq_i_norm - subseq_j_norm) ** 2))
-                        min_dist = jnp.minimum(min_dist, dist)
+            # Mask out self and exclusion zone
+            mask = jnp.abs(jnp.arange(n_subsequences) - i) >= m // 2
+            valid_dists = jnp.where(mask, dists, jnp.inf)
+            return jnp.min(valid_dists)
 
-                distances = distances.at[i].set(min_dist)
+        # Vectorize over all subsequences
+        distances = jax.vmap(lambda i: compute_min_dist(i))(jnp.arange(n_subsequences))
+        finite_distances = jnp.where(jnp.isfinite(distances), distances, 0.0)
 
-            finite_distances = jnp.where(jnp.isfinite(distances), distances, 0.0)
+        # Use lax.switch for efficient branch selection (only computes selected feature)
+        feature_map = {"min": 0, "max": 1, "mean": 2, "std": 3, "median": 4, "25": 5, "75": 6}
+        index = feature_map.get(feature, 7)
 
-            if feature == "min":
-                result = result.at[b, s].set(jnp.min(finite_distances))
-            elif feature == "max":
-                result = result.at[b, s].set(jnp.max(finite_distances))
-            elif feature == "mean":
-                result = result.at[b, s].set(jnp.mean(finite_distances))
-            elif feature == "std":
-                result = result.at[b, s].set(jnp.std(finite_distances))
-            elif feature == "median":
-                result = result.at[b, s].set(jnp.median(finite_distances))
-            elif feature == "25":
-                result = result.at[b, s].set(jnp.percentile(finite_distances, 25))
-            elif feature == "75":
-                result = result.at[b, s].set(jnp.percentile(finite_distances, 75))
+        branches = [
+            lambda d: jnp.min(d),
+            lambda d: jnp.max(d),
+            lambda d: jnp.mean(d),
+            lambda d: jnp.std(d),
+            lambda d: jnp.median(d),
+            lambda d: jnp.percentile(d, 25),
+            lambda d: jnp.percentile(d, 75),
+            lambda d: jnp.zeros_like(d[0]),
+        ]
+
+        return lax.switch(index, branches, finite_distances)
+
+    # Vectorize over batch and state dimensions
+    compute_batch = jax.vmap(jax.vmap(compute_for_series, in_axes=1), in_axes=1)
+    result = compute_batch(x)
 
     return result
 
@@ -1330,7 +1374,7 @@ ALL_FEATURE_FUNCTIONS: dict[str, Callable[..., Array]] = {
     "energy_ratio_by_chunks": energy_ratio_by_chunks,
     "friedrich_coefficients": friedrich_coefficients,
     "max_langevin_fixed_point": max_langevin_fixed_point,
-    "matrix_profile": matrix_profile,
+    # "matrix_profile": matrix_profile,
     "mean_n_absolute_max": mean_n_absolute_max,
     "range_count": range_count,
     "ratio_beyond_r_sigma": ratio_beyond_r_sigma,
@@ -1465,7 +1509,7 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
     "fourier_entropy": [{"bins": x} for x in [2, 3, 5, 10, 100]],
     "permutation_entropy": [{"tau": 1, "dimension": x} for x in [3, 4, 5, 6, 7]],
     # "matrix_profile": [{"feature": f} for f in ["min", "max", "mean", "median", "25", "75"]],
-    "mean_n_absolute_max": [{"number_of_maxima": n} for n in [3, 5, 7]],
+    "mean_n_absolute_max": [{"number_of_maxima": 7}],
 }
 
 
