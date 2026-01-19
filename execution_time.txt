@@ -392,3 +392,16 @@
 2026-01-13 17:33:04 - main_friction.py: 1.0043742656707764 seconds
 2026-01-13 17:34:57 - main_lorenz.py: 1.4259226322174072 seconds
 2026-01-13 17:39:35 - main_duffing_oscillator_supervised.py: 5.822781324386597 seconds
+2026-01-15 15:37:42 - main_rossler_network.py: 21.10791778564453 seconds
+2026-01-15 15:39:00 - main_rossler_network.py: 11.647037506103516 seconds
+2026-01-15 15:49:18 - main_rossler_network_k_study.py: 25.714598178863525 seconds
+2026-01-15 16:02:11 - main_rossler_network_k_study.py: 143.7965202331543 seconds
+2026-01-15 16:14:37 - main_rossler_network_k_study.py: 22.452378273010254 seconds
+2026-01-15 16:20:21 - main_rossler_network_k_study.py: 288.25408840179443 seconds
+2026-01-15 16:27:29 - main_rossler_network_k_study.py: 43.45068359375 seconds
+2026-01-15 16:29:14 - main_rossler_network_k_study.py: 40.767781257629395 seconds
+2026-01-15 16:32:12 - main_rossler_network_k_study.py: 38.00845265388489 seconds
+2026-01-15 16:33:45 - main_rossler_network_k_study.py: 37.952619314193726 seconds
+2026-01-15 16:47:17 - main_rossler_network_k_study.py: 415.4181218147278 seconds
+2026-01-15 16:52:00 - main_rossler_network_k_study.py: 89.73834562301636 seconds
+2026-01-15 16:54:15 - main_rossler_network_k_study.py: 10.45092511177063 seconds
