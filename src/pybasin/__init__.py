@@ -20,7 +20,7 @@ from pybasin.types import ErrorInfo
 _logger = logging.getLogger("pybasin")
 if not _logger.handlers:
     _handler = logging.StreamHandler(sys.stdout)
-    # _handler.setFormatter(logging.Formatter("%(levelname)s - %(name)s - %(message)s"))
+    _handler.setFormatter(logging.Formatter("%(message)s"))
     _logger.addHandler(_handler)
     _logger.setLevel(logging.INFO)
 

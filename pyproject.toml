@@ -52,7 +52,12 @@ docs = [
     "mkdocstrings[python]>=0.24.0",
     "mkdocs-jupyter>=0.24.0",
 ]
-case-studies = ["jupyter>=1.0.0", "openpyxl>=3.1.0", "notebook>=7.0.0"]
+case-studies = [
+    "jupyter>=1.0.0",
+    "openpyxl>=3.1.0",
+    "notebook>=7.0.0",
+    "networkx>=3.6.1",
+]
 all = ["pybasin[dev,docs,case-studies]"]
 
 [build-system]
@@ -85,7 +90,7 @@ select = [
     "SIM", # flake8-simplify
     "PLC0415", # import-outside-toplevel (from Pylint via Ruff)
 ]
-ignore = ["E501"] # Line length handled by formatter
+ignore = ["E501", "N803", "N806"] # Line length handled by formatter, allow lowercase in variable names, allow non-lowercase variables in functions
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"] # Allow unused imports in __init__.py

@@ -1,0 +1,73 @@
+feature,jax_kwargs,jax_warmup_ms,jax_run_ms,tsfresh_ms,speedup_with_compile,speedup_without_compile
+sum_values,,28.9617,1.6996,38.9074,1.3434,22.8925
+median,,1066.7797,1014.8318,205.0138,0.1922,0.2020
+mean,,28.6984,1.5402,60.4772,2.1073,39.2654
+length,,32.7827,0.2597,1.7206,0.0525,6.6240
+standard_deviation,,51.9035,10.6394,136.8763,2.6371,12.8651
+variance,,41.1219,10.5129,128.3488,3.1212,12.2087
+root_mean_square,,37.4936,7.6095,76.4834,2.0399,10.0511
+maximum,,32.6579,3.6135,38.0389,1.1648,10.5269
+absolute_maximum,,23.7989,11.8427,47.5056,1.9961,4.0114
+minimum,,33.2157,4.7357,40.1754,1.2095,8.4835
+abs_energy,,8.3677,9.7043,28.1831,3.3681,2.9042
+kurtosis,,113.5878,26.8624,570.4935,5.0225,21.2376
+skewness,,64.8607,24.7314,490.2545,7.5586,19.8232
+variation_coefficient,,15.5497,11.3504,203.1180,13.0625,17.8952
+absolute_sum_of_changes,,75.1029,14.7635,75.5553,1.0060,5.1177
+mean_abs_change,,29.0013,16.9565,100.0041,3.4483,5.8977
+mean_change,,104.3477,0.7268,4.3286,0.0415,5.9560
+mean_second_derivative_central,,16.9955,1.2116,5.7334,0.3373,4.7319
+count_above_mean,,81.4037,11.3339,96.6941,1.1878,8.5314
+count_below_mean,,25.2859,13.4697,97.4196,3.8527,7.2325
+has_duplicate,,1053.1126,1028.7107,115.2655,0.1095,0.1120
+has_duplicate_max,,61.4174,12.4516,89.7125,1.4607,7.2049
+has_duplicate_min,,43.1639,14.9117,88.9855,2.0616,5.9675
+has_variance_larger_than_standard_deviation,,15.3857,9.2280,131.7876,8.5656,14.2813
+first_location_of_maximum,,43.3906,3.3184,35.4530,0.8171,10.6838
+first_location_of_minimum,,36.0310,2.8663,32.2615,0.8954,11.2554
+last_location_of_maximum,,38.4999,9.3964,35.8822,0.9320,3.8187
+last_location_of_minimum,,63.4944,15.5643,35.1462,0.5535,2.2581
+longest_strike_above_mean,,139.2795,62.1669,1710.3790,12.2802,27.5127
+longest_strike_below_mean,,66.0872,64.6308,1697.5986,25.6873,26.2661
+percentage_of_reoccurring_datapoints_to_all_datapoints,,1023.3546,1038.6361,3004.1822,2.9356,2.8924
+percentage_of_reoccurring_values_to_all_values,,1089.0043,1070.5308,224.8944,0.2065,0.2101
+sum_of_reoccurring_data_points,,1064.6113,1054.7369,241.8676,0.2272,0.2293
+sum_of_reoccurring_values,,1079.6004,1062.9901,260.1171,0.2409,0.2447
+ratio_value_number_to_time_series_length,,1062.1607,1084.6685,113.1536,0.1065,0.1043
+benford_correlation,,479.4643,182.2693,9349.3563,19.4996,51.2942
+time_reversal_asymmetry_statistic,{'lag': 1},183.8160,81.4841,162.4579,0.8838,1.9937
+c3,{'lag': 1},35.9284,37.0769,137.8472,3.8367,3.7179
+cid_ce,{'normalize': True},38.0334,27.4580,271.4863,7.1381,9.8873
+symmetry_looking,{'r': 0.1},1026.6901,1048.2398,344.3529,0.3354,0.3285
+large_standard_deviation,{'r': 0.25},17.8332,20.4647,208.8263,11.7100,10.2042
+quantile,{'q': 0.5},1067.8144,1014.6741,422.1832,0.3954,0.4161
+autocorrelation,{'lag': 1},65.6502,54.9592,397.6321,6.0568,7.2350
+agg_autocorrelation,"{'f_agg': 'mean', 'maxlag': 40}",519.2105,234.7801,1535.0418,2.9565,6.5382
+partial_autocorrelation,{'lag': 1},50.4631,45.4798,1606.0376,31.8260,35.3132
+number_cwt_peaks,{'max_width': 5},200.1818,182.2342,74680.7435,373.0645,409.8064
+number_peaks,{'n': 3},143.1210,121.4077,303.6747,2.1218,2.5013
+binned_entropy,{'max_bins': 10},255.4570,146.4803,562.7091,2.2028,3.8415
+fourier_entropy,{'bins': 10},240.9534,55.4380,3638.0247,15.0985,65.6233
+permutation_entropy,"{'tau': 1, 'dimension': 3}",3394.0272,3224.4287,4939.7848,1.4554,1.5320
+lempel_ziv_complexity,{'bins': 2},1096.2434,1047.1142,10225.8529,9.3281,9.7657
+index_mass_quantile,{'q': 0.5},138.8646,53.9014,141.4477,1.0186,2.6242
+fft_coefficient,"{'coeff': 0, 'attr': 'abs'}",127.2992,27.4551,152.4947,1.1979,5.5543
+fft_aggregated,{'aggtype': 'centroid'},129.9365,46.7555,199.3237,1.5340,4.2631
+spkt_welch_density,{'coeff': 2},147.5573,8.4315,2865.6014,19.4203,339.8667
+cwt_coefficients,"{'widths': (2,), 'coeff': 0, 'w': 2}",331.1186,89.0509,4744.1656,14.3277,53.2748
+ar_coefficient,"{'coeff': 0, 'k': 10}",1129.8608,438.7084,16262.8115,14.3936,37.0698
+linear_trend,{'attr': 'slope'},253.7240,14.9051,2977.0555,11.7334,199.7340
+linear_trend_timewise,{'attr': 'slope'},17.3926,58.7849,,,
+agg_linear_trend,"{'attr': 'slope', 'chunk_size': 10, 'f_agg': 'mean'}",269.2957,8.7814,6380.7887,23.6944,726.6223
+augmented_dickey_fuller,{'attr': 'teststat'},142.6202,94.9921,121953.6146,855.0935,1283.8291
+change_quantiles,"{'ql': 0.0, 'qh': 0.5, 'isabs': False, 'f_agg': 'mean'}",2191.5162,2211.5927,6144.4915,2.8038,2.7783
+count_above,{'t': 0},41.1730,9.3107,56.3166,1.3678,6.0486
+count_below,{'t': 0},27.5145,10.1921,59.7615,2.1720,5.8635
+number_crossing_m,{'m': 0},72.1914,38.6872,56.2599,0.7793,1.4542
+energy_ratio_by_chunks,"{'num_segments': 10, 'segment_focus': 0}",23.3553,9.6101,194.5275,8.3290,20.2420
+ratio_beyond_r_sigma,{'r': 1.0},73.6861,33.8900,264.6878,3.5921,7.8102
+value_count,{'value': 0},27.6343,9.6351,38.8791,1.4069,4.0352
+range_count,"{'min_val': -1, 'max_val': 1}",32.5916,14.7062,83.2441,2.5542,5.6605
+friedrich_coefficients,"{'coeff': 0, 'm': 3, 'r': 30}",457.9837,200.4283,30819.6148,67.2941,153.7688
+max_langevin_fixed_point,"{'m': 3, 'r': 30}",1136.0211,827.5937,31573.0348,27.7926,38.1504
+mean_n_absolute_max,{'number_of_maxima': 3},92.9025,49.1912,112.2118,1.2078,2.2811

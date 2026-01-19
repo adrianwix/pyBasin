@@ -1,3 +1,4 @@
+# pyright: reportUnknownMemberType=false, reportUnknownLambdaType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
 """JAX-based feature extractor for ODE solution trajectories.
 
 This module provides a high-performance feature extractor using JAX for GPU-accelerated
@@ -152,7 +153,7 @@ class JaxFeatureExtractor(FeatureExtractor):
             tuple[str, tuple[tuple[str, object], ...] | None], Callable[[Array], Array]
         ] = {}
 
-        for state_idx, fc_params in self._state_feature_config.items():
+        for _, fc_params in self._state_feature_config.items():
             for feature_name, param_list in fc_params.items():
                 if feature_name not in ALL_FEATURE_FUNCTIONS:
                     available = list(ALL_FEATURE_FUNCTIONS.keys())

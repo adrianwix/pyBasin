@@ -18,6 +18,7 @@ Usage:
     uv run python benchmarks/benchmark_jax_features_timing.py --batch-only --all
 """
 
+import multiprocessing as mp
 import os
 import sys
 import warnings
@@ -42,8 +43,8 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 
-import time
 import csv
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import jax
@@ -436,8 +437,6 @@ def time_tsfresh_feature(func_name, x_np_batches, kwargs, n_batches, use_multipr
 
     try:
         if use_multiprocessing:
-            import multiprocessing as mp
-
             work_items = [(func_name, x_np_batches[:, i], kwargs) for i in range(n_batches)]
             n_workers = os.cpu_count() or 1
             t0 = time.perf_counter()
@@ -488,133 +487,132 @@ def run_individual_benchmark(n_timesteps: int, n_batches: int):
 
     # Setup CSV file for incremental results
     csv_path = Path(__file__).parent / "individual_benchmark_results.csv"
-    csv_file = open(csv_path, "w", newline="")
-    csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(
-        [
-            "feature",
-            "jax_kwargs",
-            "jax_warmup_ms",
-            "jax_run_ms",
-            "tsfresh_ms",
-            "speedup_with_compile",
-            "speedup_without_compile",
-        ]
-    )
-    csv_file.flush()
-    print(f"Writing results to: {csv_path}\n")
-
-    print("-" * 120)
-    print(
-        f"{'Feature':<40} {'JAX warmup':>12} {'JAX run':>10} {'tsfresh':>12} {'w/ compile':>12} {'w/o compile':>12}"
-    )
-    print("-" * 120)
-
-    results = []
-    jax_warmup_total = 0.0
-    jax_run_total = 0.0
-    tsfresh_total = 0.0
-    n_success = 0
-    n_jax_faster_with_compile = 0
-    n_jax_faster_without_compile = 0
-
-    for jax_name, jax_kwargs, tsfresh_name, tsfresh_kwargs in INDIVIDUAL_FEATURE_CONFIGS:
-        # Get JAX function
-        if jax_name not in ALL_FEATURE_FUNCTIONS:
-            print(f"  {jax_name:<40} {'SKIP':>12} {'':>10} {'':>12} {'':>12} {'':>12}")
-            continue
-
-        jax_func = ALL_FEATURE_FUNCTIONS[jax_name]
-
-        # Time JAX (returns warmup_time, run_time, error)
-        jax_warmup, jax_run, jax_err = time_jax_feature(jax_func, x_jax, jax_kwargs)
-
-        # Time tsfresh
-        tsfresh_time, tsfresh_err = time_tsfresh_feature(
-            tsfresh_name, x_np_batches, tsfresh_kwargs, actual_series, USE_MULTIPROCESSING
-        )
-
-        # Format results
-        if jax_warmup is not None and jax_run is not None:
-            jax_warmup_str = f"{jax_warmup * 1000:8.2f}ms"
-            jax_run_str = f"{jax_run * 1000:6.2f}ms"
-            jax_warmup_total += jax_warmup
-            jax_run_total += jax_run
-        else:
-            jax_warmup_str = "ERROR"
-            jax_run_str = "ERROR"
-
-        if tsfresh_time is not None:
-            tsfresh_str = f"{tsfresh_time * 1000:8.2f}ms"
-            tsfresh_total += tsfresh_time
-        else:
-            tsfresh_str = "ERROR"
-
-        if jax_warmup is not None and tsfresh_time is not None and jax_run is not None:
-            # Speedup = tsfresh_time / jax_time
-            # >1 means JAX is faster, <1 means JAX is slower
-            speedup_with = tsfresh_time / jax_warmup
-            speedup_without = tsfresh_time / jax_run
-
-            speedup_with_str = f"{speedup_with:8.2f}x"
-            speedup_without_str = f"{speedup_without:8.2f}x"
-
-            if speedup_with >= 1:
-                n_jax_faster_with_compile += 1
-            if speedup_without >= 1:
-                n_jax_faster_without_compile += 1
-
-            n_success += 1
-        else:
-            speedup_with_str = "N/A"
-            speedup_without_str = "N/A"
-
-        # Display name with params
-        display_name = jax_name
-        if jax_kwargs:
-            param_str = ", ".join(f"{k}={v}" for k, v in list(jax_kwargs.items())[:2])
-            display_name = f"{jax_name}({param_str})"
-        display_name = display_name[:39]
-
-        print(
-            f"  {display_name:<40} {jax_warmup_str:>12} {jax_run_str:>10} {tsfresh_str:>12} {speedup_with_str:>12} {speedup_without_str:>12}"
-        )
-
-        results.append(
-            {
-                "feature": jax_name,
-                "jax_kwargs": jax_kwargs,
-                "jax_warmup": jax_warmup,
-                "jax_run": jax_run,
-                "tsfresh_time": tsfresh_time,
-                "speedup_with_compile": tsfresh_time / jax_warmup
-                if jax_warmup and tsfresh_time
-                else None,
-                "speedup_without_compile": tsfresh_time / jax_run
-                if jax_run and tsfresh_time
-                else None,
-            }
-        )
-
-        # Write to CSV immediately
+    with open(csv_path, "w", newline="") as csv_file:
+        csv_writer = csv.writer(csv_file)
         csv_writer.writerow(
             [
-                jax_name,
-                str(jax_kwargs) if jax_kwargs else "",
-                f"{jax_warmup * 1000:.4f}" if jax_warmup else "",
-                f"{jax_run * 1000:.4f}" if jax_run else "",
-                f"{tsfresh_time * 1000:.4f}" if tsfresh_time else "",
-                f"{tsfresh_time / jax_warmup:.4f}" if jax_warmup and tsfresh_time else "",
-                f"{tsfresh_time / jax_run:.4f}" if jax_run and tsfresh_time else "",
+                "feature",
+                "jax_kwargs",
+                "jax_warmup_ms",
+                "jax_run_ms",
+                "tsfresh_ms",
+                "speedup_with_compile",
+                "speedup_without_compile",
             ]
         )
         csv_file.flush()
+        print(f"Writing results to: {csv_path}\n")
 
-    csv_file.close()
-    print("-" * 120)
-    print(
-        f"  {'TOTALS':<40} {jax_warmup_total * 1000:8.2f}ms {jax_run_total * 1000:6.2f}ms {tsfresh_total * 1000:8.2f}ms"
-    )
+        print("-" * 120)
+        print(
+            f"{'Feature':<40} {'JAX warmup':>12} {'JAX run':>10} {'tsfresh':>12} {'w/ compile':>12} {'w/o compile':>12}"
+        )
+        print("-" * 120)
+
+        results = []
+        jax_warmup_total = 0.0
+        jax_run_total = 0.0
+        tsfresh_total = 0.0
+        n_success = 0
+        n_jax_faster_with_compile = 0
+        n_jax_faster_without_compile = 0
+
+        for jax_name, jax_kwargs, tsfresh_name, tsfresh_kwargs in INDIVIDUAL_FEATURE_CONFIGS:
+            # Get JAX function
+            if jax_name not in ALL_FEATURE_FUNCTIONS:
+                print(f"  {jax_name:<40} {'SKIP':>12} {'':>10} {'':>12} {'':>12} {'':>12}")
+                continue
+
+            jax_func = ALL_FEATURE_FUNCTIONS[jax_name]
+
+            # Time JAX (returns warmup_time, run_time, error)
+            jax_warmup, jax_run, jax_err = time_jax_feature(jax_func, x_jax, jax_kwargs)
+
+            # Time tsfresh
+            tsfresh_time, tsfresh_err = time_tsfresh_feature(
+                tsfresh_name, x_np_batches, tsfresh_kwargs, actual_series, USE_MULTIPROCESSING
+            )
+
+            # Format results
+            if jax_warmup is not None and jax_run is not None:
+                jax_warmup_str = f"{jax_warmup * 1000:8.2f}ms"
+                jax_run_str = f"{jax_run * 1000:6.2f}ms"
+                jax_warmup_total += jax_warmup
+                jax_run_total += jax_run
+            else:
+                jax_warmup_str = "ERROR"
+                jax_run_str = "ERROR"
+
+            if tsfresh_time is not None:
+                tsfresh_str = f"{tsfresh_time * 1000:8.2f}ms"
+                tsfresh_total += tsfresh_time
+            else:
+                tsfresh_str = "ERROR"
+
+            if jax_warmup is not None and tsfresh_time is not None and jax_run is not None:
+                # Speedup = tsfresh_time / jax_time
+                # >1 means JAX is faster, <1 means JAX is slower
+                speedup_with = tsfresh_time / jax_warmup
+                speedup_without = tsfresh_time / jax_run
+
+                speedup_with_str = f"{speedup_with:8.2f}x"
+                speedup_without_str = f"{speedup_without:8.2f}x"
+
+                if speedup_with >= 1:
+                    n_jax_faster_with_compile += 1
+                if speedup_without >= 1:
+                    n_jax_faster_without_compile += 1
+
+                n_success += 1
+            else:
+                speedup_with_str = "N/A"
+                speedup_without_str = "N/A"
+
+            # Display name with params
+            display_name = jax_name
+            if jax_kwargs:
+                param_str = ", ".join(f"{k}={v}" for k, v in list(jax_kwargs.items())[:2])
+                display_name = f"{jax_name}({param_str})"
+            display_name = display_name[:39]
+
+            print(
+                f"  {display_name:<40} {jax_warmup_str:>12} {jax_run_str:>10} {tsfresh_str:>12} {speedup_with_str:>12} {speedup_without_str:>12}"
+            )
+
+            results.append(
+                {
+                    "feature": jax_name,
+                    "jax_kwargs": jax_kwargs,
+                    "jax_warmup": jax_warmup,
+                    "jax_run": jax_run,
+                    "tsfresh_time": tsfresh_time,
+                    "speedup_with_compile": tsfresh_time / jax_warmup
+                    if jax_warmup and tsfresh_time
+                    else None,
+                    "speedup_without_compile": tsfresh_time / jax_run
+                    if jax_run and tsfresh_time
+                    else None,
+                }
+            )
+
+            # Write to CSV immediately
+            csv_writer.writerow(
+                [
+                    jax_name,
+                    str(jax_kwargs) if jax_kwargs else "",
+                    f"{jax_warmup * 1000:.4f}" if jax_warmup else "",
+                    f"{jax_run * 1000:.4f}" if jax_run else "",
+                    f"{tsfresh_time * 1000:.4f}" if tsfresh_time else "",
+                    f"{tsfresh_time / jax_warmup:.4f}" if jax_warmup and tsfresh_time else "",
+                    f"{tsfresh_time / jax_run:.4f}" if jax_run and tsfresh_time else "",
+                ]
+            )
+            csv_file.flush()
+
+        print("-" * 120)
+        print(
+            f"  {'TOTALS':<40} {jax_warmup_total * 1000:8.2f}ms {jax_run_total * 1000:6.2f}ms {tsfresh_total * 1000:8.2f}ms"
+        )
 
     # Summary
     print("\n" + "=" * 120)
@@ -622,11 +620,11 @@ def run_individual_benchmark(n_timesteps: int, n_batches: int):
     print("=" * 120)
     print(f"  Features tested: {len(INDIVIDUAL_FEATURE_CONFIGS)}")
     print(f"  Successful comparisons: {n_success}")
-    print(f"\n  With compile time (single-run workflow):")
+    print("\n  With compile time (single-run workflow):")
     print(f"    JAX faster: {n_jax_faster_with_compile}/{n_success}")
     if jax_warmup_total > 0:
         print(f"    Overall speedup: {tsfresh_total / jax_warmup_total:.1f}x")
-    print(f"\n  Without compile time (repeated-run workflow):")
+    print("\n  Without compile time (repeated-run workflow):")
     print(f"    JAX faster: {n_jax_faster_without_compile}/{n_success}")
     if jax_run_total > 0:
         print(f"    Overall speedup: {tsfresh_total / jax_run_total:.1f}x")
@@ -843,10 +841,7 @@ def run_batch_benchmark(
     n_states = 2  # Pendulum has 2 states
     total_series = n_batches * n_states
 
-    if use_all:
-        feature_set = "all (EfficientFCParameters)"
-    else:
-        feature_set = "minimal (41 features)"
+    feature_set = "all (EfficientFCParameters)" if use_all else "minimal (41 features)"
 
     print(f"\nDevice: {device}")
     print(
