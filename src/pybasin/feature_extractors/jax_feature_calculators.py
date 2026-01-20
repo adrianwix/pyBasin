@@ -6,6 +6,7 @@ a comprehensive set of tsfresh features. All functions are designed to work with
 batched inputs and leverage JAX's vectorization and JIT compilation.
 
 The calculators operate on time series data with shape (N, B, S) where:
+
 - N: number of time steps
 - B: batch size (number of trajectories)
 - S: number of state variables
@@ -13,31 +14,45 @@ The calculators operate on time series data with shape (N, B, S) where:
 Each calculator returns features with shape (B, S).
 
 Features implemented:
+
 - MinimalFCParameters (10 features): sum_values, median, mean, length,
   standard_deviation, variance, root_mean_square, maximum, absolute_maximum, minimum
+
 - Simple Statistics: abs_energy, kurtosis, skewness, quantile, variation_coefficient
+
 - Change/Difference: absolute_sum_of_changes, mean_abs_change, mean_change,
   mean_second_derivative_central
+
 - Counting: count_above, count_above_mean, count_below, count_below_mean
+
 - Boolean: has_duplicate, has_duplicate_max, has_duplicate_min,
   has_variance_larger_than_standard_deviation, has_large_standard_deviation
+
 - Location: first_location_of_maximum, first_location_of_minimum,
   last_location_of_maximum, last_location_of_minimum, index_mass_quantile
+
 - Streak/Pattern: longest_strike_above_mean, longest_strike_below_mean,
   number_crossing_m, number_peaks, number_cwt_peaks
+
 - Autocorrelation: autocorrelation, partial_autocorrelation, agg_autocorrelation
+
 - Entropy/Complexity: permutation_entropy, binned_entropy, fourier_entropy,
   lempel_ziv_complexity, cid_ce
+
 - Frequency Domain: fft_coefficient, fft_aggregated, spkt_welch_density, cwt_coefficients
+
 - Trend/Regression: linear_trend, linear_trend_timewise, agg_linear_trend,
   ar_coefficient, augmented_dickey_fuller
+
 - Reoccurrence: percentage_of_reoccurring_datapoints_to_all_datapoints,
   percentage_of_reoccurring_values_to_all_values, sum_of_reoccurring_data_points,
   sum_of_reoccurring_values, ratio_value_number_to_time_series_length
+
 - Other Advanced: benford_correlation, c3, change_quantiles, energy_ratio_by_chunks,
   friedrich_coefficients, max_langevin_fixed_point, matrix_profile,
   mean_n_absolute_max, range_count, ratio_beyond_r_sigma, symmetry_looking,
   time_reversal_asymmetry_statistic, value_count
+
 - Custom: delta, log_delta
 """
 
@@ -705,14 +720,11 @@ def cwt_coefficients(x: Array, widths: tuple[int, ...] = (2,), coeff: int = 0, w
     from tsfresh's pywt.cwt in normalization. Results have the same sign but different
     scaling. This is acceptable for feature extraction where relative patterns matter.
 
-    Args:
-        x: Input array of shape (N, B, S)
-        widths: Tuple of wavelet width (scale) parameters
-        coeff: Coefficient index to extract
-        w: Which width from widths to use (must be in widths)
-
-    Returns:
-        Array of shape (B, S) with the CWT coefficient
+    :param x: Input array of shape (N, B, S).
+    :param widths: Tuple of wavelet width (scale) parameters.
+    :param coeff: Coefficient index to extract.
+    :param w: Which width from widths to use (must be in widths).
+    :return: Array of shape (B, S) with the CWT coefficient.
     """
     n = x.shape[0]
 
@@ -1516,10 +1528,12 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
 def _format_feature_name(feature_name: str, params: dict[str, object] | None) -> str:
     """Format feature name with parameters in tsfresh naming convention.
 
-    Examples:
-        - "mean" with None -> "mean"
-        - "autocorrelation" with {"lag": 5} -> "autocorrelation__lag_5"
-        - "ratio_beyond_r_sigma" with {"r": 2.0} -> "ratio_beyond_r_sigma__r_2.0"
+    ```python
+
+    - "mean" with None -> "mean"
+    - "autocorrelation" with {"lag": 5} -> "autocorrelation__lag_5"
+    - "ratio_beyond_r_sigma" with {"r": 2.0} -> "ratio_beyond_r_sigma__r_2.0"
+    ```
     """
     if params is None:
         return feature_name
@@ -1541,27 +1555,24 @@ def extract_features(
         (~40 minutes). Use JAX_MINIMAL_FC_PARAMETERS or a custom subset for faster
         compilation.
 
-    Args:
-        x: Input array with shape (N, B, S) where:
-            - N: number of time steps
-            - B: batch size (number of trajectories)
-            - S: number of state variables
-        fc_parameters: Feature configuration dictionary in tsfresh format.
-            - Keys are feature names (strings)
-            - Values are None (no params) or list of param dicts
+    ```python
+    import jax.numpy as jnp
+    from pybasin.feature_extractors.jax_feature_calculators import (
+        extract_features,
+        JAX_MINIMAL_FC_PARAMETERS,
+    )
 
-    Returns:
-        Dictionary mapping feature names to Arrays with shape (B, S).
-        Feature names follow tsfresh convention: "feature__param1_val1_param2_val2"
+    x = jnp.ones((100, 5, 2))  # 100 timesteps, 5 trajectories, 2 states
+    features = extract_features(x, JAX_MINIMAL_FC_PARAMETERS)
+    features["mean"].shape  # (5, 2)
+    ```
 
-    Example:
-        >>> import jax.numpy as jnp
-        >>> from pybasin.feature_extractors.jax_feature_calculators import (
-        ...     extract_features, JAX_MINIMAL_FC_PARAMETERS
-        ... )
-        >>> x = jnp.ones((100, 5, 2))  # 100 timesteps, 5 trajectories, 2 states
-        >>> features = extract_features(x, JAX_MINIMAL_FC_PARAMETERS)
-        >>> features["mean"].shape  # (5, 2)
+    :param x: Input array with shape (N, B, S) where N is number of time steps,
+        B is batch size (number of trajectories), and S is number of state variables.
+    :param fc_parameters: Feature configuration dictionary in tsfresh format.
+        Keys are feature names (strings), values are None (no params) or list of param dicts.
+    :return: Dictionary mapping feature names to Arrays with shape (B, S).
+        Feature names follow tsfresh convention: "feature__param1_val1_param2_val2".
     """
     results: dict[str, Array] = {}
 
@@ -1585,15 +1596,12 @@ def extract_features(
 def get_feature_names_from_config(
     fc_parameters: FCParameters,
 ) -> list[str]:
-    """
-    Get list of feature names that would be extracted with given configuration.
+    """Get list of feature names that would be extracted with given configuration.
+
     Used by the InteractivePlotter to display the features.
 
-    Args:
-        fc_parameters: Feature configuration dictionary.
-
-    Returns:
-        List of feature names in tsfresh naming convention.
+    :param fc_parameters: Feature configuration dictionary.
+    :return: List of feature names in tsfresh naming convention.
     """
     names: list[str] = []
 

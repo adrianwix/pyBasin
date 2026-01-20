@@ -140,13 +140,14 @@ class InteractivePlotterOptions:
     page. Invalid values (e.g., out-of-bounds indices) will trigger a warning
     and fall back to safe defaults.
 
-    Example:
-        >>> options = InteractivePlotterOptions(
-        ...     initial_view="phase-2d",
-        ...     phase_plot=PhasePlotOptions(x_var=0, y_var=2, exclude_templates=["unbounded"]),
-        ...     template_ts=TemplateTimeSeriesOptions(time_range_percent=0.10),
-        ... )
-        >>> plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
+    ```python
+    options = InteractivePlotterOptions(
+        initial_view="phase-2d",
+        phase_plot=PhasePlotOptions(x_var=0, y_var=2, exclude_templates=["unbounded"]),
+        template_ts=TemplateTimeSeriesOptions(time_range_percent=0.10),
+    )
+    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
+    ```
     """
 
     initial_view: ViewType = "bs"

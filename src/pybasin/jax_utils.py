@@ -22,20 +22,18 @@ JaxDevice = Any
 def get_jax_device(device: str | None = None) -> JaxDevice:
     """Resolve a device string to a JAX device.
 
-    Args:
-        device: Device specification. Options:
-            - None: Auto-detect (prefer GPU if available)
-            - "cpu": CPU device
-            - "gpu", "cuda", "cuda:0": GPU device
-            - "cuda:N": Specific GPU device N
+    ```python
+    device = get_jax_device("cuda:0")
+    device = get_jax_device("cpu")
+    device = get_jax_device()  # auto-detect
+    ```
 
-    Returns:
-        JAX Device object.
-
-    Example:
-        >>> device = get_jax_device("cuda:0")
-        >>> device = get_jax_device("cpu")
-        >>> device = get_jax_device()  # auto-detect
+    :param device: Device specification. Options:
+        - None: Auto-detect (prefer GPU if available)
+        - "cpu": CPU device
+        - "gpu", "cuda", "cuda:0": GPU device
+        - "cuda:N": Specific GPU device N
+    :return: JAX Device object.
     """
     if device is None:
         # Auto-detect: use default JAX device (prefers GPU)
@@ -70,16 +68,14 @@ def torch_to_jax(tensor: torch.Tensor, device: JaxDevice | None = None) -> Array
     Uses DLPack for zero-copy conversion when both tensors are on GPU.
     Falls back to NumPy conversion for CPU tensors or cross-device transfers.
 
-    Args:
-        tensor: PyTorch tensor to convert.
-        device: Target JAX device. If None, uses the same device as the tensor.
+    ```python
+    x_torch = torch.randn(100, 10, device="cuda")
+    x_jax = torch_to_jax(x_torch)  # zero-copy on GPU
+    ```
 
-    Returns:
-        JAX array on the specified device.
-
-    Example:
-        >>> x_torch = torch.randn(100, 10, device="cuda")
-        >>> x_jax = torch_to_jax(x_torch)  # zero-copy on GPU
+    :param tensor: PyTorch tensor to convert.
+    :param device: Target JAX device. If None, uses the same device as the tensor.
+    :return: JAX array on the specified device.
     """
     # Determine target device
     if device is None:
@@ -112,16 +108,14 @@ def jax_to_torch(array: Array, device: torch.device | str | None = None) -> torc
     Uses DLPack for zero-copy conversion when both arrays are on GPU.
     Falls back to NumPy conversion for CPU arrays or cross-device transfers.
 
-    Args:
-        array: JAX array to convert.
-        device: Target PyTorch device. If None, uses the same device as the array.
+    ```python
+    x_jax = jnp.ones((100, 10))
+    x_torch = jax_to_torch(x_jax, device="cuda:0")
+    ```
 
-    Returns:
-        PyTorch tensor on the specified device.
-
-    Example:
-        >>> x_jax = jnp.ones((100, 10))
-        >>> x_torch = jax_to_torch(x_jax, device="cuda:0")
+    :param array: JAX array to convert.
+    :param device: Target PyTorch device. If None, uses the same device as the array.
+    :return: PyTorch tensor on the specified device.
     """
     # Determine source device
     jax_device: JaxDevice = array.devices().pop()

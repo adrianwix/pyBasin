@@ -19,14 +19,16 @@ logger = logging.getLogger(__name__)
 
 class ASPlotter:
     """
-    Adaptive Study Basin Stability Estimator.
+    Matplotlib-based plotter for adaptive study basin stability results.
+
+    :ivar as_bse: ASBasinStabilityEstimator instance with computed results.
     """
 
     def __init__(self, as_bse: ASBasinStabilityEstimator):
         """
-        Initialize the Plotter with a ASBasinStabilityEstimator instance.
+        Initialize the plotter with an ASBasinStabilityEstimator instance.
 
-        :param bse: An instance of ASBasinStabilityEstimator.
+        :param as_bse: An instance of ASBasinStabilityEstimator.
         """
         self.as_bse = as_bse
 
@@ -45,9 +47,11 @@ class ASPlotter:
         """
         Plot all basin stability values against parameter variation in a single plot.
 
-        :param interval: Indicates whether the x-axis should use a linear or logarithmic scale.
-                         - 'linear': Default linear scale.
-                         - 'log':    Logarithmic scale, e.g., when using 2 * np.logspace(...).
+        :param interval: Indicates whether the x-axis should use a linear or logarithmic
+            scale. Options:
+
+            - 'linear': Default linear scale.
+            - 'log': Logarithmic scale, e.g., when using ``2 * np.logspace(...)``.
         """
         if not self.as_bse.parameter_values or not self.as_bse.basin_stabilities:
             raise ValueError("No results available. Run estimate_as_bs first.")
@@ -107,17 +111,16 @@ class ASPlotter:
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Extract amplitudes and compute differences via k-means clustering.
+
         Assumes solution.bifurcation_amplitudes has been extracted using
         extract_amplitudes (from utils.py) and might be a torch.Tensor.
 
-        Args:
-            solution: Solution object with attribute bifurcation_amplitudes.
-            dof: List of indices for degrees of freedom to analyze.
-            n_clusters: Number of clusters for k-means.
-
-        Returns:
-            centers: Array of cluster centroids (shape: n_clusters x len(dof)).
-            diffs: Mean absolute differences (shape: n_clusters x len(dof)).
+        :param solution: Solution object with attribute bifurcation_amplitudes.
+        :param dof: List of indices for degrees of freedom to analyze.
+        :param n_clusters: Number of clusters for k-means.
+        :return: Tuple of (centers, diffs) where centers is array of cluster
+            centroids (shape: n_clusters x len(dof)) and diffs is mean absolute
+            differences (shape: n_clusters x len(dof)).
         """
         # Extract the relevant amplitudes.
         temp = solution.bifurcation_amplitudes[:, dof]
@@ -152,8 +155,7 @@ class ASPlotter:
         k-means clustering and then plots the cluster centers as a function of
         the parameter.
 
-        Args:
-            dof: List of indices of the state variables (DOFs) to plot.
+        :param dof: List of indices of the state variables (DOFs) to plot.
         """
         if not self.as_bse.parameter_values or not self.as_bse.results:
             raise ValueError("No results available. Run estimate_as_bs first.")

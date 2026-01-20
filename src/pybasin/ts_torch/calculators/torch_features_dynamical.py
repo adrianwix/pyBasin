@@ -1,4 +1,13 @@
 # pyright: basic
+"""Dynamical systems feature calculators for time series.
+
+All feature functions follow a consistent tensor shape convention:
+- Input: (N, B, S) where N=timesteps, B=batch size, S=state variables
+- Output: (B, S) for scalar features, or (B, S, K) for multi-valued features where K is the number of values
+
+Features are computed along the time dimension (dim=0), preserving batch and state dimensions.
+"""
+
 import torch
 from torch import Tensor
 
@@ -21,15 +30,13 @@ def lyapunov_r(
 ) -> Tensor:
     """Compute largest Lyapunov exponent using Rosenstein algorithm.
 
-    Args:
-        x: Time series of shape (N, B, S)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
-
-    Returns:
-        Lyapunov exponents of shape (B, S)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param emb_dim: Embedding dimension for phase space reconstruction. Default is 10.
+    :param lag: Lag for delay embedding. Default is 1.
+    :param trajectory_len: Number of steps to follow divergence. Default is 20.
+    :param tau: Time step size for normalization. Default is 1.0.
+    :return: Tensor of shape (B, S) containing the largest Lyapunov exponent for each
+        state of each batch.
     """
     return lyap_r_batch(x, emb_dim, lag, trajectory_len, tau)
 
@@ -45,16 +52,15 @@ def lyapunov_e(
 ) -> Tensor:
     """Compute multiple Lyapunov exponents using Eckmann algorithm.
 
-    Args:
-        x: Time series of shape (N, B, S)
-        emb_dim: Embedding dimension
-        matrix_dim: Matrix dimension for Jacobian estimation (number of exponents)
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation
-        tau: Time step size for normalization
-
-    Returns:
-        Lyapunov exponents of shape (B, S, matrix_dim)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param emb_dim: Embedding dimension for phase space reconstruction. Default is 10.
+    :param matrix_dim: Matrix dimension for Jacobian estimation (number of exponents to compute).
+        Default is 4.
+    :param min_nb: Minimal number of neighbors required. Default is 8.
+    :param min_tsep: Minimal temporal separation between neighbors. Default is 0.
+    :param tau: Time step size for normalization. Default is 1.0.
+    :return: Tensor of shape (B, S, matrix_dim) containing the Lyapunov exponents. The third
+        dimension contains matrix_dim exponents sorted from largest to smallest.
     """
     return lyap_e_batch(x, emb_dim, matrix_dim, min_nb, min_tsep, tau)
 
@@ -68,14 +74,11 @@ def correlation_dimension(
 ) -> Tensor:
     """Compute correlation dimension using Grassberger-Procaccia algorithm.
 
-    Args:
-        x: Time series of shape (N, B, S)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
-
-    Returns:
-        Correlation dimensions of shape (B, S)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param emb_dim: Embedding dimension for phase space reconstruction. Default is 4.
+    :param lag: Lag for delay embedding. Default is 1.
+    :param n_rvals: Number of radius values to use in correlation integral. Default is 50.
+    :return: Tensor of shape (B, S) containing the correlation dimension for each state of each batch.
     """
     return corr_dim_batch(x, emb_dim, lag, n_rvals)
 

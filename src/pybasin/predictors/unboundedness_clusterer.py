@@ -35,55 +35,35 @@ class UnboundednessClusterer(ClustererPredictor):
     from clustering, the wrapped clusterer can focus on discovering patterns in bounded basins
     without contamination from divergent trajectories.
 
-    Parameters
-    ----------
-    clusterer : ClustererPredictor
-        The base clusterer to use for bounded trajectories. Must implement the
-        ClustererPredictor interface (predict_labels method).
+    Example usage:
 
-    unbounded_detector : callable, default=None
-        Function to detect unbounded trajectories. Should take a feature array
-        of shape (n_samples, n_features) and return a boolean array of shape
-        (n_samples,) where True indicates unbounded. If None, uses the default
-        detector which identifies:
-        - Trajectories with Inf/-Inf values (from JAX solver)
-        - Trajectories with values at ±1e10 (from torch feature extractor)
+    ```python
+    from pybasin.predictors.unboundedness_clusterer import UnboundednessClusterer
+    from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
+    import numpy as np
 
-    unbounded_label : int or str, default="unbounded"
-        Label to assign to unbounded trajectories.
+    # Create features with some unbounded samples
+    features = np.random.randn(100, 10)
+    features[0, :] = np.inf  # Unbounded sample
+    features[1, :] = 1e10  # Unbounded sample
 
-    Attributes
-    ----------
-    clusterer : ClustererPredictor
-        The wrapped clusterer instance.
+    # Wrap HDBSCAN with unboundedness handling
+    base_clusterer = HDBSCANClusterer(min_cluster_size=5)
+    clusterer = UnboundednessClusterer(base_clusterer)
+    labels = clusterer.predict_labels(features)
+    print(f"Unbounded samples: {np.sum(labels == 'unbounded')}")
+    ```
 
-    unbounded_detector : callable
-        Function used to detect unbounded trajectories.
+    Notes:
 
-    unbounded_label : int or str
-        Label assigned to unbounded trajectories.
-
-    Examples
-    --------
-    >>> from pybasin.predictors.unboundedness_clusterer import UnboundednessClusterer
-    >>> from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
-    >>> import numpy as np
-    >>> # Create features with some unbounded samples
-    >>> features = np.random.randn(100, 10)
-    >>> features[0, :] = np.inf  # Unbounded sample
-    >>> features[1, :] = 1e10    # Unbounded sample
-    >>> # Wrap HDBSCAN with unboundedness handling
-    >>> base_clusterer = HDBSCANClusterer(min_cluster_size=5)
-    >>> clusterer = UnboundednessClusterer(base_clusterer)
-    >>> labels = clusterer.predict_labels(features)
-    >>> print(f"Unbounded samples: {np.sum(labels == 'unbounded')}")
-
-    Notes
-    -----
     - Only bounded samples are passed to the wrapped clusterer for clustering
     - The unbounded label is automatically tracked and returned for unbounded samples
     - If all samples are unbounded, all labels will be the unbounded label
     - This prevents unbounded trajectories from distorting cluster centroids and boundaries
+
+    :ivar clusterer: The wrapped clusterer instance.
+    :ivar unbounded_detector: Function used to detect unbounded trajectories.
+    :ivar unbounded_label: Label assigned to unbounded trajectories.
     """
 
     display_name: str = "Unboundedness Meta-Clusterer"

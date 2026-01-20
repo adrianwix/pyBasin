@@ -34,10 +34,9 @@ class ASParameterManagerAIO:
         """
         Initialize AS parameter manager.
 
-        Args:
-            as_bse: Adaptive study basin stability estimator
-            state_labels: Optional mapping of state indices to labels
-            compute_bse_callback: Optional callback to compute BSE for a parameter index
+        :param as_bse: Adaptive study basin stability estimator.
+        :param state_labels: Optional mapping of state indices to labels.
+        :param compute_bse_callback: Optional callback to compute BSE for a parameter index.
         """
         self.as_bse = as_bse
         self.state_labels = state_labels or {}
@@ -51,11 +50,8 @@ class ASParameterManagerAIO:
         Uses LRU cache with max 5 entries. When exceeding limit, clears entire
         cache (simplified eviction strategy).
 
-        Args:
-            param_index: Index of parameter value
-
-        Returns:
-            Tuple of (page_dict, is_newly_created)
+        :param param_index: Index of parameter value.
+        :return: Tuple of (page_dict, is_newly_created).
         """
         if param_index in self._page_cache:
             self._page_cache.move_to_end(param_index)
@@ -72,11 +68,8 @@ class ASParameterManagerAIO:
         """
         Create complete page set for specific parameter index.
 
-        Args:
-            param_index: Index of parameter value
-
-        Returns:
-            Dictionary mapping page IDs to AIO page instances
+        :param param_index: Index of parameter value.
+        :return: Dictionary mapping page IDs to AIO page instances.
         """
         if self.compute_bse_callback is not None:
             bse = self.compute_bse_callback(param_index)
@@ -102,7 +95,7 @@ class ASParameterManagerAIO:
                 sampler=self.as_bse.sampler,
                 solver=self.as_bse.solver,
                 feature_extractor=self.as_bse.feature_extractor,
-                cluster_classifier=self.as_bse.cluster_classifier,
+                predictor=self.as_bse.cluster_classifier,
                 feature_selector=None,
             )
             bse.estimate_bs()

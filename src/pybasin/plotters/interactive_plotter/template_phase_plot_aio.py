@@ -43,12 +43,11 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         """
         Initialize phase plot AIO component.
 
-        Args:
-            bse: Basin stability estimator with computed results
-            aio_id: Unique identifier for this component instance
-            is_3d: Deprecated - kept for compatibility. Plot is 2D/3D based on Z selection
-            state_labels: Optional mapping of state indices to labels
-            options: Phase plot configuration options
+        :param bse: Basin stability estimator with computed results.
+        :param aio_id: Unique identifier for this component instance.
+        :param is_3d: Deprecated - kept for compatibility. Plot is 2D/3D based on Z selection.
+        :param state_labels: Optional mapping of state indices to labels.
+        :param options: Phase plot configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
         self.is_3d = is_3d
@@ -57,13 +56,13 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
 
     def _get_template_labels(self) -> list[str]:
         """Get list of template labels if using ClassifierPredictor."""
-        if isinstance(self.bse.cluster_classifier, ClassifierPredictor):
-            return list(self.bse.cluster_classifier.labels)
+        if isinstance(self.bse.predictor, ClassifierPredictor):
+            return list(self.bse.predictor.labels)
         return []
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and phase plot."""
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
@@ -169,7 +168,7 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build phase plot figure."""
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
                 text="Phase plot requires ClassifierPredictor with template ICs",
@@ -186,7 +185,7 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
 
         fig = go.Figure()
 
-        all_labels = self.bse.cluster_classifier.labels
+        all_labels = self.bse.predictor.labels
         if selected_templates is None:
             selected_templates = list(all_labels)
 

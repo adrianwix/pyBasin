@@ -11,35 +11,29 @@ from jax import Array
 
 
 def impute(features: Array) -> Array:
-    """
-    Columnwise replaces all NaNs and infs from the feature array with average/extreme values.
+    """Columnwise replaces all NaNs and infs from the feature array with average/extreme values.
 
     This is done as follows for each column:
-        * -inf -> min (of finite values in that column)
-        * +inf -> max (of finite values in that column)
-        * NaN -> median (of finite values in that column)
+
+    - -inf -> min (of finite values in that column)
+    - +inf -> max (of finite values in that column)
+    - NaN -> median (of finite values in that column)
 
     If a column does not contain any finite values at all, it is filled with zeros.
 
     This function is the JAX equivalent of tsfresh's impute function.
 
-    Parameters
-    ----------
-    features : Array
-        Feature array of shape (B, F) where B is batch size and F is number of features.
+    ```python
+    import jax.numpy as jnp
+    from pybasin.jax_feature_utilities import impute
 
-    Returns
-    -------
-    Array
-        Imputed feature array with the same shape, guaranteed to contain no NaN or inf values.
+    features = jnp.array([[1.0, jnp.nan, jnp.inf], [2.0, 3.0, -jnp.inf], [3.0, 4.0, 5.0]])
+    imputed = impute(features)
+    # NaN replaced with median, inf with max, -inf with min
+    ```
 
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> from pybasin.jax_feature_utilities import impute
-    >>> features = jnp.array([[1.0, jnp.nan, jnp.inf], [2.0, 3.0, -jnp.inf], [3.0, 4.0, 5.0]])
-    >>> imputed = impute(features)
-    >>> # NaN replaced with median, inf with max, -inf with min
+    :param features: Feature array of shape (B, F) where B is batch size and F is number of features.
+    :return: Imputed feature array with the same shape, guaranteed to contain no NaN or inf values.
     """
     # Create mask for finite values
     finite_mask = jnp.isfinite(features)
@@ -77,8 +71,7 @@ def impute(features: Array) -> Array:
 
 
 def impute_extreme(features: Array, extreme_value: float = 1e10) -> Array:
-    """
-    Replaces all NaNs and infs with extreme values to make them distinguishable.
+    """Replaces all NaNs and infs with extreme values to make them distinguishable.
 
     This is useful when you want samples with non-finite features to be
     classified separately (e.g., unbounded trajectories in dynamical systems).
@@ -87,17 +80,9 @@ def impute_extreme(features: Array, extreme_value: float = 1e10) -> Array:
     - -inf -> -extreme_value
     - NaN -> +extreme_value (to cluster with +inf)
 
-    Parameters
-    ----------
-    features : Array
-        Feature array of shape (B, F) where B is batch size and F is number of features.
-    extreme_value : float
-        The extreme value to use for replacement. Default is 1e10.
-
-    Returns
-    -------
-    Array
-        Imputed feature array with the same shape.
+    :param features: Feature array of shape (B, F) where B is batch size and F is number of features.
+    :param extreme_value: The extreme value to use for replacement. Default is 1e10.
+    :return: Imputed feature array with the same shape.
     """
     result = features
     result = jnp.where(jnp.isposinf(features), extreme_value, result)
@@ -109,13 +94,10 @@ def impute_extreme(features: Array, extreme_value: float = 1e10) -> Array:
 def delay_embedding(data: Array, emb_dim: int, lag: int = 1) -> Array:
     """Create delay embedding of a 1D time series.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension
-        lag: Lag between elements in embedded vectors
-
-    Returns:
-        Embedded orbit matrix of shape (M, emb_dim) where M = N - (emb_dim-1)*lag
+    :param data: 1D time series of shape (N,).
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag between elements in embedded vectors.
+    :return: Embedded orbit matrix of shape (M, emb_dim) where M = N - (emb_dim-1)*lag.
     """
     n = data.shape[0]
     m = n - (emb_dim - 1) * lag
@@ -129,11 +111,8 @@ def delay_embedding(data: Array, emb_dim: int, lag: int = 1) -> Array:
 def rowwise_euclidean(x: Array, y: Array) -> Array:
     """Compute Euclidean distance from each row of x to vector y.
 
-    Args:
-        x: Matrix of shape (M, D)
-        y: Vector of shape (D,)
-
-    Returns:
-        Distances of shape (M,)
+    :param x: Matrix of shape (M, D).
+    :param y: Vector of shape (D,).
+    :return: Distances of shape (M,).
     """
     return jnp.sqrt(jnp.sum((x - y) ** 2, axis=1))

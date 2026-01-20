@@ -12,8 +12,8 @@ import torch
 from sklearn.base import BaseEstimator
 
 from pybasin.feature_extractors import TorchFeatureExtractor
-from pybasin.feature_extractors.default_feature_selector import DefaultFeatureSelector
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.feature_selector.default_feature_selector import DefaultFeatureSelector
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.predictors.base import ClassifierPredictor, LabelPredictor
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
@@ -46,10 +46,12 @@ class BasinStabilityEstimator:
     This class configures the analysis with an ODE system, sampler, and solver,
     and it provides methods to estimate the basin stability (estimate_bs), and save results to file (save).
 
-    Attributes:
-        bs_vals (dict[str, float] | None): Basin stability values (fraction of samples per class).
-        y0 (torch.Tensor | None): Array of initial conditions.
-        solution (Solution | None): Solution instance containing trajectory and analysis results.
+    :ivar bs_vals: Basin stability values (fraction of samples per class).
+    :vartype bs_vals: dict[str, float] | None
+    :ivar y0: Array of initial conditions.
+    :vartype y0: torch.Tensor | None
+    :ivar solution: Solution instance containing trajectory and analysis results.
+    :vartype solution: Solution | None
     """
 
     def __init__(
@@ -76,7 +78,7 @@ class BasinStabilityEstimator:
                       and device from sampler.
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
                                  If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
-        :param cluster_classifier: The LabelPredictor object to assign labels. If None, defaults
+        :param predictor: The LabelPredictor object to assign labels. If None, defaults
                                   to HDBSCANClusterer with auto_tune=True and assign_noise=True.
         :param feature_selector: Feature filtering sklearn transformer with get_support() method.
                                 Defaults to DefaultFeatureSelector(). Pass None to disable filtering.
@@ -152,10 +154,9 @@ class BasinStabilityEstimator:
             predictor = UnboundednessClusterer(HDBSCANClusterer(auto_tune=True, assign_noise=True))
         self.predictor = predictor
 
-        # Attributes to be populated during estimation
-        self.bs_vals: dict[str, float] | None = None
-        self.y0: torch.Tensor | None = None
-        self.solution: Solution | None = None
+        self.bs_vals = None
+        self.y0 = None
+        self.solution = None
 
     def _detect_unbounded_trajectories(self, y: torch.Tensor) -> torch.Tensor:
         """Detect unbounded trajectories based on Inf values.
@@ -562,14 +563,12 @@ class BasinStabilityEstimator:
         Compute absolute and relative errors for basin stability estimates.
 
         The errors are based on the Bernoulli experiment statistics:
+
         - e_abs = sqrt(S_B(A) * (1 - S_B(A)) / N) - absolute standard error
         - e_rel = 1 / sqrt(N * S_B(A)) - relative error
 
-        Returns:
-            Dictionary mapping each label to an ErrorInfo with 'e_abs' and 'e_rel' keys.
-
-        Raises:
-            ValueError: If estimate_bs() has not been called yet.
+        :return: Dictionary mapping each label to an ErrorInfo with 'e_abs' and 'e_rel' keys.
+        :raises ValueError: If estimate_bs() has not been called yet.
         """
         if self.bs_vals is None:
             raise ValueError("No results available. Please run estimate_bs() first.")

@@ -74,3 +74,22 @@
 - **Constants should be UPPERCASE with underscores**: `N_NODES`, `K_DEGREE`, `ALPHA_1`
 - Avoid single uppercase letters except for well-known conventions (e.g., `N` for network size in papers)
 - Be consistent with naming throughout the codebase
+
+## Docstring Guidelines
+
+- Use **Sphinx/rST style** for all docstrings (not Google or NumPy style)
+- Use `:param name:` for parameters, `:return:` for return values, `:raises:` for exceptions
+- Use `:ivar name:` and `:vartype name:` for class attributes
+- Example:
+
+  ```python
+  def integrate(self, ode_system: ODESystem, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+      """
+      Integrate the ODE system from initial conditions.
+
+      :param ode_system: The ODE system to integrate.
+      :param y0: Initial conditions tensor of shape (batch, state_dim).
+      :return: Tuple of (time points, solution trajectories).
+      :raises ValueError: If y0 has incorrect shape.
+      """
+  ```

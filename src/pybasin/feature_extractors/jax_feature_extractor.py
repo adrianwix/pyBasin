@@ -38,44 +38,46 @@ class JaxFeatureExtractor(FeatureExtractor):
         (~40 minutes). Use JAX_MINIMAL_FC_PARAMETERS or a custom subset for faster
         compilation.
 
-    Args:
-        time_steady: Time threshold for filtering transients. Default 0.0.
-        features: Default FCParameters configuration to apply to all states.
-            Defaults to JAX_MINIMAL_FC_PARAMETERS. Set to None to skip states
-            not explicitly configured in features_per_state.
-        features_per_state: Optional dict mapping state indices to FCParameters.
-            Overrides `features` for specified states. Use None as value to skip
-            a state. States not in this dict use the global `features` config.
-        normalize: Whether to apply z-score normalization. Default True.
-        use_jit: Whether to JIT-compile extraction. Default True.
-        device: JAX device to use ('cpu', 'gpu', 'cuda', 'cuda:N', or None for auto).
-        impute_method: Method for handling NaN/inf values in features. Options:
-            - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
-              trajectories. Best for systems with divergent solutions. (default)
-            - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
-              NaN->median). Better when all trajectories are bounded.
+    ```python
+    # Default: use minimal features for all states
+    extractor = JaxFeatureExtractor(time_steady=9.0)
 
-    Examples:
-        >>> # Default: use minimal features for all states
-        >>> extractor = JaxFeatureExtractor(time_steady=9.0)
+    # Custom features for specific states, skip others
+    extractor = JaxFeatureExtractor(
+        time_steady=9.0,
+        features=None,  # Don't extract features by default
+        features_per_state={
+            1: {"log_delta": None},  # Only extract for state 1
+        },
+    )
 
-        >>> # Custom features for specific states, skip others
-        >>> extractor = JaxFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     features=None,  # Don't extract features by default
-        ...     features_per_state={
-        ...         1: {"log_delta": None},  # Only extract for state 1
-        ...     },
-        ... )
+    # Global features with per-state override
+    extractor = JaxFeatureExtractor(
+        time_steady=9.0,
+        features_per_state={
+            0: {"maximum": None},  # Override state 0
+            1: None,  # Skip state 1
+        },
+    )
+    ```
 
-        >>> # Global features with per-state override
-        >>> extractor = JaxFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     features_per_state={
-        ...         0: {"maximum": None},  # Override state 0
-        ...         1: None,  # Skip state 1
-        ...     },
-        ... )
+    :param time_steady: Time threshold for filtering transients. Default 0.0.
+    :param features: Default FCParameters configuration to apply to all states.
+        Defaults to JAX_MINIMAL_FC_PARAMETERS. Set to None to skip states
+        not explicitly configured in features_per_state.
+    :param features_per_state: Optional dict mapping state indices to FCParameters.
+        Overrides `features` for specified states. Use None as value to skip
+        a state. States not in this dict use the global `features` config.
+    :param normalize: Whether to apply z-score normalization. Default True.
+    :param use_jit: Whether to JIT-compile extraction. Default True.
+    :param device: JAX device to use ('cpu', 'gpu', 'cuda', 'cuda:N', or None for auto).
+    :param impute_method: Method for handling NaN/inf values in features. Options:
+
+        - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
+          trajectories. Best for systems with divergent solutions. (default)
+
+        - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
+          NaN->median). Better when all trajectories are bounded.
     """
 
     def __init__(

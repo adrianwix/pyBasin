@@ -128,17 +128,17 @@ class MatplotlibPlotter:
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             raise ValueError(
                 "plot_phase requires a ClassifierPredictor with template initial conditions."
             )
 
         # Use classifier's solver if available, otherwise use main solver
-        solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
+        solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
 
         # Convert template_y0 list to tensor on solver's device
         template_tensor = torch.tensor(
-            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            self.bse.predictor.template_y0,  # type: ignore[misc]
             dtype=torch.float32,
             device=solver.device,
         )
@@ -155,7 +155,7 @@ class MatplotlibPlotter:
         if z_var is None:
             ax: Axes = fig.add_subplot(111)  # type: ignore[assignment]
             for _i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
+                zip(self.bse.predictor.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
             ):
                 ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))  # type: ignore[misc]
             ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
@@ -164,7 +164,7 @@ class MatplotlibPlotter:
         else:
             ax = fig.add_subplot(111, projection="3d")  # type: ignore[assignment]
             for _i, (label, traj) in enumerate(
-                zip(self.bse.cluster_classifier.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
+                zip(self.bse.predictor.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
             ):
                 ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))  # type: ignore[misc,attr-defined]
             ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
@@ -185,21 +185,20 @@ class MatplotlibPlotter:
         """
         Plot trajectories for the template initial conditions.
 
-        Args:
-            plotted_var (int): Index of the variable to plot
-            time_span (tuple, optional): Time range to plot (t_start, t_end)
+        :param plotted_var: Index of the variable to plot.
+        :param time_span: Time range to plot (t_start, t_end).
         """
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             raise ValueError(
                 "plot_templates requires a ClassifierPredictor with template initial conditions."
             )
 
         # Use classifier's solver if available, otherwise use main solver
-        solver = self.bse.cluster_classifier.solver or self.bse.solver  # type: ignore[misc]
+        solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
 
         # Convert template_y0 list to tensor on solver's device
         template_tensor = torch.tensor(
-            self.bse.cluster_classifier.template_y0,  # type: ignore[misc]
+            self.bse.predictor.template_y0,  # type: ignore[misc]
             dtype=torch.float32,
             device=solver.device,
         )
@@ -222,7 +221,7 @@ class MatplotlibPlotter:
         # Plot each trajectory
         # Use permute instead of transpose for 3D tensors
         for _i, (label, traj) in enumerate(
-            zip(self.bse.cluster_classifier.labels, y.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
+            zip(self.bse.predictor.labels, y.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
         ):
             plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")  # type: ignore[misc]
 

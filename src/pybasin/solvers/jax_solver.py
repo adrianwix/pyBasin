@@ -45,21 +45,36 @@ class JaxSolver:
     The interface is compatible with other solvers - it accepts PyTorch tensors
     and returns PyTorch tensors, but internally uses JAX for maximum performance.
 
-    Example
-    -------
-    >>> from pybasin.jax_ode_system import JaxODESystem
-    >>> from pybasin.solvers import JaxSolver
-    >>> import torch
-    >>>
-    >>> class MyODE(JaxODESystem):
-    ...     def ode(self, t, y):
-    ...         return -y  # Simple decay
-    ...     def get_str(self):
-    ...         return "decay"
-    >>>
-    >>> solver = JaxSolver(time_span=(0, 10), n_steps=100)
-    >>> y0 = torch.tensor([[1.0, 2.0]])  # batch=1, dims=2
-    >>> t, y = solver.integrate(MyODE({}), y0)
+    See also: [Diffrax documentation](https://docs.kidger.site/diffrax/)
+
+    Citation:
+
+    ```bibtex
+    @phdthesis{kidger2021on,
+        title={{O}n {N}eural {D}ifferential {E}quations},
+        author={Patrick Kidger},
+        year={2021},
+        school={University of Oxford},
+    }
+    ```
+
+    Example usage:
+
+    ```python
+    from pybasin.jax_ode_system import JaxODESystem
+    from pybasin.solvers import JaxSolver
+    import torch
+
+    class MyODE(JaxODESystem):
+        def ode(self, t, y):
+            return -y  # Simple decay
+        def get_str(self):
+            return "decay"
+
+    solver = JaxSolver(time_span=(0, 10), n_steps=100)
+    y0 = torch.tensor([[1.0, 2.0]])  # batch=1, dims=2
+    t, y = solver.integrate(MyODE({}), y0)
+    ```
     """
 
     display_name: str = "JAX Solver"

@@ -1,8 +1,9 @@
 site_name: pyBasin Documentation
 site_description: Basin stability estimation for dynamical systems
 site_author: Adrian Wix
-repo_url: https://github.com/adrianwix/pyBSTAB
-repo_name: adrianwix/pyBSTAB
+repo_url: https://github.com/adrianwix/pyBasin
+repo_name: adrianwix/pyBasin
+edit_uri: blob/main/
 
 theme:
   name: material
@@ -32,18 +33,26 @@ theme:
     - search.highlight
     - content.code.copy
     - content.code.annotate
+    - content.action.view
 
 plugins:
   - search
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]
           options:
-            docstring_style: google
-            show_source: true
+            docstring_style: sphinx
+            show_source: false
             show_root_heading: true
             show_category_heading: true
             members_order: source
+            heading_level: 2
+            show_signature_annotations: true
+            separate_signature: true
+            show_labels: true
+            show_docstring_attributes: true
+            show_if_no_docstring: false
   - mkdocs-jupyter:
       include_source: True
 
@@ -72,25 +81,42 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - Basin Stability Estimator:
+          - Overview & Flow: user-guide/bse-overview.md
+          - Adaptive Parameter Studies: user-guide/adaptive-studies.md
+      - Samplers: user-guide/samplers.md
+      - Solvers: user-guide/solvers.md
+      - Feature Extractors: user-guide/feature-extractors.md
+      - Feature Selectors: user-guide/feature-selectors.md
+      - Predictors: user-guide/predictors.md
+      - Plotters: user-guide/plotters.md
+  - Case Studies:
+      - Overview: case-studies/overview.md
+      - Pendulum: case-studies/pendulum.md
+      - Duffing Oscillator: case-studies/duffing.md
+      - Lorenz System: case-studies/lorenz.md
+      - Friction Oscillator: case-studies/friction.md
+      - Rössler Network: case-studies/rossler-network.md
+  - Benchmarks:
+      - Overview: benchmarks/overview.md
+      - End-to-End Performance: benchmarks/end-to-end.md
+      - Solver Comparison: benchmarks/solvers.md
+      - Feature Extraction: benchmarks/feature-extraction.md
+  - API Reference:
+      - BasinStabilityEstimator: api/basin-stability-estimator.md
+      - ASBasinStabilityEstimator: api/adaptive-sampling.md
+      - Solution: api/solution.md
+      - Samplers: api/samplers.md
+      - Solvers: api/solvers.md
+      - Feature Extraction: api/feature-extractors.md
+      - Feature Selection: api/feature-selector.md
+      - Predictors: api/predictors.md
+      - Plotters: api/plotters.md
   - Guides:
       - Handling Unbounded Trajectories: guides/unbounded-trajectories.md
       - TorchODE Solver: guides/torchode-solver.md
       - Type Safety and Generics: guides/type-safety-generics.md
-  - Theory:
-      - Basin Stability: theory/basin-stability.md
-      - Adaptive Sampling: theory/adaptive-sampling.md
-  - API Reference:
-      - Basin Stability Estimator: api/basin-stability-estimator.md
-      - Adaptive Sampling: api/adaptive-sampling.md
-      - Solvers: api/solvers.md
-      - Plotting: api/plotting.md
-      - Feature Extraction: api/feature-extraction.md
-  - Case Studies:
-      - Overview: case-studies/overview.md
-      - Duffing Oscillator: case-studies/duffing.md
-      - Lorenz System: case-studies/lorenz.md
-      - Pendulum: case-studies/pendulum.md
-      - Friction System: case-studies/friction.md
+      - Custom Feature Extractor: guides/custom-feature-extractor.md
   - Development:
       - Contributing: development/contributing.md
-      - Testing: development/testing.md

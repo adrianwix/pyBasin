@@ -104,47 +104,36 @@ class DynamicalSystemClusterer(ClustererPredictor):
     ):
         """Initialize the dynamical system clusterer.
 
-        Args:
-            drift_threshold: Minimum |slope| to consider a dimension as drifting.
-                Drifting dimensions (e.g., pendulum angle during rotation) are
-                excluded from variance/mean calculations for FP and chaos
-                sub-classification to avoid spurious splits. Also used to detect
-                rotating limit cycles. Units: [state_units / time_units].
-                Default: 0.1.
-            tiers: List of attractor types to detect, in priority order.
-                First matching tier wins. Options: "FP", "LC", "chaos".
-                Default: ["FP", "LC", "chaos"].
-
-            fp_variance_threshold: Maximum variance to classify as fixed point.
-                For unnormalized features, set based on expected steady-state
-                fluctuations (e.g., 1e-6 for well-converged integrations).
-                For normalized features (unit variance), use relative threshold
-                (e.g., 1e-4 meaning 0.01% of typical variance).
-                Default: 1e-6 (assumes unnormalized features).
-            fp_sub_classifier: Custom sub-classifier for fixed points.
-                Input: mean values per non-drifting dimension.
-                Default: HDBSCAN with min_cluster_size=50.
-
-            lc_periodicity_threshold: Minimum periodicity strength [0-1] to
-                classify as limit cycle. The periodicity strength measures how
-                well the autocorrelation matches periodic behavior:
-                - 0.0: No periodic pattern detected
-                - 0.3-0.5: Weak/noisy periodicity
-                - 0.5-0.8: Clear periodic behavior
-                - 0.8-1.0: Strong/clean limit cycle
-                Default: 0.5.
-            lc_sub_classifier: Custom sub-classifier for limit cycles.
-                Input: [freq_ratio, amplitude, mean] features.
-                Default: Hierarchical period-based clustering.
-
-            chaos_variance_threshold: Maximum variance for limit cycle.
-                Trajectories with variance above this AND low periodicity are
-                classified as chaotic. Set based on expected LC amplitude range.
-                For normalized features, typical LC variance is ~0.5-2.0.
-                Default: 5.0.
-            chaos_sub_classifier: Custom sub-classifier for chaotic attractors.
-                Input: mean values per dimension.
-                Default: HDBSCAN with auto_tune=True.
+        :param drift_threshold: Minimum |slope| to consider a dimension as drifting.
+            Drifting dimensions (e.g., pendulum angle during rotation) are
+            excluded from variance/mean calculations for FP and chaos
+            sub-classification to avoid spurious splits. Also used to detect
+            rotating limit cycles. Units: [state_units / time_units]. Default: 0.1.
+        :param tiers: List of attractor types to detect, in priority order.
+            First matching tier wins. Options: "FP", "LC", "chaos".
+            Default: ["FP", "LC", "chaos"].
+        :param fp_variance_threshold: Maximum variance to classify as fixed point.
+            For unnormalized features, set based on expected steady-state
+            fluctuations (e.g., 1e-6 for well-converged integrations).
+            For normalized features (unit variance), use relative threshold
+            (e.g., 1e-4 meaning 0.01% of typical variance). Default: 1e-6.
+        :param fp_sub_classifier: Custom sub-classifier for fixed points.
+            Input: mean values per non-drifting dimension. Default: HDBSCAN with
+            min_cluster_size=50.
+        :param lc_periodicity_threshold: Minimum periodicity strength [0-1] to
+            classify as limit cycle. The periodicity strength measures how
+            well the autocorrelation matches periodic behavior (0.0 = no periodic
+            pattern, 0.3-0.5 = weak/noisy, 0.5-0.8 = clear periodic, 0.8-1.0 =
+            strong/clean limit cycle). Default: 0.5.
+        :param lc_sub_classifier: Custom sub-classifier for limit cycles.
+            Input: [freq_ratio, amplitude, mean] features. Default: Hierarchical
+            period-based clustering.
+        :param chaos_variance_threshold: Maximum variance for limit cycle.
+            Trajectories with variance above this AND low periodicity are
+            classified as chaotic. Set based on expected LC amplitude range.
+            For normalized features, typical LC variance is ~0.5-2.0. Default: 5.0.
+        :param chaos_sub_classifier: Custom sub-classifier for chaotic attractors.
+            Input: mean values per dimension. Default: HDBSCAN with auto_tune=True.
         """
         self.feature_names: list[str] | None = None
 
@@ -179,8 +168,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
     def set_feature_names(self, feature_names: list[str]) -> None:
         """Set feature names and build feature indices.
 
-        Args:
-            feature_names: List of feature names matching the feature array columns.
+        :param feature_names: List of feature names matching the feature array columns.
         """
         self.feature_names = feature_names
         self._build_feature_indices(feature_names)
@@ -191,11 +179,8 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         Uses the pybasin.utils feature name parsing utilities.
 
-        Args:
-            feature_names: List of feature names.
-
-        Raises:
-            ValueError: If required features are missing or names are invalid.
+        :param feature_names: List of feature names.
+        :raises ValueError: If required features are missing or names are invalid.
         """
         all_valid, invalid_names = validate_feature_names(feature_names)
         if not all_valid:
@@ -225,8 +210,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         Sets self._drifting_dims and self._non_drifting_dims.
 
-        Args:
-            features: Full feature array (n_samples, n_features).
+        :param features: Full feature array (n_samples, n_features).
         """
         slope_indices = self._feature_indices["linear_trend__attr_slope"]
         n_dims = len(slope_indices)
@@ -247,12 +231,9 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         If all dimensions are drifting, falls back to the first dimension.
 
-        Args:
-            features: Full feature array (n_samples, n_features).
-            base_feature: Base feature name (e.g., "variance").
-
-        Returns:
-            Feature values array of shape (n_samples,).
+        :param features: Full feature array (n_samples, n_features).
+        :param base_feature: Base feature name (e.g., "variance").
+        :return: Feature values array of shape (n_samples,).
         """
         indices = self._feature_indices[base_feature]
 
@@ -265,11 +246,8 @@ class DynamicalSystemClusterer(ClustererPredictor):
     def _get_non_drifting_feature_indices(self, base_feature: str) -> list[int]:
         """Get feature column indices for non-drifting dimensions only.
 
-        Args:
-            base_feature: Base feature name (e.g., "mean", "variance").
-
-        Returns:
-            List of column indices for non-drifting dimensions.
+        :param base_feature: Base feature name (e.g., "mean", "variance").
+        :return: List of column indices for non-drifting dimensions.
             Falls back to all indices if no non-drifting dimensions exist.
         """
         indices = self._feature_indices[base_feature]
@@ -282,11 +260,8 @@ class DynamicalSystemClusterer(ClustererPredictor):
         Uses only non-drifting dimensions for classification to avoid
         noise from rotating/drifting state variables.
 
-        Args:
-            features: Feature array (n_samples, n_features).
-
-        Returns:
-            Array of type labels: "FP", "LC", "chaos".
+        :param features: Feature array (n_samples, n_features).
+        :return: Array of type labels: "FP", "LC", "chaos".
         """
         n_samples = features.shape[0]
         type_labels = np.empty(n_samples, dtype=object)
@@ -328,14 +303,11 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         Excludes drifting dimensions from clustering to avoid spurious splits.
 
-        Args:
-            features: Full feature array.
-            indices: Indices of FP trajectories.
-            single_cluster_range_threshold: If range (max-min) of mean values
-                is below this threshold for all dimensions, treat as single cluster.
-
-        Returns:
-            Sub-cluster labels for FP trajectories.
+        :param features: Full feature array.
+        :param indices: Indices of FP trajectories.
+        :param single_cluster_range_threshold: If range (max-min) of mean values
+            is below this threshold for all dimensions, treat as single cluster.
+        :return: Sub-cluster labels for FP trajectories.
         """
         if len(indices) == 0:
             return np.array([], dtype=int)
@@ -373,19 +345,17 @@ class DynamicalSystemClusterer(ClustererPredictor):
         """Sub-classify limit cycles using hierarchical period-based approach.
 
         Two-level hierarchical clustering:
+
         1. First level: Group by period-n (freq_ratio rounded to nearest integer)
         2. Second level: Within each period group, cluster by amplitude and mean
 
         Uses non-drifting dimensions for amplitude and mean features.
 
-        Args:
-            features: Full feature array.
-            indices: Indices of LC trajectories.
-            amp_cv_threshold: Min coefficient of variation for amplitude to cluster.
-            mean_range_threshold: Min range for mean to cluster.
-
-        Returns:
-            Sub-cluster labels for LC trajectories.
+        :param features: Full feature array.
+        :param indices: Indices of LC trajectories.
+        :param amp_cv_threshold: Min coefficient of variation for amplitude to cluster.
+        :param mean_range_threshold: Min range for mean to cluster.
+        :return: Sub-cluster labels for LC trajectories.
         """
         if len(indices) == 0:
             return np.array([], dtype=int)
@@ -471,12 +441,9 @@ class DynamicalSystemClusterer(ClustererPredictor):
         For 1D data: detect natural gaps/modes.
         For 2D data: use HDBSCAN.
 
-        Args:
-            data: Feature array of shape (n_samples, 1) or (n_samples, 2).
-            n_samples: Number of samples.
-
-        Returns:
-            Cluster labels.
+        :param data: Feature array of shape (n_samples, 1) or (n_samples, 2).
+        :param n_samples: Number of samples.
+        :return: Cluster labels.
         """
         if data.shape[1] == 1:
             return self._cluster_1d_with_gaps(data.ravel())
@@ -501,13 +468,10 @@ class DynamicalSystemClusterer(ClustererPredictor):
         Finds gaps in sorted data that are significantly larger than typical spacing.
         Only creates up to max_clusters to avoid over-splitting.
 
-        Args:
-            data: 1D array of values.
-            min_gap_ratio: Minimum ratio of gap to median gap to be significant.
-            max_clusters: Maximum number of clusters to create.
-
-        Returns:
-            Cluster labels.
+        :param data: 1D array of values.
+        :param min_gap_ratio: Minimum ratio of gap to median gap to be significant.
+        :param max_clusters: Maximum number of clusters to create.
+        :return: Cluster labels.
         """
         n = len(data)
         if n < 4:
@@ -552,12 +516,9 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         Excludes drifting dimensions from clustering to avoid spurious splits.
 
-        Args:
-            features: Full feature array.
-            indices: Indices of chaos trajectories.
-
-        Returns:
-            Sub-cluster labels for chaos trajectories.
+        :param features: Full feature array.
+        :param indices: Indices of chaos trajectories.
+        :return: Sub-cluster labels for chaos trajectories.
         """
         if len(indices) == 0:
             return np.array([], dtype=int)
@@ -584,14 +545,9 @@ class DynamicalSystemClusterer(ClustererPredictor):
     def predict_labels(self, features: np.ndarray) -> np.ndarray:
         """Predict labels using two-stage hierarchical clustering.
 
-        Args:
-            features: Feature array of shape (n_samples, n_features).
-
-        Returns:
-            Array of predicted labels with format "TYPE_subcluster".
-
-        Raises:
-            RuntimeError: If set_feature_names() was not called before prediction.
+        :param features: Feature array of shape (n_samples, n_features).
+        :return: Array of predicted labels with format "TYPE_subcluster".
+        :raises RuntimeError: If set_feature_names() was not called before prediction.
         """
         if not self._initialized:
             raise RuntimeError(

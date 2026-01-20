@@ -37,35 +37,32 @@ class TorchFeatureExtractor(FeatureExtractor):
     For CPU extraction, uses multiprocessing to parallelize across batches.
     For GPU extraction, uses batched CUDA operations for optimal performance.
 
-    Args:
-        time_steady: Time threshold for filtering transients. Default 0.0.
-        features: Default feature configuration to apply to all states. Can be:
-            - 'comprehensive': Use TORCH_COMPREHENSIVE_FC_PARAMETERS (default)
-            - 'minimal': Use TORCH_MINIMAL_FC_PARAMETERS (10 basic features)
-            - FCParameters dict: Custom feature configuration
-            - None: Skip states not explicitly configured in features_per_state
-        features_per_state: Optional dict mapping state indices to FCParameters.
-            Overrides `features` for specified states. Use None as value to skip
-            a state. States not in this dict use the global `features` config.
-        normalize: Whether to apply z-score normalization. Default True.
-        device: Execution device ('cpu' or 'gpu'). Default 'cpu'.
-        n_jobs: Number of worker processes for CPU extraction. If None, uses all
-            available CPU cores. Ignored when device='gpu'.
-        impute_method: Method for handling NaN/inf values in features. Options:
-            - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
-              trajectories. Best for systems with divergent solutions. (default)
-            - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
-              NaN->median). Better when all trajectories are bounded.
-
-    Raises:
-        RuntimeError: If device='gpu' but CUDA is not available.
+    :param time_steady: Time threshold for filtering transients. Default 0.0.
+    :param features: Default feature configuration to apply to all states. Can be:
+        - 'comprehensive': Use TORCH_COMPREHENSIVE_FC_PARAMETERS (default)
+        - 'minimal': Use TORCH_MINIMAL_FC_PARAMETERS (10 basic features)
+        - FCParameters dict: Custom feature configuration
+        - None: Skip states not explicitly configured in features_per_state
+    :param features_per_state: Optional dict mapping state indices to FCParameters.
+        Overrides `features` for specified states. Use None as value to skip
+        a state. States not in this dict use the global `features` config.
+    :param normalize: Whether to apply z-score normalization. Default True.
+    :param device: Execution device ('cpu' or 'gpu'). Default 'cpu'.
+    :param n_jobs: Number of worker processes for CPU extraction. If None, uses all
+        available CPU cores. Ignored when device='gpu'.
+    :param impute_method: Method for handling NaN/inf values in features. Options:
+        - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
+          trajectories. Best for systems with divergent solutions. (default)
+        - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
+          NaN->median). Better when all trajectories are bounded.
+    :raises RuntimeError: If device='gpu' but CUDA is not available.
 
     Examples:
         >>> # Default: use comprehensive features for all states on CPU
         >>> extractor = TorchFeatureExtractor(time_steady=9.0)
 
         >>> # GPU extraction with default features
-        >>> extractor = TorchFeatureExtractor(time_steady=9.0, device='gpu')
+        >>> extractor = TorchFeatureExtractor(time_steady=9.0, device="gpu")
 
         >>> # Custom features for specific states, skip others
         >>> extractor = TorchFeatureExtractor(
@@ -152,12 +149,9 @@ class TorchFeatureExtractor(FeatureExtractor):
     def _extract_all_states(self, y: Tensor, fc_params: FCParameters) -> dict[str, Tensor]:
         """Extract features for all states together (optimized path).
 
-        Args:
-            y: Tensor of shape (n_timesteps, n_batches, n_states)
-            fc_params: Feature configuration for all states
-
-        Returns:
-            Dictionary mapping feature names to result tensors of shape (n_batches, n_states)
+        :param y: Tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+        :param fc_params: Feature configuration for all states.
+        :return: Dictionary mapping feature names to result tensors of shape (B, S).
         """
         if self.device == "gpu":
             y = y.cuda() if not y.is_cuda else y
@@ -169,12 +163,9 @@ class TorchFeatureExtractor(FeatureExtractor):
     def _extract_for_state(self, y_state: Tensor, fc_params: FCParameters) -> dict[str, Tensor]:
         """Extract features for a single state variable.
 
-        Args:
-            y_state: Tensor of shape (n_timesteps, n_batches, 1) for one state
-            fc_params: Feature configuration for this state
-
-        Returns:
-            Dictionary mapping feature names to result tensors of shape (n_batches,)
+        :param y_state: Tensor of shape (N, B, 1) where N=timesteps, B=batch size, for one state.
+        :param fc_params: Feature configuration for this state.
+        :return: Dictionary mapping feature names to result tensors of shape (B,).
         """
         if self.device == "gpu":
             y_state = y_state.cuda() if not y_state.is_cuda else y_state
@@ -195,11 +186,9 @@ class TorchFeatureExtractor(FeatureExtractor):
     def extract_features(self, solution: Solution) -> torch.Tensor:
         """Extract features from an ODE solution using PyTorch.
 
-        Args:
-            solution: ODE solution containing time series data.
-
-        Returns:
-            Feature tensor of shape (n_batches, n_features).
+        :param solution: ODE solution containing time series data with y tensor of shape
+            (N, B, S) where N=timesteps, B=batch size, S=state variables.
+        :return: Feature tensor of shape (B, F) where F is the total number of features.
         """
         y = self.filter_time(solution)
 

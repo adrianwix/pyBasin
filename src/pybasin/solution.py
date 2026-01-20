@@ -9,24 +9,24 @@ class Solution:
     Solution: Represents the time integration result for a single initial condition.
 
     This class stores:
-        - The initial condition used for integration.
-        - The time series result from integration.
-        - Features extracted from the trajectory.
-        - Optional labels/classification for each trajectory.
-        - Optional model parameters that were used in the integration.
-        - Optional bifurcation amplitudes extracted from the trajectory.
 
-    Attributes:
-        initial_condition (torch.Tensor): The initial condition used for integration (shape: B, S).
-        time (torch.Tensor): Time points of the solution (shape: N).
-        y (torch.Tensor): State values over time (shape: N, B, S).
-        features (torch.Tensor | None): Filtered features used for classification.
-        extracted_features (torch.Tensor | None): Original extracted features before filtering.
-        extracted_feature_names (list[str] | None): Names of extracted features.
-        filtered_feature_names (list[str] | None): Names of filtered features.
-        labels (np.ndarray | None): Labels assigned to each solution in the batch.
-        model_params (dict[str, float] | None): Parameters of the ODE model.
-        bifurcation_amplitudes (torch.Tensor | None): Maximum absolute values along time dimension.
+    - The initial condition used for integration.
+    - The time series result from integration.
+    - Features extracted from the trajectory.
+    - Optional labels/classification for each trajectory.
+    - Optional model parameters that were used in the integration.
+    - Optional bifurcation amplitudes extracted from the trajectory.
+
+    :ivar initial_condition: The initial condition used for integration (shape: B, S).
+    :ivar time: Time points of the solution (shape: N).
+    :ivar y: State values over time (shape: N, B, S).
+    :ivar features: Filtered features used for classification.
+    :ivar extracted_features: Original extracted features before filtering.
+    :ivar extracted_feature_names: Names of extracted features.
+    :ivar filtered_feature_names: Names of filtered features.
+    :ivar labels: Labels assigned to each solution in the batch.
+    :ivar model_params: Parameters of the ODE model.
+    :ivar bifurcation_amplitudes: Maximum absolute values along time dimension.
     """
 
     def __init__(
@@ -62,15 +62,15 @@ class Solution:
             f"State dimension mismatch: y.shape[2] ({y.shape[1]}) != initial_condition.shape[1] ({initial_condition.shape[0]})"
         )
 
-        self.initial_condition = initial_condition
-        self.time = time
-        self.y = y  # shape: (N, B, S)
-        self.features = features if features is not None else None
+        self.initial_condition: torch.Tensor = initial_condition
+        self.time: torch.Tensor = time
+        self.y: torch.Tensor = y
+        self.features: torch.Tensor | None = features if features is not None else None
         self.extracted_features: torch.Tensor | None = None
         self.extracted_feature_names: list[str] | None = None
         self.filtered_feature_names: list[str] | None = None
-        self.labels = labels
-        self.model_params = model_params
+        self.labels: np.ndarray | None = labels
+        self.model_params: dict[str, Any] | None = model_params
         self.bifurcation_amplitudes: torch.Tensor | None = None
 
     def set_labels(self, labels: np.ndarray):

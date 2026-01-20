@@ -11,23 +11,24 @@ JaxForPytorchSolver : JAX solver for PyTorch ODESystem (compatibility)
     Use this when you need to use an existing PyTorch ODE system with JAX.
     Performance is limited due to PyTorch callbacks.
 
-Example
--------
-For maximum performance, define your ODE using JaxODESystem:
+```python
+from pybasin.jax_ode_system import JaxODESystem
+from pybasin.solvers import JaxSolver
+import jax.numpy as jnp
 
->>> from pybasin.jax_ode_system import JaxODESystem
->>> from pybasin.solvers import JaxSolver
->>> import jax.numpy as jnp
->>>
->>> class MyODE(JaxODESystem):
-...     def ode(self, t, y):
-...         return -y
-...     def get_str(self):
-...         return "decay"
->>>
->>> solver = JaxSolver(time_span=(0, 10), n_steps=100, device="cuda")
->>> y0 = jnp.array([[1.0]])
->>> t, y = solver.integrate(MyODE({}), y0)
+
+class MyODE(JaxODESystem):
+    def ode(self, t, y):
+        return -y
+
+    def get_str(self):
+        return "decay"
+
+
+solver = JaxSolver(time_span=(0, 10), n_steps=100, device="cuda")
+y0 = jnp.array([[1.0]])
+```
+    t, y = solver.integrate(MyODE({}), y0)
 """
 
 from pybasin.solvers.jax_for_pytorch_solver import JaxForPytorchSolver

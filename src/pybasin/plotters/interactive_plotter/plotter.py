@@ -36,10 +36,9 @@ class InteractivePlotter:
     Uses Dash with Mantine components for a modern UI and Plotly for
     interactive visualizations. Each page owns its controls, plot, and callbacks.
 
-    Attributes:
-        bse: BasinStabilityEstimator instance with computed results.
-        state_labels: Optional mapping of state indices to custom labels.
-        app: Dash application instance.
+    :ivar bse: BasinStabilityEstimator instance with computed results.
+    :ivar state_labels: Optional mapping of state indices to custom labels.
+    :ivar app: Dash application instance.
     """
 
     # Main layout IDs
@@ -145,7 +144,7 @@ class InteractivePlotter:
                 sampler=self.as_bse.sampler,
                 solver=self.as_bse.solver,
                 feature_extractor=self.as_bse.feature_extractor,
-                cluster_classifier=self.as_bse.cluster_classifier,
+                predictor=self.as_bse.cluster_classifier,
                 feature_selector=None,
             )
 

@@ -29,10 +29,9 @@ class BasinStabilityAIO(BseBasePageAIO):
         """
         Initialize basin stability AIO component.
 
-        Args:
-            bse: Basin stability estimator with computed results
-            aio_id: Unique identifier for this component instance
-            state_labels: Optional mapping of state indices to labels
+        :param bse: Basin stability estimator with computed results.
+        :param aio_id: Unique identifier for this component instance.
+        :param state_labels: Optional mapping of state indices to labels.
         """
         super().__init__(bse, aio_id, state_labels)
 
@@ -50,7 +49,7 @@ class BasinStabilityAIO(BseBasePageAIO):
 
     def get_classifier_name(self) -> str:
         """Get display name of the cluster classifier."""
-        classifier = self.bse.cluster_classifier
+        classifier = self.bse.predictor
         display_name = getattr(classifier, "display_name", None)
         return display_name or classifier.__class__.__name__
 

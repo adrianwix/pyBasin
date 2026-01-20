@@ -180,12 +180,18 @@ def extract_features_sequential(
 ) -> dict[str, Tensor]:
     """Extract features sequentially on CPU.
 
-    Args:
-        x: Input tensor of shape (n_timesteps, n_batches, n_states)
-        fc_parameters: Feature configuration. If None, uses TORCH_COMPREHENSIVE_FC_PARAMETERS
+    Computes features one at a time without parallelization. Useful for debugging
+    or when multiprocessing overhead is not worth it (small datasets).
 
-    Returns:
-        Dictionary mapping feature names to result tensors of shape (n_batches, n_states)
+    :param x: Input tensor of shape (N, B, S) where:
+        - N: number of time points in the time series
+        - B: batch size (number of different initial conditions/samples)
+        - S: number of state variables
+    :param fc_parameters: Feature configuration dictionary mapping feature names to parameter
+        lists. If None, uses TORCH_COMPREHENSIVE_FC_PARAMETERS as default.
+    :return: Dictionary mapping feature names to result tensors of shape (B, S). Each key is a
+        feature name (possibly with parameters), and each value contains that feature computed
+        for all batches and states.
     """
     if fc_parameters is None:
         fc_parameters = TORCH_COMPREHENSIVE_FC_PARAMETERS
@@ -208,15 +214,20 @@ def extract_features_parallel(
 ) -> dict[str, Tensor]:
     """Extract features in parallel using multiprocessing.
 
-    Splits batches across worker processes for parallel CPU execution.
+    Splits batches across worker processes for parallel CPU execution. Each worker
+    processes a subset of batches, and results are combined at the end.
 
-    Args:
-        x: Input tensor of shape (n_timesteps, n_batches, n_states)
-        fc_parameters: Feature configuration. If None, uses TORCH_COMPREHENSIVE_FC_PARAMETERS
-        n_workers: Number of worker processes. If None, uses cpu_count
-
-    Returns:
-        Dictionary mapping feature names to result tensors of shape (n_batches, n_states)
+    :param x: Input tensor of shape (N, B, S) where:
+        - N: number of time points in the time series
+        - B: batch size (number of different initial conditions/samples)
+        - S: number of state variables
+    :param fc_parameters: Feature configuration dictionary. If None, uses
+        TORCH_COMPREHENSIVE_FC_PARAMETERS as default.
+    :param n_workers: Number of worker processes to spawn. If None, uses all available CPU cores
+        (from os.cpu_count()). Each worker processes a subset of the B batches.
+    :return: Dictionary mapping feature names to result tensors of shape (B, S). Features are
+        computed in parallel across batches and then combined. Each key is a feature name, and
+        each value contains that feature for all batches and states.
     """
     if fc_parameters is None:
         fc_parameters = TORCH_COMPREHENSIVE_FC_PARAMETERS
@@ -285,17 +296,18 @@ def extract_features_gpu(
     GPU naturally parallelizes across all batches without chunking.
     Data is moved to GPU and results are kept on GPU.
 
-    Args:
-        x: Input tensor of shape (n_timesteps, n_batches, n_states)
-        fc_parameters: Feature configuration. If None, uses GPU-friendly or comprehensive set
-        use_gpu_friendly: If True and fc_parameters is None, use GPU-optimized subset
-                          that excludes slow features (quantile, permutation_entropy, etc.)
-
-    Returns:
-        Dictionary mapping feature names to result tensors on GPU
-
-    Raises:
-        RuntimeError: If CUDA is not available
+    :param x: Input tensor of shape (N, B, S) where:
+        - N: number of time points in the time series
+        - B: batch size (number of different initial conditions/samples)
+        - S: number of state variables
+    :param fc_parameters: Feature configuration dictionary. If None, uses either GPU-friendly
+        or comprehensive feature set based on use_gpu_friendly parameter.
+    :param use_gpu_friendly: If True and fc_parameters is None, use TORCH_GPU_FC_PARAMETERS
+        (GPU-optimized subset that excludes slow features like quantile, permutation_entropy).
+        If False, uses TORCH_COMPREHENSIVE_FC_PARAMETERS. Default is True.
+    :return: Dictionary mapping feature names to result tensors on GPU of shape (B, S).
+        Results remain on GPU device for further processing.
+    :raises RuntimeError: If CUDA is not available on the system.
     """
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
@@ -425,16 +437,18 @@ def extract_features_gpu_batched(
     - Batches cwt_coefficients: 60 calls -> 4 calls (one per width)
     - And more...
 
-    Args:
-        x: Input tensor of shape (n_timesteps, n_batches, n_states)
-        fc_parameters: Feature configuration. If None, uses GPU-friendly or comprehensive set
-        use_gpu_friendly: If True and fc_parameters is None, use GPU-optimized subset
-
-    Returns:
-        Dictionary mapping feature names to result tensors on GPU
-
-    Raises:
-        RuntimeError: If CUDA is not available
+    :param x: Input tensor of shape (N, B, S) where:
+        - N: number of time points in the time series
+        - B: batch size (number of different initial conditions/samples)
+        - S: number of state variables
+    :param fc_parameters: Feature configuration dictionary. If None, uses either GPU-friendly
+        or comprehensive feature set based on use_gpu_friendly parameter.
+    :param use_gpu_friendly: If True and fc_parameters is None, use TORCH_GPU_FC_PARAMETERS
+        (GPU-optimized subset). If False, uses TORCH_COMPREHENSIVE_FC_PARAMETERS. Default is True.
+    :return: Dictionary mapping feature names to result tensors on GPU of shape (B, S).
+        For multi-output features (e.g., lyapunov_e returning multiple exponents), shape may be
+        (B, S, K) where K is the number of outputs. Results remain on GPU device.
+    :raises RuntimeError: If CUDA is not available on the system.
     """
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")

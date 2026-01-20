@@ -37,10 +37,10 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 from case_studies.friction.setup_friction_system import setup_friction_system
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.feature_extractors.correlation_selector import CorrelationSelector
 from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch_with_impute
 from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch_with_impute
+from pybasin.feature_selector.correlation_selector import CorrelationSelector
 from pybasin.solution import Solution
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 

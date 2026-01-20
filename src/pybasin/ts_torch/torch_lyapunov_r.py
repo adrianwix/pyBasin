@@ -20,12 +20,13 @@ from pybasin.ts_torch.torch_feature_utilities import delay_embedding
 def compute_min_tsep(data: Tensor, n: int) -> Tensor:
     """Compute minimum temporal separation using mean frequency.
 
-    Args:
-        data: 1D time series
-        n: Length of data
+    Analyzes the power spectral density of the signal to determine an appropriate
+    minimum temporal separation for neighbor selection.
 
-    Returns:
-        Minimum temporal separation
+    :param data: 1D time series tensor of shape (N,) where N is the number of time points.
+    :param n: Length of data (typically data.shape[0]).
+    :return: Minimum temporal separation as a scalar tensor. The value is clamped between
+        1 and 25% of the signal length.
     """
     max_tsep_factor = 0.25
 
@@ -45,13 +46,10 @@ def compute_min_tsep(data: Tensor, n: int) -> Tensor:
 def _poly_line_fit(ks: Tensor, div_traj: Tensor, finite_mask: Tensor) -> Tensor:
     """Fit a line using least squares.
 
-    Args:
-        ks: x-values (k indices), shape (N,)
-        div_traj: y-values (divergence trajectory), shape (N,)
-        finite_mask: Boolean mask for valid points, shape (N,)
-
-    Returns:
-        Slope of the fitted line
+    :param ks: x-values (k indices) tensor of shape (N,) where N is the number of data points.
+    :param div_traj: y-values (divergence trajectory) tensor of shape (N,).
+    :param finite_mask: Boolean mask for valid points of shape (N,). True indicates a valid point.
+    :return: Slope of the fitted line as a scalar tensor. Returns NaN if insufficient valid points.
     """
     n_finite = finite_mask.sum()
 
@@ -83,15 +81,20 @@ def lyap_r_single(
 ) -> Tensor:
     """Compute largest Lyapunov exponent for a single 1D time series.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
+    Uses the Rosenstein algorithm to estimate the largest Lyapunov exponent by tracking
+    the average logarithmic divergence of initially nearby trajectories in phase space.
 
-    Returns:
-        Largest Lyapunov exponent (scalar)
+    :param data: 1D time series tensor of shape (N,) where N is the number of time points.
+    :param emb_dim: Embedding dimension for phase space reconstruction. Determines the
+        dimensionality of the reconstructed attractor. Default is 10.
+    :param lag: Lag (delay) for delay embedding. Specifies the time delay between
+        consecutive elements in the embedding vectors. Default is 1.
+    :param trajectory_len: Number of time steps to follow the divergence of nearby trajectories.
+        Longer values provide more data for the linear fit but may be affected by saturation.
+        Default is 20.
+    :param tau: Time step size for normalization of the exponent. Default is 1.0.
+    :return: Largest Lyapunov exponent as a scalar tensor. Returns NaN if computation fails
+        (e.g., insufficient data points or invalid trajectory).
     """
     n = data.shape[0]
     min_tsep = compute_min_tsep(data, n)
@@ -155,20 +158,23 @@ def lyap_r_batch(
     trajectory_len: int = 20,
     tau: float = 1.0,
 ) -> Tensor:
-    """Compute Lyapunov exponents for batch of multi-state trajectories.
+    """Compute largest Lyapunov exponent for batch of multi-state trajectories.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
+    This function processes multiple ODE solutions in parallel, computing the largest
+    Lyapunov exponent for each state variable of each initial condition independently.
 
-    Returns:
-        Array of Lyapunov exponents, shape (B, S)
+    :param data: Trajectories tensor of shape (N, B, S) where:
+        - N: number of time points in the trajectory
+        - B: batch size (number of different initial conditions)
+        - S: number of state variables in the dynamical system
+    :param emb_dim: Embedding dimension for phase space reconstruction. Default is 10.
+    :param lag: Lag (delay) for delay embedding. Default is 1.
+    :param trajectory_len: Number of time steps to follow divergence. Default is 20.
+    :param tau: Time step size for normalization. Default is 1.0.
+    :return: Tensor of shape (B, S) containing the largest Lyapunov exponent for each
+        state variable of each initial condition. Shape interpretation:
+        - First dimension (B): corresponds to different initial conditions
+        - Second dimension (S): corresponds to different state variables
     """
     n_time, batch_size, n_states = data.shape
 

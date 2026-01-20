@@ -36,10 +36,9 @@ class TrajectoryModalAIO:
         """
         Initialize trajectory modal AIO component.
 
-        Args:
-            bse: Basin stability estimator with computed results
-            instance_id: Unique identifier for this modal instance
-            state_labels: Optional mapping of state indices to labels
+        :param bse: Basin stability estimator with computed results.
+        :param instance_id: Unique identifier for this modal instance.
+        :param state_labels: Optional mapping of state indices to labels.
         """
         self.bse = bse
         self.instance_id = instance_id
@@ -67,11 +66,8 @@ class TrajectoryModalAIO:
         """
         Render the modal layout with pattern-matching IDs.
 
-        Args:
-            default_time_range_percent: Default time range as percentage of total
-
-        Returns:
-            Modal component with instance-scoped IDs
+        :param default_time_range_percent: Default time range as percentage of total.
+        :return: Modal component with instance-scoped IDs.
         """
         n_states = self.get_n_states()
         state_options = [
@@ -142,13 +138,10 @@ class TrajectoryModalAIO:
         """
         Build time series plot for a selected sample.
 
-        Args:
-            sample_idx: Index of the sample to plot
-            state_var: State variable index to display
-            time_span: Optional (t_min, t_max) to limit time range
-
-        Returns:
-            Plotly figure with trajectory
+        :param sample_idx: Index of the sample to plot.
+        :param state_var: State variable index to display.
+        :param time_span: Optional (t_min, t_max) to limit time range.
+        :return: Plotly figure with trajectory.
         """
         if self.bse.solution is None:
             return _build_empty_figure()

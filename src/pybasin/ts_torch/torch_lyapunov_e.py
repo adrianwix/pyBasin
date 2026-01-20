@@ -27,16 +27,17 @@ def lyap_e_single(
 ) -> Tensor:
     """Compute multiple Lyapunov exponents for a single 1D time series.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension (must satisfy (emb_dim-1) % (matrix_dim-1) == 0)
-        matrix_dim: Matrix dimension for Jacobian estimation
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation between neighbors
-        tau: Time step size for normalization
-
-    Returns:
-        Tensor of matrix_dim Lyapunov exponents
+    :param data: 1D time series tensor of shape (N,) where N is the number of time points.
+    :param emb_dim: Embedding dimension (must satisfy (emb_dim-1) % (matrix_dim-1) == 0).
+        Determines the phase space reconstruction dimension. Default is 10.
+    :param matrix_dim: Matrix dimension for Jacobian estimation (number of exponents to compute).
+        Default is 4.
+    :param min_nb: Minimal number of neighbors required for reliable estimation. Default is 8.
+    :param min_tsep: Minimal temporal separation between neighbors (to avoid spurious correlations).
+        Default is 0.
+    :param tau: Time step size for normalization of the exponents. Default is 1.0.
+    :return: Tensor of shape (matrix_dim,) containing the Lyapunov exponents sorted from largest
+        to smallest. Returns inf values for unbounded/divergent trajectories or when computation fails.
     """
     # Handle unbounded trajectories
     if not torch.all(torch.isfinite(data)):
@@ -148,19 +149,26 @@ def lyap_e_batch(
 ) -> Tensor:
     """Compute multiple Lyapunov exponents for batch of multi-state trajectories.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        matrix_dim: Matrix dimension
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation
-        tau: Time step size for normalization
+    This function processes multiple ODE solutions in parallel, computing Lyapunov exponents
+    for each state variable of each initial condition independently.
 
-    Returns:
-        Array of Lyapunov exponents, shape (B, S, matrix_dim)
+    :param data: Trajectories tensor of shape (N, B, S) where:
+        - N: number of time points in the trajectory
+        - B: batch size (number of different initial conditions)
+        - S: number of state variables in the dynamical system
+    :param emb_dim: Embedding dimension for phase space reconstruction (must satisfy
+        (emb_dim-1) % (matrix_dim-1) == 0). Default is 10.
+    :param matrix_dim: Matrix dimension for Jacobian estimation, determines how many exponents
+        to compute. Default is 4.
+    :param min_nb: Minimal number of neighbors required for reliable estimation. Default is 8.
+    :param min_tsep: Minimal temporal separation between neighbors. Default is 0.
+    :param tau: Time step size for normalization. Default is 1.0.
+    :return: Tensor of shape (B, S, matrix_dim) containing Lyapunov exponents. For each
+        batch and state, returns matrix_dim exponents sorted from largest to smallest.
+        Shape interpretation:
+        - First dimension (B): corresponds to different initial conditions
+        - Second dimension (S): corresponds to different state variables
+        - Third dimension (matrix_dim): the Lyapunov exponents for that state/batch
     """
     n_time, batch_size, n_states = data.shape
 

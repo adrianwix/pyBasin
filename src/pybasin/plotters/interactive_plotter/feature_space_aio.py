@@ -48,11 +48,10 @@ class FeatureSpaceAIO(BseBasePageAIO):
         """
         Initialize feature space AIO component.
 
-        Args:
-            bse: Basin stability estimator with computed results
-            aio_id: Unique identifier for this component instance
-            state_labels: Optional mapping of state indices to labels
-            options: Feature space plot configuration options
+        :param bse: Basin stability estimator with computed results.
+        :param aio_id: Unique identifier for this component instance.
+        :param state_labels: Optional mapping of state indices to labels.
+        :param options: Feature space plot configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
         self.options = options or FeatureSpaceOptions()

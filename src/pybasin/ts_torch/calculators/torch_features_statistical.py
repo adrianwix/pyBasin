@@ -1,4 +1,13 @@
 # pyright: basic
+"""Statistical feature calculators for time series.
+
+All feature functions follow a consistent tensor shape convention:
+- Input: (N, B, S) where N=timesteps, B=batch size, S=state variables
+- Output: (B, S) for scalar features, or (K, B, S) for multi-valued features where K is the number of values
+
+Features are computed along the time dimension (dim=0), preserving batch and state dimensions.
+"""
+
 import torch
 from torch import Tensor
 
@@ -9,32 +18,52 @@ from torch import Tensor
 
 @torch.no_grad()
 def sum_values(x: Tensor) -> Tensor:
-    """Sum of all values."""
+    """Sum of all values along the time dimension.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the sum across all N timesteps.
+    """
     return x.sum(dim=0)
 
 
 @torch.no_grad()
 def median(x: Tensor) -> Tensor:
-    """Median of the time series."""
+    """Median of the time series along the time dimension.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the median value across all N timesteps.
+    """
     return x.median(dim=0).values
 
 
 @torch.no_grad()
 def mean(x: Tensor) -> Tensor:
-    """Mean of the time series."""
+    """Mean of the time series along the time dimension.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the mean value across all N timesteps.
+    """
     return x.mean(dim=0)
 
 
 @torch.no_grad()
 def length(x: Tensor) -> Tensor:
-    """Length of the time series."""
+    """Length of the time series (number of timesteps).
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) where all values equal N (the number of timesteps).
+    """
     n = x.shape[0]
     return torch.full(x.shape[1:], n, dtype=x.dtype, device=x.device)
 
 
 @torch.no_grad()
 def standard_deviation(x: Tensor) -> Tensor:
-    """Standard deviation (population, ddof=0)."""
+    """Standard deviation (population, ddof=0) along the time dimension.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the standard deviation across all N timesteps.
+    """
     return x.std(dim=0, correction=0)
 
 
@@ -170,12 +199,10 @@ def symmetry_looking(x: Tensor, r: float = 0.1) -> Tensor:
 def quantile_batched(x: Tensor, qs: list[float]) -> Tensor:
     """Compute multiple quantiles at once.
 
-    Args:
-        x: Input tensor of shape (N, B, S)
-        qs: List of quantile values (0.0 to 1.0)
-
-    Returns:
-        Tensor of shape (len(qs), B, S)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param qs: List of quantile values (0.0 to 1.0) to compute.
+    :return: Tensor of shape (len(qs), B, S) containing the requested quantiles. The first dimension
+        corresponds to the different quantile values in the same order as the input list.
     """
     q_tensor = torch.tensor(qs, dtype=x.dtype, device=x.device)
     return torch.quantile(x, q_tensor, dim=0)

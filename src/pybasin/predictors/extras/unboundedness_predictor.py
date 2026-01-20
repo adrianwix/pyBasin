@@ -51,61 +51,51 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
     This is particularly useful in basin stability calculations where some trajectories
     may diverge to infinity (e.g., in the Lorenz system).
 
-    Parameters
-    ----------
-    estimator : estimator object
-        The base estimator to use for bounded trajectories. Must be a classifier or
-        clusterer implementing `fit` and `predict` methods (or `fit_predict` for clustering).
+    ```python
+    from pybasin.predictors.extras import UnboundednessPredictor
+    from sklearn.cluster import KMeans
+    from sklearn.datasets import make_blobs
+    import numpy as np
 
-    unbounded_detector : callable, default=None
-        Function to detect unbounded trajectories. Should take a feature array
-        of shape (n_samples, n_features) and return a boolean array of shape
-        (n_samples,) where True indicates unbounded. If None, uses the default
-        detector which identifies:
-        - Trajectories with Inf/-Inf values (from JAX solver)
-        - Trajectories with values at ±1e10 (from torch feature extractor)
+    X, _ = make_blobs(n_samples=100, n_features=10, centers=3, random_state=42)
+    # Add some "unbounded" samples with extreme values
+    X[0, :] = 1e10
+    X[1, :] = -1e10
+    clf = UnboundednessPredictor(KMeans(n_clusters=3, random_state=42))
+    clf.fit(X)
+    labels = clf.predict(X)
+    print(f"Unbounded samples: {np.sum(labels == 'unbounded')}")
+    ```
 
-    unbounded_label : int or str, default="unbounded"
-        Label to assign to unbounded trajectories.
+    Notes:
 
-    Attributes
-    ----------
-    estimator_ : estimator object
-        The fitted base estimator (only fitted on bounded samples).
-
-    classes_ : ndarray of shape (n_classes,)
-        The classes labels (only for classifiers), including the unbounded label.
-
-    labels_ : ndarray of shape (n_samples,)
-        Cluster labels for each sample from the last fit operation (only for clusterers).
-
-    n_features_in_ : int
-        Number of features seen during fit.
-
-    bounded_mask_ : ndarray of shape (n_samples,)
-        Boolean mask indicating which training samples were bounded.
-
-    Examples
-    --------
-    >>> from pybasin.predictors.extras import UnboundednessPredictor
-    >>> from sklearn.cluster import KMeans
-    >>> from sklearn.datasets import make_blobs
-    >>> import numpy as np
-    >>> X, _ = make_blobs(n_samples=100, n_features=10, centers=3, random_state=42)
-    >>> # Add some "unbounded" samples with extreme values
-    >>> X[0, :] = 1e10
-    >>> X[1, :] = -1e10
-    >>> clf = UnboundednessPredictor(KMeans(n_clusters=3, random_state=42))
-    >>> clf.fit(X)
-    >>> labels = clf.predict(X)
-    >>> print(f"Unbounded samples: {np.sum(labels == 'unbounded')}")
-
-    Notes
-    -----
     - Only bounded samples are used to fit the base estimator
     - The unbounded label is automatically tracked
     - If all samples are unbounded, the estimator will only predict the unbounded label
     - The estimator type validation ensures only classifiers or clusterers are accepted
+
+    :param estimator: The base estimator to use for bounded trajectories. Must be a classifier or
+        clusterer implementing `fit` and `predict` methods (or `fit_predict` for clustering).
+    :param unbounded_detector: Function to detect unbounded trajectories. Should take a feature array
+        of shape (n_samples, n_features) and return a boolean array of shape
+        (n_samples,) where True indicates unbounded. If None, uses the default
+        detector which identifies:
+
+        - Trajectories with Inf/-Inf values (from JAX solver)
+        - Trajectories with values at ±1e10 (from torch feature extractor)
+    :param unbounded_label: Label to assign to unbounded trajectories.
+
+    :ivar estimator_: The fitted base estimator (only fitted on bounded samples).
+    :ivar classes_: The classes labels (only for classifiers), including the unbounded label.
+    :ivar labels_: Cluster labels for each sample from the last fit operation (only for clusterers).
+    :ivar n_features_in_: Number of features seen during fit.
+    :ivar bounded_mask_: Boolean mask indicating which training samples were bounded.
+
+    :vartype estimator_: estimator object
+    :vartype classes_: ndarray of shape (n_classes,)
+    :vartype labels_: ndarray of shape (n_samples,)
+    :vartype n_features_in_: int
+    :vartype bounded_mask_: ndarray of shape (n_samples,)
     """
 
     def __init__(
@@ -131,18 +121,9 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
 
         Detects unbounded samples, then fits the base estimator only on bounded samples.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training data.
-
-        y : array-like of shape (n_samples,), default=None
-            Target values. Only used if the base estimator is a classifier.
-
-        Returns
-        -------
-        self : object
-            Fitted estimator.
+        :param X: Training data.
+        :param y: Target values. Only used if the base estimator is a classifier.
+        :return: Fitted estimator.
         """
         self._validate_estimator()
 
@@ -212,15 +193,8 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
         """
         Predict labels for samples in X.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Samples to predict.
-
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            Predicted labels.
+        :param X: Samples to predict.
+        :return: Predicted labels.
         """
         check_is_fitted(self)
         X = cast(np.ndarray, check_array(X, ensure_all_finite=False))  # type: ignore[call-arg]
@@ -260,18 +234,9 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
         """
         Fit the meta-estimator and predict labels (for clusterers).
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training data.
-
-        y : array-like of shape (n_samples,), default=None
-            Target values (ignored for clusterers, required for classifiers).
-
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            Predicted labels.
+        :param X: Training data.
+        :param y: Target values (ignored for clusterers, required for classifiers).
+        :return: Predicted labels.
         """
         self.fit(X, y)
         if is_clusterer(self.estimator):

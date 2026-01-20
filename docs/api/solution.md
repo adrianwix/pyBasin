@@ -1,0 +1,3 @@
+# Solution
+
+::: pybasin.solution.Solution

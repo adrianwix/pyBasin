@@ -26,56 +26,31 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     mechanism, allowing you to apply different feature sets to different state variables
     based on domain knowledge.
 
-    Args:
-        time_steady: Time threshold for filtering transients. Only data after this
-            time will be used for feature extraction. Default of 0.0 uses the entire
-            time series.
-        default_fc_parameters: Default feature extraction parameters for all states.
-            Can be one of:
-            - MinimalFCParameters() - Fast extraction with ~20 features
-            - ComprehensiveFCParameters() - Full extraction with ~800 features
-            - Custom dict like {"mean": None, "maximum": None} for specific features
-            - None - must provide kind_to_fc_parameters
-            Default is MinimalFCParameters().
-        kind_to_fc_parameters: Optional dict mapping state indices to FCParameters.
-            Allows different feature sets per state variable. If provided, overrides
-            default_fc_parameters for those states. Example:
-            {
-                0: {"mean": None, "maximum": None},  # State 0: only mean and max
-                1: ComprehensiveFCParameters(),  # State 1: all features
-            }
-        n_jobs: Number of parallel jobs for feature extraction. Default is 1.
-            Set to -1 to use all available cores.
-        normalize: Whether to apply StandardScaler normalization to features.
-            Highly recommended for distance-based classifiers like KNN.
-            Default is True.
+    ```python
+    # Same minimal features for all states
+    extractor = TsfreshFeatureExtractor(
+        time_steady=9.0, default_fc_parameters=MinimalFCParameters(), n_jobs=-1, normalize=True
+    )
 
-    Examples:
-        >>> # Same minimal features for all states
-        >>> extractor = TsfreshFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     default_fc_parameters=MinimalFCParameters(),
-        ...     n_jobs=-1,
-        ...     normalize=True
-        ... )
+    # Specific features for all states
+    extractor = TsfreshFeatureExtractor(
+        time_steady=950.0,
+        default_fc_parameters={"mean": None, "std": None, "maximum": None},
+        n_jobs=-1,
+    )
 
-        >>> # Specific features for all states
-        >>> extractor = TsfreshFeatureExtractor(
-        ...     time_steady=950.0,
-        ...     default_fc_parameters={"mean": None, "std": None, "maximum": None},
-        ...     n_jobs=-1
-        ... )
+    # Different features per state (e.g., pendulum: position vs velocity)
+    from tsfresh.feature_extraction import MinimalFCParameters, ComprehensiveFCParameters
 
-        >>> # Different features per state (e.g., pendulum: position vs velocity)
-        >>> from tsfresh.feature_extraction import MinimalFCParameters, ComprehensiveFCParameters
-        >>> extractor = TsfreshFeatureExtractor(
-        ...     time_steady=950.0,
-        ...     kind_to_fc_parameters={
-        ...         0: {"mean": None, "maximum": None, "minimum": None},  # Position: basic stats
-        ...         1: ComprehensiveFCParameters(),  # Velocity: full spectral analysis
-        ...     },
-        ...     n_jobs=1  # Use n_jobs=1 for deterministic results
-        ... )
+    extractor = TsfreshFeatureExtractor(
+        time_steady=950.0,
+        kind_to_fc_parameters={
+            0: {"mean": None, "maximum": None, "minimum": None},  # Position: basic stats
+            1: ComprehensiveFCParameters(),  # Velocity: full spectral analysis
+        },
+        n_jobs=1,  # Use n_jobs=1 for deterministic results
+    )
+    ```
 
     Note on parallelism:
         Setting n_jobs > 1 enables parallel feature extraction but introduces
@@ -87,6 +62,25 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         extract_features(). For best results with supervised classifiers:
         - Either set normalize=False (recommended for KNN with few templates)
         - Or call fit_scaler() explicitly with representative data before extraction
+
+    :param time_steady: Time threshold for filtering transients. Only data after this
+        time will be used for feature extraction. Default of 0.0 uses the entire
+        time series.
+    :param default_fc_parameters: Default feature extraction parameters for all states.
+        Can be one of:
+        - MinimalFCParameters() - Fast extraction with ~20 features
+        - ComprehensiveFCParameters() - Full extraction with ~800 features
+        - Custom dict like {"mean": None, "maximum": None} for specific features
+        - None - must provide kind_to_fc_parameters
+        Default is MinimalFCParameters().
+    :param kind_to_fc_parameters: Optional dict mapping state indices to FCParameters.
+        Allows different feature sets per state variable. If provided, overrides
+        default_fc_parameters for those states.
+    :param n_jobs: Number of parallel jobs for feature extraction. Default is 1.
+        Set to -1 to use all available cores.
+    :param normalize: Whether to apply StandardScaler normalization to features.
+        Highly recommended for distance-based classifiers like KNN.
+        Default is True.
     """
 
     def __init__(
@@ -136,12 +130,9 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         extracts features for each trajectory and state variable, then converts back
         to PyTorch tensor.
 
-        Args:
-            solution: ODE solution with y tensor of shape (N, B, S) where N is
-                time steps, B is batch size, and S is number of state variables.
-
-        Returns:
-            Feature tensor of shape (B, F) where B is the batch size and F is
+        :param solution: ODE solution with y tensor of shape (N, B, S) where N is
+            time steps, B is batch size, and S is number of state variables.
+        :return: Feature tensor of shape (B, F) where B is the batch size and F is
             the total number of features extracted by tsfresh across all state
             variables.
         """
@@ -245,11 +236,8 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     def feature_names(self) -> list[str]:
         """Return the list of feature names.
 
-        Returns:
-            List of feature names from tsfresh extraction.
-
-        Raises:
-            RuntimeError: If extract_features has not been called yet.
+        :return: List of feature names from tsfresh extraction.
+        :raises RuntimeError: If extract_features has not been called yet.
         """
         if self._feature_columns is None:
             raise RuntimeError("Feature columns not initialized. Call extract_features first.")

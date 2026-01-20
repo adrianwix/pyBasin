@@ -28,19 +28,16 @@ def lyap_r_single(
 
     This is a JAX implementation of the Rosenstein algorithm.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension (default: 10)
-        lag: Lag for delay embedding (default: 1). Must be static for JIT.
-        trajectory_len: Number of steps to follow divergence (default: 20)
-        tau: Time step size for normalization (default: 1.0)
-        fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly")
-        ransac_n_iters: Number of RANSAC iterations (default: 100)
-        ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None)
-        rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC")
-
-    Returns:
-        Largest Lyapunov exponent (scalar)
+    :param data: 1D time series of shape (N,).
+    :param emb_dim: Embedding dimension (default: 10).
+    :param lag: Lag for delay embedding (default: 1). Must be static for JIT.
+    :param trajectory_len: Number of steps to follow divergence (default: 20).
+    :param tau: Time step size for normalization (default: 1.0).
+    :param fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly").
+    :param ransac_n_iters: Number of RANSAC iterations (default: 100).
+    :param ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None).
+    :param rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC").
+    :return: Largest Lyapunov exponent (scalar).
     """
     n = data.shape[0]
 
@@ -114,19 +111,16 @@ def lyap_r_batch_single_state(
 ) -> Array:
     """Compute Lyapunov exponents for a batch of 1D time series.
 
-    Args:
-        data: Batch of time series, shape (B, N) where B is batch size, N is time points
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding (must be static for JIT)
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
-        fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly")
-        ransac_n_iters: Number of RANSAC iterations (default: 100)
-        ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None)
-        rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC")
-
-    Returns:
-        Array of Lyapunov exponents, shape (B,)
+    :param data: Batch of time series, shape (B, N) where B is batch size, N is time points.
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding (must be static for JIT).
+    :param trajectory_len: Number of steps to follow divergence.
+    :param tau: Time step size for normalization.
+    :param fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly").
+    :param ransac_n_iters: Number of RANSAC iterations (default: 100).
+    :param ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None).
+    :param rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC").
+    :return: Array of Lyapunov exponents, shape (B,).
     """
     batch_size = data.shape[0]
 
@@ -164,22 +158,17 @@ def lyap_r_batch(
     This is the main entry point for computing Lyapunov exponents on
     batched trajectory data with multiple state variables.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding (must be static for JIT)
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
-        fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly")
-        ransac_n_iters: Number of RANSAC iterations (default: 100)
-        ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None)
-        rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC")
-
-    Returns:
-        Array of Lyapunov exponents, shape (B, S)
+    :param data: Trajectories of shape (N, B, S) where N is number of time points,
+        B is batch size (number of initial conditions), and S is number of state variables.
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding (must be static for JIT).
+    :param trajectory_len: Number of steps to follow divergence.
+    :param tau: Time step size for normalization.
+    :param fit: Fitting method - "poly" for least squares, "RANSAC" for robust (default: "poly").
+    :param ransac_n_iters: Number of RANSAC iterations (default: 100).
+    :param ransac_threshold: Inlier threshold for RANSAC. If None, uses MAD (default: None).
+    :param rng_key: JAX PRNG key for RANSAC (required if fit="RANSAC").
+    :return: Array of Lyapunov exponents, shape (B, S).
     """
     _n_time, batch_size, n_states = data.shape
 
@@ -221,15 +210,12 @@ def lyap_r_batch_with_impute(
 
     Same as lyap_r_batch but applies columnwise imputation after computation.
 
-    Args:
-        data: Trajectories of shape (N, B, S)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding (must be static for JIT)
-        trajectory_len: Number of steps to follow divergence
-        tau: Time step size for normalization
-
-    Returns:
-        Array of Lyapunov exponents, shape (B, S), with NaN/inf imputed
+    :param data: Trajectories of shape (N, B, S).
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding (must be static for JIT).
+    :param trajectory_len: Number of steps to follow divergence.
+    :param tau: Time step size for normalization.
+    :return: Array of Lyapunov exponents, shape (B, S), with NaN/inf imputed.
     """
     features = lyap_r_batch(data, emb_dim, lag, trajectory_len, tau)
     return impute(features)
@@ -238,13 +224,10 @@ def lyap_r_batch_with_impute(
 def _poly_line_fit(ks: Array, div_traj: Array, finite_mask: Array) -> Array:
     """Fit a line using least squares (polynomial fit).
 
-    Args:
-        ks: x-values (k indices), shape (N,)
-        div_traj: y-values (divergence trajectory), shape (N,)
-        finite_mask: Boolean mask for valid (finite) points, shape (N,)
-
-    Returns:
-        Slope of the fitted line
+    :param ks: x-values (k indices), shape (N,).
+    :param div_traj: y-values (divergence trajectory), shape (N,).
+    :param finite_mask: Boolean mask for valid (finite) points, shape (N,).
+    :return: Slope of the fitted line.
     """
     n_finite = jnp.sum(finite_mask)
 
@@ -269,12 +252,11 @@ def _poly_line_fit(ks: Array, div_traj: Array, finite_mask: Array) -> Array:
 def _fit_line_two_points(x1: Array, y1: Array, x2: Array, y2: Array) -> tuple[Array, Array]:
     """Fit a line y = a*x + b through two points.
 
-    Args:
-        x1, y1: First point
-        x2, y2: Second point
-
-    Returns:
-        Tuple of (slope a, intercept b)
+    :param x1: First point x-coordinate.
+    :param y1: First point y-coordinate.
+    :param x2: Second point x-coordinate.
+    :param y2: Second point y-coordinate.
+    :return: Tuple of (slope a, intercept b).
     """
     a = (y2 - y1) / (x2 - x1 + 1e-10)
     b = y1 - a * x1
@@ -284,14 +266,11 @@ def _fit_line_two_points(x1: Array, y1: Array, x2: Array, y2: Array) -> tuple[Ar
 def _line_residuals(a: Array, b: Array, x: Array, y: Array) -> Array:
     """Compute absolute residuals for line y = a*x + b.
 
-    Args:
-        a: Slope
-        b: Intercept
-        x: x-values, shape (N,)
-        y: y-values, shape (N,)
-
-    Returns:
-        Absolute residuals, shape (N,)
+    :param a: Slope.
+    :param b: Intercept.
+    :param x: x-values, shape (N,).
+    :param y: y-values, shape (N,).
+    :return: Absolute residuals, shape (N,).
     """
     y_pred = a * x + b
     return jnp.abs(y - y_pred)
@@ -307,17 +286,14 @@ def _ransac_line_fit(
 ) -> Array:
     """Fit a line using RANSAC (robust to outliers).
 
-    Args:
-        key: JAX PRNG key
-        ks: x-values (k indices), shape (N,)
-        div_traj: y-values (divergence trajectory), shape (N,)
-        finite_mask: Boolean mask for valid (finite) points, shape (N,)
-        n_iters: Number of RANSAC iterations
-        inlier_threshold: Threshold for considering a point an inlier.
-            If None, uses MAD (Median Absolute Deviation) like sklearn.
-
-    Returns:
-        Slope of the robustly fitted line
+    :param key: JAX PRNG key.
+    :param ks: x-values (k indices), shape (N,).
+    :param div_traj: y-values (divergence trajectory), shape (N,).
+    :param finite_mask: Boolean mask for valid (finite) points, shape (N,).
+    :param n_iters: Number of RANSAC iterations.
+    :param inlier_threshold: Threshold for considering a point an inlier.
+        If None, uses MAD (Median Absolute Deviation) like sklearn.
+    :return: Slope of the robustly fitted line.
     """
     n = ks.shape[0]
     n_finite = jnp.sum(finite_mask)
@@ -382,12 +358,9 @@ def _ransac_line_fit(
 def compute_min_tsep(data: Array, n: int) -> Array:
     """Compute minimum temporal separation using mean frequency.
 
-    Args:
-        data: 1D time series
-        n: Length of data
-
-    Returns:
-        Minimum temporal separation (as JAX Array)
+    :param data: 1D time series.
+    :param n: Length of data.
+    :return: Minimum temporal separation (as JAX Array).
     """
     max_tsep_factor = 0.25
 

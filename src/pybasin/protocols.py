@@ -22,10 +22,8 @@ class ODESystemProtocol(Protocol):
     Both implementations satisfy this protocol via structural typing (no explicit inheritance needed).
     This allows generic code to work with either implementation.
 
-    Attributes
-    ----------
-    params : Any
-        Parameter dictionary for the ODE system.
+    :ivar params: Parameter dictionary for the ODE system.
+    :vartype params: Any
     """
 
     params: Any
@@ -36,15 +34,8 @@ class ODESystemProtocol(Protocol):
         For PyTorch-based systems, this moves the module to the device.
         For JAX systems, this is a no-op (returns self).
 
-        Parameters
-        ----------
-        device : Any
-            The target device.
-
-        Returns
-        -------
-        ODESystemProtocol
-            The ODE system on the target device.
+        :param device: The target device.
+        :return: The ODE system on the target device.
         """
         ...
 
@@ -54,10 +45,7 @@ class ODESystemProtocol(Protocol):
 
         Used for caching and logging purposes.
 
-        Returns
-        -------
-        str
-            A human-readable description of the ODE system and its parameters.
+        :return: A human-readable description of the ODE system and its parameters.
         """
         ...
 
@@ -71,16 +59,15 @@ class SolverProtocol(Protocol):
     Both implementations satisfy this protocol via structural typing (no explicit inheritance needed).
     This allows generic code to work with either implementation.
 
-    Attributes
-    ----------
-    time_span : tuple[float, float]
-        The integration time interval (t_start, t_end).
-    n_steps : int
-        Number of evaluation points.
-    device : torch.device
-        Device for output tensors.
-    use_cache : bool
-        Whether caching is enabled.
+    :ivar time_span: The integration time interval (t_start, t_end).
+    :ivar n_steps: Number of evaluation points.
+    :ivar device: Device for output tensors.
+    :ivar use_cache: Whether caching is enabled.
+
+    :vartype time_span: tuple[float, float]
+    :vartype n_steps: int
+    :vartype device: torch.device
+    :vartype use_cache: bool
     """
 
     time_span: tuple[float, float]
@@ -94,17 +81,9 @@ class SolverProtocol(Protocol):
         """
         Solve the ODE system and return the evaluation time points and solution.
 
-        Parameters
-        ----------
-        ode_system : ODESystemProtocol
-            An instance of an ODE system (ODESystem or JaxODESystem).
-        y0 : torch.Tensor
-            Initial conditions with shape (batch, n_dims).
-
-        Returns
-        -------
-        tuple[torch.Tensor, torch.Tensor]
-            Tuple (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
+        :param ode_system: An instance of an ODE system (ODESystem or JaxODESystem).
+        :param y0: Initial conditions with shape (batch, n_dims).
+        :return: Tuple (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
         ...
 
@@ -112,14 +91,7 @@ class SolverProtocol(Protocol):
         """
         Create a copy of this solver configured for a different device.
 
-        Parameters
-        ----------
-        device : str
-            Target device ('cpu', 'cuda', 'gpu').
-
-        Returns
-        -------
-        SolverProtocol
-            New solver instance with the same configuration but different device.
+        :param device: Target device ('cpu', 'cuda', 'gpu').
+        :return: New solver instance with the same configuration but different device.
         """
         ...

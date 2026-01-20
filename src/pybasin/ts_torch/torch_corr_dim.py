@@ -18,15 +18,12 @@ from pybasin.ts_torch.torch_feature_utilities import delay_embedding
 def _logarithmic_r(min_r: Tensor, max_r: Tensor, n_rvals: int, device: torch.device) -> Tensor:
     """Create logarithmically spaced radius values (vmap-compatible).
 
-    Args:
-        min_r: Minimum radius value (tensor)
-        max_r: Maximum radius value (tensor)
-        n_rvals: Number of values
-        device: Device to create tensor on
-
-    Returns:
-        Tensor of logarithmically spaced values from min_r to max_r
-        Shape: (n_rvals,)
+    :param min_r: Minimum radius value as a scalar tensor.
+    :param max_r: Maximum radius value as a scalar tensor.
+    :param n_rvals: Number of logarithmically spaced values to generate.
+    :param device: Device to create the output tensor on (e.g., 'cpu' or 'cuda').
+    :return: Tensor of shape (n_rvals,) containing logarithmically spaced values
+        from min_r to max_r.
     """
     log_min = torch.log(min_r + 1e-10)
     log_max = torch.log(max_r + 1e-10)
@@ -48,15 +45,19 @@ def corr_dim_single(
 
     This is the Grassberger-Procaccia algorithm. The correlation dimension
     is a characteristic measure that describes the geometry of chaotic attractors.
+    It quantifies how the correlation sum scales with radius in the reconstructed
+    phase space.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
-
-    Returns:
-        Correlation dimension (scalar)
+    :param data: 1D time series tensor of shape (N,) where N is the number of time points.
+    :param emb_dim: Embedding dimension for phase space reconstruction. Determines the
+        dimensionality of the reconstructed attractor. Default is 4.
+    :param lag: Lag (delay) for delay embedding. Specifies the time delay between
+        consecutive elements in the embedding vectors. Default is 1.
+    :param n_rvals: Number of radius values to use in the correlation integral computation.
+        More values provide better resolution but increase computation time. Default is 50.
+    :return: Correlation dimension as a scalar tensor. This represents the slope of log(C)
+        vs log(r) where C is the correlation sum and r is the radius. Returns NaN if
+        computation fails (e.g., insufficient data or all infinite distances).
     """
     # Create delay embedding
     orbit = delay_embedding(data, emb_dim, lag)
@@ -117,17 +118,21 @@ def corr_dim_batch(
 ) -> Tensor:
     """Compute correlation dimension for batch of multi-state trajectories.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
+    This function processes multiple ODE solutions in parallel, computing the correlation
+    dimension for each state variable of each initial condition independently using vmap
+    for efficient vectorized computation.
 
-    Returns:
-        Array of correlation dimensions, shape (B, S)
+    :param data: Trajectories tensor of shape (N, B, S) where:
+        - N: number of time points in the trajectory
+        - B: batch size (number of different initial conditions)
+        - S: number of state variables in the dynamical system
+    :param emb_dim: Embedding dimension for phase space reconstruction. Default is 4.
+    :param lag: Lag (delay) for delay embedding. Default is 1.
+    :param n_rvals: Number of radius values to use in correlation integral. Default is 50.
+    :return: Tensor of shape (B, S) containing the correlation dimension for each state
+        variable of each initial condition. Shape interpretation:
+        - First dimension (B): corresponds to different initial conditions
+        - Second dimension (S): corresponds to different state variables
     """
     n_time, batch_size, n_states = data.shape
 

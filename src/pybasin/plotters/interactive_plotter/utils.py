@@ -25,10 +25,7 @@ def get_color(idx: int) -> str:
 def tensor_to_float_list(tensor: torch.Tensor) -> list[float]:
     """Convert a torch tensor to a list of floats.
 
-    Args:
-        tensor: 1D torch tensor to convert
-
-    Returns:
-        List of float values from the tensor
+    :param tensor: 1D torch tensor to convert.
+    :return: List of float values from the tensor.
     """
     return [float(x) for x in tensor.cpu().tolist()]

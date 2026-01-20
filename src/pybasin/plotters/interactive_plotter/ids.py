@@ -10,14 +10,13 @@ avoiding ID collisions.
 class IDs:
     """Registry of component ID prefixes and utilities.
 
-    Each page has a unique prefix. Use the `id()` method to generate
+    Each page has a unique prefix. Use the ``id()`` method to generate
     fully qualified component IDs.
 
-    Example:
-        >>> IDs.id(IDs.STATE_SPACE, "plot")
-        'state-plot'
-        >>> IDs.id(IDs.FEATURE_SPACE, "x-select")
-        'feature-x-select'
+    ```python
+    IDs.id(IDs.STATE_SPACE, "plot")  # returns 'state-plot'
+    IDs.id(IDs.FEATURE_SPACE, "x-select")  # returns 'feature-x-select'
+    ```
     """
 
     # Page prefixes - aligned with ViewType from types.py

@@ -1,4 +1,13 @@
 # pyright: basic
+"""Change and difference-based feature calculators for time series.
+
+All feature functions follow a consistent tensor shape convention:
+- Input: (N, B, S) where N=timesteps, B=batch size, S=state variables
+- Output: (B, S) for scalar features, or (K, B, S) for multi-valued features where K is the number of values
+
+Features are computed along the time dimension (dim=0), preserving batch and state dimensions.
+"""
+
 import torch
 from torch import Tensor
 from torch.func import vmap
@@ -68,13 +77,21 @@ def _change_quantiles_core(
 
 @torch.no_grad()
 def absolute_sum_of_changes(x: Tensor) -> Tensor:
-    """Sum of absolute differences between consecutive values."""
+    """Sum of absolute differences between consecutive values.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the sum of |x[i+1] - x[i]| for all consecutive pairs.
+    """
     return torch.abs(x[1:] - x[:-1]).sum(dim=0)
 
 
 @torch.no_grad()
 def mean_abs_change(x: Tensor) -> Tensor:
-    """Mean of absolute differences between consecutive values."""
+    """Mean of absolute differences between consecutive values.
+
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :return: Tensor of shape (B, S) containing the mean of |x[i+1] - x[i]| across all consecutive pairs.
+    """
     return torch.abs(x[1:] - x[:-1]).mean(dim=0)
 
 
@@ -101,15 +118,13 @@ def change_quantiles(
     Computes statistics of consecutive value changes where both values
     fall within the [ql, qh] quantile range.
 
-    Args:
-        x: Input tensor (N, B, S)
-        ql: Lower quantile (0.0 to 1.0)
-        qh: Upper quantile (0.0 to 1.0), must be > ql
-        isabs: If True, use absolute differences
-        f_agg: Aggregation function, "mean" or "var"
-
-    Returns:
-        Result tensor of shape (B, S)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param ql: Lower quantile (0.0 to 1.0) defining the corridor.
+    :param qh: Upper quantile (0.0 to 1.0), must be > ql.
+    :param isabs: If True, use absolute differences. Default is True.
+    :param f_agg: Aggregation function, "mean" or "var". Default is "mean".
+    :return: Tensor of shape (B, S) containing the requested statistic (mean or variance) of
+        changes within the quantile corridor.
     """
     q_low = torch.quantile(x, ql, dim=0, keepdim=True)  # (1, B, S)
     q_high = torch.quantile(x, qh, dim=0, keepdim=True)  # (1, B, S)
@@ -132,16 +147,15 @@ def change_quantiles_batched(x: Tensor, params: list[dict]) -> Tensor:
     This function pre-computes all unique quantiles once, then uses vmap to
     efficiently process all parameter combinations in a single kernel.
 
-    Args:
-        x: Input tensor of shape (N, B, S)
-        params: List of parameter dicts, each with keys:
-            - "ql": float (lower quantile, 0.0 to 1.0)
-            - "qh": float (upper quantile, 0.0 to 1.0)
-            - "isabs": bool (whether to use absolute differences)
-            - "f_agg": str ("mean" or "var")
-
-    Returns:
-        Tensor of shape (len(params), B, S)
+    :param x: Input time series tensor of shape (N, B, S) where N=timesteps, B=batch size, S=states.
+    :param params: List of parameter dicts, each with keys:
+        - "ql": float (lower quantile, 0.0 to 1.0)
+        - "qh": float (upper quantile, 0.0 to 1.0)
+        - "isabs": bool (whether to use absolute differences)
+        - "f_agg": str ("mean" or "var")
+    :return: Tensor of shape (len(params), B, S) containing the results for each parameter
+        combination. The first dimension corresponds to the different parameter sets in the
+        same order as the input list.
 
     Example:
         params = [

@@ -226,7 +226,23 @@ class Solver(ABC):
 
 class TorchDiffEqSolver(Solver):
     """
-    Solver using torchdiffeq's odeint.
+    Differentiable ODE solver with full GPU support and O(1)-memory backpropagation.
+
+    Uses the adjoint method for memory-efficient gradient computation through ODE solutions.
+    Supports adaptive-step (dopri5, dopri8, bosh3) and fixed-step (euler, rk4) methods.
+
+    See also: [torchdiffeq GitHub](https://github.com/rtqichen/torchdiffeq)
+
+    Citation:
+
+    ```bibtex
+    @misc{torchdiffeq,
+        author={Chen, Ricky T. Q.},
+        title={torchdiffeq},
+        year={2018},
+        url={https://github.com/rtqichen/torchdiffeq},
+    }
+    ```
     """
 
     display_name: str = "TorchDiffEq Solver"
@@ -304,7 +320,25 @@ class TorchDiffEqSolver(Solver):
 
 class TorchOdeSolver(Solver):
     """
-    Solver using torchode's parallel ODE solver.
+    Parallel ODE solver with independent step sizes per batch element.
+
+    Compatible with PyTorch's JIT compiler for performance optimization. Unlike other
+    solvers, torchode can take different step sizes for each sample in a batch, avoiding
+    performance traps for problems of varying stiffness.
+
+    See also: [torchode documentation](https://torchode.readthedocs.io/en/latest/)
+
+    Citation:
+
+    ```bibtex
+    @inproceedings{lienen2022torchode,
+        title = {torchode: A Parallel {ODE} Solver for PyTorch},
+        author = {Marten Lienen and Stephan G{"u}nnemann},
+        booktitle = {The Symbiosis of Deep Learning and Differential Equations II, NeurIPS},
+        year = {2022},
+        url = {https://openreview.net/forum?id=uiKVKTiUYB0}
+    }
+    ```
     """
 
     display_name: str = "TorchODE Solver"
@@ -450,6 +484,8 @@ class SklearnParallelSolver(Solver):
 
     Uses multiprocessing (loky backend) to solve multiple initial conditions in parallel.
     Each worker solves one trajectory at a time using scipy's solve_ivp.
+
+    See also: [scipy.integrate.solve_ivp](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html)
     """
 
     display_name: str = "Sklearn Parallel Solver"

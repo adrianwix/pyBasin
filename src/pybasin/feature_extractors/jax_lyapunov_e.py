@@ -41,12 +41,9 @@ from pybasin.feature_extractors.jax_feature_utilities import delay_embedding, im
 def rowwise_chebyshev(x: Array, y: Array) -> Array:
     """Compute Chebyshev (L-infinity) distance from each row of x to vector y.
 
-    Args:
-        x: Matrix of shape (M, D)
-        y: Vector of shape (D,)
-
-    Returns:
-        Distances of shape (M,)
+    :param x: Matrix of shape (M, D).
+    :param y: Vector of shape (D,).
+    :return: Distances of shape (M,).
     """
     return jnp.max(jnp.abs(x - y), axis=1)
 
@@ -65,16 +62,13 @@ def lyap_e_single(
     than JAX for this inherently sequential algorithm due to NumPy's optimized
     LAPACK calls for small matrices.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension (default: 10). Must satisfy (emb_dim-1) % (matrix_dim-1) == 0
-        matrix_dim: Matrix dimension for Jacobian estimation (default: 4)
-        min_nb: Minimal number of neighbors (default: 8)
-        min_tsep: Minimal temporal separation between neighbors (default: 0)
-        tau: Time step size for normalization (default: 1.0)
-
-    Returns:
-        Array of matrix_dim Lyapunov exponents
+    :param data: 1D time series of shape (N,).
+    :param emb_dim: Embedding dimension (default: 10). Must satisfy (emb_dim-1) % (matrix_dim-1) == 0.
+    :param matrix_dim: Matrix dimension for Jacobian estimation (default: 4).
+    :param min_nb: Minimal number of neighbors (default: 8).
+    :param min_tsep: Minimal temporal separation between neighbors (default: 0).
+    :param tau: Time step size for normalization (default: 1.0).
+    :return: Array of matrix_dim Lyapunov exponents.
     """
     data = np.asarray(data, dtype=np.float64)
 
@@ -177,16 +171,13 @@ def lyap_e_single_jax(
     This is a JAX implementation of the Eckmann algorithm using fori_loop
     for better performance on sequential operations.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension (default: 10). Must satisfy (emb_dim-1) % (matrix_dim-1) == 0
-        matrix_dim: Matrix dimension for Jacobian estimation (default: 4)
-        min_nb: Minimal number of neighbors (default: 8)
-        min_tsep: Minimal temporal separation between neighbors (default: 0)
-        tau: Time step size for normalization (default: 1.0)
-
-    Returns:
-        Array of matrix_dim Lyapunov exponents
+    :param data: 1D time series of shape (N,).
+    :param emb_dim: Embedding dimension (default: 10). Must satisfy (emb_dim-1) % (matrix_dim-1) == 0.
+    :param matrix_dim: Matrix dimension for Jacobian estimation (default: 4).
+    :param min_nb: Minimal number of neighbors (default: 8).
+    :param min_tsep: Minimal temporal separation between neighbors (default: 0).
+    :param tau: Time step size for normalization (default: 1.0).
+    :return: Array of matrix_dim Lyapunov exponents.
     """
     m = (emb_dim - 1) // (matrix_dim - 1)
 
@@ -290,17 +281,14 @@ def lyap_e_batch_single_state(
 
     Uses parallel numpy implementation with ProcessPoolExecutor for speed.
 
-    Args:
-        data: Batch of time series, shape (B, N) where B is batch size, N is time points
-        emb_dim: Embedding dimension
-        matrix_dim: Matrix dimension
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation
-        tau: Time step size for normalization
-        n_workers: Number of parallel workers (default: min(cpu_count, 16))
-
-    Returns:
-        Array of Lyapunov exponents, shape (B, matrix_dim)
+    :param data: Batch of time series, shape (B, N) where B is batch size, N is time points.
+    :param emb_dim: Embedding dimension.
+    :param matrix_dim: Matrix dimension.
+    :param min_nb: Minimal number of neighbors.
+    :param min_tsep: Minimal temporal separation.
+    :param tau: Time step size for normalization.
+    :param n_workers: Number of parallel workers (default: min(cpu_count, 16)).
+    :return: Array of Lyapunov exponents, shape (B, matrix_dim).
     """
     data_np = np.asarray(data)
     batch_size = data_np.shape[0]
@@ -333,20 +321,15 @@ def lyap_e_batch(
     This is ~20x faster than the JAX implementation due to NumPy's optimized
     LAPACK calls for small matrices and multiprocessing parallelism.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        matrix_dim: Matrix dimension
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation
-        tau: Time step size for normalization
-        n_workers: Number of parallel workers (default: min(cpu_count, 16))
-
-    Returns:
-        Array of Lyapunov exponents, shape (B, S, matrix_dim)
+    :param data: Trajectories of shape (N, B, S) where N is number of time points,
+        B is batch size (number of initial conditions), and S is number of state variables.
+    :param emb_dim: Embedding dimension.
+    :param matrix_dim: Matrix dimension.
+    :param min_nb: Minimal number of neighbors.
+    :param min_tsep: Minimal temporal separation.
+    :param tau: Time step size for normalization.
+    :param n_workers: Number of parallel workers (default: min(cpu_count, 16)).
+    :return: Array of Lyapunov exponents, shape (B, S, matrix_dim).
     """
     data_np = np.asarray(data)
     n_time, batch_size, n_states = data_np.shape
@@ -380,16 +363,13 @@ def lyap_e_batch_with_impute(
 
     Same as lyap_e_batch but applies imputation after computation.
 
-    Args:
-        data: Trajectories of shape (N, B, S)
-        emb_dim: Embedding dimension
-        matrix_dim: Matrix dimension
-        min_nb: Minimal number of neighbors
-        min_tsep: Minimal temporal separation
-        tau: Time step size for normalization
-
-    Returns:
-        Array of Lyapunov exponents, shape (B, S, matrix_dim), with NaN/inf imputed
+    :param data: Trajectories of shape (N, B, S).
+    :param emb_dim: Embedding dimension.
+    :param matrix_dim: Matrix dimension.
+    :param min_nb: Minimal number of neighbors.
+    :param min_tsep: Minimal temporal separation.
+    :param tau: Time step size for normalization.
+    :return: Array of Lyapunov exponents, shape (B, S, matrix_dim), with NaN/inf imputed.
     """
     features = lyap_e_batch(data, emb_dim, matrix_dim, min_nb, min_tsep, tau)
     # Reshape to 2D for imputation, then reshape back

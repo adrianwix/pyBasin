@@ -24,29 +24,26 @@ def aio_id(component: str, instance_id: str | _Wildcard, subcomponent: str) -> d
     """
     Generate a pattern-matching callback ID for AIO components.
 
-    Args:
-        component: Component type identifier (e.g., 'StateSpace', 'TrajectoryModal')
-        instance_id: Unique instance identifier (typically UUID or parameter index)
-        subcomponent: Specific element within the component (e.g., 'plot', 'button', 'store')
+    ```python
+    aio_id("StateSpace", "uuid-123", "plot")
+    # returns {'component': 'StateSpace', 'aio_id': 'uuid-123', 'subcomponent': 'plot'}
 
-    Returns:
-        Dictionary ID for pattern-matching callbacks with keys:
-        - component: Component type
-        - aio_id: Instance identifier
-        - subcomponent: Element identifier
 
-    Examples:
-        >>> aio_id('StateSpace', 'uuid-123', 'plot')
-        {'component': 'StateSpace', 'aio_id': 'uuid-123', 'subcomponent': 'plot'}
+    # Usage in Dash callback with MATCH pattern
+    @callback(
+        Output(aio_id("StateSpace", MATCH, "plot"), "figure"),
+        Input(aio_id("StateSpace", MATCH, "scale-dropdown"), "value"),
+    )
+    def update_plot(scale):
+        # This callback only triggers for matching aio_id instances
+        return create_figure(scale)
+    ```
 
-        >>> # Usage in Dash callback with MATCH pattern
-        >>> @callback(
-        ...     Output(aio_id('StateSpace', MATCH, 'plot'), 'figure'),
-        ...     Input(aio_id('StateSpace', MATCH, 'scale-dropdown'), 'value')
-        ... )
-        ... def update_plot(scale):
-        ...     # This callback only triggers for matching aio_id instances
-        ...     return create_figure(scale)
+    :param component: Component type identifier (e.g., 'StateSpace', 'TrajectoryModal').
+    :param instance_id: Unique instance identifier (typically UUID or parameter index).
+    :param subcomponent: Specific element within the component (e.g., 'plot', 'button', 'store').
+    :return: Dictionary ID for pattern-matching callbacks with keys:
+        component, aio_id, and subcomponent.
     """
     return {
         "component": component,

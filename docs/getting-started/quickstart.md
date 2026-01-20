@@ -13,19 +13,19 @@ from pybasin import BasinStabilityEstimator, ODESystem
 # Step 1: Define your dynamical system
 class SimpleSystem(ODESystem):
     """A simple 2D system with two stable fixed points."""
-    
+
     def dynamics(self, t, state):
         """Define the differential equations."""
         x, y = state
         dx = x * (1 - x**2 - y**2)
         dy = y * (1 - x**2 - y**2)
         return np.array([dx, dy])
-    
+
     def classify_attractor(self, solution):
         """Classify which attractor the solution reached."""
         final_state = solution.y[:, -1]
         x_final, y_final = final_state
-        
+
         # Classify based on final position
         if x_final > 0:
             return 0  # Right attractor
@@ -87,12 +87,12 @@ from pybasin import FeatureExtractor
 
 class MyFeatureExtractor(FeatureExtractor):
     """Extract custom features from solutions."""
-    
+
     def extract(self, solution):
         """Extract features from the solution."""
         t = solution.t
         y = solution.y
-        
+
         features = {
             'final_x': y[0, -1],
             'final_y': y[1, -1],
@@ -100,7 +100,7 @@ class MyFeatureExtractor(FeatureExtractor):
             'period': self._estimate_period(t, y),
         }
         return features
-    
+
     def _estimate_period(self, t, y):
         """Estimate the period of oscillation."""
         # Your period estimation logic here
@@ -120,19 +120,19 @@ For systems with more than 2 dimensions:
 ```python
 class LorenzSystem(ODESystem):
     """The Lorenz system."""
-    
+
     def __init__(self, sigma=10, rho=28, beta=8/3):
         self.sigma = sigma
         self.rho = rho
         self.beta = beta
-    
+
     def dynamics(self, t, state):
         x, y, z = state
         dx = self.sigma * (y - x)
         dy = x * (self.rho - z) - y
         dz = x * y - self.beta * z
         return np.array([dx, dy, dz])
-    
+
     def classify_attractor(self, solution):
         # Classification logic for Lorenz attractors
         final_state = solution.y[:, -1]
@@ -160,6 +160,5 @@ loaded_results = BasinStabilityResult.load('my_results.json')
 
 ## Next Steps
 
-- Learn about [Basin Stability Theory](../theory/basin-stability.md)
 - Explore the [API Reference](../api/basin-stability-estimator.md)
 - Check out the [Case Studies](../case-studies/overview.md) for real-world examples

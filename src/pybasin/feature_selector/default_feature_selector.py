@@ -8,13 +8,14 @@ import numpy as np
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.pipeline import Pipeline
 
-from pybasin.feature_extractors.correlation_selector import CorrelationSelector
+from pybasin.feature_selector.correlation_selector import CorrelationSelector
 
 
 class DefaultFeatureSelector(Pipeline):
     """Feature selector combining variance threshold and correlation filtering.
 
     This class extends sklearn's Pipeline with two steps:
+
     1. VarianceThreshold: Removes features with variance below threshold
     2. CorrelationSelector: Removes highly correlated features (|corr| > threshold)
 
@@ -24,15 +25,14 @@ class DefaultFeatureSelector(Pipeline):
     As a Pipeline subclass, this implements the full sklearn transformer API:
     fit(), transform(), fit_transform(), get_params(), set_params(), etc.
 
-    Args:
-        variance_threshold: Minimum variance required to keep a feature. Default 0.01.
-        correlation_threshold: Maximum absolute correlation allowed between features.
-            Features with |correlation| > threshold will be removed. Default 0.95.
+    ```python
+    selector = DefaultFeatureSelector(variance_threshold=0.01, correlation_threshold=0.95)
+    features_filtered = selector.fit_transform(features)
+    ```
 
-    Example:
-        >>> selector = DefaultFeatureSelector(variance_threshold=0.01, correlation_threshold=0.95)
-        >>> features_filtered = selector.fit_transform(features)
-        >>> filtered_names = selector.get_filtered_names(original_names)
+    :ivar variance_threshold: Minimum variance required to keep a feature.
+    :ivar correlation_threshold: Maximum absolute correlation allowed between features. Features with |correlation| > threshold will be removed.
+    :ivar min_features: Minimum number of features to keep.
     """
 
     def __init__(
@@ -41,9 +41,9 @@ class DefaultFeatureSelector(Pipeline):
         correlation_threshold: float = 0.95,
         min_features: int = 2,
     ):
-        self.variance_threshold = variance_threshold
-        self.correlation_threshold = correlation_threshold
-        self.min_features = min_features
+        self.variance_threshold: float = variance_threshold
+        self.correlation_threshold: float = correlation_threshold
+        self.min_features: int = min_features
 
         super().__init__(  # type: ignore[misc]
             [
@@ -58,11 +58,8 @@ class DefaultFeatureSelector(Pipeline):
     def get_support(self, indices: bool = False) -> np.ndarray:
         """Get mask or indices of features that passed the filter.
 
-        Args:
-            indices: If True, returns indices. If False, returns boolean mask.
-
-        Returns:
-            Boolean mask or integer indices of selected features.
+        :param indices: If True, returns indices. If False, returns boolean mask.
+        :return: Boolean mask or integer indices of selected features.
         """
         # Get support from each step and combine
         variance_support: np.ndarray = self.named_steps["variance"].get_support(indices=False)  # type: ignore[assignment]

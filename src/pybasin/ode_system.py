@@ -13,27 +13,27 @@ class ODESystem[P](ABC, nn.Module):
     """
     Abstract base class for defining an ODE system.
 
-    Type Parameters
-    ---------------
-    P : dict or TypedDict
-        The parameter dictionary type for this ODE system.
-        Should be a TypedDict subclass for best type checking.
+    ```python
+    from typing import TypedDict
 
-    Examples
-    --------
-    >>> from typing import TypedDict
-    >>> class MyParams(TypedDict):
-    ...     alpha: float
-    ...     beta: float
-    >>>
-    >>> class MyODE(ODESystem[MyParams]):
-    ...     def __init__(self, params: MyParams):
-    ...         super().__init__(params)
-    ...
-    ...     def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    ...         # self.params is typed as MyParams
-    ...         alpha = self.params["alpha"]  # type checker knows this exists
-    ...         return torch.zeros_like(y)
+
+    class MyParams(TypedDict):
+        alpha: float
+        beta: float
+
+
+    class MyODE(ODESystem[MyParams]):
+        def __init__(self, params: MyParams):
+            super().__init__(params)
+
+        def ode(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+            # self.params is typed as MyParams
+            alpha = self.params["alpha"]  # type checker knows this exists
+            return torch.zeros_like(y)
+    ```
+
+    :param P: Type parameter - the parameter dictionary type for this ODE system.
+        Should be a TypedDict subclass for best type checking.
     """
 
     def __init__(self, params: P) -> None:
@@ -46,17 +46,9 @@ class ODESystem[P](ABC, nn.Module):
         """
         Right-hand side (RHS) for the ODE using PyTorch tensors.
 
-        Parameters
-        ----------
-        t : torch.Tensor
-            The current time (can be scalar or batch).
-        y : torch.Tensor
-            The current state (can be shape (..., n)).
-
-        Returns
-        -------
-        derivatives : torch.Tensor
-            The time derivatives with the same leading shape as y.
+        :param t: The current time (can be scalar or batch).
+        :param y: The current state (can be shape (..., n)).
+        :return: The time derivatives with the same leading shape as y.
         """
         pass
 

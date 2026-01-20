@@ -43,11 +43,10 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         """
         Initialize template time series AIO component.
 
-        Args:
-            bse: Basin stability estimator with computed results
-            aio_id: Unique identifier for this component instance
-            state_labels: Optional mapping of state indices to labels
-            options: Template time series configuration options
+        :param bse: Basin stability estimator with computed results.
+        :param aio_id: Unique identifier for this component instance.
+        :param state_labels: Optional mapping of state indices to labels.
+        :param options: Template time series configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
         self.options = options or TemplateTimeSeriesOptions()
@@ -60,7 +59,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and time series plot."""
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
@@ -74,7 +73,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             )
 
         state_options = self.get_state_options()
-        all_template_labels = list(self.bse.cluster_classifier.labels)
+        all_template_labels = list(self.bse.predictor.labels)
         selected_templates = self.options.filter_templates(all_template_labels)
 
         t_min, t_max = self.get_time_bounds()
@@ -154,7 +153,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build template time series plot."""
-        if not isinstance(self.bse.cluster_classifier, ClassifierPredictor):
+        if not isinstance(self.bse.predictor, ClassifierPredictor):
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
                 text="Template plot requires ClassifierPredictor",
@@ -177,7 +176,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         fig = go.Figure()
 
         # After isinstance check, type is narrowed to ClassifierPredictor
-        all_labels = self.bse.cluster_classifier.labels
+        all_labels = self.bse.predictor.labels
         if selected_templates is None:
             selected_templates = list(all_labels)
 

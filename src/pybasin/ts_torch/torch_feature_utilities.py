@@ -23,15 +23,11 @@ def impute(features: Tensor) -> Tensor:
 
     This function is the PyTorch equivalent of tsfresh's impute function.
 
-    Parameters
-    ----------
-    features : Tensor
-        Feature tensor of shape (B, F) where B is batch size and F is number of features.
-
-    Returns
-    -------
-    Tensor
-        Imputed feature tensor with the same shape, guaranteed to contain no NaN or inf values.
+    :param features: Feature tensor of shape (B, F) where:
+        - B: batch size (number of samples/trajectories)
+        - F: number of features
+    :return: Imputed feature tensor of shape (B, F), guaranteed to contain no NaN or inf values.
+        Each column is imputed independently using the strategy described above.
     """
     result = features.clone()
     n_cols = features.shape[1]
@@ -72,17 +68,12 @@ def impute_extreme(features: Tensor, extreme_value: float = 1e10) -> Tensor:
     - -inf -> -extreme_value
     - NaN -> +extreme_value (to cluster with +inf)
 
-    Parameters
-    ----------
-    features : Tensor
-        Feature tensor of shape (B, F) where B is batch size and F is number of features.
-    extreme_value : float
-        The extreme value to use for replacement. Default is 1e10.
-
-    Returns
-    -------
-    Tensor
-        Imputed feature tensor with the same shape.
+    :param features: Feature tensor of shape (B, F) where:
+        - B: batch size (number of samples/trajectories)
+        - F: number of features
+    :param extreme_value: The extreme value to use for replacement. Default is 1e10.
+    :return: Imputed feature tensor of shape (B, F). All inf and NaN values are replaced
+        with ±extreme_value, allowing unbounded trajectories to be distinguished in clustering.
     """
     result = features.clone()
     result = torch.where(
@@ -106,13 +97,19 @@ def impute_extreme(features: Tensor, extreme_value: float = 1e10) -> Tensor:
 def delay_embedding(data: Tensor, emb_dim: int, lag: int = 1) -> Tensor:
     """Create delay embedding of a time series.
 
-    Args:
-        data: Time series of shape (N,) for 1D or (N, ...) for higher dims
-        emb_dim: Embedding dimension
-        lag: Lag between elements in embedded vectors
+    Constructs a matrix of delayed vectors from a 1D time series, useful for phase space
+    reconstruction in dynamical systems analysis.
 
-    Returns:
-        Embedded data of shape (M, emb_dim) for 1D input where M = N - (emb_dim-1)*lag
+    :param data: Time series tensor. Can be:
+        - 1D: shape (N,) where N is the number of time points
+        - Higher dimensional: shape (N, ...) where additional dimensions are preserved
+    :param emb_dim: Embedding dimension. Determines how many delayed copies of the signal
+        are concatenated to form each embedding vector.
+    :param lag: Lag (delay) between elements in embedded vectors. Specifies the time delay
+        in units of the sampling interval. Default is 1.
+    :return: Embedded data tensor of shape (M, emb_dim) for 1D input, where
+        M = N - (emb_dim-1)*lag is the number of embedded vectors. Each row contains
+        [data[i], data[i+lag], data[i+2*lag], ..., data[i+(emb_dim-1)*lag]].
     """
     n = data.shape[0]
     m = n - (emb_dim - 1) * lag
@@ -124,12 +121,10 @@ def delay_embedding(data: Tensor, emb_dim: int, lag: int = 1) -> Tensor:
 def rowwise_euclidean(x: Tensor, y: Tensor) -> Tensor:
     """Compute Euclidean distance from each row of x to vector y.
 
-    Args:
-        x: Matrix of shape (M, D)
-        y: Vector of shape (D,)
-
-    Returns:
-        Distances of shape (M,)
+    :param x: Matrix of shape (M, D) where M is the number of vectors and D is the dimension.
+    :param y: Vector of shape (D,) to compute distances from.
+    :return: Tensor of shape (M,) containing the Euclidean (L2) distance from each row
+        of x to vector y.
     """
     return torch.norm(x - y, dim=-1)
 
@@ -137,12 +132,12 @@ def rowwise_euclidean(x: Tensor, y: Tensor) -> Tensor:
 def rowwise_chebyshev(x: Tensor, y: Tensor) -> Tensor:
     """Compute Chebyshev (L-infinity) distance from each row of x to vector y.
 
-    Args:
-        x: Matrix of shape (M, D)
-        y: Vector of shape (D,)
+    The Chebyshev distance is the maximum absolute difference across all dimensions.
 
-    Returns:
-        Distances of shape (M,)
+    :param x: Matrix of shape (M, D) where M is the number of vectors and D is the dimension.
+    :param y: Vector of shape (D,) to compute distances from.
+    :return: Tensor of shape (M,) containing the Chebyshev (L-infinity) distance from each
+        row of x to vector y. Each distance is max(|x[i] - y|) across all dimensions.
     """
     return torch.max(torch.abs(x - y), dim=1).values
 

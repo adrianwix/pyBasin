@@ -14,12 +14,18 @@ def get_feature_names_from_config(
 ) -> list[str]:
     """Get list of feature names from configuration.
 
-    Args:
-        fc_parameters: Feature configuration (None for defaults)
-        include_custom: Include custom features
+    Parses the feature configuration dictionary to generate a list of all feature names
+    that will be computed, including parameterized variants.
 
-    Returns:
-        List of feature names
+    :param fc_parameters: Feature configuration dictionary mapping feature names to parameter
+        lists. If None, uses TORCH_COMPREHENSIVE_FC_PARAMETERS as default. Each entry can be:
+        - None: feature with no parameters
+        - list of dicts: feature with multiple parameter combinations
+    :param include_custom: Whether to include custom features (delta, log_delta) in the output.
+        Default is False.
+    :return: List of feature name strings. For parameterized features, names include parameters
+        in the format "feature_name__param1_value1__param2_value2". The order matches the order
+        features will be computed.
     """
     if fc_parameters is None:
         fc_parameters = TORCH_COMPREHENSIVE_FC_PARAMETERS
@@ -58,13 +64,19 @@ def extract_features_from_config(
 ) -> dict[str, Tensor]:
     """Extract features from tensor using configuration.
 
-    Args:
-        x: Input tensor of shape (N, B, S)
-        fc_parameters: Feature configuration (None for defaults)
-        include_custom: Include custom features (delta, log_delta)
+    Computes time series features according to the provided configuration, applying
+    each feature function (with its parameters) to the input time series data.
 
-    Returns:
-        Dictionary mapping feature names to result tensors of shape (B, S)
+    :param x: Input tensor of shape (N, B, S) where:
+        - N: number of time points in the time series
+        - B: batch size (number of different initial conditions/samples)
+        - S: number of state variables
+    :param fc_parameters: Feature configuration dictionary mapping feature names to parameter
+        lists. If None, uses TORCH_COMPREHENSIVE_FC_PARAMETERS as default.
+    :param include_custom: Whether to include custom features (delta, log_delta). Default is False.
+    :return: Dictionary mapping feature names to result tensors of shape (B, S). Each key is a
+        feature name (possibly with parameters like "feature__param_value"), and each value is
+        a tensor containing that feature computed for all batches and states.
     """
     if fc_parameters is None:
         fc_parameters = TORCH_COMPREHENSIVE_FC_PARAMETERS

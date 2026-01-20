@@ -44,10 +44,9 @@ class BseBasePageAIO(ABC):
         """
         Initialize AIO page component.
 
-        Args:
-            bse: Basin stability estimator instance
-            aio_id: Unique identifier for this component instance
-            state_labels: Optional mapping of state indices to display labels
+        :param bse: Basin stability estimator instance.
+        :param aio_id: Unique identifier for this component instance.
+        :param state_labels: Optional mapping of state indices to display labels.
         """
         self.bse = bse
         self.aio_id = aio_id
@@ -78,7 +77,6 @@ class BseBasePageAIO(ABC):
         IDs using this instance's aio_id. Callbacks registered at module level
         will use MATCH pattern to target this specific instance.
 
-        Returns:
-            Dash html.Div containing the complete page layout
+        :return: Dash html.Div containing the complete page layout.
         """
         pass

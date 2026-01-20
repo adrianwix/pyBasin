@@ -20,13 +20,10 @@ from pybasin.feature_extractors.jax_feature_utilities import (
 def logarithmic_r_numpy(min_r: float, max_r: float, factor: float) -> np.ndarray:
     """Create logarithmically spaced radius values (NumPy version for static computation).
 
-    Args:
-        min_r: Minimum radius value
-        max_r: Maximum radius value
-        factor: Multiplication factor (must be > 1)
-
-    Returns:
-        NumPy array of logarithmically spaced values from min_r to max_r
+    :param min_r: Minimum radius value.
+    :param max_r: Maximum radius value.
+    :param factor: Multiplication factor (must be > 1).
+    :return: NumPy array of logarithmically spaced values from min_r to max_r.
     """
     max_i = int(np.floor(np.log(max_r / min_r) / np.log(factor)))
     return np.array([min_r * (factor**i) for i in range(max_i + 1)])
@@ -39,13 +36,10 @@ def _corr_dim_core(
 ) -> Array:
     """Core correlation dimension computation (JIT-compilable).
 
-    Args:
-        data: Original 1D time series (unused, kept for signature consistency)
-        orbit: Delay-embedded orbit matrix of shape (M, emb_dim)
-        rvals: Array of radius values to use
-
-    Returns:
-        Correlation dimension (scalar)
+    :param data: Original 1D time series (unused, kept for signature consistency).
+    :param orbit: Delay-embedded orbit matrix of shape (M, emb_dim).
+    :param rvals: Array of radius values to use.
+    :return: Correlation dimension (scalar).
     """
     n = orbit.shape[0]
 
@@ -109,14 +103,11 @@ def corr_dim_single(
 
     If C(r) ~ r^D, then D is the correlation dimension.
 
-    Args:
-        data: 1D time series of shape (N,)
-        emb_dim: Embedding dimension (default: 4)
-        lag: Lag for delay embedding (default: 1)
-        n_rvals: Number of radius values to use (default: 50)
-
-    Returns:
-        Correlation dimension (scalar)
+    :param data: 1D time series of shape (N,).
+    :param emb_dim: Embedding dimension (default: 4).
+    :param lag: Lag for delay embedding (default: 1).
+    :param n_rvals: Number of radius values to use (default: 50).
+    :return: Correlation dimension (scalar).
     """
     # Create delay embedding
     orbit = delay_embedding(data, emb_dim, lag)
@@ -142,14 +133,11 @@ def corr_dim_batch_single_state(
 ) -> Array:
     """Compute correlation dimension for a batch of 1D time series.
 
-    Args:
-        data: Batch of time series, shape (B, N) where B is batch size, N is time points
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
-
-    Returns:
-        Array of correlation dimensions, shape (B,)
+    :param data: Batch of time series, shape (B, N) where B is batch size, N is time points.
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding.
+    :param n_rvals: Number of radius values to use.
+    :return: Array of correlation dimensions, shape (B,).
     """
 
     def compute_single(series: Array) -> Array:
@@ -170,17 +158,13 @@ def corr_dim_batch(
     This is the main entry point for computing correlation dimension on
     batched trajectory data with multiple state variables.
 
-    Args:
-        data: Trajectories of shape (N, B, S) where:
-            - N: number of time points
-            - B: batch size (number of initial conditions)
-            - S: number of state variables
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
-
-    Returns:
-        Array of correlation dimensions, shape (B, S)
+    :param data: Trajectories of shape (N, B, S) where:
+        N is number of time points, B is batch size (number of initial conditions),
+        and S is number of state variables.
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding.
+    :param n_rvals: Number of radius values to use.
+    :return: Array of correlation dimensions, shape (B, S).
     """
     _n_time, _batch_size, _n_states = data.shape
 
@@ -207,14 +191,11 @@ def corr_dim_batch_with_impute(
 
     Same as corr_dim_batch but applies imputation after computation.
 
-    Args:
-        data: Trajectories of shape (N, B, S)
-        emb_dim: Embedding dimension
-        lag: Lag for delay embedding
-        n_rvals: Number of radius values to use
-
-    Returns:
-        Array of correlation dimensions, shape (B, S), with NaN/inf imputed
+    :param data: Trajectories of shape (N, B, S).
+    :param emb_dim: Embedding dimension.
+    :param lag: Lag for delay embedding.
+    :param n_rvals: Number of radius values to use.
+    :return: Array of correlation dimensions, shape (B, S), with NaN/inf imputed.
     """
     features = corr_dim_batch(data, emb_dim, lag, n_rvals)
     return impute(features)

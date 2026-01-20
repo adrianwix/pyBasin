@@ -25,17 +25,16 @@ def parse_feature_name(feature_name: str) -> tuple[int, str] | None:
     Feature names follow the convention: state_X__feature_name
     where X is the state dimension index (0-based).
 
-    Examples:
-        - "state_0__variance" -> (0, "variance")
-        - "state_1__mean" -> (1, "mean")
-        - "state_0__autocorrelation_periodicity__output_strength" -> (0, "autocorrelation_periodicity__output_strength")
-        - "invalid_name" -> None
+    ```python
 
-    Args:
-        feature_name: Feature name string to parse.
+    - "state_0__variance" -> (0, "variance")
+    - "state_1__mean" -> (1, "mean")
+    - "state_0__autocorrelation_periodicity__output_strength" -> (0, "autocorrelation_periodicity__output_strength")
+    - "invalid_name" -> None
+    ```
 
-    Returns:
-        Tuple of (state_index, feature_identifier) if valid, None if invalid.
+    :param feature_name: Feature name string to parse.
+    :return: Tuple of (state_index, feature_identifier) if valid, None if invalid.
     """
     match = FEATURE_NAME_PATTERN.match(feature_name)
     if match:
@@ -51,13 +50,9 @@ def validate_feature_names(feature_names: list[str]) -> tuple[bool, list[str]]:
     Feature names must follow: state_X__feature_name
     where X is a non-negative integer.
 
-    Args:
-        feature_names: List of feature names to validate.
-
-    Returns:
-        Tuple of (all_valid, invalid_names) where:
-            - all_valid: True if all names are valid
-            - invalid_names: List of names that don't match the convention
+    :param feature_names: List of feature names to validate.
+    :return: Tuple of (all_valid, invalid_names) where all_valid is True if all names are valid,
+        and invalid_names is a list of names that don't match the convention.
     """
     invalid_names: list[str] = []
     for name in feature_names:
@@ -72,17 +67,15 @@ def get_feature_indices_by_base_name(feature_names: list[str], base_feature: str
     Finds all features that have the given base name (after the state_X__ prefix).
     Useful for predictors that need to access specific features across multiple states.
 
-    Examples:
-        Given feature_names = ["state_0__variance", "state_1__variance", "state_0__mean"]:
-        - get_feature_indices_by_base_name(feature_names, "variance") -> [0, 1]
-        - get_feature_indices_by_base_name(feature_names, "mean") -> [2]
+    ```python
+    Given feature_names = ["state_0__variance", "state_1__variance", "state_0__mean"]:
+    - get_feature_indices_by_base_name(feature_names, "variance") -> [0, 1]
+    - get_feature_indices_by_base_name(feature_names, "mean") -> [2]
+    ```
 
-    Args:
-        feature_names: List of feature names.
-        base_feature: Base feature name to search for (e.g., "variance", "mean").
-
-    Returns:
-        List of column indices where the base feature appears.
+    :param feature_names: List of feature names.
+    :param base_feature: Base feature name to search for (e.g., "variance", "mean").
+    :return: List of column indices where the base feature appears.
     """
     indices: list[int] = []
     for idx, name in enumerate(feature_names):
@@ -185,15 +178,10 @@ class NumpyEncoder(JSONEncoder):
 def get_filtered_feature_names(selector: Any, original_names: list[str]) -> list[str]:
     """Get feature names after applying a sklearn selector/transformer.
 
-    Args:
-        selector: Fitted sklearn transformer with get_support() method.
-        original_names: List of original feature names before filtering.
-
-    Returns:
-        List of feature names that passed the selector's filter.
-
-    Raises:
-        AttributeError: If selector doesn't have get_support() method.
+    :param selector: Fitted sklearn transformer with get_support() method.
+    :param original_names: List of original feature names before filtering.
+    :return: List of feature names that passed the selector's filter.
+    :raises AttributeError: If selector doesn't have get_support() method.
     """
     if not hasattr(selector, "get_support"):
         raise AttributeError(
@@ -209,16 +197,12 @@ def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
     Extract amplitudes by taking the maximum absolute value along the time dimension.
 
-    Args:
-        t: Time points tensor (shape: (N,))
-        y: Input tensor (shape: (N, B, S)) where:
-           N = number of time steps
-           B = batch size
-           S = number of states
-        props: Optional properties dictionary
-
-    Returns:
-        amps: Tensor containing maximum absolute values (shape: (B, S))
+    :param t: Time points tensor (shape: (N,))
+    :param y: Input tensor (shape: (N, B, S)) where:
+        N = number of time steps
+        B = batch size
+        S = number of states
+    :return: Tensor containing maximum absolute values (shape: (B, S))
     """
     # Take absolute value and maximum along time dimension (dim=0)
     amps = torch.max(torch.abs(y), dim=0)[0]

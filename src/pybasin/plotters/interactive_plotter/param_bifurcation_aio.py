@@ -48,10 +48,9 @@ class ParamBifurcationAIO:
         """
         Initialize parameter bifurcation AIO component.
 
-        Args:
-            as_bse: Adaptive study basin stability estimator
-            aio_id: Unique identifier for this component instance
-            state_labels: Optional mapping of state indices to labels
+        :param as_bse: Adaptive study basin stability estimator.
+        :param aio_id: Unique identifier for this component instance.
+        :param state_labels: Optional mapping of state indices to labels.
         """
         self.as_bse = as_bse
         self.aio_id = aio_id
