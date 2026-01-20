@@ -54,12 +54,12 @@ class BasinStabilityEstimator:
 
     def __init__(
         self,
-        n: int,
         ode_system: ODESystemProtocol,
         sampler: Sampler,
+        n: int = 10_000,
         solver: SolverProtocol | None = None,
         feature_extractor: FeatureExtractor | None = None,
-        cluster_classifier: LabelPredictor | None = None,
+        predictor: LabelPredictor | None = None,
         feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
         detect_unbounded: bool = True,
         save_to: str | None = None,
@@ -141,7 +141,7 @@ class BasinStabilityEstimator:
 
         self.feature_extractor = feature_extractor
 
-        if cluster_classifier is None:
+        if predictor is None:
             warnings.warn(
                 "No cluster_classifier provided. Using default HDBSCANClusterer with auto_tune=True "
                 "and assign_noise=True. For better performance with known attractors, pass a custom "
@@ -149,10 +149,8 @@ class BasinStabilityEstimator:
                 UserWarning,
                 stacklevel=2,
             )
-            cluster_classifier = UnboundednessClusterer(
-                HDBSCANClusterer(auto_tune=True, assign_noise=True)
-            )
-        self.cluster_classifier = cluster_classifier
+            predictor = UnboundednessClusterer(HDBSCANClusterer(auto_tune=True, assign_noise=True))
+        self.predictor = predictor
 
         # Attributes to be populated during estimation
         self.bs_vals: dict[str, float] | None = None
@@ -260,7 +258,7 @@ class BasinStabilityEstimator:
         t2a_elapsed = 0.0  # Template integration time
         t2b_elapsed = 0.0  # Main integration time
 
-        if parallel_integration and isinstance(self.cluster_classifier, ClassifierPredictor):
+        if parallel_integration and isinstance(self.predictor, ClassifierPredictor):
             logger.info("  Mode: PARALLEL (integration only)")
             logger.info("  • Main integration (sampled ICs)")
             logger.info("  • Template integration (classifier ICs)")
@@ -271,7 +269,7 @@ class BasinStabilityEstimator:
                 main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)  # type: ignore[arg-type]
 
                 template_future = executor.submit(
-                    self.cluster_classifier.integrate_templates,  # type: ignore[arg-type,misc]
+                    self.predictor.integrate_templates,  # type: ignore[arg-type,misc]
                     self.solver,
                     self.ode_system,
                 )
@@ -286,11 +284,11 @@ class BasinStabilityEstimator:
             logger.info("Main trajectory shape: %s", y.shape)
         else:
             # Sequential execution (original behavior)
-            if isinstance(self.cluster_classifier, ClassifierPredictor):
+            if isinstance(self.predictor, ClassifierPredictor):
                 logger.info("  Mode: SEQUENTIAL")
                 logger.info("  Step 2a: Integrating template initial conditions...")
                 t2a_start = time.perf_counter()
-                self.cluster_classifier.integrate_templates(  # type: ignore[misc]
+                self.predictor.integrate_templates(  # type: ignore[misc]
                     solver=self.solver,
                     ode_system=self.ode_system,
                 )
@@ -423,10 +421,10 @@ class BasinStabilityEstimator:
                     logger.debug("    %s: %.6f", name, value)
 
         # Step 5b: Fit classifier with template features (using already-fitted scaler)
-        if isinstance(self.cluster_classifier, ClassifierPredictor):  # type: ignore[type-arg]
+        if isinstance(self.predictor, ClassifierPredictor):  # type: ignore[type-arg]
             logger.info("STEP 5b: Fitting Classifier")
             t5b = time.perf_counter()
-            self.cluster_classifier.fit_with_features(  # type: ignore[misc]
+            self.predictor.fit_with_features(  # type: ignore[misc]
                 self.feature_extractor,
                 feature_selector=self.feature_selector,
             )
@@ -435,11 +433,11 @@ class BasinStabilityEstimator:
 
         # Set feature names for predictors that require them
         final_feature_names = self._filtered_feature_names or feature_names
-        if self.cluster_classifier.needs_feature_names():
+        if self.predictor.needs_feature_names():
             logger.info(
                 "  Setting feature names for classifier (%d features)", len(final_feature_names)
             )
-            self.cluster_classifier.set_feature_names(final_feature_names)
+            self.predictor.set_feature_names(final_feature_names)
 
         # Step 6: Classification
         logger.info("STEP 6: Classification")
@@ -447,7 +445,7 @@ class BasinStabilityEstimator:
 
         # Convert features to numpy for classifier
         features_np = features.detach().cpu().numpy()
-        bounded_labels = self.cluster_classifier.predict_labels(features_np)
+        bounded_labels = self.predictor.predict_labels(features_np)
         # Reconstruct full label array if unbounded trajectories were separated
         if self.detect_unbounded and unbounded_mask is not None and n_unbounded > 0:
             labels = np.empty(total_samples, dtype=object)
@@ -648,7 +646,7 @@ class BasinStabilityEstimator:
             "sampling_points": self.n,
             "sampling_method": self.sampler.__class__.__name__,
             "solver": self.solver.__class__.__name__,
-            "cluster_classifier": self.cluster_classifier.__class__.__name__,
+            "cluster_classifier": self.predictor.__class__.__name__,
             "feature_selection": feature_selection_info,
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }

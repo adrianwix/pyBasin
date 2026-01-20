@@ -21,7 +21,7 @@ def main():
         sampler=setup["sampler"],
         solver=setup.get("solver"),
         feature_extractor=setup.get("feature_extractor"),
-        cluster_classifier=cluster_classifier,
+        predictor=cluster_classifier,
         save_to="results_unsupervised",
         feature_selector=None,
     )

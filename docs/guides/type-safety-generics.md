@@ -65,10 +65,10 @@ class MyODE(ODESystem[MyODEParams]):
 
 ### Step 3: Use Type-Safe Parameters Everywhere
 
-When creating classifiers or other components, the generic type flows through:
+When creating classifiers or other components, you can pass your typed parameters:
 
 ```python
-from pybasin.classifiers.knncluster import KNNCluster
+from pybasin.predictors.knn_classifier import KNNClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
 # Create your parameters with full type safety
@@ -82,12 +82,12 @@ params: MyODEParams = {
 # Type checker ensures params matches MyODEParams
 ode_system = MyODE(params)
 
-# The KNNCluster will also be generic over MyODEParams
-knn_cluster = KNNCluster[MyODEParams](
+# Pass the parameters to the classifier
+knn_classifier = KNNClassifier(
     classifier=KNeighborsClassifier(n_neighbors=3),
     template_y0=[[0.0, 1.0], [1.0, 0.0]],
     labels=["stable", "unstable"],
-    ode_params=params,  # Type-checked!
+    ode_params=params,
 )
 ```
 

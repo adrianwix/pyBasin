@@ -161,7 +161,7 @@ class ASBasinStabilityEstimator:
                 sampler=context["sampler"],
                 solver=context["solver"],
                 feature_extractor=context["feature_extractor"],
-                cluster_classifier=context["cluster_classifier"],
+                predictor=context["cluster_classifier"],
                 feature_selector=None,
             )
 

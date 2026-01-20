@@ -1,5 +1,6 @@
 """Abstract base class for extracting features from ODE solution trajectories."""
 
+import re
 from abc import ABC, abstractmethod
 
 import torch
@@ -29,6 +30,8 @@ class FeatureExtractor(ABC):
 
     def __init__(self, time_steady: float = 0.0):
         self.time_steady = time_steady
+        self._feature_names: list[str] | None = None
+        self._num_features: int | None = None
 
     @abstractmethod
     def extract_features(self, solution: Solution) -> torch.Tensor:
@@ -50,18 +53,43 @@ class FeatureExtractor(ABC):
         pass
 
     @property
-    @abstractmethod
     def feature_names(self) -> list[str]:
         """Return the list of feature names.
 
-        This property must be implemented by subclasses to provide human-readable
-        names for each feature dimension in the output of extract_features().
+        If not explicitly set by a subclass, automatically generates names using
+        the pattern: <class_name_snake_case>_<index>. The class name is converted
+        to snake_case and the suffix 'FeatureExtractor' is removed (if present).
 
         Returns:
             List of feature names. Length must match the number of features (F)
             in the output tensor from extract_features().
         """
-        pass
+        if self._feature_names is not None:
+            return self._feature_names
+
+        if self._num_features is None:
+            return []
+
+        class_name = self.__class__.__name__
+        snake_case_name = self._to_snake_case(class_name)
+
+        if snake_case_name.endswith("_feature_extractor") and len(snake_case_name) > len(
+            "_feature_extractor"
+        ):
+            snake_case_name = snake_case_name[: -len("_feature_extractor")]
+        elif snake_case_name == "feature_extractor":
+            snake_case_name = "feature"
+
+        if len(snake_case_name) == 0:
+            snake_case_name = "feature"
+
+        return [f"{snake_case_name}_{i + 1}" for i in range(self._num_features)]
+
+    @staticmethod
+    def _to_snake_case(name: str) -> str:
+        """Convert CamelCase to snake_case."""
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
     def filter_time(self, solution: Solution) -> torch.Tensor:
         """Filter out transient behavior by removing early time steps.

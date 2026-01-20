@@ -53,7 +53,7 @@ def main():
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=clusterer,
+        predictor=clusterer,
         feature_selector=None,
     )
 

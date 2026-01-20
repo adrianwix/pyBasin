@@ -127,7 +127,7 @@ def run_benchmark(n: int, extractor_type: str, comprehensive: bool = True) -> di
         sampler=setup["sampler"],
         solver=setup.get("solver"),  # type: ignore[arg-type]
         feature_extractor=setup.get("feature_extractor"),  # type: ignore[arg-type]
-        cluster_classifier=setup.get("cluster_classifier"),  # type: ignore[arg-type]
+        predictor=setup.get("cluster_classifier"),  # type: ignore[arg-type]
         feature_selector=None,
     )
 

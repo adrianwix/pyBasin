@@ -55,7 +55,7 @@ def test_basin_stability_estimator_basic():
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=knn,
+        predictor=knn,
         feature_selector=None,
     )
 
@@ -95,7 +95,7 @@ def test_basin_stability_multiple_classes():
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=knn,
+        predictor=knn,
         feature_selector=None,
     )
 

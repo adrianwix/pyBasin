@@ -40,7 +40,7 @@ class TestDuffing:
             sampler=props["sampler"],
             solver=props.get("solver"),
             feature_extractor=props.get("feature_extractor"),
-            cluster_classifier=props.get("cluster_classifier"),
+            predictor=props.get("cluster_classifier"),
             feature_selector=None,
         )
 
@@ -104,7 +104,7 @@ class TestDuffing:
             sampler=props["sampler"],
             solver=props.get("solver"),
             feature_extractor=props.get("feature_extractor"),
-            cluster_classifier=cluster_classifier,
+            predictor=cluster_classifier,
             feature_selector=None,
         )
 
