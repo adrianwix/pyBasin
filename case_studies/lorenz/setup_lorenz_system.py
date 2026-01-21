@@ -21,7 +21,7 @@ def lorenz_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
     - Returns positive when under threshold (continue integration)
     - Returns negative/zero when over threshold (stop integration)
     """
-    max_val = 200.0
+    max_val = 196.0
     max_abs_y = jnp.max(jnp.abs(y))
     return max_val - max_abs_y
 
@@ -44,7 +44,7 @@ def setup_lorenz_system() -> SetupProperties:
 
     solver = JaxSolver(
         time_span=(0, 1000),
-        n_steps=1000,
+        n_steps=4000,
         device=device,
         rtol=1e-8,
         atol=1e-6,
@@ -52,7 +52,15 @@ def setup_lorenz_system() -> SetupProperties:
         event_fn=lorenz_stop_event,
     )
 
-    feature_extractor = JaxFeatureExtractor(time_steady=900.0, normalize=False)
+    feature_extractor = JaxFeatureExtractor(
+        time_steady=900.0,
+        normalize=False,
+        features_per_state={
+            0: {"mean": None},  # Only extract mean of x (first state)
+            1: None,  # Skip y
+            2: None,  # Skip z
+        },
+    )
 
     classifier_initial_conditions = [
         [0.8, -3.0, 0.0],
@@ -68,6 +76,7 @@ def setup_lorenz_system() -> SetupProperties:
         classifier=knn,
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
+        # TODO: bSTAB allows to define params per initial condition
         ode_params=params,
     )
 

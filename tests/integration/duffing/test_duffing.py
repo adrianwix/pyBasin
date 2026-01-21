@@ -10,73 +10,32 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
+from tests.integration.test_helpers import run_basin_stability_test
 
 
 class TestDuffing:
     """Integration tests for Duffing oscillator basin stability estimation."""
 
     @pytest.mark.integration
-    def test_supervised(self, tolerance: float) -> None:
-        """Test Duffing oscillator supervised classification approach.
+    def test_baseline_supervised(self, tolerance: float) -> None:
+        """Test Duffing oscillator baseline with supervised classification approach.
 
         Parameters: δ=0.08, k3=1, A=0.2
         Expected attractors: y1-y5 (various n-cycles)
         Uses supervised KNN classification with known attractor templates.
+
+        Verifies:
+        1. Number of ICs used matches sum of absNumMembers from MATLAB
+        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+
+        Note: Uses larger z-threshold due to chaotic nature of Duffing system.
         """
-        # Use a slightly higher tolerance for Duffing due to its chaotic nature
-        tolerance = 0.02
-
-        # Load expected results from JSON
         json_path = Path(__file__).parent / "main_duffing_supervised.json"
-        with open(json_path) as f:
-            expected_results = json.load(f)
-
-        # Setup system and run estimation
-        props = setup_duffing_oscillator_system()
-
-        bse = BasinStabilityEstimator(
-            n=props["n"],
-            ode_system=props["ode_system"],
-            sampler=props["sampler"],
-            solver=props.get("solver"),
-            feature_extractor=props.get("feature_extractor"),
-            predictor=props.get("cluster_classifier"),
-            feature_selector=None,
-        )
-
-        basin_stability = bse.estimate_bs()
-
-        # Compare results with expected values
-        for expected in expected_results:
-            label = expected["label"]
-            expected_bs = expected["basinStability"]
-
-            # Get actual basin stability for this label
-            actual_bs = basin_stability.get(label, 0.0)
-
-            # Compare with tolerance
-            assert abs(actual_bs - expected_bs) < tolerance, (
-                f"Basin stability for {label}: expected {expected_bs:.4f}, "
-                f"got {actual_bs:.4f}, difference {abs(actual_bs - expected_bs):.4f} "
-                f"exceeds tolerance {tolerance}"
-            )
-
-        # Also verify we have the same labels
-        expected_labels = {
-            result["label"] for result in expected_results if result["basinStability"] > 0
-        }
-        actual_labels = {label for label, bs in basin_stability.items() if bs > 0}
-        assert expected_labels == actual_labels, (
-            f"Label mismatch: expected {expected_labels}, got {actual_labels}"
-        )
-
-        # Verify basin stabilities sum to 1.0
-        total_bs = sum(basin_stability.values())
-        assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"
+        run_basin_stability_test(json_path, setup_duffing_oscillator_system, z_threshold=2.5)
 
     @pytest.mark.integration
-    def test_unsupervised(self, tolerance: float) -> None:
-        """Test Duffing oscillator unsupervised clustering approach.
+    def test_baseline_unsupervised(self, tolerance: float) -> None:
+        """Test Duffing oscillator baseline with unsupervised clustering approach.
 
         Parameters: δ=0.08, k3=1, A=0.2
         Uses unsupervised clustering (DBSCAN) to discover attractors.

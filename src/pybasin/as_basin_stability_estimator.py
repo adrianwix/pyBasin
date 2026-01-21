@@ -14,6 +14,7 @@ from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
+from pybasin.types import AdaptiveStudyResult, ErrorInfo
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
@@ -44,17 +45,21 @@ class ASBasinStabilityEstimator:
         verbose: bool = False,
     ):
         """
-        Initialize the ASBasinStabilityEstimator.
+        Initialize the Adaptive Study Basin Stability Estimator.
 
-        :param n: Number of initial conditions (samples) to generate.
+        Sets up the estimator for a parameter study where one parameter is systematically
+        varied across multiple values. The parameter can be in any component (ODE system,
+        sampler, solver, feature extractor, or predictor).
+
+        :param n: Number of initial conditions (samples) to generate for each parameter value.
         :param ode_system: The ODE system model (ODESystem or JaxODESystem).
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
-        :param feature_extractor: The FeatureExtractor object to extract features.
-        :param cluster_classifier: The LabelPredictor object to assign labels.
-        :param as_params: The AdaptiveStudyParams object to vary the parameter.
-        :param save_to: The folder where results will be saved.
-        :param verbose: If True, show detailed logs from BasinStabilityEstimator (default: False).
+        :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
+        :param cluster_classifier: The LabelPredictor object to assign attractor labels.
+        :param as_params: Dictionary specifying the parameter to vary and its values.
+        :param save_to: Folder path where results will be saved, or None to disable saving.
+        :param verbose: If True, show detailed logs from BasinStabilityEstimator instances. If False, suppress INFO logs to reduce output clutter during parameter sweeps.
         """
         self.n = n
         self.ode_system = ode_system
@@ -69,7 +74,7 @@ class ASBasinStabilityEstimator:
         # Add storage for parameter study results
         self.parameter_values: list[float] = []
         self.basin_stabilities: list[dict[str, float]] = []
-        self.results: list[dict[str, Any]] = []
+        self.results: list[AdaptiveStudyResult] = []
 
     def _suppress_verbose_logs(self) -> dict[str, int]:
         """Suppress verbose logs from BasinStabilityEstimator and related components.
@@ -103,13 +108,26 @@ class ASBasinStabilityEstimator:
 
     def estimate_as_bs(
         self,
-    ) -> tuple[list[float], list[dict[str, float]], list[dict[str, Any]]]:
+    ) -> tuple[list[float], list[dict[str, float]], list[AdaptiveStudyResult]]:
         """
-        Estimate basin stability for each parameter value.
+        Estimate basin stability for each parameter value in the adaptive study.
+
+        Performs basin stability estimation by systematically varying the specified parameter
+        across the provided parameter values. For each parameter value:
+
+        1. Updates the parameter in the ODE system, sampler, solver, or predictor
+        2. Creates a new BasinStabilityEstimator instance
+        3. Estimates basin stability and computes error estimates
+        4. Stores results including basin stability values, errors, and solution metadata
 
         Uses GPU acceleration automatically when available for significant performance gains.
+        Memory is explicitly freed after each iteration to prevent accumulation.
 
-        :return: Tuple of (parameter_values, basin_stabilities, results)
+        :return: Tuple of three lists with matching indices:
+
+                 - parameter_values: List of parameter values used
+                 - basin_stabilities: List of basin stability dictionaries (label -> fraction)
+                 - results: List of AdaptiveStudyResult with complete information including errors
         """
         self.parameter_values = []
         self.basin_stabilities = []
@@ -169,15 +187,19 @@ class ASBasinStabilityEstimator:
             basin_stability = bse.estimate_bs()
             self._restore_log_levels(original_levels)
 
+            # Compute errors for this parameter value
+            errors = bse.get_errors()
+
             # Store only essential results (not the full solution to save memory)
             self.parameter_values.append(param_value)
             self.basin_stabilities.append(basin_stability)
 
             # Extract only necessary data from solution before storing
             if bse.solution is not None:
-                solution_summary = {
+                solution_summary: AdaptiveStudyResult = {
                     "param_value": param_value,
                     "basin_stability": basin_stability,
+                    "errors": errors,
                     "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
                     "labels": bse.solution.labels.copy()
                     if bse.solution.labels is not None
@@ -192,6 +214,7 @@ class ASBasinStabilityEstimator:
                 solution_summary = {
                     "param_value": param_value,
                     "basin_stability": basin_stability,
+                    "errors": errors,
                     "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
                     "labels": None,
                     "bifurcation_amplitudes": None,
@@ -261,3 +284,25 @@ class ASBasinStabilityEstimator:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
         logger.info("Results saved to %s", full_path)
+
+    def get_errors(self, param_index: int) -> dict[str, ErrorInfo]:
+        """
+        Get error information for basin stability estimates at a specific parameter value.
+
+        Retrieves the pre-computed error estimates (absolute and relative standard errors)
+        for all attractor labels at the specified parameter index.
+
+        :param param_index: Index of the parameter value in the adaptive study (0-based).
+        :return: Dictionary mapping each attractor label to its ErrorInfo containing e_abs and e_rel.
+        :raises ValueError: If estimate_as_bs() has not been called yet.
+        :raises ValueError: If param_index is out of range.
+        """
+        if len(self.results) == 0:
+            raise ValueError("No basin stability values available. Call estimate_as_bs() first.")
+
+        if param_index < 0 or param_index >= len(self.results):
+            raise ValueError(
+                f"Parameter index {param_index} out of range [0, {len(self.results) - 1}]"
+            )
+
+        return self.results[param_index]["errors"]

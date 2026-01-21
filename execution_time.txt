@@ -406,3 +406,6 @@
 2026-01-15 16:52:00 - main_rossler_network_k_study.py: 89.73834562301636 seconds
 2026-01-15 16:54:15 - main_rossler_network_k_study.py: 10.45092511177063 seconds
 2026-01-19 15:07:24 - main_rossler_network_2_dimensional.py: 199.2309193611145 seconds
+2026-01-21 16:47:46 - main_pendulum_case1.py: 0.835533618927002 seconds
+2026-01-21 16:48:00 - main_pendulum_case1.py: 0.7222397327423096 seconds
+2026-01-21 17:12:41 - main_pendulum_case1.py: 0.7136991024017334 seconds
