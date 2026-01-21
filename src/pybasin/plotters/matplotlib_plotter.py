@@ -34,21 +34,96 @@ class MatplotlibPlotter:
         logger.info("Saving plots to: %s", full_path)
         plt.savefig(full_path, dpi=300)  # type: ignore[misc]
 
-    def plot_bse_results(self):
+    def plot_basin_stability_bars(self, ax: Axes | None = None):
         """
-        Generate diagnostic plots using the data stored in self.solution:
-            1. A bar plot of basin stability values.
-            2. A scatter plot of initial conditions (state space).
-            3. A scatter plot of the feature space with classifier results.
-            4. A placeholder plot for future use.
-        """
-        if self.bse.solution is None:
-            raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
+        Plot basin stability values as a bar chart.
 
+        :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        """
+        if self.bse.bs_vals is None:
+            raise ValueError(
+                "No basin stability values available. Please run estimate_bs() before plotting."
+            )
+
+        # Create standalone figure if no axes provided
+        if ax is None:
+            plt.figure(figsize=(6, 5))  # type: ignore[misc]
+            ax = plt.gca()  # type: ignore[assignment]
+            standalone = True
+        else:
+            standalone = False
+
+        # Plot bar chart
+        bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
+        ax.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])  # type: ignore[misc]
+        ax.set_xticks(bar_labels)  # type: ignore[misc]
+        ax.set_ylabel("Fraction of samples")  # type: ignore[misc]
+        ax.set_title("Basin Stability")  # type: ignore[misc]
+
+        # Show/save if standalone
+        if standalone:
+            plt.tight_layout()
+            if self.bse.save_to:
+                self.save_plot("basin_stability_bars")
+            plt.show()  # type: ignore[misc]
+
+    def plot_state_space(self, ax: Axes | None = None):
+        """
+        Plot initial conditions in state space, colored by their attractor labels.
+
+        :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        """
         if self.bse.y0 is None:
             raise ValueError(
                 "No initial conditions available. Please run estimate_bs() before plotting."
             )
+
+        if self.bse.solution is None or self.bse.solution.labels is None:
+            raise ValueError("No labels available. Please run estimate_bs() before plotting.")
+
+        # Extract data
+        initial_conditions = self.bse.y0.cpu().numpy()
+        labels = np.array(self.bse.solution.labels)
+
+        # Create standalone figure if no axes provided
+        if ax is None:
+            plt.figure(figsize=(6, 5))  # type: ignore[misc]
+            ax = plt.gca()  # type: ignore[assignment]
+            standalone = True
+        else:
+            standalone = False
+
+        # Plot state space scatter
+        unique_labels = np.unique(labels)
+        for label in unique_labels:
+            idx = np.where(labels == label)
+            ax.scatter(  # type: ignore[misc]
+                initial_conditions[idx, 0],
+                initial_conditions[idx, 1],
+                s=4,
+                alpha=0.5,
+                label=str(label),
+            )
+        ax.set_title("Initial Conditions in State Space")  # type: ignore[misc]
+        ax.set_xlabel("y_1")  # type: ignore[misc]
+        ax.set_ylabel("y_2")  # type: ignore[misc]
+        ax.legend(loc="upper left")  # type: ignore[misc]
+
+        # Show/save if standalone
+        if standalone:
+            plt.tight_layout()
+            if self.bse.save_to:
+                self.save_plot("state_space")
+            plt.show()  # type: ignore[misc]
+
+    def plot_feature_space(self, ax: Axes | None = None):
+        """
+        Plot feature space with classifier results.
+
+        :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        """
+        if self.bse.solution is None:
+            raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
 
         if self.bse.solution.features is None:
             raise ValueError("No features available. Please run estimate_bs() before plotting.")
@@ -56,68 +131,63 @@ class MatplotlibPlotter:
         if self.bse.solution.labels is None:
             raise ValueError("No labels available. Please run estimate_bs() before plotting.")
 
-        if self.bse.bs_vals is None:
-            raise ValueError(
-                "No basin stability values available. Please run estimate_bs() before plotting."
-            )
-
-        # Extract data from each Solution instance.
-        initial_conditions = self.bse.y0.cpu().numpy()
-
+        # Extract data
         features_array = self.bse.solution.features.cpu().numpy()
-
-        # ['LC' 'LC' 'FP' 'LC' 'LC' ... ]
         labels = np.array(self.bse.solution.labels)
 
-        plt.figure(figsize=(10, 10))  # type: ignore[misc]
+        # Create standalone figure if no axes provided
+        if ax is None:
+            plt.figure(figsize=(6, 5))  # type: ignore[misc]
+            ax = plt.gca()  # type: ignore[assignment]
+            standalone = True
+        else:
+            standalone = False
 
-        # 1) Bar plot for basin stability values.
-        plt.subplot(2, 2, 1)  # type: ignore[misc]
-        bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
-        plt.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])  # type: ignore[misc]
-        plt.xticks(bar_labels)  # type: ignore[misc]
-        plt.ylabel("Fraction of samples")  # type: ignore[misc]
-        plt.title("Basin Stability")  # type: ignore[misc]
-
-        # 2) State space scatter plot: class-labeled initial conditions.
-        plt.subplot(2, 2, 2)  # type: ignore[misc]
+        # Plot feature space scatter
         unique_labels = np.unique(labels)
         for label in unique_labels:
             idx = np.where(labels == label)
-            plt.scatter(  # type: ignore[misc]
-                initial_conditions[idx, 0],
-                initial_conditions[idx, 1],
-                s=4,
-                alpha=0.5,
-                label=str(label),
-            )
-        plt.title("Initial Conditions in State Space")  # type: ignore[misc]
-        # TODO: Have custom labels per case
-        plt.xlabel("y_1")  # type: ignore[misc]
-        plt.ylabel("y_2")  # type: ignore[misc]
-        plt.legend(loc="upper left")  # type: ignore[misc]
-
-        # 3) Feature space scatter plot with classifier results.
-        plt.subplot(2, 2, 3)  # type: ignore[misc]
-        for label in unique_labels:
-            idx = np.where(labels == label)
-            # Map labels to class names if desired (example mapping below)
-            plt.scatter(  # type: ignore[misc]
+            ax.scatter(  # type: ignore[misc]
                 features_array[idx, 0], features_array[idx, 1], s=5, alpha=0.5, label=str(label)
             )
-        plt.title("Feature Space with Classifier Results")  # type: ignore[misc]
-        plt.xlabel("Feature 1")  # type: ignore[misc]
-        plt.ylabel("Feature 2")  # type: ignore[misc]
-        plt.legend()  # type: ignore[misc]
+        ax.set_title("Feature Space with Classifier Results")  # type: ignore[misc]
+        ax.set_xlabel("Feature 1")  # type: ignore[misc]
+        ax.set_ylabel("Feature 2")  # type: ignore[misc]
+        ax.legend()  # type: ignore[misc]
 
-        # 4) Placeholder for future plotting.
-        plt.subplot(2, 2, 4)  # type: ignore[misc]
-        plt.title("Future Plot")  # type: ignore[misc]
+        # Show/save if standalone
+        if standalone:
+            plt.tight_layout()
+            if self.bse.save_to:
+                self.save_plot("feature_space")
+            plt.show()  # type: ignore[misc]
+
+    def plot_bse_results(self):
+        """
+        Generate diagnostic plots using the data stored in self.solution:
+            1. A bar plot of basin stability values.
+            2. A scatter plot of initial conditions (state space).
+            3. A scatter plot of the feature space with classifier results.
+            4. A placeholder plot for future use.
+
+        This method combines the individual plotting functions into a 2x2 grid.
+        For individual plots, use plot_basin_stability_bars(), plot_state_space(),
+        or plot_feature_space() directly.
+        """
+        # Create 2x2 subplot grid
+        fig, axs = plt.subplots(2, 2, figsize=(10, 10))  # type: ignore[misc]
+
+        # Use the individual plotting functions
+        self.plot_basin_stability_bars(ax=axs[0, 0])
+        self.plot_state_space(ax=axs[0, 1])
+        self.plot_feature_space(ax=axs[1, 0])
+
+        # Placeholder for future plotting
+        axs[1, 1].set_title("Future Plot")
 
         plt.tight_layout()
 
-        # Save the figure
-        # Create results directory if it does not exist
+        # Save the combined figure
         if self.bse.save_to:
             self.save_plot("bse_results_plot")
 
