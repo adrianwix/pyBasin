@@ -2039,20 +2039,18 @@
 <p>where <span class="arithmatex">\(p\)</span> is the basin stability estimate and <span class="arithmatex">\(N\)</span> is the number of samples.</p>
 <p>To compare two independent estimates (Python vs MATLAB), we compute:</p>
 <ol>
-<li>
-<p><strong>Z-score</strong>: Measures difference in standard deviations
-   <span class="arithmatex">\(<span class="arithmatex">\(z = \frac{|BS_{Python} - BS_{MATLAB}|}{\sqrt{SE_{Python}^2 + SE_{MATLAB}^2}}\)</span>\)</span></p>
-</li>
-<li>
-<p><strong>P-value</strong>: Probability of observing this difference by chance
-   <span class="arithmatex">\(<span class="arithmatex">\(p = 2 \cdot \Phi(-|z|)\)</span>\)</span>
-   where <span class="arithmatex">\(\Phi\)</span> is the standard normal CDF (computed using <code>scipy.stats.norm.sf</code>)</p>
-</li>
-<li>
-<p><strong>95% Confidence Interval</strong>: Range where true difference likely lies
-   <span class="arithmatex">\(<span class="arithmatex">\(CI = (BS_{Python} - BS_{MATLAB}) \pm z_{0.975} \cdot \sqrt{SE_{Python}^2 + SE_{MATLAB}^2}\)</span>\)</span></p>
-</li>
+<li><strong>Z-score</strong>: Measures difference in standard deviations</li>
 </ol>
+<p><span class="arithmatex">\(<span class="arithmatex">\(z = \frac{|BS_{Python} - BS_{MATLAB}|}{\sqrt{SE_{Python}^2 + SE_{MATLAB}^2}}\)</span>\)</span></p>
+<ol>
+<li><strong>P-value</strong>: Probability of observing this difference by chance</li>
+</ol>
+<p><span class="arithmatex">\(<span class="arithmatex">\(p = 2 \cdot \Phi(-|z|)\)</span>\)</span></p>
+<p>where <span class="arithmatex">\(\Phi\)</span> is the standard normal CDF (computed using <code>scipy.stats.norm.sf</code>)</p>
+<ol>
+<li><strong>95% Confidence Interval</strong>: Range where true difference likely lies</li>
+</ol>
+<p><span class="arithmatex">\(<span class="arithmatex">\(CI = (BS_{Python} - BS_{MATLAB}) \pm z_{0.975} \cdot \sqrt{SE_{Python}^2 + SE_{MATLAB}^2}\)</span>\)</span></p>
 <h3 id="confidence-levels">Confidence Levels</h3>
 <p>Based on the p-value, we classify results into confidence levels:</p>
 <table>
@@ -2290,9 +2288,7 @@
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
