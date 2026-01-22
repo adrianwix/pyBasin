@@ -27,6 +27,7 @@ from scipy import stats
 
 from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.sampler import CsvSampler
 from pybasin.types import SetupProperties
 
 Z_THRESHOLD_OK = 2.0
@@ -255,15 +256,17 @@ def run_basin_stability_test(
     label_map: dict[str, str] | None = None,
     system_name: str = "",
     case_name: str = "",
+    ground_truth_csv: Path | None = None,
 ) -> tuple[BasinStabilityEstimator, ComparisonResult]:
     """Run basin stability test with z-score validation against MATLAB reference results.
 
     This function:
     1. Loads expected results from MATLAB JSON file
-    2. Verifies N matches between setup and JSON (sum of absNumMembers)
-    3. Runs basin stability estimation
-    4. Validates results using z-score test: z = |A - B| / sqrt(SE_A^2 + SE_B^2)
-    5. Asserts that differences are within z_threshold combined standard errors
+    2. If ground_truth_csv is provided, uses CsvSampler with exact MATLAB ICs
+    3. Verifies N matches between setup and JSON (sum of absNumMembers)
+    4. Runs basin stability estimation
+    5. Validates results using z-score test: z = |A - B| / sqrt(SE_A^2 + SE_B^2)
+    6. Asserts that differences are within z_threshold combined standard errors
 
     :param json_path: Path to JSON file with expected results from MATLAB.
     :param setup_function: Function that returns system properties (e.g., setup_pendulum_system).
@@ -271,6 +274,8 @@ def run_basin_stability_test(
     :param label_map: Optional mapping from JSON labels to Python labels.
     :param system_name: Name of the dynamical system for artifact generation.
     :param case_name: Name of the case for artifact generation.
+    :param ground_truth_csv: Path to CSV with exact MATLAB initial conditions. If provided,
+        uses CsvSampler instead of the sampler from setup_function.
     :return: Tuple of (BasinStabilityEstimator, ComparisonResult).
     :raises AssertionError: If validation fails.
     """
@@ -287,10 +292,20 @@ def run_basin_stability_test(
         f"Case study N mismatch: props['n']={props['n']} but JSON absNumMembers sum={expected_n}"
     )
 
+    # Use CsvSampler if ground_truth_csv is provided (exact MATLAB ICs)
+    if ground_truth_csv is not None:
+        state_dim = props["sampler"].state_dim
+        coordinate_columns = [f"x{i + 1}" for i in range(state_dim)]
+        sampler = CsvSampler(ground_truth_csv, coordinate_columns=coordinate_columns)
+        n_samples = sampler.n_samples
+    else:
+        sampler = props["sampler"]
+        n_samples = props["n"]
+
     bse = BasinStabilityEstimator(
-        n=props["n"],
+        n=n_samples,
         ode_system=props["ode_system"],
-        sampler=props["sampler"],
+        sampler=sampler,
         solver=props.get("solver"),
         feature_extractor=props.get("feature_extractor"),
         predictor=props.get("cluster_classifier"),

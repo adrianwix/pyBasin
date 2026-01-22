@@ -140,9 +140,3 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     print(f"\n{'=' * 60}")
     print("✅ Artifact generation complete")
     print(f"{'=' * 60}\n")
-
-
-@pytest.fixture
-def tolerance() -> float:
-    """Default tolerance for comparing basin stability values."""
-    return 0.015  # 1.5% tolerance (increased to account for statistical variability)

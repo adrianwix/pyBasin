@@ -97,7 +97,7 @@ class TestRosslerNetwork:
         print(f"  Difference:   {diff:+.3f}")
         print(f"  Z-score:      {stats_comp.z_score:.2f}")
         print(f"  P-value:      {stats_comp.p_value:.4f}")
-        print(f"  Threshold:    3.00 (99.7% CI)")
+        print("  Threshold:    3.00 (99.7% CI)")
 
         comparison = AttractorComparison(
             label="synchronized",
@@ -195,7 +195,6 @@ class TestRosslerNetwork:
 
             e_abs_computed = np.sqrt(sync_val * (1 - sync_val) / n_samples)
             e_abs_paper = np.sqrt(expected_val * (1 - expected_val) / n_samples)
-            e_combined = np.sqrt(e_abs_computed**2 + e_abs_paper**2)
 
             stats_comp = compute_statistical_comparison(
                 sync_val, e_abs_computed, expected_val, e_abs_paper

@@ -28,7 +28,6 @@ class TestLorenz:
     @pytest.mark.integration
     def test_case1(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test Lorenz system case 1 - broken butterfly attractor parameters.
@@ -38,9 +37,10 @@ class TestLorenz:
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
         """
         json_path = Path(__file__).parent / "main_lorenz.json"
+        ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_lorenz.csv"
         label_map = {
             "butterfly1": "chaos y_1",
             "butterfly2": "chaos y_2",
@@ -50,9 +50,11 @@ class TestLorenz:
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_lorenz_system,
+            z_threshold=0.5,
             label_map=label_map,
             system_name="lorenz",
             case_name="case1",
+            ground_truth_csv=ground_truth_csv,
         )
 
         if artifact_collector is not None:
@@ -61,7 +63,6 @@ class TestLorenz:
     @pytest.mark.integration
     def test_parameter_sigma(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test Lorenz sigma parameter sweep using z-score validation.
@@ -94,7 +95,7 @@ class TestLorenz:
             artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
-    def test_hyperparameter_n(self, tolerance: float) -> None:
+    def test_hyperparameter_n(self) -> None:
         """Test hyperparameter n - convergence study varying sample size N.
 
         Uses z-score validation with standard errors. As N increases, the standard
@@ -150,7 +151,6 @@ class TestLorenz:
     @pytest.mark.integration
     def test_hyperparameter_rtol(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test hyperparameter rtol - ODE solver relative tolerance convergence study.

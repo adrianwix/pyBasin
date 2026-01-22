@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 
 
@@ -124,3 +126,89 @@ class GaussianSampler(Sampler):
         samples = torch.normal(mean.repeat(n, 1), std.repeat(n, 1))
 
         return torch.clamp(samples, self.min_limits, self.max_limits)
+
+
+class CsvSampler(Sampler):
+    """Loads samples from a CSV file.
+
+    This sampler reads initial conditions from a CSV file, useful for reproducing
+    exact results from MATLAB or other reference implementations.
+    """
+
+    display_name: str = "CSV Sampler"
+
+    def __init__(
+        self,
+        csv_path: str | Path,
+        coordinate_columns: list[str],
+        label_column: str | None = None,
+        device: str | None = None,
+    ):
+        """Initialize the CSV sampler.
+
+        :param csv_path: Path to the CSV file containing samples.
+        :param coordinate_columns: List of column names to use as coordinates
+            (e.g., ["x1", "x2"] or ["disp", "vel"]).
+        :param label_column: Column name containing ground truth labels (e.g., "label").
+            If None, no labels are loaded.
+        :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
+        """
+        self.csv_path = Path(csv_path)
+        if not self.csv_path.exists():
+            raise FileNotFoundError(f"CSV file not found: {self.csv_path}")
+
+        df = pd.read_csv(self.csv_path)  # pyright: ignore[reportUnknownMemberType]
+
+        missing_cols = [col for col in coordinate_columns if col not in df.columns]
+        if missing_cols:
+            raise ValueError(
+                f"Columns {missing_cols} not found in CSV. Available: {list(df.columns)}"
+            )
+
+        self._coordinate_columns = coordinate_columns
+        self._label_column = label_column
+        self._data = df[coordinate_columns].values.astype(np.float32)
+
+        if label_column is not None:
+            if label_column not in df.columns:
+                raise ValueError(
+                    f"Label column '{label_column}' not found in CSV. Available: {list(df.columns)}"
+                )
+            self._labels: np.ndarray | None = np.asarray(df[label_column].values)
+        else:
+            self._labels = None
+
+        min_limits = self._data.min(axis=0).tolist()
+        max_limits = self._data.max(axis=0).tolist()
+
+        super().__init__(min_limits, max_limits, device)
+
+        self._tensor_data = torch.tensor(self._data, dtype=torch.float32, device=self.device)
+
+    @property
+    def labels(self) -> np.ndarray | None:
+        """Return ground truth labels from the CSV file, or None if no label column was specified."""
+        return self._labels
+
+    @property
+    def n_samples(self) -> int:
+        """Return the total number of samples in the CSV file."""
+        return len(self._data)
+
+    def sample(self, n: int | None = None) -> torch.Tensor:
+        """Return samples from the CSV file.
+
+        :param n: Number of samples to return. If None, returns all samples.
+            If n is larger than available samples, raises ValueError.
+            If n is smaller than available samples, returns first n samples.
+        :return: Sampled initial conditions as a tensor of shape (n, state_dim).
+        """
+        if n is None:
+            return self._tensor_data
+
+        if n > len(self._tensor_data):
+            raise ValueError(
+                f"Requested {n} samples, but CSV only contains {len(self._tensor_data)}"
+            )
+
+        return self._tensor_data[:n]

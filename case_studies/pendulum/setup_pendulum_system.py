@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.predictors.knn_classifier import KNNClassifier
-from pybasin.sampler import GridSampler
+from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 
 # from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
@@ -25,7 +25,7 @@ def setup_pendulum_system() -> SetupProperties:
 
     ode_system = PendulumJaxODE(params)
 
-    sampler = GridSampler(
+    sampler = UniformRandomSampler(
         min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
         max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
         device=device,

@@ -15,7 +15,6 @@ from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
 from pybasin.predictors.knn_classifier import KNNClassifier
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
-    ComparisonResult,
     UnsupervisedAttractorComparison,
     UnsupervisedComparisonResult,
     compute_statistical_comparison,
@@ -29,7 +28,6 @@ class TestDuffing:
     @pytest.mark.integration
     def test_baseline_supervised(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test Duffing oscillator baseline with supervised classification approach.
@@ -40,17 +38,19 @@ class TestDuffing:
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
 
-        Note: Uses larger z-threshold due to chaotic nature of Duffing system.
+        Note: Uses tight z-threshold since exact MATLAB ICs eliminate sampling variance.
         """
         json_path = Path(__file__).parent / "main_duffing_supervised.json"
+        ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_duffing.csv"
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_duffing_oscillator_system,
-            z_threshold=2.5,
+            z_threshold=0.5,
             system_name="duffing",
             case_name="case1",
+            ground_truth_csv=ground_truth_csv,
         )
 
         if artifact_collector is not None:
@@ -59,7 +59,6 @@ class TestDuffing:
     @pytest.mark.integration
     def test_baseline_unsupervised(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test Duffing oscillator baseline with unsupervised clustering approach.
@@ -241,7 +240,7 @@ class TestDuffing:
             threshold = z_threshold * combined_se if combined_se > 0 else 0.01
             assert diff < threshold, (
                 f"Label '{label}': expected {expected_bs:.4f} ± {expected_se:.4f}, "
-                f"got {actual_bs:.4f} ± {actual_se:.4f}, z-score {z_score:.2f} exceeds {z_threshold}"
+                f"got {actual_bs:.4f} ± {actual_se:.4f}, z-score {stats_comp.z_score:.2f} exceeds {z_threshold}"
             )
 
         comparison = UnsupervisedComparisonResult(

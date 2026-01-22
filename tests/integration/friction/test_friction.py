@@ -18,7 +18,6 @@ class TestFriction:
     @pytest.mark.integration
     def test_baseline(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test friction oscillator baseline parameters.
@@ -28,18 +27,19 @@ class TestFriction:
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
 
-        Note: Uses larger z-threshold due to small sample size (N=1000)
-        and sensitivity of friction system.
+        Note: Uses tight z-threshold since exact MATLAB ICs eliminate sampling variance.
         """
         json_path = Path(__file__).parent / "main_friction_case1.json"
+        ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_friction.csv"
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_friction_system,
-            z_threshold=2.5,
+            z_threshold=0.5,
             system_name="friction",
             case_name="case1",
+            ground_truth_csv=ground_truth_csv,
         )
 
         if artifact_collector is not None:
@@ -48,7 +48,6 @@ class TestFriction:
     @pytest.mark.integration
     def test_parameter_v_d(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test friction oscillator v_d parameter sweep - adaptive parameter study varying v_d.

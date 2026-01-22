@@ -19,21 +19,30 @@ class TestPendulum:
     @pytest.mark.integration
     def test_baseline(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
-        """Test pendulum baseline parameters using z-score validation.
+        """Test pendulum baseline using exact MATLAB initial conditions.
+
+        Uses CsvSampler to load the exact ICs from MATLAB bSTAB, eliminating
+        sampling variance. Any differences are due to numerical integration
+        or feature extraction only.
 
         Verifies:
-        1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+        1. Basin stability values match MATLAB within tight tolerance
+        2. Z-score validation: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
         """
         json_path = Path(__file__).parent / "main_pendulum_case1.json"
+        ground_truth_csv = (
+            Path(__file__).parent / "ground_truths" / "case1" / "main_pendulum_case1.csv"
+        )
+
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_pendulum_system,
+            z_threshold=0.5,
             system_name="pendulum",
             case_name="case1",
+            ground_truth_csv=ground_truth_csv,
         )
 
         if artifact_collector is not None:
@@ -42,7 +51,6 @@ class TestPendulum:
     @pytest.mark.integration
     def test_parameter_t(
         self,
-        tolerance: float,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
         """Test pendulum period (T) parameter sweep using z-score validation.

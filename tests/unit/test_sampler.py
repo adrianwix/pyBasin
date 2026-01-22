@@ -1,9 +1,11 @@
+from pathlib import Path
 from typing import TypedDict
 
+import numpy as np
 import pytest
 import torch
 
-from pybasin.sampler import GaussianSampler, GridSampler, UniformRandomSampler
+from pybasin.sampler import CsvSampler, GaussianSampler, GridSampler, UniformRandomSampler
 
 
 class SamplerParams(TypedDict):
@@ -71,3 +73,107 @@ def test_gaussian_sampler_distribution(sampler_params: SamplerParams) -> None:
     expected_mean = torch.tensor([0.5, 0.0])
     # Sample mean ≈ [0.5, 0.0] (midpoint between bounds)
     assert torch.allclose(mean, expected_mean, atol=0.1)
+
+
+class TestCsvSampler:
+    """Tests for CsvSampler."""
+
+    @pytest.fixture
+    def csv_file(self, tmp_path: Path) -> Path:
+        """Create a temporary CSV file for testing."""
+        csv_content = """x1,x2,label
+1.0,2.0,A
+3.0,4.0,B
+5.0,6.0,A
+7.0,8.0,B
+"""
+        csv_path = tmp_path / "test_samples.csv"
+        csv_path.write_text(csv_content)
+        return csv_path
+
+    def test_csv_sampler_loads_data(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+        samples = sampler.sample()
+
+        assert samples.shape == (4, 2)
+        assert samples.dtype == torch.float32
+
+    def test_csv_sampler_correct_values(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+        samples = sampler.sample()
+
+        expected = torch.tensor(
+            [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]], dtype=torch.float32
+        )
+        assert torch.allclose(samples, expected)
+
+    def test_csv_sampler_labels(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+
+        assert sampler.labels is not None
+        np.testing.assert_array_equal(sampler.labels, ["A", "B", "A", "B"])
+
+    def test_csv_sampler_no_label_column(self, csv_file: Path) -> None:
+        sampler = CsvSampler(csv_file, coordinate_columns=["x1", "x2"], device="cpu")
+
+        assert sampler.labels is None
+
+    def test_csv_sampler_n_samples(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+
+        assert sampler.n_samples == 4
+
+    def test_csv_sampler_partial_sample(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+        samples = sampler.sample(n=2)
+
+        assert samples.shape == (2, 2)
+        expected = torch.tensor([[1.0, 2.0], [3.0, 4.0]], dtype=torch.float32)
+        assert torch.allclose(samples, expected)
+
+    def test_csv_sampler_exceeds_available(self, csv_file: Path) -> None:
+        sampler = CsvSampler(
+            csv_file, coordinate_columns=["x1", "x2"], label_column="label", device="cpu"
+        )
+
+        with pytest.raises(ValueError, match="Requested 10 samples"):
+            sampler.sample(n=10)
+
+    def test_csv_sampler_custom_columns(self, tmp_path: Path) -> None:
+        csv_content = """a,b,c,label
+1.0,2.0,3.0,A
+4.0,5.0,6.0,B
+"""
+        csv_path = tmp_path / "custom_cols.csv"
+        csv_path.write_text(csv_content)
+
+        sampler = CsvSampler(csv_path, coordinate_columns=["a", "c"], device="cpu")
+        samples = sampler.sample()
+
+        assert samples.shape == (2, 2)
+        expected = torch.tensor([[1.0, 3.0], [4.0, 6.0]], dtype=torch.float32)
+        assert torch.allclose(samples, expected)
+
+    def test_csv_sampler_file_not_found(self) -> None:
+        with pytest.raises(FileNotFoundError):
+            CsvSampler("/nonexistent/path.csv", coordinate_columns=["x1", "x2"])
+
+    def test_csv_sampler_missing_columns(self, csv_file: Path) -> None:
+        with pytest.raises(ValueError, match="Columns .* not found"):
+            CsvSampler(csv_file, coordinate_columns=["x1", "missing"], device="cpu")
+
+    def test_csv_sampler_limits_from_data(self, csv_file: Path) -> None:
+        sampler = CsvSampler(csv_file, coordinate_columns=["x1", "x2"], device="cpu")
+
+        assert sampler.min_limits.tolist() == [1.0, 2.0]
+        assert sampler.max_limits.tolist() == [7.0, 8.0]

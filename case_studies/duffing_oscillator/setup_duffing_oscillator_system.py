@@ -10,7 +10,7 @@ from pybasin.types import SetupProperties
 
 
 def setup_duffing_oscillator_system() -> SetupProperties:
-    n = 5000
+    n = 10000
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Duffing oscillator system on device: {device}")

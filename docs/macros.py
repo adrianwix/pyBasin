@@ -18,22 +18,22 @@ Z_THRESHOLD_OK = 2.0
 Z_THRESHOLD_WARNING = 3.0
 
 
+_CONFIDENCE_EMOJI: dict[str, str] = {
+    "very_high": "✅",  # p > 0.10 (very likely same)
+    "high": "✅",  # p > 0.05 (no significant difference)
+    "moderate": "⚠️",  # p > 0.01 (borderline)
+    "low": "❌",  # p > 0.001 (significant difference)
+    "very_low": "❌",  # p <= 0.001 (highly significant difference)
+}
+
+
 def _status_emoji(confidence: str) -> str:
     """Get status emoji based on confidence level.
 
     :param confidence: Confidence level string ("very_high", "high", "moderate", "low", "very_low").
     :return: Status emoji.
     """
-    if confidence == "very_high":
-        return "✅"  # p > 0.10 (very likely same)
-    elif confidence == "high":
-        return "✅"  # p > 0.05 (no significant difference)
-    elif confidence == "moderate":
-        return "⚠️"  # p > 0.01 (borderline)
-    elif confidence == "low":
-        return "❌"  # p > 0.001 (significant difference)
-    else:  # very_low
-        return "❌"  # p <= 0.001 (highly significant difference)
+    return _CONFIDENCE_EMOJI.get(confidence, "❌")
 
 
 def _format_bs_with_se(bs: float, se: float) -> str:
