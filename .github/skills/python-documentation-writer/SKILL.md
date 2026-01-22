@@ -18,7 +18,7 @@ Guidelines for writing Python documentation that renders correctly with mkdocstr
 uv run python .github/skills/python-documentation-writer/check_docstrings.py path/to/file.py
 ```
 
-The linter detects: Google/NumPy style sections, missing blank lines before bullet lists, indented parameter blocks.
+The linter detects: Google/NumPy style sections, missing blank lines before bullet lists, indented parameter blocks, redundant `:vartype:` tags.
 
 ## Quick Reference
 

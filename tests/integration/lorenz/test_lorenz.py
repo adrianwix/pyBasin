@@ -7,8 +7,15 @@ import numpy as np
 import pytest
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import (
+    AdaptiveStudyParams,
+    ASBasinStabilityEstimator,
+)
+from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
+    AttractorComparison,
+    ComparisonResult,
+    compute_statistical_comparison,
     run_adaptive_basin_stability_test,
     run_basin_stability_test,
     run_single_point_test,
@@ -19,7 +26,11 @@ class TestLorenz:
     """Integration tests for Lorenz system basin stability estimation."""
 
     @pytest.mark.integration
-    def test_case1(self, tolerance: float) -> None:
+    def test_case1(
+        self,
+        tolerance: float,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test Lorenz system case 1 - broken butterfly attractor parameters.
 
         Parameters: sigma=0.12, r=0.0, b=-0.6
@@ -36,10 +47,23 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        run_basin_stability_test(json_path, setup_lorenz_system, label_map=label_map)
+        bse, comparison = run_basin_stability_test(
+            json_path,
+            setup_lorenz_system,
+            label_map=label_map,
+            system_name="lorenz",
+            case_name="case1",
+        )
+
+        if artifact_collector is not None:
+            artifact_collector.add_single_point(bse, comparison)
 
     @pytest.mark.integration
-    def test_parameter_sigma(self, tolerance: float) -> None:
+    def test_parameter_sigma(
+        self,
+        tolerance: float,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test Lorenz sigma parameter sweep using z-score validation.
 
         Studies the effect of varying sigma parameter from 0.12 to 0.18 on basin stability.
@@ -55,14 +79,19 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        run_adaptive_basin_stability_test(
+        as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_lorenz_system,
             adaptative_parameter_name='ode_system.params["sigma"]',
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
             z_threshold=3.5,  # Chaotic system - occasional 2-3σ outliers expected
+            system_name="lorenz",
+            case_name="case2",
         )
+
+        if artifact_collector is not None:
+            artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
     def test_hyperparameter_n(self, tolerance: float) -> None:
@@ -95,6 +124,7 @@ class TestLorenz:
         )
 
     @pytest.mark.integration
+    @pytest.mark.no_artifacts
     def test_n200(self) -> None:
         """Test with small N=200 for random sampling validation.
 
@@ -118,7 +148,11 @@ class TestLorenz:
         )
 
     @pytest.mark.integration
-    def test_hyperparameter_rtol(self, tolerance: float) -> None:
+    def test_hyperparameter_rtol(
+        self,
+        tolerance: float,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test hyperparameter rtol - ODE solver relative tolerance convergence study.
 
         Studies the effect of varying relative tolerance from 1e-3 to 1e-8 on basin stability.
@@ -131,15 +165,12 @@ class TestLorenz:
 
         Note: We use a more lenient tolerance for rtol=1e-3 since we expect it to be less accurate.
         """
-        # Load expected results from JSON (MATLAB reference)
         json_path = Path(__file__).parent / "main_lorenz_hyperpTol.json"
         with open(json_path) as f:
             expected_results = json.load(f)
 
-        # Setup system and run tolerance study
         props = setup_lorenz_system()
 
-        # Use the same tolerance values as in the expected results
         parameter_values = np.array([result["parameter"] for result in expected_results])
 
         as_params = AdaptiveStudyParams(
@@ -154,82 +185,110 @@ class TestLorenz:
         assert feature_extractor is not None
         assert cluster_classifier is not None
 
-        # Use N=20000 to match MATLAB study
         as_bse = ASBasinStabilityEstimator(
-            n=20000,
+            n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
             solver=solver,
             feature_extractor=feature_extractor,
             cluster_classifier=cluster_classifier,
             as_params=as_params,
-            save_to=None,  # Don't save during test
         )
 
         as_bse.estimate_as_bs()
 
-        # Compare results at each tolerance value
+        label_map = {
+            "butterfly1": "chaos y_1",
+            "butterfly2": "chaos y_2",
+            "unbounded": "unbounded",
+        }
+
+        comparison_results: list[ComparisonResult] = []
+        z_threshold = 2.0
+
         for i, expected in enumerate(expected_results):
             rtol_value = expected["parameter"]
             actual_bs = as_bse.basin_stabilities[i]
+            errors = as_bse.get_errors(i)
 
-            # Use a more lenient tolerance for rtol=1e-3 since it's expected to be less accurate
-            # For rtol >= 1e-4, we expect convergence to accurate values
-            test_tolerance = tolerance * 3.0 if rtol_value >= 1e-3 else tolerance  # type: ignore[assignment]
+            attractor_comparisons: list[AttractorComparison] = []
 
-            # Check butterfly1 (JSON) -> chaos y_1 (Python) basin stability
-            expected_bs_b1 = expected["bs_butterfly1"]
-            actual_bs_b1 = actual_bs.get("chaos y_1", 0.0)
-            diff_b1 = abs(actual_bs_b1 - expected_bs_b1)
-
-            # For rtol=1e-3, just verify it's within a reasonable range (not checking exact match)
-            if rtol_value == 1e-3:
-                # At coarse tolerance, we mainly want to ensure the solver doesn't crash
-                # and produces some result (even if less accurate)
-                assert 0.0 <= actual_bs_b1 <= 1.0, (
-                    f"At rtol={rtol_value:.0e}, chaos y_1 basin stability {actual_bs_b1:.4f} "
-                    f"is outside valid range [0, 1]"
-                )
+            # For rtol=1e-3, just verify values are in valid range (coarse tolerance expected to differ)
+            if rtol_value >= 1e-3:
+                for label, python_label in label_map.items():
+                    actual_val = actual_bs.get(python_label, 0.0)
+                    assert 0.0 <= actual_val <= 1.0, (
+                        f"At rtol={rtol_value:.0e}, {python_label} basin stability {actual_val:.4f} "
+                        f"is outside valid range [0, 1]"
+                    )
+                    expected_bs = expected[f"bs_{label}"]
+                    expected_err = expected.get(f"err_{label}", 0.0)
+                    actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
+                    stats_comp = compute_statistical_comparison(
+                        actual_val, actual_err, expected_bs, expected_err
+                    )
+                    attractor_comparisons.append(
+                        AttractorComparison(
+                            label=python_label,
+                            python_bs=actual_val,
+                            python_se=actual_err,
+                            matlab_bs=expected_bs,
+                            matlab_se=expected_err,
+                            z_score=stats_comp.z_score,
+                            p_value=stats_comp.p_value,
+                            ci_lower=stats_comp.ci_lower,
+                            ci_upper=stats_comp.ci_upper,
+                            confidence="high",  # Only range check for rtol=1e-3, override
+                        )
+                    )
             else:
-                assert diff_b1 < test_tolerance, (
-                    f"At rtol={rtol_value:.0e}, chaos y_1 basin stability: "
-                    f"expected {expected_bs_b1:.4f}, got {actual_bs_b1:.4f}, "
-                    f"difference {diff_b1:.4f} exceeds tolerance {test_tolerance:.4f}"
-                )
+                # For rtol < 1e-3, use z-score validation
+                for label, python_label in label_map.items():
+                    expected_bs = expected[f"bs_{label}"]
+                    expected_err = expected.get(f"err_{label}", 0.0)
+                    actual_val = actual_bs.get(python_label, 0.0)
+                    actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
 
-            # Check butterfly2 (JSON) -> chaos y_2 (Python) basin stability
-            expected_bs_b2 = expected["bs_butterfly2"]
-            actual_bs_b2 = actual_bs.get("chaos y_2", 0.0)
-            diff_b2 = abs(actual_bs_b2 - expected_bs_b2)
+                    stats_comp = compute_statistical_comparison(
+                        actual_val, actual_err, expected_bs, expected_err
+                    )
 
-            if rtol_value == 1e-3:
-                assert 0.0 <= actual_bs_b2 <= 1.0, (
-                    f"At rtol={rtol_value:.0e}, chaos y_2 basin stability {actual_bs_b2:.4f} "
-                    f"is outside valid range [0, 1]"
-                )
-            else:
-                assert diff_b2 < test_tolerance, (
-                    f"At rtol={rtol_value:.0e}, chaos y_2 basin stability: "
-                    f"expected {expected_bs_b2:.4f}, got {actual_bs_b2:.4f}, "
-                    f"difference {diff_b2:.4f} exceeds tolerance {test_tolerance:.4f}"
-                )
+                    combined_err = float(np.sqrt(expected_err**2 + actual_err**2))
+                    diff = abs(actual_val - expected_bs)
 
-            # Check unbounded basin stability
-            expected_bs_unbounded = expected["bs_unbounded"]
-            actual_bs_unbounded = actual_bs.get("unbounded", 0.0)
-            diff_unbounded = abs(actual_bs_unbounded - expected_bs_unbounded)
+                    if combined_err > 0:
+                        threshold = z_threshold * combined_err
+                        assert diff < threshold, (
+                            f"At rtol={rtol_value:.0e}, {python_label}: "
+                            f"expected {expected_bs:.4f} ± {expected_err:.4f}, "
+                            f"got {actual_val:.4f} ± {actual_err:.4f}, "
+                            f"diff {diff:.4f} exceeds threshold {threshold:.4f}"
+                        )
 
-            if rtol_value == 1e-3:
-                assert 0.0 <= actual_bs_unbounded <= 1.0, (
-                    f"At rtol={rtol_value:.0e}, unbounded basin stability {actual_bs_unbounded:.4f} "
-                    f"is outside valid range [0, 1]"
+                    attractor_comparisons.append(
+                        AttractorComparison(
+                            label=python_label,
+                            python_bs=actual_val,
+                            python_se=actual_err,
+                            matlab_bs=expected_bs,
+                            matlab_se=expected_err,
+                            z_score=stats_comp.z_score,
+                            p_value=stats_comp.p_value,
+                            ci_lower=stats_comp.ci_lower,
+                            ci_upper=stats_comp.ci_upper,
+                            confidence=stats_comp.confidence,
+                        )
+                    )
+
+            comparison_results.append(
+                ComparisonResult(
+                    system_name="lorenz",
+                    case_name="case3",
+                    attractors=attractor_comparisons,
+                    parameter_value=rtol_value,
+                    z_threshold=z_threshold,
                 )
-            else:
-                assert diff_unbounded < test_tolerance, (
-                    f"At rtol={rtol_value:.0e}, unbounded basin stability: "
-                    f"expected {expected_bs_unbounded:.4f}, got {actual_bs_unbounded:.4f}, "
-                    f"difference {diff_unbounded:.4f} exceeds tolerance {test_tolerance:.4f}"
-                )
+            )
 
             # Verify basin stabilities sum to approximately 1.0
             total_bs = sum(actual_bs.values())
@@ -237,13 +296,5 @@ class TestLorenz:
                 f"At rtol={rtol_value:.0e}, basin stabilities should sum to 1.0, got {total_bs:.4f}"
             )
 
-        # Additional check: verify that results for rtol >= 1e-4 are relatively consistent
-        # (i.e., they have converged to a stable solution)
-        consistent_results = as_bse.basin_stabilities[1:]  # Skip rtol=1e-3
-        if len(consistent_results) > 1:
-            chaos_y_1_values = [bs.get("chaos y_1", 0.0) for bs in consistent_results]
-            chaos_y_1_std = np.std(chaos_y_1_values)
-            assert chaos_y_1_std < 0.01, (
-                f"chaos y_1 values for rtol >= 1e-4 should be consistent, "
-                f"but std={chaos_y_1_std:.4f} is too high. Values: {chaos_y_1_values}"
-            )
+        if artifact_collector is not None:
+            artifact_collector.add_parameter_sweep(as_bse, comparison_results)

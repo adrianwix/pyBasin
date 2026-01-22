@@ -51,6 +51,7 @@ docs = [
     "mkdocs-material>=9.4.0",
     "mkdocstrings[python]>=0.24.0",
     "mkdocs-jupyter>=0.24.0",
+    "mkdocs-macros-plugin>=1.0.0",
 ]
 case-studies = [
     "jupyter>=1.0.0",

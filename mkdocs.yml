@@ -37,6 +37,8 @@ theme:
 
 plugins:
   - search
+  - macros:
+      module_name: docs/macros
   - mkdocstrings:
       handlers:
         python:
@@ -73,8 +75,7 @@ markdown_extensions:
 
 extra_javascript:
   - javascripts/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
@@ -91,6 +92,11 @@ nav:
       - Feature Selectors: user-guide/feature-selectors.md
       - Predictors: user-guide/predictors.md
       - Plotters: user-guide/plotters.md
+      - How To:
+          - Handling Unbounded Trajectories: guides/unbounded-trajectories.md
+          - TorchODE Solver: guides/torchode-solver.md
+          - Type Safety and Generics: guides/type-safety-generics.md
+          - Custom Feature Extractor: guides/custom-feature-extractor.md
   - Case Studies:
       - Overview: case-studies/overview.md
       - Pendulum: case-studies/pendulum.md
@@ -113,10 +119,5 @@ nav:
       - Feature Selection: api/feature-selector.md
       - Predictors: api/predictors.md
       - Plotters: api/plotters.md
-  - Guides:
-      - Handling Unbounded Trajectories: guides/unbounded-trajectories.md
-      - TorchODE Solver: guides/torchode-solver.md
-      - Type Safety and Generics: guides/type-safety-generics.md
-      - Custom Feature Extractor: guides/custom-feature-extractor.md
   - Development:
       - Contributing: development/contributing.md

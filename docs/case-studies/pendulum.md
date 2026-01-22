@@ -1,8 +1,5 @@
 # Pendulum
 
-!!! note "Documentation in Progress"
-This page is under construction.
-
 ## System Description
 
 Driven damped pendulum:
@@ -14,25 +11,48 @@ $$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
 - **Fixed Point (FP)**: Pendulum settles to equilibrium
 - **Limit Cycle (LC)**: Periodic oscillation
 
-## Minimal Example
+## Reproduction Code
 
-```python
-from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.basin_stability_estimator import BasinStabilityEstimator
+### Setup
 
-props = setup_pendulum_system()
-bse = BasinStabilityEstimator(
-    ode_system=props["ode_system"],
-    sampler=props["sampler"],
-)
-basin_stability = bse.estimate_bs()
-print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
-```
+{{ load_snippet("case_studies/pendulum/setup_pendulum_system.py::setup_pendulum_system") }}
 
-## Expected Results
+### Main Estimation
 
-From integration tests:
+{{ load_snippet("case_studies/pendulum/main_pendulum_case1.py::main") }}
 
-```json
-{ "FP": 0.518, "LC": 0.482 }
-```
+## Case 1: Baseline Results
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("pendulum_case1") }}
+
+### Visualizations
+
+#### Basin Stability
+
+![Basin Stability](../assets/pendulum_case1_basin_stability.png)
+
+#### State Space
+
+![State Space](../assets/pendulum_case1_state_space.png)
+
+#### Feature Space
+
+![Feature Space](../assets/pendulum_case1_feature_space.png)
+
+## Case 2: Parameter Sweep
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("pendulum_case2") }}
+
+### Visualizations
+
+#### Basin Stability Variation
+
+![Basin Stability Variation](../assets/pendulum_case2_basin_stability_variation.png)
+
+#### Bifurcation Diagram
+
+![Bifurcation Diagram](../assets/pendulum_case2_bifurcation_diagram.png)

@@ -5,6 +5,7 @@ This script detects:
 1. Google-style sections (Returns:, Raises:, Args:, Attributes:) that should use Sphinx style
 2. Bullet lists without a blank line before them
 3. NumPy-style sections (Parameters, Returns with dashes underneath)
+4. Redundant :vartype: tags when type hints are present in __init__
 
 Usage:
     python check_docstrings.py <file_or_directory> [<file_or_directory> ...]
@@ -316,6 +317,92 @@ def extract_docstrings(file_path: Path) -> list[tuple[str, int]]:
     return docstrings
 
 
+def get_typed_init_attributes(class_node: ast.ClassDef) -> set[str]:
+    """Extract attribute names that have type annotations in __init__.
+
+    Looks for patterns like: self.name: Type = value
+
+    :param class_node: The AST node for the class.
+    :return: Set of attribute names with type annotations.
+    """
+    typed_attrs: set[str] = set()
+
+    for node in class_node.body:
+        if isinstance(node, ast.FunctionDef) and node.name == "__init__":
+            for stmt in ast.walk(node):
+                if (
+                    isinstance(stmt, ast.AnnAssign)
+                    and isinstance(stmt.target, ast.Attribute)
+                    and isinstance(stmt.target.value, ast.Name)
+                    and stmt.target.value.id == "self"
+                ):
+                    typed_attrs.add(stmt.target.attr)
+            break
+
+    return typed_attrs
+
+
+def check_redundant_vartype(class_node: ast.ClassDef, file: str) -> list[DocstringIssue]:
+    """Detect redundant :vartype: tags when type hints are present in __init__.
+
+    :param class_node: The AST node for the class.
+    :param file: The file path for error reporting.
+    :return: List of docstring issues found.
+    """
+    issues: list[DocstringIssue] = []
+
+    docstring = ast.get_docstring(class_node)
+    if not docstring:
+        return issues
+
+    typed_attrs = get_typed_init_attributes(class_node)
+    if not typed_attrs:
+        return issues
+
+    vartype_pattern = re.compile(r":vartype\s+(\w+):")
+    lines = docstring.split("\n")
+    base_line = class_node.lineno
+
+    for i, line in enumerate(lines):
+        match = vartype_pattern.search(line)
+        if match:
+            attr_name = match.group(1)
+            if attr_name in typed_attrs:
+                issues.append(
+                    DocstringIssue(
+                        file=file,
+                        line=base_line + i,
+                        issue_type="redundant-vartype",
+                        message=f"Redundant ':vartype {attr_name}:' - type hint already in __init__",
+                        suggestion=f"Remove ':vartype {attr_name}: ...' line; type is inferred from 'self.{attr_name}: Type = ...' in __init__",
+                    )
+                )
+
+    return issues
+
+
+def extract_class_nodes(file_path: Path) -> list[tuple[ast.ClassDef, str]]:
+    """Extract all class nodes from a Python file.
+
+    :param file_path: Path to the Python file.
+    :return: List of (class_node, file_path_str) tuples.
+    """
+    classes: list[tuple[ast.ClassDef, str]] = []
+
+    try:
+        source = file_path.read_text()
+        tree = ast.parse(source)
+    except (SyntaxError, UnicodeDecodeError) as e:
+        print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
+        return []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            classes.append((node, str(file_path)))
+
+    return classes
+
+
 def check_file(file_path: Path) -> list[DocstringIssue]:
     """Check a single Python file for docstring issues."""
     all_issues: list[DocstringIssue] = []
@@ -328,6 +415,9 @@ def check_file(file_path: Path) -> list[DocstringIssue]:
         all_issues.extend(check_indented_params(docstring, line_no, file_str))
         all_issues.extend(check_doctest_examples(docstring, line_no, file_str))
         all_issues.extend(check_content_after_field_lists(docstring, line_no, file_str))
+
+    for class_node, file_str in extract_class_nodes(file_path):
+        all_issues.extend(check_redundant_vartype(class_node, file_str))
 
     return all_issues
 

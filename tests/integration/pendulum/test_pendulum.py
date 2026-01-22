@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
+from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
     run_adaptive_basin_stability_test,
     run_basin_stability_test,
@@ -16,7 +17,11 @@ class TestPendulum:
     """Integration tests for pendulum basin stability estimation."""
 
     @pytest.mark.integration
-    def test_baseline(self, tolerance: float) -> None:
+    def test_baseline(
+        self,
+        tolerance: float,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test pendulum baseline parameters using z-score validation.
 
         Verifies:
@@ -24,10 +29,22 @@ class TestPendulum:
         2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
         """
         json_path = Path(__file__).parent / "main_pendulum_case1.json"
-        run_basin_stability_test(json_path, setup_pendulum_system)
+        bse, comparison = run_basin_stability_test(
+            json_path,
+            setup_pendulum_system,
+            system_name="pendulum",
+            case_name="case1",
+        )
+
+        if artifact_collector is not None:
+            artifact_collector.add_single_point(bse, comparison)
 
     @pytest.mark.integration
-    def test_parameter_t(self, tolerance: float) -> None:
+    def test_parameter_t(
+        self,
+        tolerance: float,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test pendulum period (T) parameter sweep using z-score validation.
 
         Verifies:
@@ -36,12 +53,17 @@ class TestPendulum:
         3. Uses standard errors from both MATLAB (err_FP, err_LC) and Python results
         """
         json_path = Path(__file__).parent / "main_pendulum_case2.json"
-        run_adaptive_basin_stability_test(
+        as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_pendulum_system,
             adaptative_parameter_name='ode_system.params["T"]',
             label_keys=["FP", "LC", "NaN"],
+            system_name="pendulum",
+            case_name="case2",
         )
+
+        if artifact_collector is not None:
+            artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
     def test_hyperparameter_n(self) -> None:
@@ -56,7 +78,7 @@ class TestPendulum:
         3. Uses standard errors from both MATLAB (err_FP, err_LC) and Python results
         """
         json_path = Path(__file__).parent / "main_pendulum_hyperparameters.json"
-        run_adaptive_basin_stability_test(
+        _as_bse, _comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_pendulum_system,
             adaptative_parameter_name="n",
@@ -65,6 +87,7 @@ class TestPendulum:
         )
 
     @pytest.mark.integration
+    @pytest.mark.no_artifacts
     def test_n50(self) -> None:
         """Test with small N=50 for grid sampling validation.
 

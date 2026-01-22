@@ -65,7 +65,8 @@ class MatplotlibPlotter:
             plt.tight_layout()
             if self.bse.save_to:
                 self.save_plot("basin_stability_bars")
-            plt.show()  # type: ignore[misc]
+            else:
+                plt.show()  # type: ignore[misc]
 
     def plot_state_space(self, ax: Axes | None = None):
         """
@@ -114,7 +115,8 @@ class MatplotlibPlotter:
             plt.tight_layout()
             if self.bse.save_to:
                 self.save_plot("state_space")
-            plt.show()  # type: ignore[misc]
+            else:
+                plt.show()  # type: ignore[misc]
 
     def plot_feature_space(self, ax: Axes | None = None):
         """
@@ -133,7 +135,25 @@ class MatplotlibPlotter:
 
         # Extract data
         features_array = self.bse.solution.features.cpu().numpy()
-        labels = np.array(self.bse.solution.labels)
+        all_labels = np.array(self.bse.solution.labels)
+
+        # Features only exist for bounded trajectories.
+        # Filter out unbounded trajectories (matching feature_space_aio.py approach)
+        bounded_mask = all_labels != "unbounded"
+        labels = all_labels[bounded_mask]
+
+        # Verify features array matches bounded trajectory count
+        if len(features_array) != len(labels):
+            raise ValueError(
+                f"Feature array size mismatch: {len(features_array)} features "
+                f"vs {len(labels)} bounded trajectories"
+            )
+
+        n_features = features_array.shape[1] if features_array.ndim > 1 else 1
+
+        # Ensure features_array is 2D for consistent indexing
+        if features_array.ndim == 1:
+            features_array = features_array.reshape(-1, 1)
 
         # Create standalone figure if no axes provided
         if ax is None:
@@ -143,16 +163,42 @@ class MatplotlibPlotter:
         else:
             standalone = False
 
-        # Plot feature space scatter
+        # Plot feature space scatter using boolean masks (matching feature_space_aio.py)
         unique_labels = np.unique(labels)
+        rng = np.random.default_rng(42)
+
         for label in unique_labels:
-            idx = np.where(labels == label)
-            ax.scatter(  # type: ignore[misc]
-                features_array[idx, 0], features_array[idx, 1], s=5, alpha=0.5, label=str(label)
-            )
-        ax.set_title("Feature Space with Classifier Results")  # type: ignore[misc]
-        ax.set_xlabel("Feature 1")  # type: ignore[misc]
-        ax.set_ylabel("Feature 2")  # type: ignore[misc]
+            mask = labels == label
+            if n_features >= 2:
+                ax.scatter(  # type: ignore[misc]
+                    features_array[mask, 0],
+                    features_array[mask, 1],
+                    s=5,
+                    alpha=0.5,
+                    label=str(label),
+                )
+            else:
+                x_data = features_array[mask, 0]
+                y_jitter = rng.uniform(-0.4, 0.4, size=len(x_data))
+                ax.scatter(  # type: ignore[misc]
+                    x_data,
+                    y_jitter,
+                    s=5,
+                    alpha=0.5,
+                    label=str(label),
+                )
+
+        if n_features >= 2:
+            ax.set_title("Feature Space with Classifier Results")  # type: ignore[misc]
+            ax.set_xlabel("Feature 1")  # type: ignore[misc]
+            ax.set_ylabel("Feature 2")  # type: ignore[misc]
+        else:
+            ax.set_title("Feature Space (1D Strip Plot)")  # type: ignore[misc]
+            ax.set_xlabel("Feature 1")  # type: ignore[misc]
+            ax.set_ylabel("")  # type: ignore[misc]
+            ax.set_yticks([])  # type: ignore[misc]
+            ax.set_ylim(-0.6, 0.6)  # type: ignore[misc]
+
         ax.legend()  # type: ignore[misc]
 
         # Show/save if standalone
@@ -160,7 +206,8 @@ class MatplotlibPlotter:
             plt.tight_layout()
             if self.bse.save_to:
                 self.save_plot("feature_space")
-            plt.show()  # type: ignore[misc]
+            else:
+                plt.show()  # type: ignore[misc]
 
     def plot_bse_results(self):
         """
@@ -190,8 +237,8 @@ class MatplotlibPlotter:
         # Save the combined figure
         if self.bse.save_to:
             self.save_plot("bse_results_plot")
-
-        plt.show()  # type: ignore[misc]
+        else:
+            plt.show()  # type: ignore[misc]
 
     # Plots 2 states over time for the same trajectory in the same space
     def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
@@ -247,8 +294,8 @@ class MatplotlibPlotter:
 
         if self.bse.save_to:
             self.save_plot("phase_plot")
-
-        plt.show()  # type: ignore[misc]
+        else:
+            plt.show()  # type: ignore[misc]
 
     # Plots over time
     def plot_templates(self, plotted_var: int, time_span: tuple[float, float] | None = None):
@@ -304,5 +351,5 @@ class MatplotlibPlotter:
         # Save plot
         if self.bse.save_to:
             self.save_plot("template_trajectories_plot")
-
-        plt.show()  # type: ignore[misc]
+        else:
+            plt.show()  # type: ignore[misc]

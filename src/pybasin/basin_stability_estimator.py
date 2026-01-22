@@ -41,17 +41,14 @@ logger = logging.getLogger(__name__)
 
 class BasinStabilityEstimator:
     """
-    BasinStabilityEstimator (BSE): Core class for basin stability analysis.
+    Core class for basin stability analysis.
 
-    This class configures the analysis with an ODE system, sampler, and solver,
-    and it provides methods to estimate the basin stability (estimate_bs), and save results to file (save).
+    Configures the analysis with an ODE system, sampler, and solver,
+    and provides methods to estimate basin stability and save results.
 
     :ivar bs_vals: Basin stability values (fraction of samples per class).
-    :vartype bs_vals: dict[str, float] | None
-    :ivar y0: Array of initial conditions.
-    :vartype y0: torch.Tensor | None
+    :ivar y0: Initial conditions tensor.
     :ivar solution: Solution instance containing trajectory and analysis results.
-    :vartype solution: Solution | None
     """
 
     def __init__(
@@ -154,9 +151,9 @@ class BasinStabilityEstimator:
             predictor = UnboundednessClusterer(HDBSCANClusterer(auto_tune=True, assign_noise=True))
         self.predictor = predictor
 
-        self.bs_vals = None
-        self.y0 = None
-        self.solution = None
+        self.bs_vals: dict[str, float] | None = None
+        self.y0: torch.Tensor | None = None
+        self.solution: Solution | None = None
 
     def _detect_unbounded_trajectories(self, y: torch.Tensor) -> torch.Tensor:
         """Detect unbounded trajectories based on Inf values.
@@ -562,13 +559,13 @@ class BasinStabilityEstimator:
         """
         Compute absolute and relative errors for basin stability estimates.
 
-        The errors are based on the Bernoulli experiment statistics:
+        The errors are based on Bernoulli experiment statistics:
 
-        - e_abs = sqrt(S_B(A) * (1 - S_B(A)) / N) - absolute standard error
-        - e_rel = 1 / sqrt(N * S_B(A)) - relative error
+        - e_abs = sqrt(S_B(A) * (1 - S_B(A)) / N) — absolute standard error
+        - e_rel = 1 / sqrt(N * S_B(A)) — relative error
 
-        :return: Dictionary mapping each label to an ErrorInfo with 'e_abs' and 'e_rel' keys.
-        :raises ValueError: If estimate_bs() has not been called yet.
+        :return: Dictionary mapping each label to an ErrorInfo with ``e_abs`` and ``e_rel`` keys.
+        :raises ValueError: If ``estimate_bs()`` has not been called yet.
         """
         if self.bs_vals is None:
             raise ValueError("No results available. Please run estimate_bs() first.")
@@ -588,7 +585,11 @@ class BasinStabilityEstimator:
     def save(self) -> None:
         """
         Save the basin stability results to a JSON file.
-        Handles numpy arrays and Solution objects by converting them to standard Python types.
+
+        Converts numpy arrays and Solution objects to standard Python types.
+
+        :raises ValueError: If ``estimate_bs()`` has not been called yet.
+        :raises ValueError: If ``save_to`` path is not defined.
         """
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
@@ -658,7 +659,12 @@ class BasinStabilityEstimator:
     def save_to_excel(self) -> None:
         """
         Save the basin stability results to an Excel file.
+
         Includes grid samples, labels, and bifurcation amplitudes.
+
+        :raises ValueError: If ``estimate_bs()`` has not been called yet.
+        :raises ValueError: If ``save_to`` path is not defined.
+        :raises ValueError: If no solution data is available.
         """
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")

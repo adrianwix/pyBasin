@@ -12,15 +12,12 @@ from pybasin.types import SetupProperties
 def setup_duffing_oscillator_system() -> SetupProperties:
     n = 5000
 
-    # Auto-detect device (use GPU if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Duffing oscillator system on device: {device}")
 
-    # Create ODE system instance
     params: DuffingParams = {"delta": 0.08, "k3": 1, "A": 0.2}
     ode_system = DuffingJaxODE(params)
 
-    # Instantiate sampler, solver, feature extractor, and cluster classifier
     sampler = UniformRandomSampler(min_limits=[-1, -0.5], max_limits=[1, 1], device=device)
 
     solver = JaxSolver(
@@ -50,11 +47,11 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     ]
 
     classifier_labels = [
-        "period-1 LC y_1",
-        "period-1 LC y_2",
-        "period-2 LC y_3",
-        "period-2 LC y_4",
-        "period-3 LC y_5",
+        "y1",
+        "y2",
+        "y3",
+        "y4",
+        "y5",
     ]
 
     knn = KNeighborsClassifier(n_neighbors=1)

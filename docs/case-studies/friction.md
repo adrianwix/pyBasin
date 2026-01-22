@@ -1,8 +1,5 @@
 # Friction Oscillator
 
-!!! note "Documentation in Progress"
-This page is under construction.
-
 ## System Description
 
 Mass-spring-damper with friction:
@@ -11,13 +8,51 @@ $$m\ddot{x} + c\dot{x} + kx = F_{friction}(v_{belt} - \dot{x})$$
 
 ## Attractors
 
-- **stick_slip**: Stick-slip limit cycle
-- **sliding**: Continuous sliding motion
+- **FP**: Fixed point (stick state)
+- **LC**: Limit cycle (stick-slip oscillation)
 
-## Expected Results
+## Reproduction Code
 
-From integration tests:
+### Setup
 
-```json
-{ "stick_slip": 0.65, "sliding": 0.35 }
-```
+{{ load_snippet("case_studies/friction/setup_friction_system.py::setup_friction_system") }}
+
+### Main Estimation
+
+{{ load_snippet("case_studies/friction/main_friction.py::main") }}
+
+## Case 1: Baseline Results
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("friction_case1") }}
+
+### Visualizations
+
+#### Basin Stability
+
+![Basin Stability](../assets/friction_case1_basin_stability.png)
+
+#### State Space
+
+![State Space](../assets/friction_case1_state_space.png)
+
+#### Feature Space
+
+![Feature Space](../assets/friction_case1_feature_space.png)
+
+## Case 2: v_d Parameter Sweep
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("friction_case2") }}
+
+### Visualizations
+
+#### Basin Stability Variation
+
+![Basin Stability Variation](../assets/friction_case2_basin_stability_variation.png)
+
+#### Bifurcation Diagram
+
+![Bifurcation Diagram](../assets/friction_case2_bifurcation_diagram.png)

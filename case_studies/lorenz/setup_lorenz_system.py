@@ -29,11 +29,9 @@ def lorenz_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
 def setup_lorenz_system() -> SetupProperties:
     n = 20_000
 
-    # Auto-detect device (use GPU if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Lorenz system on device: {device}")
 
-    # Parameters for broken butterfly system
     params: LorenzParams = {"sigma": 0.12, "r": 0.0, "b": -0.6}
 
     ode_system = LorenzJaxODE(params)
@@ -56,9 +54,9 @@ def setup_lorenz_system() -> SetupProperties:
         time_steady=900.0,
         normalize=False,
         features_per_state={
-            0: {"mean": None},  # Only extract mean of x (first state)
-            1: None,  # Skip y
-            2: None,  # Skip z
+            0: {"mean": None},
+            1: None,
+            2: None,
         },
     )
 
@@ -76,7 +74,6 @@ def setup_lorenz_system() -> SetupProperties:
         classifier=knn,
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
-        # TODO: bSTAB allows to define params per initial condition
         ode_params=params,
     )
 

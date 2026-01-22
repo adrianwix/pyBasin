@@ -4,15 +4,12 @@ import logging
 import os
 from typing import Any, Literal
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 
 from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.utils import generate_filename, resolve_folder
-
-matplotlib.use("Agg")
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +40,9 @@ class ASPlotter:
         logger.info("Saving plots to: %s", full_path)
         plt.savefig(full_path, dpi=300)  # type: ignore[func-returns-value]
 
-    def plot_basin_stability_variation(self, interval: Literal["linear", "log"] = "linear"):
+    def plot_basin_stability_variation(
+        self, interval: Literal["linear", "log"] = "linear", show: bool = True
+    ):
         """
         Plot all basin stability values against parameter variation in a single plot.
 
@@ -52,6 +51,8 @@ class ASPlotter:
 
             - 'linear': Default linear scale.
             - 'log': Logarithmic scale, e.g., when using ``2 * np.logspace(...)``.
+        :param show: Whether to display the plot. If False, returns the figure without showing.
+        :return: The matplotlib Figure object.
         """
         if not self.as_bse.parameter_values or not self.as_bse.basin_stabilities:
             raise ValueError("No results available. Run estimate_as_bs first.")
@@ -72,7 +73,7 @@ class ASPlotter:
                 bs_values[label].append(bs_dict.get(label, 0))
 
         # Create single plot with all labels
-        plt.figure(figsize=(10, 6))  # type: ignore[misc]
+        fig = plt.figure(figsize=(10, 6))  # type: ignore[misc]
 
         # Set x-axis scale if needed
         if interval == "log":
@@ -82,12 +83,14 @@ class ASPlotter:
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # Different colors
 
         for i, label in enumerate(labels):
+            # Format label: "Unbounded" for unbounded, "State X" for numbered states
+            display_label = "Unbounded" if label == "unbounded" else f"State {label}"
             plt.plot(  # type: ignore[misc]
                 self.as_bse.parameter_values,
                 bs_values[label],
                 "o-",  # Use consistent marker 'o' for all
                 color=colors[i % len(colors)],
-                label=f"State {label}",
+                label=display_label,
                 markersize=8,
                 linewidth=2,
                 alpha=0.8,
@@ -104,9 +107,12 @@ class ASPlotter:
         if self.as_bse.save_to:
             self.save_plot("basin_stability_variation")
 
-        plt.show()  # type: ignore[misc]
+        if show:
+            plt.show()  # type: ignore[misc]
 
-    def get_amplitudes(
+        return fig
+
+    def _get_amplitudes(
         self, solution: Any, dof: list[int], n_clusters: int
     ) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -122,31 +128,40 @@ class ASPlotter:
             centroids (shape: n_clusters x len(dof)) and diffs is mean absolute
             differences (shape: n_clusters x len(dof)).
         """
-        # Extract the relevant amplitudes.
         temp = solution.bifurcation_amplitudes[:, dof]
 
-        # If temp is a torch.Tensor, convert it to a NumPy array.
         temp_np: np.ndarray = (
             temp.detach().cpu().numpy() if hasattr(temp, "detach") else np.asarray(temp)
         )
 
-        # k-means clustering
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-        labels: np.ndarray = kmeans.fit_predict(temp_np)  # type: ignore[assignment]
+        finite_mask = np.all(np.isfinite(temp_np), axis=1)
+        temp_np_finite = temp_np[finite_mask]
+
+        if len(temp_np_finite) == 0:
+            return np.zeros((n_clusters, len(dof))), np.zeros((n_clusters, len(dof)))
+
+        n_samples_finite = len(temp_np_finite)
+        actual_n_clusters = min(n_clusters, n_samples_finite)
+
+        kmeans = KMeans(n_clusters=actual_n_clusters, random_state=42)
+        labels: np.ndarray = kmeans.fit_predict(temp_np_finite)  # type: ignore[assignment]
         centers_raw = kmeans.cluster_centers_  # type: ignore[assignment]
         centers: np.ndarray = np.asarray(centers_raw)  # type: ignore[arg-type]
 
+        if actual_n_clusters < n_clusters:
+            centers_padded = np.zeros((n_clusters, len(dof)))
+            centers_padded[:actual_n_clusters] = centers
+            centers = centers_padded
+
         n_dofs = len(dof)
         diffs = np.zeros((n_clusters, n_dofs))
-        for i in range(n_clusters):
+        for i in range(actual_n_clusters):
             for j in range(n_dofs):
                 if np.any(labels == i):  # type: ignore[arg-type]
-                    diffs[i, j] = np.mean(np.abs(temp_np[labels == i, j] - centers[i, j]))  # type: ignore[arg-type]
-                else:
-                    diffs[i, j] = 0
+                    diffs[i, j] = np.mean(np.abs(temp_np_finite[labels == i, j] - centers[i, j]))  # type: ignore[arg-type]
         return centers, diffs
 
-    def plot_bifurcation_diagram(self, dof: list[int]):
+    def plot_bifurcation_diagram(self, dof: list[int], show: bool = True):
         """
         Plot bifurcation diagram showing attractor locations over parameter variation.
 
@@ -155,7 +170,12 @@ class ASPlotter:
         k-means clustering and then plots the cluster centers as a function of
         the parameter.
 
+        Unbounded trajectories are automatically filtered out before clustering,
+        as bifurcation amplitudes are only computed for bounded trajectories.
+
         :param dof: List of indices of the state variables (DOFs) to plot.
+        :param show: Whether to display the plot. If False, returns the figure without showing.
+        :return: The matplotlib Figure object.
         """
         if not self.as_bse.parameter_values or not self.as_bse.results:
             raise ValueError("No results available. Run estimate_as_bs first.")
@@ -178,18 +198,21 @@ class ASPlotter:
                     f"No bifurcation amplitudes found for parameter value {result['param_value']}"
                 )
 
+            # Note: bifurcation_amplitudes only contains bounded trajectories
+            # (unbounded trajectories are filtered out during basin stability estimation)
+
             # Create a temporary object to hold the amplitudes
             class TempSolution:
                 def __init__(self, amps: Any):
                     self.bifurcation_amplitudes = amps
 
             solution = TempSolution(bifurcation_amplitudes)
-            centers, diffs = self.get_amplitudes(solution, dof, n_clusters)
+            centers, diffs = self._get_amplitudes(solution, dof, n_clusters)
             amplitudes[:, :, idx] = centers
             errors[:, :, idx] = diffs
 
         # Create subplots for each requested DOF
-        _fig, axes = plt.subplots(1, n_dofs, figsize=(5 * n_dofs, 4))  # type: ignore[misc]
+        fig, axes = plt.subplots(1, n_dofs, figsize=(5 * n_dofs, 4))  # type: ignore[misc]
         if n_dofs == 1:
             axes = [axes]
 
@@ -237,4 +260,7 @@ class ASPlotter:
         if self.as_bse.save_to:
             self.save_plot("bifurcation_diagram")
 
-        plt.show()  # type: ignore[misc]
+        if show:
+            plt.show()  # type: ignore[misc]
+
+        return fig

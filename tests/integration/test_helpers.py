@@ -19,13 +19,233 @@ for convergence studies) and may not fit the z-score validation pattern.
 
 import json
 from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import numpy as np
+from scipy import stats
 
 from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.types import SetupProperties
+
+Z_THRESHOLD_OK = 2.0
+Z_THRESHOLD_WARNING = 3.0
+
+
+@dataclass
+class StatisticalComparison:
+    """Statistical comparison metrics between two proportion estimates.
+
+    :ivar z_score: Z-score measuring difference in standard deviations.
+    :ivar p_value: Two-tailed p-value from hypothesis test.
+    :ivar ci_lower: Lower bound of 95% confidence interval for difference.
+    :ivar ci_upper: Upper bound of 95% confidence interval for difference.
+    :ivar confidence: Confidence level ("very_high", "high", "moderate", "low", "very_low").
+    """
+
+    z_score: float
+    p_value: float
+    ci_lower: float
+    ci_upper: float
+    confidence: str
+
+
+def compute_statistical_comparison(
+    value_a: float,
+    se_a: float,
+    value_b: float,
+    se_b: float,
+    alpha: float = 0.05,
+) -> StatisticalComparison:
+    """Compute statistical comparison between two proportion estimates.
+
+    Uses two-sample z-test for proportions to compare estimates from independent
+    Monte Carlo experiments. Returns z-score, p-value, confidence interval for
+    the difference, and confidence level.
+
+    :param value_a: First proportion estimate.
+    :param se_a: Standard error of first estimate.
+    :param value_b: Second proportion estimate.
+    :param se_b: Standard error of second estimate.
+    :param alpha: Significance level for confidence interval (default: 0.05 for 95% CI).
+    :return: StatisticalComparison with z-score, p-value, CI, and confidence level.
+    """
+    difference = abs(value_a - value_b)
+    combined_se = float(np.sqrt(se_a**2 + se_b**2))
+
+    if combined_se > 0:
+        z_score = difference / combined_se
+        p_value = 2 * stats.norm.sf(abs(z_score))
+
+        diff_signed = value_a - value_b
+        z_critical = stats.norm.ppf(1 - alpha / 2)
+        ci_lower = diff_signed - z_critical * combined_se
+        ci_upper = diff_signed + z_critical * combined_se
+    else:
+        z_score = 0.0 if difference < 1e-10 else float("inf")
+        p_value = 1.0 if difference < 1e-10 else 0.0
+        ci_lower = 0.0
+        ci_upper = 0.0
+
+    if p_value > 0.10:
+        confidence = "very_high"
+    elif p_value > 0.05:
+        confidence = "high"
+    elif p_value > 0.01:
+        confidence = "moderate"
+    elif p_value > 0.001:
+        confidence = "low"
+    else:
+        confidence = "very_low"
+
+    return StatisticalComparison(
+        z_score=z_score,
+        p_value=p_value,
+        ci_lower=ci_lower,
+        ci_upper=ci_upper,
+        confidence=confidence,
+    )
+
+
+@dataclass
+class AttractorComparison:
+    """Comparison metrics for a single attractor.
+
+    :ivar label: Attractor label (e.g., "FP", "LC").
+    :ivar python_bs: Basin stability computed by pyBasin.
+    :ivar python_se: Standard error from pyBasin.
+    :ivar matlab_bs: Basin stability from MATLAB bSTAB reference.
+    :ivar matlab_se: Standard error from MATLAB bSTAB reference.
+    :ivar z_score: Z-score for the comparison.
+    :ivar p_value: Two-tailed p-value from hypothesis test.
+    :ivar ci_lower: Lower bound of 95% confidence interval for difference.
+    :ivar ci_upper: Upper bound of 95% confidence interval for difference.
+    :ivar confidence: Confidence level based on p-value.
+    """
+
+    label: str
+    python_bs: float
+    python_se: float
+    matlab_bs: float
+    matlab_se: float
+    z_score: float
+    p_value: float
+    ci_lower: float
+    ci_upper: float
+    confidence: str
+
+    @staticmethod
+    def get_confidence_level(p_value: float) -> str:
+        """Determine confidence level based on p-value.
+
+        Lower p-values indicate lower confidence that implementations are equivalent.
+
+        :param p_value: P-value from two-sample z-test.
+        :return: Confidence level string.
+        """
+        if p_value > 0.10:
+            return "very_high"
+        elif p_value > 0.05:
+            return "high"
+        elif p_value > 0.01:
+            return "moderate"
+        elif p_value > 0.001:
+            return "low"
+        else:
+            return "very_low"
+
+    def to_dict(self) -> dict[str, str | float]:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
+
+
+@dataclass
+class UnsupervisedAttractorComparison(AttractorComparison):
+    """Comparison metrics for a single attractor in unsupervised clustering.
+
+    Extends AttractorComparison with cluster purity information from DBSCAN.
+
+    :ivar dbscan_label: Original DBSCAN cluster label (numeric string).
+    :ivar cluster_size: Total trajectories in this cluster.
+    :ivar majority_count: Trajectories agreeing with majority template.
+    :ivar purity: Fraction agreeing with majority (majority_count / cluster_size).
+    """
+
+    dbscan_label: str = ""
+    cluster_size: int = 0
+    majority_count: int = 0
+    purity: float = 0.0
+
+
+@dataclass
+class ComparisonResult:
+    """Comparison result for a case study or parameter point.
+
+    :ivar system_name: Name of the dynamical system (e.g., "pendulum", "duffing").
+    :ivar case_name: Name of the case (e.g., "case1", "case2").
+    :ivar attractors: List of attractor comparisons.
+    :ivar parameter_value: Parameter value for parameter sweep tests (None for single-point).
+    :ivar z_threshold: Z-score threshold used for validation.
+    """
+
+    system_name: str
+    case_name: str
+    attractors: list[AttractorComparison]
+    parameter_value: float | None = None
+    z_threshold: float = 2.0
+
+    def all_passed(self, z_threshold: float = 2.0) -> bool:
+        """Check if all attractor comparisons passed z-threshold.
+
+        :param z_threshold: Z-score threshold for validation.
+        :return: True if all attractors have z-score below threshold.
+        """
+        return all(a.z_score < z_threshold for a in self.attractors)
+
+    def to_dict(self) -> dict[str, str | float | list[dict[str, str | float | int]] | None]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "system_name": self.system_name,
+            "case_name": self.case_name,
+            "parameter_value": self.parameter_value,
+            "z_threshold": self.z_threshold,
+            "attractors": [a.to_dict() for a in self.attractors],
+        }
+
+
+@dataclass
+class UnsupervisedComparisonResult(ComparisonResult):
+    """Comparison result for unsupervised clustering case study.
+
+    Extends ComparisonResult with cluster quality metrics.
+
+    :ivar overall_agreement: Fraction of trajectories where DBSCAN matches KNN.
+    :ivar adjusted_rand_index: ARI score comparing DBSCAN to KNN clustering.
+    :ivar n_clusters_found: Number of clusters discovered by DBSCAN.
+    :ivar n_clusters_expected: Number of clusters expected from reference.
+    """
+
+    attractors: list[UnsupervisedAttractorComparison] = None  # type: ignore[assignment]
+    overall_agreement: float = 0.0
+    adjusted_rand_index: float = 0.0
+    n_clusters_found: int = 0
+    n_clusters_expected: int = 0
+
+    def to_dict(
+        self,
+    ) -> dict[str, str | float | int | list[dict[str, str | float | int]] | None]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "system_name": self.system_name,
+            "case_name": self.case_name,
+            "n_clusters_found": self.n_clusters_found,
+            "n_clusters_expected": self.n_clusters_expected,
+            "overall_agreement": self.overall_agreement,
+            "adjusted_rand_index": self.adjusted_rand_index,
+            "z_threshold": self.z_threshold,
+            "attractors": [a.to_dict() for a in self.attractors],
+        }
 
 
 def run_basin_stability_test(
@@ -33,7 +253,9 @@ def run_basin_stability_test(
     setup_function: Callable[[], SetupProperties],
     z_threshold: float = 2.0,
     label_map: dict[str, str] | None = None,
-) -> None:
+    system_name: str = "",
+    case_name: str = "",
+) -> tuple[BasinStabilityEstimator, ComparisonResult]:
     """Run basin stability test with z-score validation against MATLAB reference results.
 
     This function:
@@ -46,8 +268,11 @@ def run_basin_stability_test(
     :param json_path: Path to JSON file with expected results from MATLAB.
     :param setup_function: Function that returns system properties (e.g., setup_pendulum_system).
     :param z_threshold: Z-score threshold for validation (default: 2.0, i.e., ~95% confidence).
-    :param label_map: Optional mapping from JSON labels to Python labels (e.g., {"butterfly1": "chaos y_1"}).
-    :raises AssertionError: If validation fails (N mismatch, z-score exceeds threshold, or label mismatch).
+    :param label_map: Optional mapping from JSON labels to Python labels.
+    :param system_name: Name of the dynamical system for artifact generation.
+    :param case_name: Name of the case for artifact generation.
+    :return: Tuple of (BasinStabilityEstimator, ComparisonResult).
+    :raises AssertionError: If validation fails.
     """
     # Load expected results from JSON
     with open(json_path) as f:
@@ -82,6 +307,10 @@ def run_basin_stability_test(
     # Get computed standard errors
     errors = bse.get_errors()
 
+    # Build comparison results
+    attractor_comparisons: list[AttractorComparison] = []
+    failures: list[str] = []
+
     # Compare results using z-score test:
     # z = |A - B| / sqrt(SE_A^2 + SE_B^2)
     # Accept if z < z_threshold (within ~z_threshold combined standard errors)
@@ -101,25 +330,46 @@ def run_basin_stability_test(
         actual_bs: float = basin_stability.get(python_label, 0.0)
         actual_std_err: float = errors[python_label]["e_abs"] if python_label in errors else 0.0
 
-        # Combined standard error (both measurements have uncertainty)
-        combined_std_err: float = float(np.sqrt(expected_std_err**2 + actual_std_err**2))
-        difference: float = abs(actual_bs - expected_bs)
+        # Compute statistical comparison
+        stats_comp = compute_statistical_comparison(
+            actual_bs, actual_std_err, expected_bs, expected_std_err
+        )
 
-        # Special case: when both errors are 0 (basin stability = 1.0 or 0.0),
-        # accept if values are exactly equal (or very close due to floating point)
+        # Check if difference is significant
+        combined_std_err = float(np.sqrt(expected_std_err**2 + actual_std_err**2))
+        difference = abs(actual_bs - expected_bs)
+
         if combined_std_err == 0.0:
-            assert difference < 1e-10, (
-                f"Basin stability for {json_label}: expected {expected_bs:.4f}, "
-                f"got {actual_bs:.4f}, difference {difference:.4f} "
-                f"(deterministic case, both errors = 0)"
-            )
+            if difference >= 1e-10:
+                failures.append(
+                    f"Basin stability for {json_label}: expected {expected_bs:.4f}, "
+                    f"got {actual_bs:.4f}, difference {difference:.4f} "
+                    f"(deterministic case, both errors = 0)"
+                )
         else:
             threshold = z_threshold * combined_std_err
-            assert difference < threshold, (
-                f"Basin stability for {json_label}: expected {expected_bs:.4f} ± {expected_std_err:.4f}, "
-                f"got {actual_bs:.4f} ± {actual_std_err:.4f}, "
-                f"difference {difference:.4f} exceeds z={z_threshold} threshold {threshold:.4f}"
+            if difference >= threshold:
+                failures.append(
+                    f"Basin stability for {json_label}: expected {expected_bs:.4f} ± {expected_std_err:.4f}, "
+                    f"got {actual_bs:.4f} ± {actual_std_err:.4f}, "
+                    f"difference {difference:.4f} exceeds z={z_threshold} threshold {threshold:.4f} "
+                    f"(p={stats_comp.p_value:.4f})"
+                )
+
+        attractor_comparisons.append(
+            AttractorComparison(
+                label=python_label,
+                python_bs=actual_bs,
+                python_se=actual_std_err,
+                matlab_bs=expected_bs,
+                matlab_se=expected_std_err,
+                z_score=stats_comp.z_score,
+                p_value=stats_comp.p_value,
+                ci_lower=stats_comp.ci_lower,
+                ci_upper=stats_comp.ci_upper,
+                confidence=stats_comp.confidence,
             )
+        )
 
     # Verify we have the same labels
     expected_labels = {
@@ -134,6 +384,20 @@ def run_basin_stability_test(
         f"Label mismatch: expected {expected_labels}, got {actual_labels}"
     )
 
+    # Build comparison result
+    comparison_result = ComparisonResult(
+        system_name=system_name,
+        case_name=case_name,
+        attractors=attractor_comparisons,
+        parameter_value=None,
+        z_threshold=z_threshold,
+    )
+
+    # Assert all validations passed
+    assert not failures, "\n".join(failures)
+
+    return bse, comparison_result
+
 
 def run_adaptive_basin_stability_test(
     json_path: Path,
@@ -142,7 +406,9 @@ def run_adaptive_basin_stability_test(
     z_threshold: float = 2.0,
     label_keys: list[str] | None = None,
     label_map: dict[str, str] | None = None,
-) -> None:
+    system_name: str = "",
+    case_name: str = "",
+) -> tuple[ASBasinStabilityEstimator, list[ComparisonResult]]:
     """Run adaptive basin stability test with z-score validation against MATLAB reference results.
 
     This function:
@@ -153,12 +419,14 @@ def run_adaptive_basin_stability_test(
     5. Handles JSON with either "bs_<label>" format or "bs_<label>"+"err_<label>" format
 
     :param json_path: Path to JSON file with expected parameter study results from MATLAB.
-    :param setup_function: Function that returns system properties (e.g., setup_pendulum_system).
-    :param adaptative_parameter_name: Name of parameter to vary (e.g., 'ode_system.params["T"]').
-    :param z_threshold: Z-score threshold for validation (default: 2.0, i.e., ~95% confidence).
-    :param label_keys: List of label keys to check (e.g., ["FP", "LC"]).
-                       If None, auto-detect from JSON keys starting with "bs_".
-    :param label_map: Optional mapping from JSON labels to Python labels (e.g., {"butterfly1": "chaos y_1"}).
+    :param setup_function: Function that returns system properties.
+    :param adaptative_parameter_name: Name of parameter to vary.
+    :param z_threshold: Z-score threshold for validation (default: 2.0).
+    :param label_keys: List of label keys to check. If None, auto-detect from JSON.
+    :param label_map: Optional mapping from JSON labels to Python labels.
+    :param system_name: Name of the dynamical system for artifact generation.
+    :param case_name: Name of the case for artifact generation.
+    :return: Tuple of (ASBasinStabilityEstimator, list of ComparisonResult per parameter).
     :raises AssertionError: If validation fails.
     """
     # Load expected results from JSON
@@ -201,8 +469,9 @@ def run_adaptive_basin_stability_test(
             key.replace("bs_", "") for key in expected_results[0] if key.startswith("bs_")
         ]
 
-    # Collect all failures instead of stopping at first one
+    # Collect all failures and comparison results
     failures: list[str] = []
+    comparison_results: list[ComparisonResult] = []
     total_checks = 0
 
     # Compare results at each parameter value
@@ -212,6 +481,9 @@ def run_adaptive_basin_stability_test(
 
         # Get errors for this parameter point
         errors = as_bse.get_errors(i)
+
+        # Build attractor comparisons for this parameter point
+        attractor_comparisons: list[AttractorComparison] = []
 
         # Check each label
         for label in label_keys:
@@ -243,12 +515,16 @@ def run_adaptive_basin_stability_test(
             actual_bs_val = actual_bs.get(python_label, 0.0)
             actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
 
-            # Combined standard error
+            # Compute statistical comparison
+            stats_comp = compute_statistical_comparison(
+                actual_bs_val, actual_err, expected_bs, expected_err
+            )
+
+            # Check if difference is significant
             combined_err = float(np.sqrt(expected_err**2 + actual_err**2))
             difference = abs(actual_bs_val - expected_bs)
             total_checks += 1
 
-            # Special case: when both errors are 0 (basin stability = 1.0 or 0.0)
             if combined_err == 0.0:
                 if difference >= 1e-10:
                     failures.append(
@@ -259,13 +535,39 @@ def run_adaptive_basin_stability_test(
             else:
                 threshold = z_threshold * combined_err
                 if difference >= threshold:
-                    z_score = difference / combined_err
                     failures.append(
                         f"Parameter {param_value:.4f}, {label}: "
                         f"expected {expected_bs:.4f} ± {expected_err:.4f}, "
                         f"got {actual_bs_val:.4f} ± {actual_err:.4f}, "
-                        f"diff {difference:.4f} exceeds z={z_threshold} threshold {threshold:.4f} (z={z_score:.2f})"
+                        f"diff {difference:.4f} exceeds z={z_threshold} threshold {threshold:.4f} "
+                        f"(p={stats_comp.p_value:.4f})"
                     )
+
+            attractor_comparisons.append(
+                AttractorComparison(
+                    label=python_label,
+                    python_bs=actual_bs_val,
+                    python_se=actual_err,
+                    matlab_bs=expected_bs,
+                    matlab_se=expected_err,
+                    z_score=stats_comp.z_score,
+                    p_value=stats_comp.p_value,
+                    ci_lower=stats_comp.ci_lower,
+                    ci_upper=stats_comp.ci_upper,
+                    confidence=stats_comp.confidence,
+                )
+            )
+
+        # Build comparison result for this parameter point
+        comparison_results.append(
+            ComparisonResult(
+                system_name=system_name,
+                case_name=case_name,
+                attractors=attractor_comparisons,
+                parameter_value=param_value,
+                z_threshold=z_threshold,
+            )
+        )
 
     # Report results
     if failures:
@@ -288,6 +590,8 @@ def run_adaptive_basin_stability_test(
         print(f"{'=' * 80}\n")
 
         raise AssertionError(f"{num_failures}/{total_checks} checks failed. See details above.")
+
+    return as_bse, comparison_results
 
 
 def run_single_point_test(
