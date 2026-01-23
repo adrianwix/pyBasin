@@ -2108,7 +2108,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=aa5a754c">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c6619631">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2143,7 +2143,7 @@ and loading code snippets from source files.
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d2ec26f8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=83f36ed3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2155,7 +2155,7 @@ pyright: reportUnknownVariableType=false, reportMissingTypeArgument=false</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2749a917">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c7cb0b60">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2188,7 +2188,7 @@ from typing import Any</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=68a22a70">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a31aab7f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2215,7 +2215,7 @@ from typing import Any</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=34c16e6f">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d009a147">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2244,7 +2244,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=462344d7">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1c12c574">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2262,46 +2262,20 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_status_emoji</span><span class="p">(</span><span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Get status emoji based on confidence level.</span>
-
-<span class="sd">    :param confidence: Confidence level string ("very_high", "high", "moderate", "low", "very_low").</span>
-<span class="sd">    :return: Status emoji.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">confidence</span> <span class="o">==</span> <span class="s2">"very_high"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"✅"</span>  <span class="c1"># p &gt; 0.10 (very likely same)</span>
-    <span class="k">elif</span> <span class="n">confidence</span> <span class="o">==</span> <span class="s2">"high"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"✅"</span>  <span class="c1"># p &gt; 0.05 (no significant difference)</span>
-    <span class="k">elif</span> <span class="n">confidence</span> <span class="o">==</span> <span class="s2">"moderate"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"⚠️"</span>  <span class="c1"># p &gt; 0.01 (borderline)</span>
-    <span class="k">elif</span> <span class="n">confidence</span> <span class="o">==</span> <span class="s2">"low"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"❌"</span>  <span class="c1"># p &gt; 0.001 (significant difference)</span>
-    <span class="k">else</span><span class="p">:</span>  <span class="c1"># very_low</span>
-        <span class="k">return</span> <span class="s2">"❌"</span>  <span class="c1"># p &lt;= 0.001 (highly significant difference)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_format_bs_with_se</span><span class="p">(</span><span class="n">bs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Format basin stability with standard error."""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bs</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">def _status_emoji(confidence: str) -&gt; str:
-    """Get status emoji based on confidence level.
-
-    :param confidence: Confidence level string ("very_high", "high", "moderate", "low", "very_low").
-    :return: Status emoji.
-    """
-    if confidence == "very_high":
-        return "✅"  # p &gt; 0.10 (very likely same)
-    elif confidence == "high":
-        return "✅"  # p &gt; 0.05 (no significant difference)
-    elif confidence == "moderate":
-        return "⚠️"  # p &gt; 0.01 (borderline)
-    elif confidence == "low":
-        return "❌"  # p &gt; 0.001 (significant difference)
-    else:  # very_low
-        return "❌"  # p &lt;= 0.001 (highly significant difference)</div>
+<div class="clipboard-copy-txt" id="cell-5">def _format_bs_with_se(bs: float, se: float) -&gt; str:
+    """Format basin stability with standard error."""
+    return f"{bs:.4f} ± {se:.4f}"</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=fdbd18c3">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0cbd1dcd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2319,20 +2293,116 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_format_bs_with_se</span><span class="p">(</span><span class="n">bs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Format basin stability with standard error."""</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bs</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">comparison_table</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render a comparison table from a JSON artifact.</span>
+
+<span class="sd">    For single-point tests, renders a table with columns:</span>
+<span class="sd">    Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC</span>
+
+<span class="sd">    For parameter sweep tests, adds a Parameter column first:</span>
+<span class="sd">    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC</span>
+
+<span class="sd">    For unsupervised tests, adds cluster quality metrics and purity column:</span>
+<span class="sd">    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC</span>
+
+<span class="sd">    For paper validation tests (no ground truth labels), shows confidence intervals:</span>
+<span class="sd">    Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status</span>
+
+<span class="sd">    Also shows overall Macro F1 and MCC in a summary section.</span>
+
+<span class="sd">    :param case_id: Case identifier (e.g., "pendulum_case1", "pendulum_case2").</span>
+<span class="sd">    :return: Markdown table string.</span>
+<span class="sd">    """</span>
+    <span class="n">json_path</span> <span class="o">=</span> <span class="n">ARTIFACTS_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">case_id</span><span class="si">}</span><span class="s2">_comparison.json"</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">'!!! warning "Missing Data"</span><span class="se">\n</span><span class="s1">    Comparison data not found: `</span><span class="si">{</span><span class="n">case_id</span><span class="si">}</span><span class="s1">_comparison.json`</span><span class="se">\n</span><span class="s1">    Run tests with `--generate-artifacts` to generate.'</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="c1"># Detect paper validation case: attractors have f1_score == 0.0 (N/A)</span>
+    <span class="n">is_paper_validation</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="s2">"attractors"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"attractors"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">attractors</span> <span class="ow">and</span> <span class="n">attractors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"f1_score"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">is_paper_validation</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="s2">"parameter_results"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">param_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"parameter_results"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">param_results</span> <span class="ow">and</span> <span class="s2">"attractors"</span> <span class="ow">in</span> <span class="n">param_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">first_attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">param_results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"attractors"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">first_attractors</span> <span class="ow">and</span> <span class="n">first_attractors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"f1_score"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">is_paper_validation</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">is_paper_validation</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"parameter_results"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_render_paper_validation_sweep_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_render_paper_validation_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"parameter_results"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_render_parameter_sweep_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"overall_agreement"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_render_unsupervised_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_render_single_point_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">def _format_bs_with_se(bs: float, se: float) -&gt; str:
-    """Format basin stability with standard error."""
-    return f"{bs:.4f} ± {se:.4f}"</div>
+<div class="clipboard-copy-txt" id="cell-6">def comparison_table(case_id: str) -&gt; str:
+    """Render a comparison table from a JSON artifact.
+
+    For single-point tests, renders a table with columns:
+    Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+
+    For parameter sweep tests, adds a Parameter column first:
+    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+
+    For unsupervised tests, adds cluster quality metrics and purity column:
+    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+
+    For paper validation tests (no ground truth labels), shows confidence intervals:
+    Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status
+
+    Also shows overall Macro F1 and MCC in a summary section.
+
+    :param case_id: Case identifier (e.g., "pendulum_case1", "pendulum_case2").
+    :return: Markdown table string.
+    """
+    json_path = ARTIFACTS_DIR / f"{case_id}_comparison.json"
+
+    if not json_path.exists():
+        return f'!!! warning "Missing Data"\n    Comparison data not found: `{case_id}_comparison.json`\n    Run tests with `--generate-artifacts` to generate.'
+
+    with open(json_path) as f:
+        data: dict[str, Any] = json.load(f)
+
+    # Detect paper validation case: attractors have f1_score == 0.0 (N/A)
+    is_paper_validation = False
+    if "attractors" in data:
+        attractors: list[dict[str, Any]] = data["attractors"]
+        if attractors and attractors[0].get("f1_score", 1.0) == 0.0:
+            is_paper_validation = True
+    elif "parameter_results" in data:
+        param_results: list[dict[str, Any]] = data["parameter_results"]
+        if param_results and "attractors" in param_results[0]:
+            first_attractors: list[dict[str, Any]] = param_results[0]["attractors"]
+            if first_attractors and first_attractors[0].get("f1_score", 1.0) == 0.0:
+                is_paper_validation = True
+
+    if is_paper_validation:
+        if "parameter_results" in data:
+            return _render_paper_validation_sweep_table(data)
+        return _render_paper_validation_table(data)
+
+    if "parameter_results" in data:
+        return _render_parameter_sweep_table(data)
+    if "overall_agreement" in data:
+        return _render_unsupervised_table(data)
+    return _render_single_point_table(data)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=60889d79">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4421bc95">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2350,20 +2420,94 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_format_ci</span><span class="p">(</span><span class="n">ci_lower</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ci_upper</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Format confidence interval."""</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">ci_lower</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">ci_upper</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">]"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_render_paper_validation_table</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render table for paper validation (statistical comparison)."""</span>
+    <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attractors"</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">attractors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'!!! warning "No Data"</span><span class="se">\n</span><span class="s1">    No attractor data found in comparison.'</span>
+
+    <span class="c1"># Table header</span>
+    <span class="n">table_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"| Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |"</span><span class="p">,</span>
+        <span class="s2">"|-----------|-----------------|---------------|------------|--------|--------|"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
+        <span class="n">python_bs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">]</span>
+        <span class="n">python_se</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">]</span>
+        <span class="n">matlab_bs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">]</span>
+        <span class="n">matlab_se</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">]</span>
+
+        <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">python_bs</span><span class="p">,</span> <span class="n">python_se</span><span class="p">)</span>
+        <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">matlab_bs</span><span class="p">,</span> <span class="n">matlab_se</span><span class="p">)</span>
+
+        <span class="c1"># Compute difference and 95% confidence interval</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">python_bs</span> <span class="o">-</span> <span class="n">matlab_bs</span>
+        <span class="c1"># For 95% confidence, z = 1.96</span>
+        <span class="n">combined_se</span> <span class="o">=</span> <span class="p">(</span><span class="n">python_se</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">matlab_se</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">ci_margin</span> <span class="o">=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">combined_se</span>
+
+        <span class="c1"># Check if difference is within CI (difference should contain 0)</span>
+        <span class="n">within_ci</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">ci_margin</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s2">"✓"</span> <span class="k">if</span> <span class="n">within_ci</span> <span class="k">else</span> <span class="s2">"✗"</span>
+
+        <span class="n">diff_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">+.4f</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">ci_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"±</span><span class="si">{</span><span class="n">ci_margin</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">diff_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">ci_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> |"</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">def _format_ci(ci_lower: float, ci_upper: float) -&gt; str:
-    """Format confidence interval."""
-    return f"[{ci_lower:.4f}, {ci_upper:.4f}]"</div>
+<div class="clipboard-copy-txt" id="cell-7">def _render_paper_validation_table(data: dict[str, Any]) -&gt; str:
+    """Render table for paper validation (statistical comparison)."""
+    attractors: list[dict[str, Any]] = data.get("attractors", [])
+
+    if not attractors:
+        return '!!! warning "No Data"\n    No attractor data found in comparison.'
+
+    # Table header
+    table_lines: list[str] = [
+        "| Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |",
+        "|-----------|-----------------|---------------|------------|--------|--------|",
+    ]
+
+    for a in attractors:
+        python_bs: float = a["python_bs"]
+        python_se: float = a["python_se"]
+        matlab_bs: float = a["matlab_bs"]
+        matlab_se: float = a["matlab_se"]
+
+        python_str = _format_bs_with_se(python_bs, python_se)
+        matlab_str = _format_bs_with_se(matlab_bs, matlab_se)
+
+        # Compute difference and 95% confidence interval
+        diff = python_bs - matlab_bs
+        # For 95% confidence, z = 1.96
+        combined_se = (python_se**2 + matlab_se**2) ** 0.5
+        ci_margin = 1.96 * combined_se
+
+        # Check if difference is within CI (difference should contain 0)
+        within_ci = abs(diff) &lt;= ci_margin
+        status = "✓" if within_ci else "✗"
+
+        diff_str = f"{diff:+.4f}"
+        ci_str = f"±{ci_margin:.4f}"
+
+        table_lines.append(
+            f"| {a['label']} | {python_str} | {matlab_str} | {diff_str} | {ci_str} | {status} |"
+        )
+
+    return "\n".join(table_lines)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2efc2920">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=47396b92">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2381,70 +2525,82 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">comparison_table</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Render a comparison table from a JSON artifact.</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_render_single_point_table</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render table for single-point comparison."""</span>
+    <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attractors"</span><span class="p">,</span> <span class="p">[])</span>
 
-<span class="sd">    For single-point tests, renders a table with columns:</span>
-<span class="sd">    Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">attractors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'!!! warning "No Data"</span><span class="se">\n</span><span class="s1">    No attractor data found in comparison.'</span>
 
-<span class="sd">    For parameter sweep tests, adds a Parameter column first:</span>
-<span class="sd">    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status</span>
+    <span class="c1"># Get overall metrics</span>
+    <span class="n">macro_f1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"macro_f1"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">mcc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"matthews_corrcoef"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
-<span class="sd">    For unsupervised tests, adds cluster quality metrics and purity column:</span>
-<span class="sd">    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status</span>
+    <span class="c1"># Summary metrics</span>
+    <span class="n">summary_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"**Overall Classification Quality:**"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"- Macro F1-score: </span><span class="si">{</span><span class="n">macro_f1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"- Matthews Correlation Coefficient: </span><span class="si">{</span><span class="n">mcc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+    <span class="p">]</span>
 
-<span class="sd">    :param case_id: Case identifier (e.g., "pendulum_case1", "pendulum_case2").</span>
-<span class="sd">    :return: Markdown table string.</span>
-<span class="sd">    """</span>
-    <span class="n">json_path</span> <span class="o">=</span> <span class="n">ARTIFACTS_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">case_id</span><span class="si">}</span><span class="s2">_comparison.json"</span>
+    <span class="c1"># Attractor table</span>
+    <span class="n">table_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |"</span><span class="p">,</span>
+        <span class="s2">"|-----------|-----------------|---------------|-----|"</span><span class="p">,</span>
+    <span class="p">]</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s1">'!!! warning "Missing Data"</span><span class="se">\n</span><span class="s1">    Comparison data not found: `</span><span class="si">{</span><span class="n">case_id</span><span class="si">}</span><span class="s1">_comparison.json`</span><span class="se">\n</span><span class="s1">    Run tests with `--generate-artifacts` to generate.'</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
+        <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">])</span>
+        <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">])</span>
+        <span class="n">f1_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"f1_score"</span><span class="p">]</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">f1_score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> |"</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">"parameter_results"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_render_parameter_sweep_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">"overall_agreement"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_render_unsupervised_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_render_single_point_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span> <span class="o">+</span> <span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">def comparison_table(case_id: str) -&gt; str:
-    """Render a comparison table from a JSON artifact.
+<div class="clipboard-copy-txt" id="cell-8">def _render_single_point_table(data: dict[str, Any]) -&gt; str:
+    """Render table for single-point comparison."""
+    attractors: list[dict[str, Any]] = data.get("attractors", [])
 
-    For single-point tests, renders a table with columns:
-    Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status
+    if not attractors:
+        return '!!! warning "No Data"\n    No attractor data found in comparison.'
 
-    For parameter sweep tests, adds a Parameter column first:
-    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status
+    # Get overall metrics
+    macro_f1 = data.get("macro_f1", 0.0)
+    mcc = data.get("matthews_corrcoef", 0.0)
 
-    For unsupervised tests, adds cluster quality metrics and purity column:
-    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | z-score | Status
+    # Summary metrics
+    summary_lines: list[str] = [
+        "**Overall Classification Quality:**",
+        "",
+        f"- Macro F1-score: {macro_f1:.4f}",
+        f"- Matthews Correlation Coefficient: {mcc:.4f}",
+        "",
+    ]
 
-    :param case_id: Case identifier (e.g., "pendulum_case1", "pendulum_case2").
-    :return: Markdown table string.
-    """
-    json_path = ARTIFACTS_DIR / f"{case_id}_comparison.json"
+    # Attractor table
+    table_lines: list[str] = [
+        "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
+        "|-----------|-----------------|---------------|-----|",
+    ]
 
-    if not json_path.exists():
-        return f'!!! warning "Missing Data"\n    Comparison data not found: `{case_id}_comparison.json`\n    Run tests with `--generate-artifacts` to generate.'
+    for a in attractors:
+        python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
+        matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
+        f1_score: float = a["f1_score"]
 
-    with open(json_path) as f:
-        data: dict[str, Any] = json.load(f)
+        table_lines.append(f"| {a['label']} | {python_str} | {matlab_str} | {f1_score:.4f} |")
 
-    if "parameter_results" in data:
-        return _render_parameter_sweep_table(data)
-    if "overall_agreement" in data:
-        return _render_unsupervised_table(data)
-    return _render_single_point_table(data)</div>
+    return "\n".join(summary_lines + table_lines)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=50f2a20c">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=15aa806d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2453,83 +2609,6 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_render_single_point_table</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Render table for single-point comparison."""</span>
-    <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attractors"</span><span class="p">,</span> <span class="p">[])</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">attractors</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s1">'!!! warning "No Data"</span><span class="se">\n</span><span class="s1">    No attractor data found in comparison.'</span>
-
-    <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">"| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | 95% CI (diff) | Confidence |"</span><span class="p">,</span>
-        <span class="s2">"|-----------|-----------------|---------------|---|---------|---------------|------------|"</span><span class="p">,</span>
-    <span class="p">]</span>
-
-    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
-        <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">])</span>
-        <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">])</span>
-        <span class="n">z_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"z_score"</span><span class="p">]</span>
-        <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"p_value"</span><span class="p">]</span>
-        <span class="n">ci_str</span> <span class="o">=</span> <span class="n">_format_ci</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"ci_lower"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"ci_upper"</span><span class="p">])</span>
-        <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"confidence"</span><span class="p">]</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="n">_status_emoji</span><span class="p">(</span><span class="n">confidence</span><span class="p">)</span>
-
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">z_score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">ci_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&amp;nbsp;</span><span class="si">{</span><span class="n">confidence</span><span class="si">}</span><span class="s2"> |"</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-9">def _render_single_point_table(data: dict[str, Any]) -&gt; str:
-    """Render table for single-point comparison."""
-    attractors: list[dict[str, Any]] = data.get("attractors", [])
-
-    if not attractors:
-        return '!!! warning "No Data"\n    No attractor data found in comparison.'
-
-    lines: list[str] = [
-        "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | 95% CI (diff) | Confidence |",
-        "|-----------|-----------------|---------------|---|---------|---------------|------------|",
-    ]
-
-    for a in attractors:
-        python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
-        matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-        z_score: float = a["z_score"]
-        p_value: float = a["p_value"]
-        ci_str = _format_ci(a["ci_lower"], a["ci_upper"])
-        confidence: str = a["confidence"]
-        status = _status_emoji(confidence)
-
-        lines.append(
-            f"| {a['label']} | {python_str} | {matlab_str} | {z_score:.2f} | {p_value:.4f} | {ci_str} | {status} {confidence} |"
-        )
-
-    return "\n".join(lines)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7be1d012">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2551,6 +2630,8 @@ Z_THRESHOLD_WARNING = 3.0</div>
     <span class="n">n_expected</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_clusters_expected"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">agreement</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"overall_agreement"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="n">ari</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"adjusted_rand_index"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">macro_f1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"macro_f1"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">mcc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"matthews_corrcoef"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
     <span class="n">summary_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">"**Cluster Quality Metrics:**"</span><span class="p">,</span>
@@ -2558,33 +2639,32 @@ Z_THRESHOLD_WARNING = 3.0</div>
         <span class="sa">f</span><span class="s2">"- Clusters found: </span><span class="si">{</span><span class="n">n_found</span><span class="si">}</span><span class="s2"> (expected: </span><span class="si">{</span><span class="n">n_expected</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">"- Overall agreement: </span><span class="si">{</span><span class="n">agreement</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">"- Adjusted Rand Index: </span><span class="si">{</span><span class="n">ari</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"- Macro F1-score: </span><span class="si">{</span><span class="n">macro_f1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"- Matthews Correlation Coefficient: </span><span class="si">{</span><span class="n">mcc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
         <span class="s2">""</span><span class="p">,</span>
     <span class="p">]</span>
 
     <span class="c1"># Attractor table with purity info</span>
     <span class="n">table_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">"| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | Confidence |"</span><span class="p">,</span>
-        <span class="s2">"|-----------|--------|--------|-----------------|---------------|---|---------|------------|"</span><span class="p">,</span>
+        <span class="s2">"| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 |"</span><span class="p">,</span>
+        <span class="s2">"|-----------|--------|--------|-----------------|---------------|-----|"</span><span class="p">,</span>
     <span class="p">]</span>
 
     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
         <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">])</span>
         <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">])</span>
-        <span class="n">z_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"z_score"</span><span class="p">]</span>
-        <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"p_value"</span><span class="p">]</span>
-        <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"confidence"</span><span class="p">]</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="n">_status_emoji</span><span class="p">(</span><span class="n">confidence</span><span class="p">)</span>
+        <span class="n">f1_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"f1_score"</span><span class="p">]</span>
         <span class="n">dbscan_label</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dbscan_label"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
         <span class="n">purity</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"purity"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">purity_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">purity</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">"</span>
 
         <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">dbscan_label</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">purity_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">z_score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&amp;nbsp;</span><span class="si">{</span><span class="n">confidence</span><span class="si">}</span><span class="s2"> |"</span>
+            <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">dbscan_label</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">purity_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">f1_score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> |"</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span> <span class="o">+</span> <span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10">def _render_unsupervised_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-9">def _render_unsupervised_table(data: dict[str, Any]) -&gt; str:
     """Render table for unsupervised clustering comparison."""
     attractors: list[dict[str, Any]] = data.get("attractors", [])
 
@@ -2596,6 +2676,8 @@ Z_THRESHOLD_WARNING = 3.0</div>
     n_expected = data.get("n_clusters_expected", 0)
     agreement = data.get("overall_agreement", 0.0)
     ari = data.get("adjusted_rand_index", 0.0)
+    macro_f1 = data.get("macro_f1", 0.0)
+    mcc = data.get("matthews_corrcoef", 0.0)
 
     summary_lines: list[str] = [
         "**Cluster Quality Metrics:**",
@@ -2603,28 +2685,27 @@ Z_THRESHOLD_WARNING = 3.0</div>
         f"- Clusters found: {n_found} (expected: {n_expected})",
         f"- Overall agreement: {agreement:.1%}",
         f"- Adjusted Rand Index: {ari:.4f}",
+        f"- Macro F1-score: {macro_f1:.4f}",
+        f"- Matthews Correlation Coefficient: {mcc:.4f}",
         "",
     ]
 
     # Attractor table with purity info
     table_lines: list[str] = [
-        "| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | Confidence |",
-        "|-----------|--------|--------|-----------------|---------------|---|---------|------------|",
+        "| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
+        "|-----------|--------|--------|-----------------|---------------|-----|",
     ]
 
     for a in attractors:
         python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
         matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-        z_score: float = a["z_score"]
-        p_value: float = a["p_value"]
-        confidence: str = a["confidence"]
-        status = _status_emoji(confidence)
+        f1_score: float = a["f1_score"]
         dbscan_label = a.get("dbscan_label", "-")
         purity = a.get("purity", 0.0)
         purity_str = f"{purity:.1%}"
 
         table_lines.append(
-            f"| {a['label']} | {dbscan_label} | {purity_str} | {python_str} | {matlab_str} | {z_score:.2f} | {p_value:.4f} | {status} {confidence} |"
+            f"| {a['label']} | {dbscan_label} | {purity_str} | {python_str} | {matlab_str} | {f1_score:.4f} |"
         )
 
     return "\n".join(summary_lines + table_lines)</div>
@@ -2634,7 +2715,134 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=841ee05a">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7c6a2894">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_render_paper_validation_sweep_table</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render table for paper validation parameter sweep (statistical comparison)."""</span>
+    <span class="n">parameter_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameter_results"</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter_results</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'!!! warning "No Data"</span><span class="se">\n</span><span class="s1">    No parameter data found in comparison.'</span>
+
+    <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameter_name"</span><span class="p">,</span> <span class="s2">"Parameter"</span><span class="p">)</span>
+    <span class="n">sections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">parameter_results</span><span class="p">:</span>
+        <span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameter_value"</span><span class="p">)</span>
+        <span class="n">param_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">param_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"-"</span>
+
+        <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">"#### </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">param_str</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"| Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |"</span><span class="p">,</span>
+            <span class="s2">"|-----------|-----------------|---------------|------------|--------|--------|"</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attractors"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
+            <span class="n">python_bs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">]</span>
+            <span class="n">python_se</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">]</span>
+            <span class="n">matlab_bs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">]</span>
+            <span class="n">matlab_se</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">]</span>
+
+            <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">python_bs</span><span class="p">,</span> <span class="n">python_se</span><span class="p">)</span>
+            <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">matlab_bs</span><span class="p">,</span> <span class="n">matlab_se</span><span class="p">)</span>
+
+            <span class="c1"># Compute difference and 95% confidence interval</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">python_bs</span> <span class="o">-</span> <span class="n">matlab_bs</span>
+            <span class="c1"># For 95% confidence, z = 1.96</span>
+            <span class="n">combined_se</span> <span class="o">=</span> <span class="p">(</span><span class="n">python_se</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">matlab_se</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+            <span class="n">ci_margin</span> <span class="o">=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">combined_se</span>
+
+            <span class="c1"># Check if difference is within CI (difference should contain 0)</span>
+            <span class="n">within_ci</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">ci_margin</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"✓"</span> <span class="k">if</span> <span class="n">within_ci</span> <span class="k">else</span> <span class="s2">"✗"</span>
+
+            <span class="n">diff_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">+.4f</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">ci_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"±</span><span class="si">{</span><span class="n">ci_margin</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">diff_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">ci_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> |"</span>
+            <span class="p">)</span>
+
+        <span class="n">sections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10">def _render_paper_validation_sweep_table(data: dict[str, Any]) -&gt; str:
+    """Render table for paper validation parameter sweep (statistical comparison)."""
+    parameter_results: list[dict[str, Any]] = data.get("parameter_results", [])
+
+    if not parameter_results:
+        return '!!! warning "No Data"\n    No parameter data found in comparison.'
+
+    param_name: str = data.get("parameter_name", "Parameter")
+    sections: list[str] = []
+
+    for result in parameter_results:
+        param_value: float | None = result.get("parameter_value")
+        param_str = f"{param_value:.4f}" if param_value is not None else "-"
+
+        lines: list[str] = [
+            f"#### {param_name} = {param_str}",
+            "",
+            "| Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |",
+            "|-----------|-----------------|---------------|------------|--------|--------|",
+        ]
+
+        attractors: list[dict[str, Any]] = result.get("attractors", [])
+        for a in attractors:
+            python_bs: float = a["python_bs"]
+            python_se: float = a["python_se"]
+            matlab_bs: float = a["matlab_bs"]
+            matlab_se: float = a["matlab_se"]
+
+            python_str = _format_bs_with_se(python_bs, python_se)
+            matlab_str = _format_bs_with_se(matlab_bs, matlab_se)
+
+            # Compute difference and 95% confidence interval
+            diff = python_bs - matlab_bs
+            # For 95% confidence, z = 1.96
+            combined_se = (python_se**2 + matlab_se**2) ** 0.5
+            ci_margin = 1.96 * combined_se
+
+            # Check if difference is within CI (difference should contain 0)
+            within_ci = abs(diff) &lt;= ci_margin
+            status = "✓" if within_ci else "✗"
+
+            diff_str = f"{diff:+.4f}"
+            ci_str = f"±{ci_margin:.4f}"
+
+            lines.append(
+                f"| {a['label']} | {python_str} | {matlab_str} | {diff_str} | {ci_str} | {status} |"
+            )
+
+        sections.append("\n".join(lines))
+
+    return "\n\n".join(sections)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3af70bd4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2665,27 +2873,25 @@ Z_THRESHOLD_WARNING = 3.0</div>
     <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">parameter_results</span><span class="p">:</span>
         <span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameter_value"</span><span class="p">)</span>
         <span class="n">param_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">param_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="n">macro_f1</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"macro_f1"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">mcc</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"matthews_corrcoef"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
         <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
             <span class="sa">f</span><span class="s2">"#### </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">param_str</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | 95% CI (diff) | Confidence |"</span><span class="p">,</span>
-            <span class="s2">"|-----------|-----------------|---------------|---|---------|---------------|------------|"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"**Macro F1:** </span><span class="si">{</span><span class="n">macro_f1</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | **MCC:** </span><span class="si">{</span><span class="n">mcc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |"</span><span class="p">,</span>
+            <span class="s2">"|-----------|-----------------|---------------|-----|"</span><span class="p">,</span>
         <span class="p">]</span>
 
         <span class="n">attractors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attractors"</span><span class="p">,</span> <span class="p">[])</span>
         <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attractors</span><span class="p">:</span>
             <span class="n">python_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"python_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"python_se"</span><span class="p">])</span>
             <span class="n">matlab_str</span> <span class="o">=</span> <span class="n">_format_bs_with_se</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"matlab_bs"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"matlab_se"</span><span class="p">])</span>
-            <span class="n">z_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"z_score"</span><span class="p">]</span>
-            <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"p_value"</span><span class="p">]</span>
-            <span class="n">ci_str</span> <span class="o">=</span> <span class="n">_format_ci</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"ci_lower"</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="s2">"ci_upper"</span><span class="p">])</span>
-            <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"confidence"</span><span class="p">]</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">_status_emoji</span><span class="p">(</span><span class="n">confidence</span><span class="p">)</span>
+            <span class="n">f1_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"f1_score"</span><span class="p">]</span>
 
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">z_score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">ci_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&amp;nbsp;</span><span class="si">{</span><span class="n">confidence</span><span class="si">}</span><span class="s2"> |"</span>
-            <span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">python_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">matlab_str</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">f1_score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> |"</span><span class="p">)</span>
 
         <span class="n">sections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
 
@@ -2704,27 +2910,25 @@ Z_THRESHOLD_WARNING = 3.0</div>
     for result in parameter_results:
         param_value: float | None = result.get("parameter_value")
         param_str = f"{param_value:.4f}" if param_value is not None else "-"
+        macro_f1 = result.get("macro_f1", 0.0)
+        mcc = result.get("matthews_corrcoef", 0.0)
 
         lines: list[str] = [
             f"#### {param_name} = {param_str}",
             "",
-            "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | z | p-value | 95% CI (diff) | Confidence |",
-            "|-----------|-----------------|---------------|---|---------|---------------|------------|",
+            f"**Macro F1:** {macro_f1:.4f} | **MCC:** {mcc:.4f}",
+            "",
+            "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
+            "|-----------|-----------------|---------------|-----|",
         ]
 
         attractors: list[dict[str, Any]] = result.get("attractors", [])
         for a in attractors:
             python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
             matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-            z_score: float = a["z_score"]
-            p_value: float = a["p_value"]
-            ci_str = _format_ci(a["ci_lower"], a["ci_upper"])
-            confidence: str = a["confidence"]
-            status = _status_emoji(confidence)
+            f1_score: float = a["f1_score"]
 
-            lines.append(
-                f"| {a['label']} | {python_str} | {matlab_str} | {z_score:.2f} | {p_value:.4f} | {ci_str} | {status} {confidence} |"
-            )
+            lines.append(f"| {a['label']} | {python_str} | {matlab_str} | {f1_score:.4f} |")
 
         sections.append("\n".join(lines))
 
@@ -2735,7 +2939,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=67a77191">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=de67e736">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2836,7 +3040,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=733c96ca">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2d361d30">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

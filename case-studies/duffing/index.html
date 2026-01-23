@@ -2112,7 +2112,7 @@
 <h2 id="reproduction-code">Reproduction Code</h2>
 <h3 id="setup">Setup</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">setup_duffing_oscillator_system</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SetupProperties</span><span class="p">:</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">n</span> <span class="o">=</span> <span class="mi">5000</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">n</span> <span class="o">=</span> <span class="mi">10000</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting up Duffing oscillator system on device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2181,63 +2181,50 @@
 </div>
 <h2 id="case-1-baseline-results-supervised">Case 1: Baseline Results (Supervised)</h2>
 <h3 id="comparison-with-matlab-bstab">Comparison with MATLAB bSTAB</h3>
+<p><strong>Overall Classification Quality:</strong></p>
+<ul>
+<li>Macro F1-score: 0.9980</li>
+<li>Matthews Correlation Coefficient: 0.9977</li>
+</ul>
 <table>
 <thead>
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
 <th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>F1</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>y1</td>
-<td>0.1954 ± 0.0056</td>
-<td>0.1908 ± 0.0056</td>
-<td>0.58</td>
-<td>0.5601</td>
-<td>[-0.0109, 0.0201]</td>
-<td>✅&nbsp;very_high</td>
+<td>0.2023 ± 0.0040</td>
+<td>0.2027 ± 0.0040</td>
+<td>0.9965</td>
 </tr>
 <tr>
 <td>y2</td>
-<td>0.5104 ± 0.0071</td>
-<td>0.4994 ± 0.0071</td>
-<td>1.10</td>
-<td>0.2713</td>
-<td>[-0.0086, 0.0306]</td>
-<td>✅&nbsp;very_high</td>
+<td>0.4950 ± 0.0050</td>
+<td>0.4950 ± 0.0050</td>
+<td>1.0000</td>
 </tr>
 <tr>
 <td>y3</td>
-<td>0.0264 ± 0.0023</td>
-<td>0.0278 ± 0.0023</td>
-<td>0.43</td>
-<td>0.6664</td>
-<td>[-0.0078, 0.0050]</td>
-<td>✅&nbsp;very_high</td>
+<td>0.0288 ± 0.0017</td>
+<td>0.0288 ± 0.0017</td>
+<td>1.0000</td>
 </tr>
 <tr>
 <td>y4</td>
-<td>0.0264 ± 0.0023</td>
-<td>0.0220 ± 0.0021</td>
-<td>1.43</td>
-<td>0.1522</td>
-<td>[-0.0016, 0.0104]</td>
-<td>✅&nbsp;very_high</td>
+<td>0.0257 ± 0.0016</td>
+<td>0.0257 ± 0.0016</td>
+<td>0.9961</td>
 </tr>
 <tr>
 <td>y5</td>
-<td>0.2414 ± 0.0061</td>
-<td>0.2600 ± 0.0062</td>
-<td>2.15</td>
-<td>0.0319</td>
-<td>[-0.0356, -0.0016]</td>
-<td>⚠️&nbsp;moderate</td>
+<td>0.2482 ± 0.0043</td>
+<td>0.2478 ± 0.0043</td>
+<td>0.9972</td>
 </tr>
 </tbody>
 </table>
@@ -2256,6 +2243,8 @@
 <li>Clusters found: 5 (expected: 5)</li>
 <li>Overall agreement: 100.0%</li>
 <li>Adjusted Rand Index: 1.0000</li>
+<li>Macro F1-score: 0.9980</li>
+<li>Matthews Correlation Coefficient: 0.9977</li>
 </ul>
 <table>
 <thead>
@@ -2265,61 +2254,49 @@
 <th>Purity</th>
 <th>pyBasin BS ± SE</th>
 <th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>Confidence</th>
+<th>F1</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>y1</td>
-<td>1</td>
+<td>0</td>
 <td>100.0%</td>
-<td>0.1954 ± 0.0056</td>
-<td>0.1908 ± 0.0056</td>
-<td>0.58</td>
-<td>0.5601</td>
-<td>✅&nbsp;very_high</td>
+<td>0.2023 ± 0.0040</td>
+<td>0.2027 ± 0.0040</td>
+<td>0.9965</td>
 </tr>
 <tr>
 <td>y2</td>
-<td>2</td>
+<td>1</td>
 <td>100.0%</td>
-<td>0.5104 ± 0.0071</td>
-<td>0.4994 ± 0.0071</td>
-<td>1.10</td>
-<td>0.2713</td>
-<td>✅&nbsp;very_high</td>
+<td>0.4950 ± 0.0050</td>
+<td>0.4950 ± 0.0050</td>
+<td>1.0000</td>
 </tr>
 <tr>
 <td>y3</td>
 <td>4</td>
 <td>100.0%</td>
-<td>0.0264 ± 0.0023</td>
-<td>0.0278 ± 0.0023</td>
-<td>0.43</td>
-<td>0.6664</td>
-<td>✅&nbsp;very_high</td>
+<td>0.0288 ± 0.0017</td>
+<td>0.0288 ± 0.0017</td>
+<td>1.0000</td>
 </tr>
 <tr>
 <td>y4</td>
-<td>3</td>
+<td>2</td>
 <td>100.0%</td>
-<td>0.0264 ± 0.0023</td>
-<td>0.0220 ± 0.0021</td>
-<td>1.43</td>
-<td>0.1522</td>
-<td>✅&nbsp;very_high</td>
+<td>0.0257 ± 0.0016</td>
+<td>0.0257 ± 0.0016</td>
+<td>0.9961</td>
 </tr>
 <tr>
 <td>y5</td>
-<td>0</td>
+<td>3</td>
 <td>100.0%</td>
-<td>0.2414 ± 0.0061</td>
-<td>0.2600 ± 0.0062</td>
-<td>2.15</td>
-<td>0.0319</td>
-<td>⚠️&nbsp;moderate</td>
+<td>0.2482 ± 0.0043</td>
+<td>0.2478 ± 0.0043</td>
+<td>0.9972</td>
 </tr>
 </tbody>
 </table>

@@ -2362,224 +2362,140 @@
 </ul>
 <h2 id="reproduction-code">Reproduction Code</h2>
 <h3 id="setup">Setup</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">setup_rossler_network_system</span><span class="p">(</span><span class="n">k</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.218</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SetupProperties</span><span class="p">:</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="sd">    Setup the Rössler network system for basin stability estimation.</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="sd">    Parameters</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="sd">    ----------</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="sd">    k : float</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="sd">        Coupling strength. Must be in the stability interval (0.100, 0.336).</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="sd">        Default is 0.218, which has expected S_B ≈ 0.496 from the reference paper.</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">setup_rossler_network_system</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SetupProperties</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Setup the Rössler network system for basin stability estimation.</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="sd">    Uses coupling strength K=0.218 (expected S_B ≈ 0.496 from paper).</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="sd">    :return: Configuration dictionary for BasinStabilityEstimator.</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">k</span> <span class="o">=</span> <span class="mf">0.218</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">n</span> <span class="o">=</span> <span class="mi">500</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="sd">    Returns</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sd">    -------</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="sd">    SetupProperties</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="sd">        Configuration dictionary for BasinStabilityEstimator.</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sd">    Notes</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sd">    -----</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sd">    Reference values from the paper:</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sd">        K=0.119: S_B=0.226    K=0.238: S_B=0.594</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sd">        K=0.139: S_B=0.274    K=0.258: S_B=0.628</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sd">        K=0.159: S_B=0.330    K=0.278: S_B=0.656</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sd">        K=0.179: S_B=0.346    K=0.297: S_B=0.694</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sd">        K=0.198: S_B=0.472    K=0.317: S_B=0.690</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sd">        K=0.218: S_B=0.496</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    <span class="n">n</span> <span class="o">=</span> <span class="mi">500</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting up Rössler network system on device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  N = </span><span class="si">{</span><span class="n">N_NODES</span><span class="si">}</span><span class="s2"> nodes, k = </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    <span class="n">params</span><span class="p">:</span> <span class="n">RosslerNetworkParams</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mf">7.0</span><span class="p">,</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        <span class="s2">&quot;edges_i&quot;</span><span class="p">:</span> <span class="n">EDGES_I</span><span class="p">,</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        <span class="s2">&quot;edges_j&quot;</span><span class="p">:</span> <span class="n">EDGES_J</span><span class="p">,</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="n">N_NODES</span><span class="p">,</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    <span class="p">}</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    <span class="n">ode_system</span> <span class="o">=</span> <span class="n">RosslerNetworkJaxODE</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting up Rössler network system on device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  N = </span><span class="si">{</span><span class="n">N_NODES</span><span class="si">}</span><span class="s2"> nodes, k = </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">params</span><span class="p">:</span> <span class="n">RosslerNetworkParams</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mf">7.0</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        <span class="s2">&quot;edges_i&quot;</span><span class="p">:</span> <span class="n">EDGES_I</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        <span class="s2">&quot;edges_j&quot;</span><span class="p">:</span> <span class="n">EDGES_J</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        <span class="s2">&quot;N&quot;</span><span class="p">:</span> <span class="n">N_NODES</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    <span class="p">}</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    <span class="n">ode_system</span> <span class="o">=</span> <span class="n">RosslerNetworkJaxODE</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="n">min_limits</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        <span class="p">[</span><span class="o">-</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># x_i in [-15, 15]</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># y_i in [-15, 15]</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># z_i in [-5, 35]</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    <span class="p">)</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    <span class="n">max_limits</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        <span class="p">[</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># x_i</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        <span class="o">+</span> <span class="p">[</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># y_i</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        <span class="o">+</span> <span class="p">[</span><span class="mf">35.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># z_i</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    <span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    <span class="n">sampler</span> <span class="o">=</span> <span class="n">UniformRandomSampler</span><span class="p">(</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>        <span class="n">min_limits</span><span class="o">=</span><span class="n">min_limits</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        <span class="n">max_limits</span><span class="o">=</span><span class="n">max_limits</span><span class="p">,</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    <span class="p">)</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    <span class="n">min_limits</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        <span class="p">[</span><span class="o">-</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># x_i in [-15, 15]</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># y_i in [-15, 15]</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># z_i in [-5, 35]</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    <span class="p">)</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    <span class="n">max_limits</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        <span class="p">[</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># x_i</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        <span class="o">+</span> <span class="p">[</span><span class="mf">15.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># y_i</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        <span class="o">+</span> <span class="p">[</span><span class="mf">35.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N_NODES</span>  <span class="c1"># z_i</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    <span class="p">)</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    <span class="n">sampler</span> <span class="o">=</span> <span class="n">UniformRandomSampler</span><span class="p">(</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>        <span class="n">min_limits</span><span class="o">=</span><span class="n">min_limits</span><span class="p">,</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>        <span class="n">max_limits</span><span class="o">=</span><span class="n">max_limits</span><span class="p">,</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    <span class="p">)</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>        <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        <span class="n">n_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        <span class="n">event_fn</span><span class="o">=</span><span class="n">rossler_stop_event</span><span class="p">,</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    <span class="p">)</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    <span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">SynchronizationFeatureExtractor</span><span class="p">(</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>        <span class="n">n_nodes</span><span class="o">=</span><span class="n">N_NODES</span><span class="p">,</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>        <span class="n">time_steady</span><span class="o">=</span><span class="mi">950</span><span class="p">,</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    <span class="p">)</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    <span class="n">sync_classifier</span> <span class="o">=</span> <span class="n">SynchronizationClassifier</span><span class="p">(</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>        <span class="n">epsilon</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    <span class="p">)</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>        <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>        <span class="s2">&quot;ode_system&quot;</span><span class="p">:</span> <span class="n">ode_system</span><span class="p">,</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>        <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">sampler</span><span class="p">,</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="p">,</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>        <span class="s2">&quot;feature_extractor&quot;</span><span class="p">:</span> <span class="n">feature_extractor</span><span class="p">,</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>        <span class="s2">&quot;cluster_classifier&quot;</span><span class="p">:</span> <span class="n">sync_classifier</span><span class="p">,</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    <span class="p">}</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        <span class="n">n_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>        <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>        <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        <span class="n">event_fn</span><span class="o">=</span><span class="n">rossler_stop_event</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    <span class="p">)</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    <span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">SynchronizationFeatureExtractor</span><span class="p">(</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>        <span class="n">n_nodes</span><span class="o">=</span><span class="n">N_NODES</span><span class="p">,</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>        <span class="n">time_steady</span><span class="o">=</span><span class="mi">950</span><span class="p">,</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    <span class="p">)</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    <span class="n">sync_classifier</span> <span class="o">=</span> <span class="n">SynchronizationClassifier</span><span class="p">(</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>        <span class="n">epsilon</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    <span class="p">)</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>        <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>        <span class="s2">&quot;ode_system&quot;</span><span class="p">:</span> <span class="n">ode_system</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>        <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="p">,</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>        <span class="s2">&quot;feature_extractor&quot;</span><span class="p">:</span> <span class="n">feature_extractor</span><span class="p">,</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>        <span class="s2">&quot;cluster_classifier&quot;</span><span class="p">:</span> <span class="n">sync_classifier</span><span class="p">,</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    <span class="p">}</span>
 </code></pre></div>
 <h3 id="single-k-value">Single K Value</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">k</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.218</span><span class="p">):</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">props</span> <span class="o">=</span> <span class="n">setup_rossler_network_system</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">BasinStabilityEstimator</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run basin stability estimation for Rössler network.</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">n</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">],</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="n">solver</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;solver&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="n">feature_extractor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        <span class="n">predictor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cluster_classifier&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="n">feature_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        <span class="n">detect_unbounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="p">)</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">basin_stability</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Basin Stability for k=</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">basin_stability</span><span class="p">)</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">expected_sb</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="mf">0.119</span><span class="p">:</span> <span class="mf">0.226</span><span class="p">,</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        <span class="mf">0.139</span><span class="p">:</span> <span class="mf">0.274</span><span class="p">,</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        <span class="mf">0.159</span><span class="p">:</span> <span class="mf">0.330</span><span class="p">,</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        <span class="mf">0.179</span><span class="p">:</span> <span class="mf">0.346</span><span class="p">,</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        <span class="mf">0.198</span><span class="p">:</span> <span class="mf">0.472</span><span class="p">,</span>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        <span class="mf">0.218</span><span class="p">:</span> <span class="mf">0.496</span><span class="p">,</span>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        <span class="mf">0.238</span><span class="p">:</span> <span class="mf">0.594</span><span class="p">,</span>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>        <span class="mf">0.258</span><span class="p">:</span> <span class="mf">0.628</span><span class="p">,</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        <span class="mf">0.278</span><span class="p">:</span> <span class="mf">0.656</span><span class="p">,</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        <span class="mf">0.297</span><span class="p">:</span> <span class="mf">0.694</span><span class="p">,</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        <span class="mf">0.317</span><span class="p">:</span> <span class="mf">0.690</span><span class="p">,</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    <span class="p">}</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">expected_sb</span><span class="p">:</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Expected S_B (synchronized) from paper: </span><span class="si">{</span><span class="n">expected_sb</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="k">return</span> <span class="n">bse</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="sd">    Uses coupling strength K=0.218 (expected S_B ≈ 0.496 from paper).</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="sd">    :return: Basin stability estimator with results.</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">props</span> <span class="o">=</span> <span class="n">setup_rossler_network_system</span><span class="p">()</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="n">n</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="n">solver</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;solver&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="n">feature_extractor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="n">predictor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cluster_classifier&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="n">feature_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="n">detect_unbounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="p">)</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="k">return</span> <span class="n">bse</span>
 </code></pre></div>
 <h3 id="k-parameter-sweep">K Parameter Sweep</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">props</span> <span class="o">=</span> <span class="n">setup_rossler_network_system</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.119</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ASBasinStabilityEstimator</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run adaptive parameter study for Rössler network coupling strength.</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">k_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="p">[</span><span class="mf">0.119</span><span class="p">,</span> <span class="mf">0.139</span><span class="p">,</span> <span class="mf">0.159</span><span class="p">,</span> <span class="mf">0.179</span><span class="p">,</span> <span class="mf">0.198</span><span class="p">,</span> <span class="mf">0.218</span><span class="p">,</span> <span class="mf">0.238</span><span class="p">,</span> <span class="mf">0.258</span><span class="p">,</span> <span class="mf">0.278</span><span class="p">,</span> <span class="mf">0.297</span><span class="p">,</span> <span class="mf">0.317</span><span class="p">]</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="p">)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">as_params</span> <span class="o">=</span> <span class="n">AdaptiveStudyParams</span><span class="p">(</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="n">adaptative_parameter_values</span><span class="o">=</span><span class="n">k_values</span><span class="p">,</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="n">adaptative_parameter_name</span><span class="o">=</span><span class="s1">&#39;ode_system.params[&quot;K&quot;]&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="p">)</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;solver&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">cluster_classifier</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cluster_classifier&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="k">assert</span> <span class="n">solver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="k">assert</span> <span class="n">feature_extractor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="k">assert</span> <span class="n">cluster_classifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    <span class="n">bse</span> <span class="o">=</span> <span class="n">ASBasinStabilityEstimator</span><span class="p">(</span>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        <span class="n">n</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">],</span>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>        <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>        <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>        <span class="n">feature_extractor</span><span class="o">=</span><span class="n">feature_extractor</span><span class="p">,</span>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>        <span class="n">cluster_classifier</span><span class="o">=</span><span class="n">cluster_classifier</span><span class="p">,</span>
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        <span class="n">as_params</span><span class="o">=</span><span class="n">as_params</span><span class="p">,</span>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_k_study&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    <span class="p">)</span>
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">estimate_as_bs</span><span class="p">()</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    Sweeps through K values from paper to analyze basin stability variation.</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    :return: Adaptive basin stability estimator with results.</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">props</span> <span class="o">=</span> <span class="n">setup_rossler_network_system</span><span class="p">()</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">study_params</span> <span class="o">=</span> <span class="n">SweepStudyParams</span><span class="p">(</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ode_system.params[&quot;K&quot;]&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="n">values</span><span class="o">=</span><span class="n">K_VALUES_FROM_PAPER</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="p">)</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;solver&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="n">cluster_classifier</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cluster_classifier&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="k">assert</span> <span class="n">solver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    <span class="k">assert</span> <span class="n">feature_extractor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    <span class="k">assert</span> <span class="n">cluster_classifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    <span class="n">bse</span> <span class="o">=</span> <span class="n">ASBasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>        <span class="n">n</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>        <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>        <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>        <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        <span class="n">feature_extractor</span><span class="o">=</span><span class="n">feature_extractor</span><span class="p">,</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        <span class="n">cluster_classifier</span><span class="o">=</span><span class="n">cluster_classifier</span><span class="p">,</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>        <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_k_study&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    <span class="p">)</span>
 <a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;COMPARISON WITH PAPER RESULTS&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    <span class="n">expected</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>        <span class="mf">0.119</span><span class="p">:</span> <span class="mf">0.226</span><span class="p">,</span>
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>        <span class="mf">0.139</span><span class="p">:</span> <span class="mf">0.274</span><span class="p">,</span>
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>        <span class="mf">0.159</span><span class="p">:</span> <span class="mf">0.330</span><span class="p">,</span>
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>        <span class="mf">0.179</span><span class="p">:</span> <span class="mf">0.346</span><span class="p">,</span>
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>        <span class="mf">0.198</span><span class="p">:</span> <span class="mf">0.472</span><span class="p">,</span>
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>        <span class="mf">0.218</span><span class="p">:</span> <span class="mf">0.496</span><span class="p">,</span>
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>        <span class="mf">0.238</span><span class="p">:</span> <span class="mf">0.594</span><span class="p">,</span>
-<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>        <span class="mf">0.258</span><span class="p">:</span> <span class="mf">0.628</span><span class="p">,</span>
-<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>        <span class="mf">0.278</span><span class="p">:</span> <span class="mf">0.656</span><span class="p">,</span>
-<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>        <span class="mf">0.297</span><span class="p">:</span> <span class="mf">0.694</span><span class="p">,</span>
-<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>        <span class="mf">0.317</span><span class="p">:</span> <span class="mf">0.690</span><span class="p">,</span>
-<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>    <span class="p">}</span>
-<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>
-<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>    <span class="n">n_samples</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span>
-<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>
-<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;K&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;Expected&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;Computed&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;Diff&#39;</span><span class="si">:</span><span class="s2">&gt;7</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;e_abs&#39;</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;2σ&#39;</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>
-<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>    <span class="n">computed_sync</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>    <span class="n">within_2sigma</span> <span class="o">=</span> <span class="mi">0</span>
-<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>    <span class="k">for</span> <span class="n">param_val</span><span class="p">,</span> <span class="n">bs_dict</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bse</span><span class="o">.</span><span class="n">parameter_values</span><span class="p">,</span> <span class="n">bse</span><span class="o">.</span><span class="n">basin_stabilities</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>        <span class="n">sync_val</span> <span class="o">=</span> <span class="n">bs_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;synchronized&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>        <span class="n">computed_sync</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sync_val</span><span class="p">)</span>
-<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>        <span class="n">diff</span> <span class="o">=</span> <span class="n">sync_val</span> <span class="o">-</span> <span class="n">expected</span><span class="p">[</span><span class="n">param_val</span><span class="p">]</span>
-<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>
-<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>        <span class="n">e_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sync_val</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">sync_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_samples</span><span class="p">)</span>
-<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>        <span class="n">e_combined</span> <span class="o">=</span> <span class="n">e_abs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>        <span class="n">within</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">e_combined</span>
-<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>        <span class="n">within_2sigma</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">within</span><span class="p">)</span>
-<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>        <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;✓&quot;</span> <span class="k">if</span> <span class="n">within</span> <span class="k">else</span> <span class="s2">&quot;✗&quot;</span>
-<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>
-<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>        <span class="nb">print</span><span class="p">(</span>
-<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">param_val</span><span class="si">:</span><span class="s2">&gt;8.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">expected</span><span class="p">[</span><span class="n">param_val</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;8.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">sync_val</span><span class="si">:</span><span class="s2">&gt;8.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">&gt;+7.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">e_abs</span><span class="si">:</span><span class="s2">&gt;6.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">status</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>        <span class="p">)</span>
-<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a>
-<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>    <span class="k">if</span> <span class="n">computed_sync</span><span class="p">:</span>
-<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>        <span class="n">mean_sb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">computed_sync</span><span class="p">)</span>
-<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a>        <span class="n">e_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">computed_sync</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">computed_sync</span><span class="p">))</span>
-<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a>        <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">mean_sb</span> <span class="o">-</span> <span class="mf">0.490</span>
-<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>        <span class="n">mean_within</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mean_diff</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">e_mean</span>
-<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a>        <span class="n">mean_status</span> <span class="o">=</span> <span class="s2">&quot;✓&quot;</span> <span class="k">if</span> <span class="n">mean_within</span> <span class="k">else</span> <span class="s2">&quot;✗&quot;</span>
-<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>        <span class="nb">print</span><span class="p">(</span>
-<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Mean S_B&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="s1">&#39;0.490&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">mean_sb</span><span class="si">:</span><span class="s2">&gt;8.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">mean_diff</span><span class="si">:</span><span class="s2">&gt;+7.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">e_mean</span><span class="si">:</span><span class="s2">&gt;6.3f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">mean_status</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>        <span class="p">)</span>
-<a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a>        <span class="nb">print</span><span class="p">(</span>
-<a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a>            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Within 2σ: </span><span class="si">{</span><span class="n">within_2sigma</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">within_2sigma</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">%)&quot;</span>
-<a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a>        <span class="p">)</span>
-<a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Note: e_abs = sqrt(S_B*(1-S_B)/N), N=</span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2">; e_mean = std(S_B)/sqrt(K)&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>
-<a id="__codelineno-2-88" name="__codelineno-2-88" href="#__codelineno-2-88"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<a id="__codelineno-2-89" name="__codelineno-2-89" href="#__codelineno-2-89"></a>
-<a id="__codelineno-2-90" name="__codelineno-2-90" href="#__codelineno-2-90"></a>    <span class="k">return</span> <span class="n">bse</span>
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">estimate_as_bs</span><span class="p">()</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="k">return</span> <span class="n">bse</span>
 </code></pre></div>
 <h2 id="baseline-results-k0218">Baseline Results (K=0.218)</h2>
 <h3 id="comparison-with-paper-results">Comparison with Paper Results</h3>
@@ -2588,11 +2504,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2600,10 +2515,17 @@
 <td>synchronized</td>
 <td>0.4840 ± 0.0223</td>
 <td>0.4960 ± 0.0224</td>
-<td>0.38</td>
-<td>0.7043</td>
-<td>[-0.0740, 0.0500]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0120</td>
+<td>±0.0620</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.5160 ± 0.0223</td>
+<td>0.5040 ± 0.0224</td>
+<td>+0.0120</td>
+<td>±0.0620</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2622,22 +2544,28 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>synchronized</td>
-<td>0.2020 ± 0.0180</td>
+<td>0.0780 ± 0.0120</td>
 <td>0.2260 ± 0.0187</td>
-<td>0.93</td>
-<td>0.3546</td>
-<td>[-0.0748, 0.0268]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.1480</td>
+<td>±0.0435</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.7980 ± 0.0180</td>
+<td>0.7740 ± 0.0187</td>
+<td>+0.0240</td>
+<td>±0.0508</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2647,22 +2575,28 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>synchronized</td>
-<td>0.2480 ± 0.0193</td>
+<td>0.2260 ± 0.0187</td>
 <td>0.2740 ± 0.0199</td>
-<td>0.94</td>
-<td>0.3490</td>
-<td>[-0.0804, 0.0284]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0480</td>
+<td>±0.0536</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.7520 ± 0.0193</td>
+<td>0.7260 ± 0.0199</td>
+<td>+0.0260</td>
+<td>±0.0544</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2672,22 +2606,28 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>synchronized</td>
-<td>0.3080 ± 0.0206</td>
+<td>0.3040 ± 0.0206</td>
 <td>0.3300 ± 0.0210</td>
-<td>0.75</td>
-<td>0.4553</td>
-<td>[-0.0798, 0.0358]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0260</td>
+<td>±0.0577</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.6920 ± 0.0206</td>
+<td>0.6700 ± 0.0210</td>
+<td>+0.0220</td>
+<td>±0.0578</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2697,22 +2637,28 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>synchronized</td>
-<td>0.3620 ± 0.0215</td>
+<td>0.3600 ± 0.0215</td>
 <td>0.3460 ± 0.0213</td>
-<td>0.53</td>
-<td>0.5967</td>
-<td>[-0.0433, 0.0753]</td>
-<td>✅&nbsp;very_high</td>
+<td>+0.0140</td>
+<td>±0.0592</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.6380 ± 0.0215</td>
+<td>0.6540 ± 0.0213</td>
+<td>-0.0160</td>
+<td>±0.0593</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2722,11 +2668,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2734,10 +2679,17 @@
 <td>synchronized</td>
 <td>0.4200 ± 0.0221</td>
 <td>0.4720 ± 0.0223</td>
-<td>1.66</td>
-<td>0.0977</td>
-<td>[-0.1135, 0.0095]</td>
-<td>✅&nbsp;high</td>
+<td>-0.0520</td>
+<td>±0.0615</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.5800 ± 0.0221</td>
+<td>0.5280 ± 0.0223</td>
+<td>+0.0520</td>
+<td>±0.0615</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2747,11 +2699,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2759,10 +2710,17 @@
 <td>synchronized</td>
 <td>0.4840 ± 0.0223</td>
 <td>0.4960 ± 0.0224</td>
-<td>0.38</td>
-<td>0.7043</td>
-<td>[-0.0740, 0.0500]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0120</td>
+<td>±0.0620</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.5160 ± 0.0223</td>
+<td>0.5040 ± 0.0224</td>
+<td>+0.0120</td>
+<td>±0.0620</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2772,11 +2730,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2784,10 +2741,17 @@
 <td>synchronized</td>
 <td>0.5500 ± 0.0222</td>
 <td>0.5940 ± 0.0220</td>
-<td>1.41</td>
-<td>0.1593</td>
-<td>[-0.1053, 0.0173]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0440</td>
+<td>±0.0613</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.4500 ± 0.0222</td>
+<td>0.4060 ± 0.0220</td>
+<td>+0.0440</td>
+<td>±0.0613</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2797,11 +2761,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2809,10 +2772,17 @@
 <td>synchronized</td>
 <td>0.6080 ± 0.0218</td>
 <td>0.6280 ± 0.0216</td>
-<td>0.65</td>
-<td>0.5151</td>
-<td>[-0.0802, 0.0402]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0200</td>
+<td>±0.0602</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.3920 ± 0.0218</td>
+<td>0.3720 ± 0.0216</td>
+<td>+0.0200</td>
+<td>±0.0602</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2822,11 +2792,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2834,10 +2803,17 @@
 <td>synchronized</td>
 <td>0.6560 ± 0.0212</td>
 <td>0.6560 ± 0.0212</td>
-<td>0.00</td>
-<td>1.0000</td>
-<td>[-0.0589, 0.0589]</td>
-<td>✅&nbsp;very_high</td>
+<td>+0.0000</td>
+<td>±0.0589</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.3440 ± 0.0212</td>
+<td>0.3440 ± 0.0212</td>
+<td>+0.0000</td>
+<td>±0.0589</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2847,11 +2823,10 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2859,10 +2834,17 @@
 <td>synchronized</td>
 <td>0.7120 ± 0.0203</td>
 <td>0.6940 ± 0.0206</td>
-<td>0.62</td>
-<td>0.5333</td>
-<td>[-0.0386, 0.0746]</td>
-<td>✅&nbsp;very_high</td>
+<td>+0.0180</td>
+<td>±0.0566</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.2880 ± 0.0203</td>
+<td>0.3060 ± 0.0206</td>
+<td>-0.0180</td>
+<td>±0.0566</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>
@@ -2872,22 +2854,28 @@
 <tr>
 <th>Attractor</th>
 <th>pyBasin BS ± SE</th>
-<th>bSTAB BS ± SE</th>
-<th>z</th>
-<th>p-value</th>
-<th>95% CI (diff)</th>
-<th>Confidence</th>
+<th>Paper BS ± SE</th>
+<th>Difference</th>
+<th>95% CI</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>synchronized</td>
-<td>0.7280 ± 0.0199</td>
+<td>0.6860 ± 0.0208</td>
 <td>0.6900 ± 0.0207</td>
-<td>1.32</td>
-<td>0.1855</td>
-<td>[-0.0183, 0.0943]</td>
-<td>✅&nbsp;very_high</td>
+<td>-0.0040</td>
+<td>±0.0574</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>unbounded</td>
+<td>0.2720 ± 0.0199</td>
+<td>0.3100 ± 0.0207</td>
+<td>-0.0380</td>
+<td>±0.0563</td>
+<td>✓</td>
 </tr>
 </tbody>
 </table>

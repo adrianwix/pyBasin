@@ -1074,13 +1074,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#statistical-comparison-method" class="md-nav__link">
+  <a href="#classification-quality-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      Statistical Comparison Method
+      Classification Quality Metrics
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Statistical Comparison Method">
+    <nav class="md-nav" aria-label="Classification Quality Metrics">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1093,9 +1093,51 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#confidence-levels" class="md-nav__link">
+  <a href="#metrics-used" class="md-nav__link">
     <span class="md-ellipsis">
-      Confidence Levels
+      Metrics Used
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metrics Used">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-f1-score-per-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. F1-Score (Per Class)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-macro-f1-score-overall" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Macro F1-Score (Overall)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-matthews-correlation-coefficient-mcc" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Matthews Correlation Coefficient (MCC)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quality Thresholds
     </span>
   </a>
   
@@ -1856,13 +1898,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#statistical-comparison-method" class="md-nav__link">
+  <a href="#classification-quality-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      Statistical Comparison Method
+      Classification Quality Metrics
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Statistical Comparison Method">
+    <nav class="md-nav" aria-label="Classification Quality Metrics">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1875,9 +1917,51 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#confidence-levels" class="md-nav__link">
+  <a href="#metrics-used" class="md-nav__link">
     <span class="md-ellipsis">
-      Confidence Levels
+      Metrics Used
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metrics Used">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-f1-score-per-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. F1-Score (Per Class)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-macro-f1-score-overall" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Macro F1-Score (Overall)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-matthews-correlation-coefficient-mcc" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Matthews Correlation Coefficient (MCC)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quality Thresholds
     </span>
   </a>
   
@@ -2031,79 +2115,102 @@
 
 <h1 id="case-studies-overview">Case Studies Overview</h1>
 <p>This section documents the case studies used to validate pyBasin against the original MATLAB bSTAB implementation.</p>
-<h2 id="statistical-comparison-method">Statistical Comparison Method</h2>
-<p>All case study comparisons use a rigorous two-sample z-test for proportions to validate that pyBasin produces statistically equivalent results to MATLAB bSTAB.</p>
+<h2 id="classification-quality-metrics">Classification Quality Metrics</h2>
+<p>All case study comparisons evaluate classification quality by comparing predicted labels from pyBasin against ground truth labels from MATLAB bSTAB on identical initial conditions.</p>
 <h3 id="methodology">Methodology</h3>
-<p>Since both implementations use Monte Carlo sampling to estimate basin stability (a proportion), each estimate has an associated standard error:</p>
-<div class="arithmatex">\[SE = \sqrt{\frac{p(1-p)}{N}}\]</div>
-<p>where <span class="arithmatex">\(p\)</span> is the basin stability estimate and <span class="arithmatex">\(N\)</span> is the number of samples.</p>
-<p>To compare two independent estimates (Python vs MATLAB), we compute:</p>
+<p>Since both implementations classify trajectories into attractor labels (e.g., "FP", "LC", "chaos"), we use standard classification metrics to validate that pyBasin correctly replicates MATLAB bSTAB's behavior.</p>
+<p>For each test case, we:</p>
 <ol>
-<li><strong>Z-score</strong>: Measures difference in standard deviations</li>
+<li>Load exact initial conditions from MATLAB ground truth CSV files</li>
+<li>Run pyBasin classification on those same initial conditions</li>
+<li>Compare predicted labels against MATLAB's ground truth labels</li>
+<li>Compute classification metrics</li>
 </ol>
-<p><span class="arithmatex">\(<span class="arithmatex">\(z = \frac{|BS_{Python} - BS_{MATLAB}|}{\sqrt{SE_{Python}^2 + SE_{MATLAB}^2}}\)</span>\)</span></p>
-<ol>
-<li><strong>P-value</strong>: Probability of observing this difference by chance</li>
-</ol>
-<p><span class="arithmatex">\(<span class="arithmatex">\(p = 2 \cdot \Phi(-|z|)\)</span>\)</span></p>
-<p>where <span class="arithmatex">\(\Phi\)</span> is the standard normal CDF (computed using <code>scipy.stats.norm.sf</code>)</p>
-<ol>
-<li><strong>95% Confidence Interval</strong>: Range where true difference likely lies</li>
-</ol>
-<p><span class="arithmatex">\(<span class="arithmatex">\(CI = (BS_{Python} - BS_{MATLAB}) \pm z_{0.975} \cdot \sqrt{SE_{Python}^2 + SE_{MATLAB}^2}\)</span>\)</span></p>
-<h3 id="confidence-levels">Confidence Levels</h3>
-<p>Based on the p-value, we classify results into confidence levels:</p>
+<h3 id="metrics-used">Metrics Used</h3>
+<h4 id="1-f1-score-per-class">1. F1-Score (Per Class)</h4>
+<p>The <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html#sklearn.metrics.f1_score">F1-score</a> measures classification quality for each attractor type:</p>
+<div class="arithmatex">\[F1 = \frac{2 \cdot TP}{2 \cdot TP + FP + FN}\]</div>
+<p>where TP = true positives, FP = false positives, FN = false negatives for that class.</p>
+<p><strong>Range:</strong> [0, 1], where 1.0 = perfect classification for that class</p>
+<h4 id="2-macro-f1-score-overall">2. Macro F1-Score (Overall)</h4>
+<p>The macro-averaged F1-score summarizes overall classification quality:</p>
+<div class="arithmatex">\[\text{Macro F1} = \frac{1}{K} \sum_{k=1}^{K} F1_k\]</div>
+<p>where <span class="arithmatex">\(K\)</span> is the number of classes (attractor types).</p>
+<p><strong>Range:</strong> [0, 1], where 1.0 = perfect classification across all classes</p>
+<h4 id="3-matthews-correlation-coefficient-mcc">3. Matthews Correlation Coefficient (MCC)</h4>
+<p>The <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#matthews-corrcoef">Matthews correlation coefficient</a> is a global metric measuring correlation between predictions and ground truth.</p>
+<p>For <strong>binary classification</strong>:</p>
+<div class="arithmatex">\[\text{MCC} = \frac{TP \cdot TN - FP \cdot FN}{\sqrt{(TP + FP)(TP + FN)(TN + FP)(TN + FN)}}\]</div>
+<p>For <strong>multiclass classification</strong>, scikit-learn uses a generalization based on the confusion matrix <span class="arithmatex">\(C\)</span>:</p>
+<div class="arithmatex">\[\text{MCC} = \frac{c \cdot s - \sum_k p_k \cdot t_k}{\sqrt{(s^2 - \sum_k p_k^2)(s^2 - \sum_k t_k^2)}}\]</div>
+<p>where:</p>
+<ul>
+<li><span class="arithmatex">\(t_k = \sum_i^K C_{ik}\)</span> — the number of times class <span class="arithmatex">\(k\)</span> truly occurred</li>
+<li><span class="arithmatex">\(p_k = \sum_i^K C_{ki}\)</span> — the number of times class <span class="arithmatex">\(k\)</span> was predicted</li>
+<li><span class="arithmatex">\(c = \sum_k^K C_{kk}\)</span> — the total number of samples correctly predicted</li>
+<li><span class="arithmatex">\(s = \sum_i^K \sum_j^K C_{ij}\)</span> — the total number of samples</li>
+</ul>
+<p><strong>Range:</strong> [-1, 1], where:</p>
+<ul>
+<li>+1 = perfect prediction</li>
+<li>0 = random prediction</li>
+<li>-1 = complete disagreement</li>
+</ul>
+<p>MCC is particularly useful for imbalanced datasets (common in basin stability with dominant attractors).</p>
+<h3 id="quality-thresholds">Quality Thresholds</h3>
 <table>
 <thead>
 <tr>
-<th>Confidence</th>
-<th>P-value</th>
-<th>Interpretation</th>
+<th>Metric</th>
+<th>Excellent</th>
+<th>Good</th>
+<th>Acceptable</th>
+<th>Poor</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Very High</strong> ✅</td>
-<td>p &gt; 0.10</td>
-<td>Highly likely the same implementation</td>
+<td><strong>F1</strong></td>
+<td>≥ 0.95</td>
+<td>≥ 0.90</td>
+<td>≥ 0.80</td>
+<td>&lt; 0.80</td>
 </tr>
 <tr>
-<td><strong>High</strong> ✅</td>
-<td>p &gt; 0.05</td>
-<td>No significant difference (standard significance level)</td>
+<td><strong>Macro F1</strong></td>
+<td>≥ 0.95</td>
+<td>≥ 0.90</td>
+<td>≥ 0.80</td>
+<td>&lt; 0.80</td>
 </tr>
 <tr>
-<td><strong>Moderate</strong> ⚠️</td>
-<td>p &gt; 0.01</td>
-<td>Borderline case, may warrant investigation</td>
-</tr>
-<tr>
-<td><strong>Low</strong> ❌</td>
-<td>p &gt; 0.001</td>
-<td>Significant difference detected</td>
-</tr>
-<tr>
-<td><strong>Very Low</strong> ❌</td>
-<td>p ≤ 0.001</td>
-<td>Highly significant difference</td>
+<td><strong>MCC</strong></td>
+<td>≥ 0.90</td>
+<td>≥ 0.80</td>
+<td>≥ 0.70</td>
+<td>&lt; 0.70</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Interpretation:</strong></p>
 <ul>
-<li>Lower p-values indicate implementations are <strong>more likely different</strong></li>
-<li>Higher p-values indicate implementations are <strong>more likely equivalent</strong></li>
-<li>A "Very High" or "High" confidence (✅) confirms correct implementation</li>
+<li><strong>Excellent/Good</strong>: Confirms correct implementation - pyBasin matches MATLAB behavior</li>
+<li><strong>Acceptable</strong>: Minor discrepancies, may be due to numerical differences or edge cases</li>
+<li><strong>Poor</strong>: Significant differences requiring investigation</li>
 </ul>
 <h3 id="reading-comparison-tables">Reading Comparison Tables</h3>
 <p>The comparison tables in each case study show:</p>
 <ul>
-<li><strong>pyBasin BS ± SE</strong>: Python implementation result with standard error</li>
-<li><strong>bSTAB BS ± SE</strong>: MATLAB reference result with standard error</li>
-<li><strong>z-score</strong>: How many combined standard errors apart</li>
-<li><strong>p-value</strong>: Statistical significance of difference</li>
-<li><strong>95% CI (diff)</strong>: Confidence interval for the difference</li>
-<li><strong>Confidence</strong>: Classification based on p-value</li>
+<li><strong>Attractor</strong>: The attractor type (e.g., "FP", "LC", "chaos")</li>
+<li><strong>pyBasin BS ± SE</strong>: Python implementation basin stability with standard error</li>
+<li><strong>bSTAB BS ± SE</strong>: MATLAB reference basin stability with standard error</li>
+<li><strong>F1</strong>: F1-score for this specific attractor class (classification quality)</li>
+<li><strong>MCC</strong>: Matthews correlation coefficient (same value repeated for all rows - it's a global metric)</li>
+</ul>
+<p>Additionally, a summary section displays:</p>
+<ul>
+<li><strong>Macro F1-score</strong>: Overall classification quality across all attractors</li>
+<li><strong>Matthews Correlation Coefficient</strong>: Global classification correlation</li>
 </ul>
 <h2 id="purpose">Purpose</h2>
 <p>The case studies serve multiple purposes:</p>

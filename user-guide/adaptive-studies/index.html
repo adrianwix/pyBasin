@@ -1825,15 +1825,25 @@
 <h2 id="the-asbasinstabilityestimator-class">The <code>ASBasinStabilityEstimator</code> Class</h2>
 <p>Runs BSE multiple times for different parameter values, returning parameter values, BS values, and full results per run.</p>
 <h2 id="example-pendulum-damping-study">Example: Pendulum Damping Study</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.as_basin_stability_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASBasinStabilityEstimator</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">as_bse</span> <span class="o">=</span> <span class="n">ASBasinStabilityEstimator</span><span class="p">(</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">pendulum_ode</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">as_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)},</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.as_basin_stability_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASBasinStabilityEstimator</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.study_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">SweepStudyParams</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">study_params</span> <span class="o">=</span> <span class="n">SweepStudyParams</span><span class="p">(</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ode_system.params[&quot;gamma&quot;]&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">params</span><span class="p">,</span> <span class="n">bs_vals</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">as_bse</span><span class="o">.</span><span class="n">estimate_as_bs</span><span class="p">()</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">as_bse</span> <span class="o">=</span> <span class="n">ASBasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">pendulum_ode</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">feature_extractor</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">cluster_classifier</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">labels</span><span class="p">,</span> <span class="n">bs_vals</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">as_bse</span><span class="o">.</span><span class="n">estimate_as_bs</span><span class="p">()</span>
 </code></pre></div>
 <h2 id="visualization-with-asplotter">Visualization with <code>ASPlotter</code></h2>
 <p>Use the <code>ASPlotter</code> class to create parameter vs BS bifurcation diagrams.</p>
