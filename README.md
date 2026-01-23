@@ -3,7 +3,7 @@
 **Basin stability estimation for dynamical systems**
 
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 pyBasin is a Python library for estimating basin stability in dynamical systems. This is a modern port of the MATLAB bSTAB library with additional features including adaptive sampling and neural network-based classification.
 
@@ -31,7 +31,7 @@ pip install pybasin
 
 ```bash
 # Clone the repository
-git clone https://github.com/adrianwix/pyBSTAB.git
+git clone https://github.com/adrianwix/pyBasin.git
 cd pyBasinWorkspace
 
 # Create virtual environment with UV
@@ -187,6 +187,7 @@ For complete working examples with visualization:
 - **Lorenz System**: `case_studies/lorenz/` - Chaotic attractor analysis
 - **Duffing Oscillator**: `case_studies/duffing_oscillator/` - Classic bistable system
 - **Friction System**: `case_studies/friction/` - Mechanical system with friction
+- **Rössler Network**: `case_studies/rossler_network/` - Coupled oscillators with synchronization
 
 Run a case study:
 
@@ -196,7 +197,7 @@ uv run python -m case_studies.pendulum.main_pendulum_case1
 
 ## 📚 Documentation
 
-Full documentation is available at: **[https://adrianwix.github.io/pyBSTAB/](https://adrianwix.github.io/pyBSTAB/)**
+Full documentation is available at: **[https://adrianwix.github.io/pyBasin/](https://adrianwix.github.io/pyBasin/)**
 
 Or build locally:
 
@@ -209,14 +210,15 @@ Then visit http://localhost:8000
 
 ## 🧪 Case Studies
 
-This repository includes validated case studies from the original bSTAB paper:
+This repository includes validated case studies from the original bSTAB paper and the seminal work by Menck et al. (2013) on basin stability:
 
-| Case Study             | Location                           | Description                        |
-| ---------------------- | ---------------------------------- | ---------------------------------- |
-| **Duffing Oscillator** | `case_studies/duffing_oscillator/` | Forced oscillator with bistability |
-| **Lorenz System**      | `case_studies/lorenz/`             | Classic chaotic attractor          |
-| **Pendulum**           | `case_studies/pendulum/`           | Forced pendulum with bifurcations  |
-| **Friction System**    | `case_studies/friction/`           | Mechanical system with friction    |
+| Case Study             | Location                           | Description                         |
+| ---------------------- | ---------------------------------- | ----------------------------------- |
+| **Duffing Oscillator** | `case_studies/duffing_oscillator/` | Forced oscillator with bistability  |
+| **Lorenz System**      | `case_studies/lorenz/`             | Classic chaotic attractor           |
+| **Pendulum**           | `case_studies/pendulum/`           | Forced pendulum with bifurcations   |
+| **Friction System**    | `case_studies/friction/`           | Mechanical system with friction     |
+| **Rössler Network**    | `case_studies/rossler_network/`    | Coupled oscillators synchronization |
 
 Run a case study:
 
@@ -314,7 +316,7 @@ If you use pyBasin in your research, please cite:
   author = {Wix, Adrian},
   title = {Pybasin: A Python Toolbox for Basin Stability of Multi-Stable Dynamical Systems},
   year = {2025},
-  url = {https://github.com/adrianwix/pyBSTAB}
+  url = {https://github.com/adrianwix/pyBasin}
 }
 ```
 
@@ -329,8 +331,8 @@ Contributions are welcome! Please see the [Contributing Guide](docs/development/
 ## 📧 Contact
 
 - **Author**: Adrian Wix
-- **Repository**: [https://github.com/adrianwix/pyBSTAB](https://github.com/adrianwix/pyBSTAB)
-- **Issues**: [https://github.com/adrianwix/pyBSTAB/issues](https://github.com/adrianwix/pyBSTAB/issues)
+- **Repository**: [https://github.com/adrianwix/pyBasin](https://github.com/adrianwix/pyBasin)
+- **Issues**: [https://github.com/adrianwix/pyBasin/issues](https://github.com/adrianwix/pyBasin/issues)
 
 ---
 

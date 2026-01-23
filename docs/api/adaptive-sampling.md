@@ -6,25 +6,33 @@
 
 ## Study Parameters
 
-### StudyParams (Base)
-
 ::: pybasin.study_params.StudyParams
+options:
+heading_level: 3
 
-### SweepStudyParams
+---
 
 ::: pybasin.study_params.SweepStudyParams
+options:
+heading_level: 3
 
-### GridStudyParams
+---
 
 ::: pybasin.study_params.GridStudyParams
+options:
+heading_level: 3
 
-### ZipStudyParams
+---
 
 ::: pybasin.study_params.ZipStudyParams
+options:
+heading_level: 3
 
-### CustomStudyParams
+---
 
 ::: pybasin.study_params.CustomStudyParams
+options:
+heading_level: 3
 
 ---
 
@@ -33,6 +41,8 @@
 ::: pybasin.study_params.ParamAssignment
 options:
 heading_level: 3
+
+---
 
 ::: pybasin.study_params.RunConfig
 options:
@@ -46,6 +56,9 @@ heading_level: 3
 options:
 heading_level: 3
 
+---
+
 ::: pybasin.types.ErrorInfo
 options:
+heading_level: 3
 heading_level: 3
