@@ -8,8 +8,9 @@ Based on the MATLAB bSTAB implementation.
 import numpy as np
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
 
 
@@ -17,12 +18,9 @@ def main():
     """Run hyperparameter sensitivity study for pendulum system."""
     props = setup_pendulum_system()
 
-    # Hyperparameter study: vary N (number of sampling points)
-    # Using log-spaced values from 50 to 5000 (20 points)
-    # Equivalent to MATLAB: 5*logspace(1, 3, 20)
-    as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=5 * np.logspace(1, 3, 20),
-        adaptative_parameter_name="n",  # Varying the number of samples
+    study_params = SweepStudyParams(
+        name="n",
+        values=list(5 * np.logspace(1, 3, 20)),
     )
 
     solver = props.get("solver")
@@ -37,25 +35,26 @@ def main():
     )
 
     bse = ASBasinStabilityEstimator(
-        n=props["n"],  # Initial value, will be overridden by adaptive study
+        n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=cluster_classifier,
-        as_params=as_params,
+        study_params=study_params,
         save_to="results_hyperparameters",
     )
 
     bse.estimate_as_bs()
 
-    plotter = ASPlotter(bse)
-
-    # Plot basin stability variation against hyperparameter
-    plotter.plot_basin_stability_variation()
-
-    bse.save()
+    return bse
 
 
 if __name__ == "__main__":
-    time_execution("main_pendulum_hyperparameters.py", main)
+    bse = time_execution("main_pendulum_hyperparameters.py", main)
+
+    plotter = ASPlotter(bse)
+
+    plotter.plot_basin_stability_variation()
+
+    bse.save()

@@ -1,17 +1,18 @@
 import numpy as np
 
 from case_studies.friction.setup_friction_system import setup_friction_system
-from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
 
 
 def main():
     props = setup_friction_system()
 
-    as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=np.arange(0.1, 1.5, 0.05),
-        adaptative_parameter_name='ode_system.params["v"]',
+    study_params = SweepStudyParams(
+        name='ode_system.params["v_d"]',
+        values=list(np.linspace(0.8, 2.225, 20)),
     )
 
     solver = props.get("solver")
@@ -32,21 +33,22 @@ def main():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=cluster_classifier,
-        as_params=as_params,
+        study_params=study_params,
         save_to="results_friction_vd_study",
     )
 
     print("Estimating Basin Stability...")
     bse.estimate_as_bs()
 
-    plotter = ASPlotter(bse)
-
-    # plotter.plot_basin_stability_variation()
-
-    plotter.plot_bifurcation_diagram([1])
-
-    bse.save()
+    return bse
 
 
 if __name__ == "__main__":
-    time_execution("main_friction_v_study.py", main)
+    bse = time_execution("main_friction_v_study.py", main)
+
+    plotter = ASPlotter(bse)
+
+    plotter.plot_basin_stability_variation()
+    plotter.plot_bifurcation_diagram([1])
+
+    bse.save()

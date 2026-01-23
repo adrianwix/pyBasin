@@ -53,7 +53,9 @@ class ParamOverviewAIO:
 
     def get_parameter_name_short(self) -> str:
         """Get short parameter name."""
-        return self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1]
+        if self.as_bse.labels:
+            return list(self.as_bse.labels[0].keys())[0]
+        return "param"
 
     def _get_all_labels(self) -> list[str]:
         """Get all unique labels across all parameter values."""

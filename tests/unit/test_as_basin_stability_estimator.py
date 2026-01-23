@@ -1,0 +1,482 @@
+"""Tests for ASBasinStabilityEstimator."""
+
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.study_params import (
+    GridStudyParams,
+    SweepStudyParams,
+    ZipStudyParams,
+)
+
+
+@pytest.fixture
+def mock_components() -> dict[str, MagicMock]:
+    """Create mock components for ASBasinStabilityEstimator."""
+    ode_system = MagicMock()
+    ode_system.params = {"T": 0.5, "K": 0.1}
+
+    sampler = MagicMock()
+    sampler.min_limits = [0.0, 0.0]
+    sampler.max_limits = [1.0, 1.0]
+
+    solver = MagicMock()
+    feature_extractor = MagicMock()
+    cluster_classifier = MagicMock()
+
+    return {
+        "ode_system": ode_system,
+        "sampler": sampler,
+        "solver": solver,
+        "feature_extractor": feature_extractor,
+        "cluster_classifier": cluster_classifier,
+    }
+
+
+@pytest.fixture
+def mock_bse() -> MagicMock:
+    """Create a mock BasinStabilityEstimator."""
+    mock = MagicMock()
+    mock.estimate_bs.return_value = {"attractor_1": 0.6, "attractor_2": 0.4}
+    mock.get_errors.return_value = {
+        "attractor_1": {"e_abs": 0.01, "e_rel": 0.02},
+        "attractor_2": {"e_abs": 0.01, "e_rel": 0.025},
+    }
+    mock.solution = None
+    mock.y0 = None
+    mock.n = 100
+    return mock
+
+
+class TestASBasinStabilityEstimatorWithSweep:
+    """Tests for ASBasinStabilityEstimator with SweepStudyParams."""
+
+    def test_calls_bse_correct_number_of_times(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """BSE should be instantiated once per parameter value."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ) as mock_bse_class:
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert mock_bse_class.call_count == 3
+
+    def test_updates_ode_param_for_each_run(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """ODE parameter should be updated for each run."""
+        t_values = [0.1, 0.5, 0.9]
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=t_values)
+
+        captured_ode_systems: list[Any] = []
+
+        def capture_bse_args(**kwargs: Any) -> MagicMock:
+            captured_ode_systems.append(kwargs["ode_system"].params["T"])
+            return mock_bse
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            side_effect=capture_bse_args,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert captured_ode_systems == t_values
+
+    def test_nested_param_path_is_evaluated_correctly(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """The full parameter path should be evaluated, not just the short label."""
+        t_values = [0.15, 0.25]
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=t_values)
+
+        captured_full_params: list[dict[str, Any]] = []
+
+        def capture_bse_args(**kwargs: Any) -> MagicMock:
+            # Capture the full ODE system params dict
+            captured_full_params.append(kwargs["ode_system"].params.copy())
+            return mock_bse
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            side_effect=capture_bse_args,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            labels, _, _ = as_bse.estimate_as_bs()
+
+            # Verify labels use short name
+            assert labels[0] == {"T": 0.15}
+            assert labels[1] == {"T": 0.25}
+
+            # Verify actual nested parameter was updated
+            assert captured_full_params[0]["T"] == 0.15
+            assert captured_full_params[1]["T"] == 0.25
+            # K should remain unchanged
+            assert captured_full_params[0]["K"] == 0.1
+            assert captured_full_params[1]["K"] == 0.1
+
+    def test_returns_correct_labels(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """Should return labels matching parameter values."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            labels, basin_stabilities, results = as_bse.estimate_as_bs()
+
+            assert labels == [{"T": 0.1}, {"T": 0.2}]
+            assert len(basin_stabilities) == 2
+            assert len(results) == 2
+
+
+class TestASBasinStabilityEstimatorWithGrid:
+    """Tests for ASBasinStabilityEstimator with GridStudyParams."""
+
+    def test_calls_bse_for_cartesian_product(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """BSE should be called for each combination in the grid."""
+        study_params = GridStudyParams(
+            **{
+                'ode_system.params["T"]': [0.1, 0.2],
+                'ode_system.params["K"]': [1.0, 2.0, 3.0],
+            }
+        )
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ) as mock_bse_class:
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert mock_bse_class.call_count == 6
+
+    def test_grid_produces_correct_labels(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """Grid should produce all combinations as labels."""
+        study_params = GridStudyParams(
+            **{
+                'ode_system.params["T"]': [0.1, 0.2],
+                'ode_system.params["K"]': [1.0, 2.0],
+            }
+        )
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            labels, _, _ = as_bse.estimate_as_bs()
+
+            expected_labels = [
+                {"T": 0.1, "K": 1.0},
+                {"T": 0.1, "K": 2.0},
+                {"T": 0.2, "K": 1.0},
+                {"T": 0.2, "K": 2.0},
+            ]
+            assert labels == expected_labels
+
+
+class TestASBasinStabilityEstimatorWithZip:
+    """Tests for ASBasinStabilityEstimator with ZipStudyParams."""
+
+    def test_calls_bse_for_zipped_params(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """BSE should be called once per zipped pair."""
+        study_params = ZipStudyParams(
+            **{
+                'ode_system.params["T"]': [0.1, 0.2, 0.3],
+                'ode_system.params["K"]': [1.0, 2.0, 3.0],
+            }
+        )
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ) as mock_bse_class:
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert mock_bse_class.call_count == 3
+
+    def test_zip_produces_paired_labels(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """Zip should pair parameters at same index."""
+        study_params = ZipStudyParams(
+            **{
+                'ode_system.params["T"]': [0.1, 0.2],
+                'ode_system.params["K"]': [1.0, 2.0],
+            }
+        )
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            labels, _, _ = as_bse.estimate_as_bs()
+
+            expected_labels = [
+                {"T": 0.1, "K": 1.0},
+                {"T": 0.2, "K": 2.0},
+            ]
+            assert labels == expected_labels
+
+
+class TestASBasinStabilityEstimatorWithSampler:
+    """Tests for varying sampler objects."""
+
+    def test_passes_different_samplers_to_bse(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """Each run should receive its own sampler."""
+        sampler1 = MagicMock(name="sampler1")
+        sampler2 = MagicMock(name="sampler2")
+        sampler3 = MagicMock(name="sampler3")
+
+        study_params = SweepStudyParams(name="sampler", values=[sampler1, sampler2, sampler3])
+
+        captured_samplers: list[MagicMock] = []
+
+        def capture_bse_args(**kwargs: Any) -> MagicMock:
+            captured_samplers.append(kwargs["sampler"])
+            return mock_bse
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            side_effect=capture_bse_args,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert captured_samplers == [sampler1, sampler2, sampler3]
+
+    def test_zip_param_with_sampler(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """Zip should pair ODE param with corresponding sampler."""
+        sampler1 = MagicMock(name="sampler_T0.1")
+        sampler2 = MagicMock(name="sampler_T0.2")
+
+        study_params = ZipStudyParams(
+            **{
+                'ode_system.params["T"]': [0.1, 0.2],
+                "sampler": [sampler1, sampler2],
+            }
+        )
+
+        captured_args: list[dict[str, Any]] = []
+
+        def capture_bse_args(**kwargs: Any) -> MagicMock:
+            captured_args.append(
+                {"T": kwargs["ode_system"].params["T"], "sampler": kwargs["sampler"]}
+            )
+            return mock_bse
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            side_effect=capture_bse_args,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            labels, _, _ = as_bse.estimate_as_bs()
+
+            # Verify labels have both parameters
+            assert labels[0] == {"T": 0.1, "sampler": sampler1}
+            assert labels[1] == {"T": 0.2, "sampler": sampler2}
+
+            # Verify actual nested parameter AND sampler were updated correctly
+            assert captured_args[0]["T"] == 0.1
+            assert captured_args[0]["sampler"] is sampler1
+            assert captured_args[1]["T"] == 0.2
+            assert captured_args[1]["sampler"] is sampler2
+
+
+class TestASBasinStabilityEstimatorBSEArguments:
+    """Tests that BSE is called with correct arguments."""
+
+    def test_bse_receives_all_required_arguments(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """BSE should receive all required arguments from AS-BSE."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.5])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ) as mock_bse_class:
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            call_kwargs = mock_bse_class.call_args.kwargs
+            assert call_kwargs["n"] == 100
+            assert call_kwargs["ode_system"] is mock_components["ode_system"]
+            assert call_kwargs["solver"] is mock_components["solver"]
+            assert call_kwargs["feature_extractor"] is mock_components["feature_extractor"]
+            assert call_kwargs["predictor"] is mock_components["cluster_classifier"]
+            assert call_kwargs["feature_selector"] is None
+
+    def test_bse_estimate_bs_called_for_each_run(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """estimate_bs should be called once per run."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert mock_bse.estimate_bs.call_count == 3
+
+    def test_bse_get_errors_called_for_each_run(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """get_errors should be called once per run."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert mock_bse.get_errors.call_count == 2
+
+
+class TestASBasinStabilityEstimatorResults:
+    """Tests for results storage."""
+
+    def test_basin_stabilities_stored_correctly(
+        self, mock_components: dict[str, MagicMock]
+    ) -> None:
+        """Basin stabilities from BSE should be stored."""
+        mock_bse = MagicMock()
+        mock_bse.estimate_bs.side_effect = [
+            {"a": 0.7, "b": 0.3},
+            {"a": 0.5, "b": 0.5},
+        ]
+        mock_bse.get_errors.return_value = {}
+        mock_bse.solution = None
+        mock_bse.y0 = None
+        mock_bse.n = 100
+
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            _, basin_stabilities, _ = as_bse.estimate_as_bs()
+
+            assert basin_stabilities[0] == {"a": 0.7, "b": 0.3}
+            assert basin_stabilities[1] == {"a": 0.5, "b": 0.5}
+
+    def test_parameter_values_property(
+        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
+    ) -> None:
+        """parameter_values property should return first label values."""
+        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
+
+        with patch(
+            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            return_value=mock_bse,
+        ):
+            as_bse = ASBasinStabilityEstimator(
+                n=100,
+                study_params=study_params,
+                save_to=None,
+                **mock_components,
+            )
+            as_bse.estimate_as_bs()
+
+            assert as_bse.parameter_values == [0.1, 0.2, 0.3]

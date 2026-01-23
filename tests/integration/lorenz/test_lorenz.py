@@ -1,21 +1,12 @@
 """Integration tests for the Lorenz system case study."""
 
-import json
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-from pybasin.as_basin_stability_estimator import (
-    AdaptiveStudyParams,
-    ASBasinStabilityEstimator,
-)
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
-    AttractorComparison,
-    ComparisonResult,
-    compute_statistical_comparison,
     run_adaptive_basin_stability_test,
     run_basin_stability_test,
     run_single_point_test,
@@ -50,7 +41,6 @@ class TestLorenz:
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_lorenz_system,
-            z_threshold=0.5,
             label_map=label_map,
             system_name="lorenz",
             case_name="case1",
@@ -74,6 +64,7 @@ class TestLorenz:
         2. Basin stability values pass z-score test for butterfly1, butterfly2, unbounded, NaN
         """
         json_path = Path(__file__).parent / "main_lorenz_sigma_study.json"
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "sigmaStudy"
         label_map = {
             "butterfly1": "chaos y_1",
             "butterfly2": "chaos y_2",
@@ -86,9 +77,9 @@ class TestLorenz:
             adaptative_parameter_name='ode_system.params["sigma"]',
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
-            z_threshold=3.5,  # Chaotic system - occasional 2-3σ outliers expected
             system_name="lorenz",
             case_name="case2",
+            ground_truths_dir=ground_truths_dir,
         )
 
         if artifact_collector is not None:
@@ -109,6 +100,7 @@ class TestLorenz:
         Note: Uses higher z-threshold (3.5) for chaotic Lorenz system.
         """
         json_path = Path(__file__).parent / "main_lorenz_hyperparameters.json"
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperpN"
         label_map = {
             "butterfly1": "chaos y_1",
             "butterfly2": "chaos y_2",
@@ -121,7 +113,7 @@ class TestLorenz:
             adaptative_parameter_name="n",
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
-            z_threshold=3.5,
+            ground_truths_dir=ground_truths_dir,
         )
 
     @pytest.mark.integration
@@ -144,7 +136,6 @@ class TestLorenz:
                 "unbounded": 0.825,
             },
             setup_function=setup_lorenz_system,
-            z_threshold=3.5,
             expected_points=200,
         )
 
@@ -156,145 +147,31 @@ class TestLorenz:
         """Test hyperparameter rtol - ODE solver relative tolerance convergence study.
 
         Studies the effect of varying relative tolerance from 1e-3 to 1e-8 on basin stability.
-        This test validates that the solver correctly uses the specified tolerances and
-        that coarse tolerances (1e-3) can produce incorrect results.
+        This test validates that the solver correctly uses the specified tolerances using
+        classification metrics to compare against ground truth labels.
 
         Expected behavior:
-        - rtol=1e-3: May produce significantly different results (tolerance is too coarse)
-        - rtol=1e-4 to 1e-8: Should converge to consistent values
-
-        Note: We use a more lenient tolerance for rtol=1e-3 since we expect it to be less accurate.
+        - rtol=1e-3: May produce different results (tolerance is too coarse)
+        - rtol=1e-4 to 1e-8: Should converge to consistent classification results
         """
         json_path = Path(__file__).parent / "main_lorenz_hyperpTol.json"
-        with open(json_path) as f:
-            expected_results = json.load(f)
-
-        props = setup_lorenz_system()
-
-        parameter_values = np.array([result["parameter"] for result in expected_results])
-
-        as_params = AdaptiveStudyParams(
-            adaptative_parameter_values=parameter_values,
-            adaptative_parameter_name="solver.rtol",
-        )
-
-        solver = props.get("solver")
-        feature_extractor = props.get("feature_extractor")
-        cluster_classifier = props.get("cluster_classifier")
-        assert solver is not None
-        assert feature_extractor is not None
-        assert cluster_classifier is not None
-
-        as_bse = ASBasinStabilityEstimator(
-            n=props["n"],
-            ode_system=props["ode_system"],
-            sampler=props["sampler"],
-            solver=solver,
-            feature_extractor=feature_extractor,
-            cluster_classifier=cluster_classifier,
-            as_params=as_params,
-        )
-
-        as_bse.estimate_as_bs()
-
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperpTol"
         label_map = {
             "butterfly1": "chaos y_1",
             "butterfly2": "chaos y_2",
             "unbounded": "unbounded",
+            "NaN": "NaN",
         }
-
-        comparison_results: list[ComparisonResult] = []
-        z_threshold = 2.0
-
-        for i, expected in enumerate(expected_results):
-            rtol_value = expected["parameter"]
-            actual_bs = as_bse.basin_stabilities[i]
-            errors = as_bse.get_errors(i)
-
-            attractor_comparisons: list[AttractorComparison] = []
-
-            # For rtol=1e-3, just verify values are in valid range (coarse tolerance expected to differ)
-            if rtol_value >= 1e-3:
-                for label, python_label in label_map.items():
-                    actual_val = actual_bs.get(python_label, 0.0)
-                    assert 0.0 <= actual_val <= 1.0, (
-                        f"At rtol={rtol_value:.0e}, {python_label} basin stability {actual_val:.4f} "
-                        f"is outside valid range [0, 1]"
-                    )
-                    expected_bs = expected[f"bs_{label}"]
-                    expected_err = expected.get(f"err_{label}", 0.0)
-                    actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
-                    stats_comp = compute_statistical_comparison(
-                        actual_val, actual_err, expected_bs, expected_err
-                    )
-                    attractor_comparisons.append(
-                        AttractorComparison(
-                            label=python_label,
-                            python_bs=actual_val,
-                            python_se=actual_err,
-                            matlab_bs=expected_bs,
-                            matlab_se=expected_err,
-                            z_score=stats_comp.z_score,
-                            p_value=stats_comp.p_value,
-                            ci_lower=stats_comp.ci_lower,
-                            ci_upper=stats_comp.ci_upper,
-                            confidence="high",  # Only range check for rtol=1e-3, override
-                        )
-                    )
-            else:
-                # For rtol < 1e-3, use z-score validation
-                for label, python_label in label_map.items():
-                    expected_bs = expected[f"bs_{label}"]
-                    expected_err = expected.get(f"err_{label}", 0.0)
-                    actual_val = actual_bs.get(python_label, 0.0)
-                    actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
-
-                    stats_comp = compute_statistical_comparison(
-                        actual_val, actual_err, expected_bs, expected_err
-                    )
-
-                    combined_err = float(np.sqrt(expected_err**2 + actual_err**2))
-                    diff = abs(actual_val - expected_bs)
-
-                    if combined_err > 0:
-                        threshold = z_threshold * combined_err
-                        assert diff < threshold, (
-                            f"At rtol={rtol_value:.0e}, {python_label}: "
-                            f"expected {expected_bs:.4f} ± {expected_err:.4f}, "
-                            f"got {actual_val:.4f} ± {actual_err:.4f}, "
-                            f"diff {diff:.4f} exceeds threshold {threshold:.4f}"
-                        )
-
-                    attractor_comparisons.append(
-                        AttractorComparison(
-                            label=python_label,
-                            python_bs=actual_val,
-                            python_se=actual_err,
-                            matlab_bs=expected_bs,
-                            matlab_se=expected_err,
-                            z_score=stats_comp.z_score,
-                            p_value=stats_comp.p_value,
-                            ci_lower=stats_comp.ci_lower,
-                            ci_upper=stats_comp.ci_upper,
-                            confidence=stats_comp.confidence,
-                        )
-                    )
-
-            comparison_results.append(
-                ComparisonResult(
-                    system_name="lorenz",
-                    case_name="case3",
-                    attractors=attractor_comparisons,
-                    parameter_value=rtol_value,
-                    z_threshold=z_threshold,
-                )
-            )
-
-            # Verify basin stabilities sum to approximately 1.0
-            total_bs = sum(actual_bs.values())
-            assert abs(total_bs - 1.0) < 0.01, (
-                f"At rtol={rtol_value:.0e}, basin stabilities should sum to 1.0, got {total_bs:.4f}"
-            )
+        as_bse, comparisons = run_adaptive_basin_stability_test(
+            json_path,
+            setup_lorenz_system,
+            adaptative_parameter_name="solver.rtol",
+            label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
+            label_map=label_map,
+            system_name="lorenz",
+            case_name="case3",
+            ground_truths_dir=ground_truths_dir,
+        )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparison_results)
+            artifact_collector.add_parameter_sweep(as_bse, comparisons)

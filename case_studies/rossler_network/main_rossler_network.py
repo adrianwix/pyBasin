@@ -6,15 +6,25 @@ Rössler oscillator networks from the original paper.
 Expected result for K=0.218: S_B ≈ 0.496 (±0.05 due to sampling variance)
 """
 
+import numpy as np
+
 from case_studies.rossler_network.setup_rossler_network_system import (
+    EXPECTED_SB_FROM_PAPER,
+    K_VALUES_FROM_PAPER,
     setup_rossler_network_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.utils import time_execution
 
 
-def main(k: float = 0.218):
-    props = setup_rossler_network_system(k=k)
+def main() -> BasinStabilityEstimator:
+    """Run basin stability estimation for Rössler network.
+
+    Uses coupling strength K=0.218 (expected S_B ≈ 0.496 from paper).
+
+    :return: Basin stability estimator with results.
+    """
+    props = setup_rossler_network_system()
 
     bse = BasinStabilityEstimator(
         n=props["n"],
@@ -28,28 +38,22 @@ def main(k: float = 0.218):
         detect_unbounded=False,
     )
 
-    basin_stability = bse.estimate_bs()
-    print(f"\nBasin Stability for k={k}:")
-    print(basin_stability)
-
-    expected_sb = {
-        0.119: 0.226,
-        0.139: 0.274,
-        0.159: 0.330,
-        0.179: 0.346,
-        0.198: 0.472,
-        0.218: 0.496,
-        0.238: 0.594,
-        0.258: 0.628,
-        0.278: 0.656,
-        0.297: 0.694,
-        0.317: 0.690,
-    }
-    if k in expected_sb:
-        print(f"\nExpected S_B (synchronized) from paper: {expected_sb[k]}")
+    bse.estimate_bs()
 
     return bse
 
 
 if __name__ == "__main__":
     bse = time_execution("main_rossler_network.py", main)
+
+    # Print results and comparison with paper
+    k_val = 0.218
+    if bse.bs_vals is not None:
+        print(f"\nBasin Stability for k={k_val}:")
+        print(bse.bs_vals)
+
+    # Find expected value from paper if k is in the list
+    k_indices = np.where(np.isclose(K_VALUES_FROM_PAPER, k_val, atol=1e-6))[0]
+    if len(k_indices) > 0:
+        expected_sb = float(EXPECTED_SB_FROM_PAPER[k_indices[0]])
+        print(f"\nExpected S_B (synchronized) from paper: {expected_sb}")

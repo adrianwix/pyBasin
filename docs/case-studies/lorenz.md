@@ -4,9 +4,13 @@
 
 Lorenz "broken butterfly" attractor:
 
-$$\dot{x} = \sigma(y - x)$$
-$$\dot{y} = rx - y - xz$$
-$$\dot{z} = xy - bz$$
+$$
+\begin{aligned}
+\dot{x} &= \sigma(y - x) \\
+\dot{y} &= rx - y - xz \\
+\dot{z} &= xy - bz
+\end{aligned}
+$$
 
 ## Attractors
 

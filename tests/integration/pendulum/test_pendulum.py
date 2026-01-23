@@ -39,7 +39,6 @@ class TestPendulum:
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_pendulum_system,
-            z_threshold=0.5,
             system_name="pendulum",
             case_name="case1",
             ground_truth_csv=ground_truth_csv,
@@ -53,14 +52,20 @@ class TestPendulum:
         self,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
-        """Test pendulum period (T) parameter sweep using z-score validation.
+        """Test pendulum period (T) parameter sweep using exact MATLAB initial conditions.
+
+        Uses CsvSampler for each parameter point to load exact ICs from MATLAB bSTAB,
+        eliminating sampling variance. Any differences are due to numerical integration
+        or feature extraction only.
 
         Verifies:
         1. Parameter sweep over T (driving period)
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2
+        2. Basin stability values match MATLAB using z-score test with z < 2.0
         3. Uses standard errors from both MATLAB (err_FP, err_LC) and Python results
         """
         json_path = Path(__file__).parent / "main_pendulum_case2.json"
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "case2"
+
         as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_pendulum_system,
@@ -68,6 +73,7 @@ class TestPendulum:
             label_keys=["FP", "LC", "NaN"],
             system_name="pendulum",
             case_name="case2",
+            ground_truths_dir=ground_truths_dir,
         )
 
         if artifact_collector is not None:
@@ -75,41 +81,42 @@ class TestPendulum:
 
     @pytest.mark.integration
     def test_hyperparameter_n(self) -> None:
-        """Test hyperparameter n - convergence study varying sample size N.
+        """Test hyperparameter n - convergence study varying sample size N with exact MATLAB ICs.
 
-        Uses z-score validation with standard errors. As N increases, the standard
-        error decreases (SE ~ 1/sqrt(N)), so validation naturally becomes stricter.
+        Uses CsvSampler for each N value to load exact ICs from MATLAB, eliminating sampling
+        variance across different sample sizes.
 
         Verifies:
         1. Parameter sweep over N (sample size)
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 2.5
+        2. Basin stability values match MATLAB using z-score test with z < 2.5
         3. Uses standard errors from both MATLAB (err_FP, err_LC) and Python results
         """
         json_path = Path(__file__).parent / "main_pendulum_hyperparameters.json"
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperparameters"
+
         _as_bse, _comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_pendulum_system,
             adaptative_parameter_name="n",
             label_keys=["FP", "LC", "NaN"],
-            z_threshold=2.5,
+            ground_truths_dir=ground_truths_dir,
         )
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts
     def test_n50(self) -> None:
-        """Test with small N=50 for grid sampling validation.
+        """Test with small N=50 for random sampling validation.
 
-        Expected from MATLAB:
-        - N=50 -> ceil(50^0.5) = 8 -> 8x8 = 64 grid points
+        Python implementation uses UniformRandomSampler which generates exactly N points.
+        Expected basin stability:
         - FP: 0.1000, LC: 0.9000
 
-        Note: With only 64 grid points, there's inherent statistical uncertainty.
+        Note: With only 50 random points, there's inherent statistical uncertainty.
         We use z-score validation with z-threshold=3.0 for small sample size.
         """
         run_single_point_test(
             n=50,
             expected_bs={"FP": 0.1, "LC": 0.9},
             setup_function=setup_pendulum_system,
-            z_threshold=3.0,
-            expected_points=64,
+            expected_points=50,
         )

@@ -137,7 +137,6 @@ def generate_parameter_sweep_artifacts(
     ] = {
         "system_name": system_name,
         "case_name": case_name,
-        "z_threshold": comparisons[0].z_threshold,
         "parameter_results": [c.to_dict() for c in comparisons],
     }
 

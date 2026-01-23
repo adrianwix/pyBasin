@@ -96,7 +96,9 @@ class ASPlotter:
                 alpha=0.8,
             )
 
-        plt.xlabel(self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1])  # type: ignore[misc]
+        # Get parameter name from first label key
+        param_name = next(iter(self.as_bse.labels[0].keys())) if self.as_bse.labels else "Parameter"
+        plt.xlabel(param_name)  # type: ignore[misc]
         plt.ylabel("Basin Stability")  # type: ignore[misc]
         plt.title("Basin Stability vs Parameter Variation")  # type: ignore[misc]
         plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")  # type: ignore[misc]
@@ -242,7 +244,11 @@ class ASPlotter:
                     color=colors[i % len(colors)],
                     label=f"Cluster {i + 1}",
                 )
-            ax.set_xlabel(self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1])  # type: ignore[misc]
+            # Get parameter name from first label key
+            param_name = (
+                next(iter(self.as_bse.labels[0].keys())) if self.as_bse.labels else "Parameter"
+            )
+            ax.set_xlabel(param_name)  # type: ignore[misc]
             ax.set_ylabel(f"Amplitude state {dof[j]}")  # type: ignore[misc]
             ax.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
             ax.legend()  # type: ignore[misc]

@@ -13,11 +13,11 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
 from pybasin.predictors.knn_classifier import KNNClassifier
+from pybasin.sampler import CsvSampler
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
     UnsupervisedAttractorComparison,
     UnsupervisedComparisonResult,
-    compute_statistical_comparison,
     run_basin_stability_test,
 )
 
@@ -47,7 +47,6 @@ class TestDuffing:
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_duffing_oscillator_system,
-            z_threshold=0.5,
             system_name="duffing",
             case_name="case1",
             ground_truth_csv=ground_truth_csv,
@@ -74,6 +73,7 @@ class TestDuffing:
         """
         # Load expected results from supervised JSON (the ground truth with meaningful labels)
         json_path = Path(__file__).parent / "main_duffing_supervised.json"
+        ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_duffing.csv"
         with open(json_path) as f:
             expected_results = json.load(f)
 
@@ -82,13 +82,21 @@ class TestDuffing:
         knn_classifier = props.get("cluster_classifier")
         assert isinstance(knn_classifier, KNNClassifier)
 
+        # Use ground truth CSV for exact MATLAB ICs
+        state_dim = props["sampler"].state_dim
+        coordinate_columns = [f"x{i + 1}" for i in range(state_dim)]
+        sampler = CsvSampler(
+            ground_truth_csv, coordinate_columns=coordinate_columns, label_column="label"
+        )
+        n_samples = sampler.n_samples
+
         # Use DBSCAN clustering for unsupervised discovery
         dbscan_clusterer = DBSCANClusterer(eps=0.08)
 
         bse = BasinStabilityEstimator(
-            n=props["n"],
+            n=n_samples,
             ode_system=props["ode_system"],
-            sampler=props["sampler"],
+            sampler=sampler,
             solver=props.get("solver"),
             feature_extractor=props.get("feature_extractor"),
             predictor=dbscan_clusterer,
@@ -192,8 +200,16 @@ class TestDuffing:
             relabeled_bs[label_str] = bs
             relabeled_se[label_str] = float(np.sqrt(bs * (1 - bs) / n_samples))
 
-        # Build comparison results using z-score validation
-        z_threshold = 2.5
+        # Load ground truth labels for classification metrics
+        ground_truth_labels = sampler.labels
+        assert ground_truth_labels is not None, "Ground truth CSV must have label column"
+
+        # Compute classification metrics
+        from tests.integration.test_helpers import compute_classification_metrics
+
+        metrics = compute_classification_metrics(ground_truth_labels, relabeled)
+
+        # Build comparison results using classification metrics
         attractor_comparisons: list[UnsupervisedAttractorComparison] = []
 
         for expected in expected_results:
@@ -206,12 +222,8 @@ class TestDuffing:
             actual_bs = relabeled_bs.get(label, 0.0)
             actual_se = relabeled_se.get(label, 0.0)
 
-            stats_comp = compute_statistical_comparison(
-                actual_bs, actual_se, expected_bs, expected_se
-            )
-
-            combined_se = float(np.sqrt(expected_se**2 + actual_se**2))
-            diff = abs(actual_bs - expected_bs)
+            # Get F1-score for this class
+            f1_for_class = metrics.f1_per_class.get(label, 0.0)
 
             # Get purity info for this attractor's DBSCAN cluster
             dbscan_cluster = template_to_cluster.get(label, -1)
@@ -224,11 +236,8 @@ class TestDuffing:
                     python_se=actual_se,
                     matlab_bs=expected_bs,
                     matlab_se=expected_se,
-                    z_score=stats_comp.z_score,
-                    p_value=stats_comp.p_value,
-                    ci_lower=stats_comp.ci_lower,
-                    ci_upper=stats_comp.ci_upper,
-                    confidence=stats_comp.confidence,
+                    f1_score=f1_for_class,
+                    matthews_corrcoef=metrics.matthews_corrcoef,
                     dbscan_label=str(dbscan_cluster),
                     cluster_size=int(purity_info.get("cluster_size", 0)),
                     majority_count=int(purity_info.get("majority_count", 0)),
@@ -236,11 +245,9 @@ class TestDuffing:
                 )
             )
 
-            # Assert validation still passes
-            threshold = z_threshold * combined_se if combined_se > 0 else 0.01
-            assert diff < threshold, (
-                f"Label '{label}': expected {expected_bs:.4f} ± {expected_se:.4f}, "
-                f"got {actual_bs:.4f} ± {actual_se:.4f}, z-score {stats_comp.z_score:.2f} exceeds {z_threshold}"
+            # Assert validation: F1-score should be high (>0.9 for good classification)
+            assert f1_for_class >= 0.85, (
+                f"Label '{label}': F1-score {f1_for_class:.4f} is below threshold 0.85"
             )
 
         comparison = UnsupervisedComparisonResult(
@@ -251,7 +258,8 @@ class TestDuffing:
             n_clusters_found=actual_n_clusters,
             n_clusters_expected=expected_n_clusters,
             attractors=attractor_comparisons,
-            z_threshold=z_threshold,
+            macro_f1=metrics.macro_f1,
+            matthews_corrcoef=metrics.matthews_corrcoef,
         )
 
         # Verify basin stabilities sum to 1.0

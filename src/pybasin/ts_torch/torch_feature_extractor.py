@@ -37,12 +37,40 @@ class TorchFeatureExtractor(FeatureExtractor):
     For CPU extraction, uses multiprocessing to parallelize across batches.
     For GPU extraction, uses batched CUDA operations for optimal performance.
 
+    ```python
+    # Default: use comprehensive features for all states on CPU
+    extractor = TorchFeatureExtractor(time_steady=9.0)
+
+    # GPU extraction with default features
+    extractor = TorchFeatureExtractor(time_steady=9.0, device="gpu")
+
+    # Custom features for specific states, skip others
+    extractor = TorchFeatureExtractor(
+        time_steady=9.0,
+        features=None,  # Don't extract features by default
+        features_per_state={
+            1: {"maximum": None, "minimum": None},  # Only extract for state 1
+        },
+    )
+
+    # Global features with per-state override
+    extractor = TorchFeatureExtractor(
+        time_steady=9.0,
+        features_per_state={
+            0: {"maximum": None},  # Override state 0
+            1: None,  # Skip state 1
+        },
+    )
+    ```
+
     :param time_steady: Time threshold for filtering transients. Default 0.0.
     :param features: Default feature configuration to apply to all states. Can be:
+
         - 'comprehensive': Use TORCH_COMPREHENSIVE_FC_PARAMETERS (default)
         - 'minimal': Use TORCH_MINIMAL_FC_PARAMETERS (10 basic features)
         - FCParameters dict: Custom feature configuration
         - None: Skip states not explicitly configured in features_per_state
+
     :param features_per_state: Optional dict mapping state indices to FCParameters.
         Overrides `features` for specified states. Use None as value to skip
         a state. States not in this dict use the global `features` config.
@@ -50,37 +78,12 @@ class TorchFeatureExtractor(FeatureExtractor):
     :param device: Execution device ('cpu' or 'gpu'). Default 'cpu'.
     :param n_jobs: Number of worker processes for CPU extraction. If None, uses all
         available CPU cores. Ignored when device='gpu'.
-    :param impute_method: Method for handling NaN/inf values in features. Options:
-        - 'extreme': Replace with extreme values (1e10) to distinguish unbounded
-          trajectories. Best for systems with divergent solutions. (default)
-        - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min,
-          NaN->median). Better when all trajectories are bounded.
+    :param impute_method: Method for handling NaN/inf values in features:
+
+        - 'extreme': Replace with extreme values (1e10) to distinguish unbounded trajectories. Best for systems with divergent solutions. (default)
+        - 'tsfresh': Replace using tsfresh-style imputation (inf->max/min, NaN->median). Better when all trajectories are bounded.
+
     :raises RuntimeError: If device='gpu' but CUDA is not available.
-
-    Examples:
-        >>> # Default: use comprehensive features for all states on CPU
-        >>> extractor = TorchFeatureExtractor(time_steady=9.0)
-
-        >>> # GPU extraction with default features
-        >>> extractor = TorchFeatureExtractor(time_steady=9.0, device="gpu")
-
-        >>> # Custom features for specific states, skip others
-        >>> extractor = TorchFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     features=None,  # Don't extract features by default
-        ...     features_per_state={
-        ...         1: {"maximum": None, "minimum": None},  # Only extract for state 1
-        ...     },
-        ... )
-
-        >>> # Global features with per-state override
-        >>> extractor = TorchFeatureExtractor(
-        ...     time_steady=9.0,
-        ...     features_per_state={
-        ...         0: {"maximum": None},  # Override state 0
-        ...         1: None,  # Skip state 1
-        ...     },
-        ... )
     """
 
     def __init__(

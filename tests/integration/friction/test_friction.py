@@ -36,7 +36,6 @@ class TestFriction:
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_friction_system,
-            z_threshold=0.5,
             system_name="friction",
             case_name="case1",
             ground_truth_csv=ground_truth_csv,
@@ -59,6 +58,7 @@ class TestFriction:
         2. Basin stability values pass z-score test for FP, LC, NaN
         """
         json_path = Path(__file__).parent / "main_friction_v_study.json"
+        ground_truths_dir = Path(__file__).parent / "ground_truths" / "vStudy"
         as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_friction_system,
@@ -66,6 +66,7 @@ class TestFriction:
             label_keys=["FP", "LC", "NaN"],
             system_name="friction",
             case_name="case2",
+            ground_truths_dir=ground_truths_dir,
         )
 
         if artifact_collector is not None:

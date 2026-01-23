@@ -4,9 +4,8 @@ import gc
 import json
 import logging
 import os
-from typing import Any, TypedDict
+from typing import Any
 
-import numpy as np
 import torch
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
@@ -14,17 +13,11 @@ from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
+from pybasin.study_params import StudyParams
 from pybasin.types import AdaptiveStudyResult, ErrorInfo
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
-
-
-class AdaptiveStudyParams(TypedDict):
-    """Parameters for adaptive parameter study."""
-
-    adaptative_parameter_values: np.ndarray
-    adaptative_parameter_name: str
 
 
 class ASBasinStabilityEstimator:
@@ -40,16 +33,16 @@ class ASBasinStabilityEstimator:
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
         cluster_classifier: LabelPredictor,
-        as_params: AdaptiveStudyParams,
+        study_params: StudyParams,
         save_to: str | None = "results",
         verbose: bool = False,
     ):
         """
         Initialize the Adaptive Study Basin Stability Estimator.
 
-        Sets up the estimator for a parameter study where one parameter is systematically
-        varied across multiple values. The parameter can be in any component (ODE system,
-        sampler, solver, feature extractor, or predictor).
+        Sets up the estimator for a parameter study where one or more parameters are
+        systematically varied across multiple values. Parameters can be in any component
+        (ODE system, sampler, solver, feature extractor, or predictor).
 
         :param n: Number of initial conditions (samples) to generate for each parameter value.
         :param ode_system: The ODE system model (ODESystem or JaxODESystem).
@@ -57,9 +50,10 @@ class ASBasinStabilityEstimator:
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
         :param cluster_classifier: The LabelPredictor object to assign attractor labels.
-        :param as_params: Dictionary specifying the parameter to vary and its values.
+        :param study_params: Parameter study specification (SweepStudyParams, GridStudyParams, etc.).
         :param save_to: Folder path where results will be saved, or None to disable saving.
-        :param verbose: If True, show detailed logs from BasinStabilityEstimator instances. If False, suppress INFO logs to reduce output clutter during parameter sweeps.
+        :param verbose: If True, show detailed logs from BasinStabilityEstimator instances.
+                        If False, suppress INFO logs to reduce output clutter during parameter sweeps.
         """
         self.n = n
         self.ode_system = ode_system
@@ -67,14 +61,25 @@ class ASBasinStabilityEstimator:
         self.solver = solver
         self.feature_extractor = feature_extractor
         self.cluster_classifier = cluster_classifier
-        self.as_params = as_params
+        self.study_params = study_params
         self.save_to = save_to
         self.verbose = verbose
 
         # Add storage for parameter study results
-        self.parameter_values: list[float] = []
+        self.labels: list[dict[str, Any]] = []
         self.basin_stabilities: list[dict[str, float]] = []
         self.results: list[AdaptiveStudyResult] = []
+
+    @property
+    def parameter_values(self) -> list[Any]:
+        """Legacy access to parameter values (for backward compatibility).
+
+        :return: List of parameter values from labels.
+        """
+        if not self.labels:
+            return []
+        first_key = next(iter(self.labels[0].keys()))
+        return [label[first_key] for label in self.labels]
 
     def _suppress_verbose_logs(self) -> dict[str, int]:
         """Suppress verbose logs from BasinStabilityEstimator and related components.
@@ -108,14 +113,14 @@ class ASBasinStabilityEstimator:
 
     def estimate_as_bs(
         self,
-    ) -> tuple[list[float], list[dict[str, float]], list[AdaptiveStudyResult]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, float]], list[AdaptiveStudyResult]]:
         """
-        Estimate basin stability for each parameter value in the adaptive study.
+        Estimate basin stability for each parameter combination in the study.
 
-        Performs basin stability estimation by systematically varying the specified parameter
-        across the provided parameter values. For each parameter value:
+        Performs basin stability estimation by systematically varying parameters
+        across the provided combinations. For each configuration:
 
-        1. Updates the parameter in the ODE system, sampler, solver, or predictor
+        1. Applies all parameter assignments from the RunConfig
         2. Creates a new BasinStabilityEstimator instance
         3. Estimates basin stability and computes error estimates
         4. Stores results including basin stability values, errors, and solution metadata
@@ -125,35 +130,25 @@ class ASBasinStabilityEstimator:
 
         :return: Tuple of three lists with matching indices:
 
-                 - parameter_values: List of parameter values used
+                 - labels: List of label dictionaries identifying each run
                  - basin_stabilities: List of basin stability dictionaries (label -> fraction)
                  - results: List of AdaptiveStudyResult with complete information including errors
         """
-        self.parameter_values = []
+        self.labels = []
         self.basin_stabilities = []
         self.results = []
 
-        param_values_list = self.as_params["adaptative_parameter_values"]
-        total_params = len(param_values_list)
+        total_runs = len(self.study_params)
 
         logger.info("\n" + "=" * 80)
-        logger.info("PARAMETER STUDY: %s", self.as_params["adaptative_parameter_name"])
-        logger.info(
-            "Parameter range: [%.4f, %.4f] (%d values)",
-            param_values_list[0],
-            param_values_list[-1],
-            total_params,
-        )
+        logger.info("PARAMETER STUDY: %d runs", total_runs)
         logger.info("=" * 80)
 
         # Check if GPU is available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         logger.info("Computing device: %s\n", device)
 
-        for idx, param_value in enumerate(param_values_list, 1):
-            # Update parameter using eval
-            assignment = f"{self.as_params['adaptative_parameter_name']} = {param_value}"
-
+        for idx, run_config in enumerate(self.study_params, 1):
             context: dict[str, Any] = {
                 "n": self.n,
                 "ode_system": self.ode_system,
@@ -163,18 +158,26 @@ class ASBasinStabilityEstimator:
                 "cluster_classifier": self.cluster_classifier,
             }
 
-            eval(compile(assignment, "<string>", "exec"), context, context)
-
-            # Evaluate the same variable/expression to get its current value
-            variable_name = self.as_params["adaptative_parameter_name"]
-            updated_value = eval(variable_name, context, context)
+            # Apply all parameter assignments for this run
+            for assignment in run_config.assignments:
+                context["_param_value"] = assignment.value
+                exec_code = f"{assignment.name} = _param_value"
+                eval(compile(exec_code, "<string>", "exec"), context, context)
 
             logger.info("\n" + "-" * 80)
-            logger.info("[%d/%d] %s = %.4f", idx, total_params, variable_name, updated_value)
+            label_str = ", ".join(f"{k}={v}" for k, v in run_config.label.items())
+            logger.info("[%d/%d] %s", idx, total_runs, label_str)
             logger.info("-" * 80)
 
+            # Use sampler's n_samples if available (for CsvSampler), otherwise use self.n
+            n_samples = (
+                context["sampler"].n_samples
+                if hasattr(context["sampler"], "n_samples")
+                else context["n"]
+            )
+
             bse = BasinStabilityEstimator(
-                n=context["n"],
+                n=n_samples,
                 ode_system=context["ode_system"],
                 sampler=context["sampler"],
                 solver=context["solver"],
@@ -191,8 +194,11 @@ class ASBasinStabilityEstimator:
             errors = bse.get_errors()
 
             # Store only essential results (not the full solution to save memory)
-            self.parameter_values.append(param_value)
+            self.labels.append(run_config.label)
             self.basin_stabilities.append(basin_stability)
+
+            # Get the primary parameter value for backward compatibility
+            param_value = next(iter(run_config.label.values())) if run_config.label else None
 
             # Extract only necessary data from solution before storing
             if bse.solution is not None:
@@ -233,7 +239,7 @@ class ASBasinStabilityEstimator:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-        return self.parameter_values, self.basin_stabilities, self.results
+        return self.labels, self.basin_stabilities, self.results
 
     def save(self) -> None:
         """
@@ -264,14 +270,18 @@ class ASBasinStabilityEstimator:
             ]
         )
 
-        adaptative_parameter_study = [
-            {"param_value": param_value, "basin_of_attraction": bs}
-            for param_value, bs in zip(self.parameter_values, self.basin_stabilities, strict=True)
+        # Build study results with labels
+        parameter_study = [
+            {"label": label, "basin_of_attraction": bs}
+            for label, bs in zip(self.labels, self.basin_stabilities, strict=True)
         ]
 
+        # Determine studied parameters from first label keys
+        studied_params = list(self.labels[0].keys()) if self.labels else []
+
         results: dict[str, Any] = {
-            "studied_parameters": self.as_params["adaptative_parameter_name"],
-            "adaptative_parameter_study": adaptative_parameter_study,
+            "studied_parameters": studied_params,
+            "parameter_study": parameter_study,
             "region_of_interest": region_of_interest,
             "sampling_points": self.n,
             "sampling_method": self.sampler.__class__.__name__,

@@ -62,7 +62,9 @@ class FrictionJaxODE(JaxODESystem[FrictionParams]):
 
         vrel = vel - v_d
         eta = 1e-4
-        k_smooth = 50.0  # Controls transition smoothness
+        k_smooth = (
+            200.0  # Controls transition smoothness (higher = sharper, closer to hard switching)
+        )
 
         # Friction force calculation
         f_fric = mud + mud * (musd - 1.0) * jnp.exp(-jnp.abs(vrel) / v0) + muv * jnp.abs(vrel) / v0

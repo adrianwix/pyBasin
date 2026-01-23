@@ -120,7 +120,7 @@ class InteractivePlotter:
         """
         try:
             param_value = self.as_bse.parameter_values[param_idx]
-            param_name = self.as_bse.as_params["adaptative_parameter_name"]
+            param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
 
             logger.info(f"Computing BSE for {param_name}={param_value} (index {param_idx})")
 
@@ -305,7 +305,7 @@ class InteractivePlotter:
 
     def _build_as_nav_items(self, initial_view: str) -> list:
         """Build navigation items for Adaptive Study mode."""
-        param_name = self.as_bse.as_params["adaptative_parameter_name"].split(".")[-1]
+        param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
         param_values = self.as_bse.parameter_values
         param_options = [
             {"value": str(i), "label": f"{param_name}={val:.4f}"}

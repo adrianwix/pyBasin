@@ -1,17 +1,18 @@
 import numpy as np
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.study_params import SweepStudyParams
+from pybasin.utils import time_execution
 
 
 def main():
     props = setup_lorenz_system()
 
-    as_params = AdaptiveStudyParams(
-        # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
-        adaptative_parameter_values=2 * np.logspace(2, 4, 50, dtype=np.int64),
-        adaptative_parameter_name="N",
+    study_params = SweepStudyParams(
+        name="N",
+        values=list(2 * np.logspace(2, 4, 50, dtype=np.int64)),
     )
 
     solver = props.get("solver")
@@ -32,20 +33,19 @@ def main():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=cluster_classifier,
-        as_params=as_params,
+        study_params=study_params,
         save_to="results_hyperpN",
     )
 
-    print("Estimating Basin Stability...")
     bse.estimate_as_bs()
 
+    return bse
+
+
+if __name__ == "__main__":
+    bse = time_execution("main_lorenz_hyperpN.py", main)
     plotter = ASPlotter(bse)
 
     plotter.plot_basin_stability_variation(interval="log")
 
     bse.save()
-
-
-if __name__ == "__main__":
-    # time_execution("main_lorenz.py", main)
-    main()

@@ -14,6 +14,15 @@ from pybasin.plotters.types import (
     TemplateSelectionOptions,
     TemplateTimeSeriesOptions,
 )
+from pybasin.study_params import (
+    CustomStudyParams,
+    GridStudyParams,
+    ParamAssignment,
+    RunConfig,
+    StudyParams,
+    SweepStudyParams,
+    ZipStudyParams,
+)
 from pybasin.types import ErrorInfo
 
 # Configure library logger with default handler
@@ -26,13 +35,20 @@ if not _logger.handlers:
 
 __all__ = [
     "BasinStabilityEstimator",
+    "CustomStudyParams",
     "ErrorInfo",
     "FeatureSpaceOptions",
+    "GridStudyParams",
     "InteractivePlotter",
     "InteractivePlotterOptions",
     "MatplotlibPlotter",
+    "ParamAssignment",
     "PhasePlotOptions",
+    "RunConfig",
     "StateSpaceOptions",
+    "StudyParams",
+    "SweepStudyParams",
     "TemplateSelectionOptions",
     "TemplateTimeSeriesOptions",
+    "ZipStudyParams",
 ]

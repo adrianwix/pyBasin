@@ -75,7 +75,7 @@ class ASParameterManagerAIO:
             bse = self.compute_bse_callback(param_index)
         else:
             param_value = self.as_bse.parameter_values[param_index]
-            param_name = self.as_bse.as_params["adaptative_parameter_name"]
+            param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
 
             assignment = f"{param_name} = {param_value}"
             context: dict[str, object] = {

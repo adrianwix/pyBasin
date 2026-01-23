@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
+import pandas as pd  # pyright: ignore[reportMissingTypeStubs]
 import torch
 
 
@@ -167,23 +167,31 @@ class CsvSampler(Sampler):
 
         self._coordinate_columns = coordinate_columns
         self._label_column = label_column
-        self._data = df[coordinate_columns].values.astype(np.float32)
+        self._data: np.ndarray[tuple[int, int], np.dtype[np.float32]] = df[
+            coordinate_columns
+        ].values.astype(np.float32)  # type: ignore[reportUnknownMemberType]
 
         if label_column is not None:
             if label_column not in df.columns:
                 raise ValueError(
                     f"Label column '{label_column}' not found in CSV. Available: {list(df.columns)}"
                 )
-            self._labels: np.ndarray | None = np.asarray(df[label_column].values)
+            self._labels: np.ndarray | None = np.asarray(
+                df[label_column].values  # type: ignore[reportUnknownMemberType]
+            )
         else:
             self._labels = None
 
-        min_limits = self._data.min(axis=0).tolist()
-        max_limits = self._data.max(axis=0).tolist()
+        min_limits_list: list[float] = list(self._data.min(axis=0).tolist())  # type: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        max_limits_list: list[float] = list(self._data.max(axis=0).tolist())  # type: ignore[reportUnknownMemberType, reportUnknownArgumentType]
 
-        super().__init__(min_limits, max_limits, device)
+        super().__init__(min_limits_list, max_limits_list, device)
 
-        self._tensor_data = torch.tensor(self._data, dtype=torch.float32, device=self.device)
+        self._tensor_data = torch.tensor(
+            self._data,  # type: ignore[reportUnknownMemberType]
+            dtype=torch.float32,
+            device=self.device,
+        )
 
     @property
     def labels(self) -> np.ndarray | None:

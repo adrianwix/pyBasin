@@ -11,35 +11,20 @@ import numpy as np
 import pytest
 
 from case_studies.rossler_network.setup_rossler_network_system import (
+    EXPECTED_MEAN_SB,
+    EXPECTED_SB_FROM_PAPER,
+    K_VALUES_FROM_PAPER,
     setup_rossler_network_system,
 )
-from pybasin.as_basin_stability_estimator import (
-    AdaptiveStudyParams,
-    ASBasinStabilityEstimator,
-)
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.study_params import SweepStudyParams
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
     AttractorComparison,
     ComparisonResult,
     compute_statistical_comparison,
 )
-
-EXPECTED_VALUES_FROM_PAPER: dict[float, float] = {
-    0.119: 0.226,
-    0.139: 0.274,
-    0.159: 0.330,
-    0.179: 0.346,
-    0.198: 0.472,
-    0.218: 0.496,
-    0.238: 0.594,
-    0.258: 0.628,
-    0.278: 0.656,
-    0.297: 0.694,
-    0.317: 0.690,
-}
-
-EXPECTED_MEAN_SB = 0.490
 
 
 class TestRosslerNetwork:
@@ -60,9 +45,10 @@ class TestRosslerNetwork:
         2. Results are documented for artifact generation
         """
         k_val = 0.218
-        expected_sb = EXPECTED_VALUES_FROM_PAPER[k_val]
+        k_idx = np.where(k_val == K_VALUES_FROM_PAPER)[0][0]
+        expected_sb = float(EXPECTED_SB_FROM_PAPER[k_idx])
 
-        props = setup_rossler_network_system(k=k_val)
+        props = setup_rossler_network_system()
 
         bse = BasinStabilityEstimator(
             n=props["n"],
@@ -75,17 +61,23 @@ class TestRosslerNetwork:
         )
 
         basin_stability = bse.estimate_bs()
-        computed_sb = basin_stability.get("synchronized", 0.0) + basin_stability.get(
-            "desynchronized", 0.0
-        )
+
+        # Get individual attractor basin stabilities
+        sync_bs = basin_stability.get("synchronized", 0.0)
+        unbounded_bs = basin_stability.get("unbounded", 0.0)
+
+        # For comparison with paper, we use total bounded (synchronized + desynchronized if present)
+        computed_sb = sync_bs + basin_stability.get("desynchronized", 0.0)
 
         n_samples = props["n"]
+
+        # Compute standard errors for individual attractors
+        sync_se = np.sqrt(sync_bs * (1 - sync_bs) / n_samples)
+        unbounded_se = np.sqrt(unbounded_bs * (1 - unbounded_bs) / n_samples)
+
+        # Standard errors for comparison with paper
         e_abs_computed = np.sqrt(computed_sb * (1 - computed_sb) / n_samples)
         e_abs_paper = np.sqrt(expected_sb * (1 - expected_sb) / n_samples)
-
-        e_combined = np.sqrt(e_abs_computed**2 + e_abs_paper**2)
-        diff = abs(computed_sb - expected_sb)
-        z_score = diff / e_combined if e_combined > 0 else 0.0
 
         stats_comp = compute_statistical_comparison(
             computed_sb, e_abs_computed, expected_sb, e_abs_paper
@@ -94,35 +86,55 @@ class TestRosslerNetwork:
         print(f"\nRössler Network K={k_val}:")
         print(f"  Expected S_B: {expected_sb:.3f} ± {e_abs_paper:.3f}")
         print(f"  Computed S_B: {computed_sb:.3f} ± {e_abs_computed:.3f}")
-        print(f"  Difference:   {diff:+.3f}")
+        print(f"  - Synchronized: {sync_bs:.3f}")
+        print(f"  - Unbounded: {unbounded_bs:.3f}")
+        print(f"  Difference:   {abs(computed_sb - expected_sb):+.3f}")
         print(f"  Z-score:      {stats_comp.z_score:.2f}")
-        print(f"  P-value:      {stats_comp.p_value:.4f}")
-        print("  Threshold:    3.00 (99.7% CI)")
+        print(f"  Passes test:  {stats_comp.passes_test} (α=0.05)")
 
-        comparison = AttractorComparison(
-            label="synchronized",
-            python_bs=computed_sb,
-            python_se=e_abs_computed,
-            matlab_bs=expected_sb,
-            matlab_se=e_abs_paper,
-            z_score=stats_comp.z_score,
-            p_value=stats_comp.p_value,
-            ci_lower=stats_comp.ci_lower,
-            ci_upper=stats_comp.ci_upper,
-            confidence=stats_comp.confidence,
+        # Note: For comparison with old code, 1.96 corresponds to α=0.05 (95% CI)
+        # Old threshold of 3.0 corresponds to α=0.0027 (99.7% CI)
+        z_threshold = 3.0  # Using stricter threshold for paper validation
+
+        # Create comparisons for both attractors
+        attractor_comparisons: list[AttractorComparison] = []
+
+        # Synchronized attractor
+        attractor_comparisons.append(
+            AttractorComparison(
+                label="synchronized",
+                python_bs=sync_bs,
+                python_se=sync_se,
+                matlab_bs=expected_sb,  # Paper reports total bounded
+                matlab_se=e_abs_paper,
+                f1_score=0.0,  # N/A - no ground truth labels
+                matthews_corrcoef=0.0,  # N/A - no ground truth labels
+            )
+        )
+
+        # Unbounded attractor
+        attractor_comparisons.append(
+            AttractorComparison(
+                label="unbounded",
+                python_bs=unbounded_bs,
+                python_se=unbounded_se,
+                matlab_bs=1.0 - expected_sb,  # Everything not synchronized
+                matlab_se=e_abs_paper,
+                f1_score=0.0,  # N/A - no ground truth labels
+                matthews_corrcoef=0.0,  # N/A - no ground truth labels
+            )
         )
 
         comparison_result = ComparisonResult(
             system_name="rossler_network",
             case_name="baseline",
-            attractors=[comparison],
-            z_threshold=3.0,
+            attractors=attractor_comparisons,
         )
 
-        assert z_score < 3.0, (
+        assert stats_comp.z_score < z_threshold, (
             f"Basin stability for K={k_val}: expected {expected_sb:.3f} ± {e_abs_paper:.3f}, "
             f"got {computed_sb:.3f} ± {e_abs_computed:.3f}, "
-            f"z-score {z_score:.2f} exceeds threshold 3.0"
+            f"z-score {stats_comp.z_score:.2f} exceeds threshold {z_threshold:.1f}"
         )
 
         if artifact_collector is not None:
@@ -145,13 +157,11 @@ class TestRosslerNetwork:
         2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 3
         3. Results are documented for artifact generation
         """
-        props = setup_rossler_network_system(k=0.119)
+        props = setup_rossler_network_system()
 
-        k_values = np.array(list(EXPECTED_VALUES_FROM_PAPER.keys()))
-
-        as_params = AdaptiveStudyParams(
-            adaptative_parameter_values=k_values,
-            adaptative_parameter_name='ode_system.params["K"]',
+        study_params = SweepStudyParams(
+            name='ode_system.params["K"]',
+            values=K_VALUES_FROM_PAPER.tolist(),
         )
 
         solver = props.get("solver")
@@ -168,7 +178,7 @@ class TestRosslerNetwork:
             solver=solver,
             feature_extractor=feature_extractor,
             cluster_classifier=cluster_classifier,
-            as_params=as_params,
+            study_params=study_params,
         )
 
         as_bse.estimate_as_bs()
@@ -176,6 +186,7 @@ class TestRosslerNetwork:
         comparison_results: list[ComparisonResult] = []
         computed_sync: list[float] = []
         n_samples = props["n"]
+        z_threshold = 3.0  # Using stricter threshold for paper validation
 
         print("\n" + "=" * 80)
         print("RÖSSLER NETWORK K-SWEEP: COMPARISON WITH PAPER")
@@ -185,68 +196,90 @@ class TestRosslerNetwork:
         )
         print("-" * 80)
 
-        within_2sigma = 0
-        for param_val, bs_dict in zip(
-            as_bse.parameter_values, as_bse.basin_stabilities, strict=True
+        within_threshold = 0
+        for idx, (param_val, bs_dict) in enumerate(
+            zip(as_bse.parameter_values, as_bse.basin_stabilities, strict=True)
         ):
-            sync_val = bs_dict.get("synchronized", 0.0) + bs_dict.get("desynchronized", 0.0)
-            computed_sync.append(sync_val)
-            expected_val = EXPECTED_VALUES_FROM_PAPER[param_val]
+            sync_val = bs_dict.get("synchronized", 0.0)
+            unbounded_val = bs_dict.get("unbounded", 0.0)
 
-            e_abs_computed = np.sqrt(sync_val * (1 - sync_val) / n_samples)
+            # Compute SE for individual attractors
+            sync_se = np.sqrt(sync_val * (1 - sync_val) / n_samples)
+            unbounded_se = np.sqrt(unbounded_val * (1 - unbounded_val) / n_samples)
+
+            # For comparison with paper, sum synchronized + desynchronized (if present)
+            total_bounded = sync_val + bs_dict.get("desynchronized", 0.0)
+            computed_sync.append(total_bounded)
+            expected_val = float(EXPECTED_SB_FROM_PAPER[idx])
+            e_abs_computed = np.sqrt(total_bounded * (1 - total_bounded) / n_samples)
             e_abs_paper = np.sqrt(expected_val * (1 - expected_val) / n_samples)
 
             stats_comp = compute_statistical_comparison(
-                sync_val, e_abs_computed, expected_val, e_abs_paper
+                total_bounded, e_abs_computed, expected_val, e_abs_paper
             )
 
-            diff = sync_val - expected_val
+            diff = total_bounded - expected_val
 
-            within = stats_comp.z_score < 3.0
-            within_2sigma += int(within)
+            within = stats_comp.z_score < z_threshold
+            within_threshold += int(within)
             status = "✓" if within else "✗"
 
             print(
-                f"{param_val:>8.3f} | {expected_val:>8.3f} | {sync_val:>8.3f} | "
+                f"{param_val:>8.3f} | {expected_val:>8.3f} | {total_bounded:>8.3f} | "
                 f"{diff:>+7.3f} | {e_abs_computed:>6.3f} | {stats_comp.z_score:>8.2f} | {status:>6}"
             )
 
-            comparison = AttractorComparison(
-                label="synchronized",
-                python_bs=sync_val,
-                python_se=e_abs_computed,
-                matlab_bs=expected_val,
-                matlab_se=e_abs_paper,
-                z_score=stats_comp.z_score,
-                p_value=stats_comp.p_value,
-                ci_lower=stats_comp.ci_lower,
-                ci_upper=stats_comp.ci_upper,
-                confidence=stats_comp.confidence,
+            # Create comparisons for both attractors
+            attractor_comparisons_for_param: list[AttractorComparison] = []
+
+            # Synchronized attractor
+            attractor_comparisons_for_param.append(
+                AttractorComparison(
+                    label="synchronized",
+                    python_bs=sync_val,
+                    python_se=sync_se,
+                    matlab_bs=expected_val,  # Paper reports total bounded
+                    matlab_se=e_abs_paper,
+                    f1_score=0.0,  # N/A - no ground truth labels
+                    matthews_corrcoef=0.0,  # N/A - no ground truth labels
+                )
+            )
+
+            # Unbounded attractor
+            attractor_comparisons_for_param.append(
+                AttractorComparison(
+                    label="unbounded",
+                    python_bs=unbounded_val,
+                    python_se=unbounded_se,
+                    matlab_bs=1.0 - expected_val,  # Everything not synchronized
+                    matlab_se=e_abs_paper,
+                    f1_score=0.0,  # N/A - no ground truth labels
+                    matthews_corrcoef=0.0,  # N/A - no ground truth labels
+                )
             )
 
             comparison_result = ComparisonResult(
                 system_name="rossler_network",
                 case_name="k_sweep",
-                attractors=[comparison],
+                attractors=attractor_comparisons_for_param,
                 parameter_value=param_val,
-                z_threshold=3.0,
             )
             comparison_results.append(comparison_result)
 
-            assert stats_comp.z_score < 3.0, (
+            assert stats_comp.z_score < z_threshold, (
                 f"Basin stability for K={param_val}: expected {expected_val:.3f} ± {e_abs_paper:.3f}, "
-                f"got {sync_val:.3f} ± {e_abs_computed:.3f}, "
-                f"z-score {stats_comp.z_score:.2f} exceeds threshold 3.0"
+                f"got {total_bounded:.3f} ± {e_abs_computed:.3f}, "
+                f"z-score {stats_comp.z_score:.2f} exceeds threshold {z_threshold:.1f}"
             )
 
         mean_sb = np.mean(computed_sync)
         print("-" * 80)
         print(f"Mean S_B: {mean_sb:.3f} (expected ~{EXPECTED_MEAN_SB:.3f} from paper)")
         print(
-            f"\nWithin 2σ: {within_2sigma}/{len(EXPECTED_VALUES_FROM_PAPER)} "
-            f"({within_2sigma / len(EXPECTED_VALUES_FROM_PAPER) * 100:.0f}%)"
+            f"\nWithin threshold: {within_threshold}/{len(K_VALUES_FROM_PAPER)} "
+            f"({within_threshold / len(K_VALUES_FROM_PAPER) * 100:.0f}%)"
         )
-        print(f"Note: e_abs = sqrt(S_B*(1-S_B)/N), N={n_samples}")
+        print(f"Note: e_abs = sqrt(S_B*(1-S_B)/N), N={n_samples}, z-threshold={z_threshold:.1f}")
 
         if artifact_collector is not None:
             artifact_collector.add_parameter_sweep(as_bse, comparison_results)

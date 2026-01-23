@@ -37,12 +37,10 @@ from case_studies.rossler_network.synchronization_classifier import (
 from case_studies.rossler_network.synchronization_feature_extractor import (
     SynchronizationFeatureExtractor,
 )
-from pybasin.as_basin_stability_estimator import (
-    AdaptiveStudyParams,
-    ASBasinStabilityEstimator,
-)
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.study_params import SweepStudyParams
 from pybasin.utils import generate_filename, time_execution
 
 logger = logging.getLogger(__name__)
@@ -191,9 +189,9 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         epsilon=1.5,
     )
 
-    as_params = AdaptiveStudyParams(
-        adaptative_parameter_values=k_values,
-        adaptative_parameter_name='ode_system.params["K"]',
+    study_params = SweepStudyParams(
+        name='ode_system.params["K"]',
+        values=list(k_values),
     )
 
     bse = ASBasinStabilityEstimator(
@@ -203,7 +201,7 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=sync_classifier,
-        as_params=as_params,
+        study_params=study_params,
         save_to=save_dir,
         verbose=False,
     )

@@ -14,15 +14,25 @@ Runs BSE multiple times for different parameter values, returning parameter valu
 ## Example: Pendulum Damping Study
 
 ```python
+import numpy as np
 from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.study_params import SweepStudyParams
+
+study_params = SweepStudyParams(
+    name='ode_system.params["gamma"]',
+    values=np.linspace(0.1, 0.5, 10),
+)
 
 as_bse = ASBasinStabilityEstimator(
     n=10_000,
     ode_system=pendulum_ode,
     sampler=sampler,
-    as_params={"gamma": np.linspace(0.1, 0.5, 10)},
+    solver=solver,
+    feature_extractor=feature_extractor,
+    cluster_classifier=predictor,
+    study_params=study_params,
 )
-params, bs_vals, results = as_bse.estimate_as_bs()
+labels, bs_vals, results = as_bse.estimate_as_bs()
 ```
 
 ## Visualization with `ASPlotter`

@@ -175,5 +175,7 @@ class TestCsvSampler:
     def test_csv_sampler_limits_from_data(self, csv_file: Path) -> None:
         sampler = CsvSampler(csv_file, coordinate_columns=["x1", "x2"], device="cpu")
 
-        assert sampler.min_limits.tolist() == [1.0, 2.0]
-        assert sampler.max_limits.tolist() == [7.0, 8.0]
+        min_limits_list: list[float] = sampler.min_limits.tolist()  # type: ignore[reportUnknownMemberType]
+        max_limits_list: list[float] = sampler.max_limits.tolist()  # type: ignore[reportUnknownMemberType]
+        assert min_limits_list == [1.0, 2.0]
+        assert max_limits_list == [7.0, 8.0]

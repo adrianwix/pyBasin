@@ -3,6 +3,7 @@
 from typing import Any
 
 import jax.numpy as jnp
+import numpy as np
 import torch
 from jax import Array
 
@@ -21,6 +22,14 @@ from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.types import SetupProperties
 
+K_VALUES_FROM_PAPER = np.array(
+    [0.119, 0.139, 0.159, 0.179, 0.198, 0.218, 0.238, 0.258, 0.278, 0.297, 0.317]
+)
+EXPECTED_SB_FROM_PAPER = np.array(
+    [0.226, 0.274, 0.330, 0.346, 0.472, 0.496, 0.594, 0.628, 0.656, 0.694, 0.690]
+)
+EXPECTED_MEAN_SB = 0.490
+
 
 def rossler_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
     """
@@ -34,31 +43,14 @@ def rossler_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
     return max_val - max_abs_y
 
 
-def setup_rossler_network_system(k: float = 0.218) -> SetupProperties:
+def setup_rossler_network_system() -> SetupProperties:
+    """Setup the Rössler network system for basin stability estimation.
+
+    Uses coupling strength K=0.218 (expected S_B ≈ 0.496 from paper).
+
+    :return: Configuration dictionary for BasinStabilityEstimator.
     """
-    Setup the Rössler network system for basin stability estimation.
-
-    Parameters
-    ----------
-    k : float
-        Coupling strength. Must be in the stability interval (0.100, 0.336).
-        Default is 0.218, which has expected S_B ≈ 0.496 from the reference paper.
-
-    Returns
-    -------
-    SetupProperties
-        Configuration dictionary for BasinStabilityEstimator.
-
-    Notes
-    -----
-    Reference values from the paper:
-        K=0.119: S_B=0.226    K=0.238: S_B=0.594
-        K=0.139: S_B=0.274    K=0.258: S_B=0.628
-        K=0.159: S_B=0.330    K=0.278: S_B=0.656
-        K=0.179: S_B=0.346    K=0.297: S_B=0.694
-        K=0.198: S_B=0.472    K=0.317: S_B=0.690
-        K=0.218: S_B=0.496
-    """
+    k = 0.218
     n = 500
 
     device = "cuda" if torch.cuda.is_available() else "cpu"

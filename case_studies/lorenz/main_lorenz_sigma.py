@@ -1,20 +1,22 @@
 import matplotlib
 import numpy as np
 
+from pybasin.utils import time_execution
+
 matplotlib.use("TkAgg")
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-from pybasin.as_basin_stability_estimator import AdaptiveStudyParams, ASBasinStabilityEstimator
+from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.study_params import SweepStudyParams
 
 
 def main():
     props = setup_lorenz_system()
 
-    as_params = AdaptiveStudyParams(
-        # adaptative_parameter_values=np.arange(0.01, 1.05, 0.05),
-        adaptative_parameter_values=np.arange(0.12, 0.1825, 0.0025),
-        adaptative_parameter_name='ode_system.params["sigma"]',
+    study_params = SweepStudyParams(
+        name='ode_system.params["sigma"]',
+        values=list(np.arange(0.12, 0.1825, 0.0025)),
     )
 
     solver = props.get("solver")
@@ -35,22 +37,21 @@ def main():
         solver=solver,
         feature_extractor=feature_extractor,
         cluster_classifier=cluster_classifier,
-        as_params=as_params,
+        study_params=study_params,
         save_to="results_sigma",
     )
 
-    print("Estimating Basin Stability...")
     bse.estimate_as_bs()
+
+    return bse
+
+
+if __name__ == "__main__":
+    bse = time_execution("main_lorenz_sigma.py", main)
 
     plotter = ASPlotter(bse)
 
     plotter.plot_basin_stability_variation()
-
     plotter.plot_bifurcation_diagram(dof=[0, 1, 2])
 
     bse.save()
-
-
-if __name__ == "__main__":
-    # time_execution("main_lorenz.py", main)
-    main()

@@ -1,8 +1,8 @@
 import torch
 from sklearn.neighbors import KNeighborsClassifier
 
+from case_studies.friction.friction_feature_extractor import FrictionFeatureExtractor
 from case_studies.friction.friction_jax_ode import FrictionJaxODE, FrictionParams
-from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
@@ -38,10 +38,10 @@ def setup_friction_system() -> SetupProperties:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=True,
+        use_cache=False,
     )
 
-    feature_extractor = JaxFeatureExtractor(time_steady=400.0, normalize=False)
+    feature_extractor = FrictionFeatureExtractor(time_steady=400)
 
     classifier_initial_conditions = [
         [0.1, 0.1],

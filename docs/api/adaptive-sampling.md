@@ -4,7 +4,39 @@
 
 ---
 
-::: pybasin.as_basin_stability_estimator.AdaptiveStudyParams
+## Study Parameters
+
+### StudyParams (Base)
+
+::: pybasin.study_params.StudyParams
+
+### SweepStudyParams
+
+::: pybasin.study_params.SweepStudyParams
+
+### GridStudyParams
+
+::: pybasin.study_params.GridStudyParams
+
+### ZipStudyParams
+
+::: pybasin.study_params.ZipStudyParams
+
+### CustomStudyParams
+
+::: pybasin.study_params.CustomStudyParams
+
+---
+
+## Configuration Types
+
+::: pybasin.study_params.ParamAssignment
+options:
+heading_level: 3
+
+::: pybasin.study_params.RunConfig
+options:
+heading_level: 3
 
 ---
 

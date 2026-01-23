@@ -54,8 +54,8 @@ if __name__ == "__main__":
 
     # Test individual plots
     mpl_plotter.plot_basin_stability_bars()
-    # mpl_plotter.plot_state_space()
-    # mpl_plotter.plot_feature_space()
+    mpl_plotter.plot_state_space()
+    mpl_plotter.plot_feature_space()
 
     # Test combined plot
     # mpl_plotter.plot_bse_results()

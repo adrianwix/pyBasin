@@ -32,7 +32,7 @@ class AdaptiveStudyResult(TypedDict):
     including the basin stability values, error estimates, sample metadata, and optional
     detailed solution data.
 
-    :ivar param_value: The parameter value used for this estimation.
+    :ivar param_value: The parameter value used for this estimation, or None if no parameter is being varied.
     :ivar basin_stability: Dictionary mapping attractor labels to their basin stability values (fraction of samples).
     :ivar errors: Dictionary mapping attractor labels to their ErrorInfo (absolute and relative errors).
     :ivar n_samples: Number of initial conditions actually used (may differ from requested N due to grid rounding).
@@ -40,7 +40,7 @@ class AdaptiveStudyResult(TypedDict):
     :ivar bifurcation_amplitudes: Amplitude values for bifurcation analysis, or None if not computed.
     """
 
-    param_value: float
+    param_value: float | None
     basin_stability: dict[str, float]
     errors: dict[str, ErrorInfo]
     n_samples: int
