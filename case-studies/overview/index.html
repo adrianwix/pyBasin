@@ -1212,6 +1212,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rossler-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rössler Network
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1227,9 +1236,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#comparison-with-matlab" class="md-nav__link">
+  <a href="#integration-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      Comparison with MATLAB
+      Integration Tests
     </span>
   </a>
   
@@ -1239,15 +1248,6 @@
   <a href="#generated-artifacts" class="md-nav__link">
     <span class="md-ellipsis">
       Generated Artifacts
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      Integration Tests
     </span>
   </a>
   
@@ -2036,6 +2036,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rossler-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rössler Network
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2051,9 +2060,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#comparison-with-matlab" class="md-nav__link">
+  <a href="#integration-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      Comparison with MATLAB
+      Integration Tests
     </span>
   </a>
   
@@ -2063,15 +2072,6 @@
   <a href="#generated-artifacts" class="md-nav__link">
     <span class="md-ellipsis">
       Generated Artifacts
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      Integration Tests
     </span>
   </a>
   
@@ -2225,20 +2225,23 @@
 <p>A forced Duffing oscillator exhibiting bistability with two coexisting attractors.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li>Two stable periodic attractors</li>
-<li>Parameter-dependent basin stability</li>
-<li>Supervised and unsupervised learning approaches</li>
+<li>Five coexisting limit cycle attractors</li>
+<li>Supervised vs. unsupervised classification comparison</li>
+<li>Feature extraction using maximum and standard deviation</li>
 </ul>
+<p><strong>Reference:</strong> Thomson, J. M. T., &amp; Stewart, H. B. (2002). <em>Nonlinear dynamics and chaos</em> (2nd ed.). Wiley. (See p. 9, Fig. 1.9)</p>
 <p><strong>Files:</strong> <code>case_studies/duffing_oscillator/</code></p>
 <hr />
 <h3 id="lorenz-system"><a href="../lorenz/">Lorenz System</a></h3>
-<p>The classic Lorenz system with parameter variations.</p>
+<p>A version of the Lorenz system exhibiting two stable co-existing chaotic attractors.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li>Chaotic dynamics</li>
-<li>Parameter sensitivity studies (σ, ρ)</li>
-<li>High-dimensional state space</li>
+<li>Two coexisting chaotic attractors and unbounded solutions</li>
+<li>Parameter sweep study (σ)</li>
+<li>Sample size (N) convergence study</li>
+<li>Tolerance (rtol/atol) sensitivity study</li>
 </ul>
+<p><strong>Reference:</strong> Li, C., &amp; Sprott, J. C. (2014). Multistability in the Lorenz system: A broken butterfly. <em>International Journal of Bifurcation and Chaos</em>, <em>24</em>(10), Article 1450131. https://doi.org/10.1142/S0218127414501314</p>
 <p><strong>Files:</strong> <code>case_studies/lorenz/</code></p>
 <hr />
 <h3 id="pendulum"><a href="../pendulum/">Pendulum</a></h3>
@@ -2246,83 +2249,63 @@
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Multiple parameter cases</li>
-<li>Bifurcation analysis</li>
-<li>Grid-based sampling comparison</li>
+<li>Fixed point and limit cycle attractors</li>
+<li>Supervised classification approach</li>
 </ul>
+<p><strong>Reference:</strong> Menck, P., Heitzig, J., Marwan, N., &amp; Kurths, J. (2013). How basin stability complements the linear-stability paradigm. <em>Nature Physics</em>, <em>9</em>, 89–92. https://doi.org/10.1038/nphys2516</p>
 <p><strong>Files:</strong> <code>case_studies/pendulum/</code></p>
 <hr />
 <h3 id="friction-system"><a href="../friction/">Friction System</a></h3>
 <p>A mechanical system with friction effects.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li>Non-smooth dynamics</li>
-<li>Velocity-dependent friction</li>
-<li>Parameter variation studies</li>
+<li>Fixed point and limit cycle attractors</li>
+<li>Non-smooth dynamics with friction</li>
+<li>Driving velocity (v_d) parameter sweep study</li>
 </ul>
+<p><strong>Reference:</strong> Stender, M., Hoffmann, N., &amp; Papangelo, A. (2020). The basin stability of bi-stable friction-excited oscillators. <em>Lubricants</em>, <em>8</em>(12), Article 105. https://doi.org/10.3390/lubricants8120105</p>
 <p><strong>Files:</strong> <code>case_studies/friction/</code></p>
+<hr />
+<h3 id="rossler-network"><a href="rossler.md">Rössler Network</a></h3>
+<p>A network of coupled Rössler oscillators exhibiting synchronization dynamics.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Coupled oscillator dynamics</li>
+<li>Synchronization analysis</li>
+<li>Network-based basin stability</li>
+</ul>
+<p><strong>Reference:</strong> Menck, P., Heitzig, J., Marwan, N., &amp; Kurths, J. (2013). How basin stability complements the linear-stability paradigm. <em>Nature Physics</em>, <em>9</em>, 89–92. https://doi.org/10.1038/nphys2516</p>
+<p><strong>Files:</strong> <code>case_studies/rossler/</code></p>
 <h2 id="running-case-studies">Running Case Studies</h2>
 <p>All case studies can be run from the project root:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Navigate to project root</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/pyBasinWorkspace
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Run a specific case study</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>case_studies/duffing_oscillator/main_supervised.py
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>case_studies/lorenz/main_lorenz.py
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>case_studies/pendulum/main_case1.py
-</code></pre></div>
-<h2 id="comparison-with-matlab">Comparison with MATLAB</h2>
-<p>Each case study includes validation against the MATLAB implementation:</p>
-<table>
-<thead>
-<tr>
-<th>Case Study</th>
-<th>MATLAB BS</th>
-<th>Python BS</th>
-<th>Difference</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Duffing (Case 1)</td>
-<td>TBD</td>
-<td>TBD</td>
-<td>TBD</td>
-</tr>
-<tr>
-<td>Lorenz (σ=10)</td>
-<td>TBD</td>
-<td>TBD</td>
-<td>TBD</td>
-</tr>
-<tr>
-<td>Pendulum (Case 1)</td>
-<td>TBD</td>
-<td>TBD</td>
-<td>TBD</td>
-</tr>
-<tr>
-<td>Friction (v=1)</td>
-<td>TBD</td>
-<td>TBD</td>
-<td>TBD</td>
-</tr>
-</tbody>
-</table>
-<p><em>Values to be filled after validation runs</em></p>
-<h2 id="generated-artifacts">Generated Artifacts</h2>
-<p>All case studies save their outputs to the <code>artifacts/</code> directory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>artifacts/
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── figures/          # Generated plots
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── results/          # Numerical results (JSON, CSV)
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>└── reports/          # Summary reports
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.duffing_oscillator.main_supervised
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.lorenz.main_lorenz
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.pendulum.main_case1
 </code></pre></div>
 <h2 id="integration-tests">Integration Tests</h2>
 <p>The case studies are also converted into integration tests that automatically validate correctness:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Run all integration tests</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pytest<span class="w"> </span>tests/integration/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Run all integration tests</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Run specific case study test</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/test_duffing.py
+</code></pre></div>
+<h2 id="generated-artifacts">Generated Artifacts</h2>
+<p>Case studies save their outputs to:</p>
+<ul>
+<li><strong>Figures</strong>: <code>docs/assets/</code> — Generated plots and visualizations</li>
+<li><strong>Results</strong>: <code>artifacts/results/</code> — Numerical results (JSON, CSV)</li>
+</ul>
+<p>To generate new artifacts, run the integration tests with the <code>--generate-artifacts</code> flag:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Generate artifacts for all case studies</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/<span class="w"> </span>--generate-artifacts
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Run specific case study test</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>pytest<span class="w"> </span>tests/integration/test_duffing.py
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Generate artifacts for a specific case study</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/test_duffing.py<span class="w"> </span>--generate-artifacts
 </code></pre></div>
 <h2 id="contributing-new-case-studies">Contributing New Case Studies</h2>
 <p>To add a new case study:</p>
