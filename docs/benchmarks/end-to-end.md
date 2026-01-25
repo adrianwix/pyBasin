@@ -1,29 +1,51 @@
 # End-to-End Performance
 
-!!! note "Documentation in Progress"
-This page is under construction.
+This benchmark compares the full basin stability estimation pipeline across MATLAB and Python implementations.
 
 ## Methodology
 
-Compare full basin stability estimation times:
+All implementations use the same:
 
-- Same ODE system (Pendulum)
-- Same parameters (t_span, tolerances)
-- Vary sample sizes: 10,000 / 50,000 / 100,000
+- **ODE system**: Damped driven pendulum
+- **Parameters**: `α=0.1`, `T=0.5`, `K=1.0`
+- **Integration**: `t_span=(0, 1000)`, `rtol=1e-8`, `atol=1e-6`
+- **Sample sizes**: 100 to 100,000 initial conditions
 
 ## Implementations Compared
 
-- MATLAB bSTAB-M (CPU)
-- pyBasin + JaxSolver (CPU)
-- pyBasin + JaxSolver (CUDA GPU)
+| Implementation | Platform | Parallelization     |
+| -------------- | -------- | ------------------- |
+| MATLAB bSTAB-M | CPU      | MATLAB `parfor`     |
+| pyBasin + JAX  | CPU      | Vectorized (`vmap`) |
+| pyBasin + JAX  | CUDA GPU | Vectorized (`vmap`) |
 
 ## Results
 
-| Samples | MATLAB CPU | pyBasin CPU | pyBasin GPU | GPU Speedup |
-| ------- | ---------- | ----------- | ----------- | ----------- |
-| 10,000  | ~11.3s     | ~9.3s       | ~11.7s      | 0.97x       |
-| 100,000 | ~122s      | ~56s        | ~11.7s      | **10.4x**   |
+### Performance Comparison
 
-## Key Finding
+{{ benchmark_comparison_table() }}
 
-GPU time is nearly constant regardless of sample size due to parallelization.
+### Scaling Analysis
+
+{{ benchmark_scaling_analysis() }}
+
+### Comparison Plot
+
+![Benchmark Comparison](../assets/benchmarks/end_to_end/end_to_end_comparison.png)
+
+### Scaling Plot (Log-Log)
+
+![Scaling Analysis](../assets/benchmarks/end_to_end/end_to_end_scaling.png)
+
+## Key Findings
+
+1. **Python CPU** becomes **3-5× faster** than MATLAB for N > 5,000 (JAX JIT compilation overhead dominates at small N)
+2. **Python CUDA** achieves near-constant time (~12s) regardless of N due to GPU parallelization
+3. At N=100,000: GPU is **~25× faster** than MATLAB (as long as data fits in GPU memory)
+
+## Hardware
+
+Benchmarks run on:
+
+- **CPU**: Intel Core Ultra 9 275HX
+- **GPU**: NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB VRAM)

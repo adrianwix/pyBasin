@@ -6,6 +6,7 @@
 - **DO NOT** create new files unless explicitly requested by the user
 - **DO NOT** modify existing files unless explicitly requested by the user
 - **DO NOT** modify pyrightconfig.json under any circumstances
+- **DO NOT** manually edit pyproject.toml to add dependencies - always use `uv add` instead
 - **DO NOT** suggest changes proactively - wait for the user to ask
 - When the user asks a question, provide information and explanations only
 - Only take action (create/edit/delete files) when the user explicitly asks you to do so
@@ -13,7 +14,8 @@
 - Always use `uv run python` to run Python scripts (not `python` or `python3`)
 - Never created .md or README files unless explicitly requested by the user
 - Do not leave comments in the code explaining what you did. That's understandable from the code changes themselves
-- The command to install dependencies is uv add NOT uv pip install
+- Use `uv add <package>` to install dependencies (NOT `uv pip install`)
+- Use `uv add --dev <package>` to install dev dependencies
 
 ## Typing Guidelines
 

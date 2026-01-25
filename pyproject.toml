@@ -133,5 +133,6 @@ ignore_names = ["render", "layout"]
 [dependency-groups]
 dev = [
     "pyright>=1.1.408",
+    "pytest-benchmark>=5.2.3",
     "vulture>=2.14",
 ]

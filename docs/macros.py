@@ -332,6 +332,103 @@ def load_snippet(spec: str) -> str:
         return f'!!! error "Error"\n    Failed to load snippet: {e}'
 
 
+BENCHMARK_RESULTS_DIR = Path(__file__).parent.parent / "benchmarks" / "end_to_end" / "results"
+
+
+def benchmark_comparison_table() -> str:
+    """Render benchmark comparison table from CSV data.
+
+    :return: Markdown table string.
+    """
+    csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
+
+    if not csv_path.exists():
+        return '!!! warning "Missing Data"\n    Benchmark data not found. Run `uv run python benchmarks/end_to_end/compare_matlab_vs_python.py` to generate.'
+
+    import pandas as pd
+
+    df = pd.read_csv(csv_path)
+
+    n_values = sorted(df["N"].unique())
+
+    table_lines: list[str] = [
+        "| N | MATLAB (s) | Python CPU (s) | Python CUDA (s) | CPU vs MATLAB | GPU vs MATLAB |",
+        "|--:|----------:|---------------:|----------------:|--------------:|--------------:|",
+    ]
+
+    for n in n_values:
+        n_data = df[df["N"] == n]
+
+        matlab_row = n_data[n_data["implementation"] == "MATLAB"]
+        cpu_row = n_data[n_data["implementation"] == "Python CPU"]
+        cuda_row = n_data[n_data["implementation"] == "Python CUDA"]
+
+        matlab_time = matlab_row["mean_time"].values[0] if len(matlab_row) > 0 else float("nan")
+        cpu_time = cpu_row["mean_time"].values[0] if len(cpu_row) > 0 else float("nan")
+        cuda_time = cuda_row["mean_time"].values[0] if len(cuda_row) > 0 else float("nan")
+
+        cpu_speedup = matlab_time / cpu_time if cpu_time > 0 else float("nan")
+        gpu_speedup = matlab_time / cuda_time if cuda_time > 0 else float("nan")
+
+        table_lines.append(
+            f"| {n:,} | {matlab_time:.2f} | {cpu_time:.2f} | {cuda_time:.2f} | {cpu_speedup:.1f}x | {gpu_speedup:.1f}x |"
+        )
+
+    return "\n".join(table_lines)
+
+
+def benchmark_scaling_analysis() -> str:
+    """Render scaling analysis summary from benchmark data.
+
+    :return: Markdown summary string.
+    """
+    import pandas as pd
+    from scipy import stats as scipy_stats
+
+    csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
+
+    if not csv_path.exists():
+        return '!!! warning "Missing Data"\n    Benchmark data not found.'
+
+    df = pd.read_csv(csv_path)
+
+    implementations = ["MATLAB", "Python CPU", "Python CUDA"]
+    results: list[str] = [
+        "| Implementation | Scaling | Exponent α | R² |",
+        "|----------------|---------|------------|-----|",
+    ]
+
+    for impl in implementations:
+        impl_data = df[df["implementation"] == impl].sort_values("N")
+        if len(impl_data) < 3:
+            continue
+
+        import numpy as np
+
+        n_vals = impl_data["N"].values.astype(float)
+        t_vals = impl_data["mean_time"].values
+
+        log_n = np.log(n_vals)
+        log_t = np.log(t_vals)
+        slope, intercept, r_value, p_value, std_err = scipy_stats.linregress(log_n, log_t)
+        alpha = slope
+        alpha_ci = 1.96 * std_err
+        r2 = r_value**2
+
+        if alpha < 0.15:
+            complexity = "O(1)"
+        elif abs(alpha - 1.0) < 0.15:
+            complexity = "O(N)"
+        elif abs(alpha - 2.0) < 0.15:
+            complexity = "O(N²)"
+        else:
+            complexity = f"O(N^{alpha:.2f})"
+
+        results.append(f"| {impl} | {complexity} | {alpha:.2f} ± {alpha_ci:.2f} | {r2:.3f} |")
+
+    return "\n".join(results)
+
+
 def define_env(env: Any) -> None:
     """Define macros for mkdocs-macros-plugin.
 
@@ -339,3 +436,5 @@ def define_env(env: Any) -> None:
     """
     env.macro(comparison_table, "comparison_table")
     env.macro(load_snippet, "load_snippet")
+    env.macro(benchmark_comparison_table, "benchmark_comparison_table")
+    env.macro(benchmark_scaling_analysis, "benchmark_scaling_analysis")

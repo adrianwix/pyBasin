@@ -81,12 +81,12 @@ results_*/
 **/cache/
 **/results/
 **/results_*/
-!benchmarks/time_integrations/results/
 execution_time.txt
 *.png
 *.jpg
 *.pdf
 lorenz_as_sigma.png
+.benchmarks
 
 # MkDocs
 site/
@@ -102,3 +102,6 @@ dmypy.json
 
 # Keep important files
 !artifacts/.gitkeep
+!benchmarks/end_to_end/results/
+!benchmarks/end_to_end/results/*.png
+!benchmarks/time_integrations/results/
