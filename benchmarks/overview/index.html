@@ -1808,17 +1808,12 @@
 
 
 <h1 id="benchmarks-overview">Benchmarks Overview</h1>
-<div class="admonition note">
-<p class="admonition-title">Documentation in Progress</p>
-</div>
-<p>This page is under construction.</p>
 <h2 id="purpose">Purpose</h2>
 <p>Compare pyBasin performance against MATLAB bSTAB-M and evaluate different solver and feature extraction backends.</p>
 <h2 id="test-hardware">Test Hardware</h2>
 <ul>
-<li>CPU: (specify)</li>
-<li>GPU: (specify)</li>
-<li>Memory: (specify)</li>
+<li><strong>CPU</strong>: Intel Core Ultra 9 275HX</li>
+<li><strong>GPU</strong>: NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB VRAM)</li>
 </ul>
 <h2 id="key-findings">Key Findings</h2>
 <table>
@@ -1831,24 +1826,19 @@
 </thead>
 <tbody>
 <tr>
-<td>Solver (CPU)</td>
-<td>~10-15x faster</td>
-<td>Dopri5 methods</td>
+<td>Solver (CPU, N=5k)</td>
+<td>~1.2x faster</td>
+<td>JAX/Diffrax Dopri5</td>
 </tr>
 <tr>
-<td>Solver (GPU)</td>
-<td>~10x faster</td>
-<td>At 100k samples</td>
-</tr>
-<tr>
-<td>Feature Extraction</td>
-<td>~20x faster</td>
-<td>PyTorch vs tsfresh</td>
+<td>Solver (GPU, N=100k)</td>
+<td>~8.9x faster</td>
+<td>JAX/Diffrax near-constant time</td>
 </tr>
 <tr>
 <td>End-to-End (GPU, 100k)</td>
-<td>~10x faster</td>
-<td>Full BS estimation</td>
+<td>~25x faster</td>
+<td>Full BS estimation pipeline</td>
 </tr>
 </tbody>
 </table>

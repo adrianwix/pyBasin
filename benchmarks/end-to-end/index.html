@@ -1311,12 +1311,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scaling Analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison Plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling-plot-log-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scaling Plot (Log-Log)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-finding" class="md-nav__link">
+  <a href="#key-findings" class="md-nav__link">
     <span class="md-ellipsis">
-      Key Finding
+      Key Findings
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware
     </span>
   </a>
   
@@ -1769,12 +1820,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scaling Analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison Plot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling-plot-log-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scaling Plot (Log-Log)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-finding" class="md-nav__link">
+  <a href="#key-findings" class="md-nav__link">
     <span class="md-ellipsis">
-      Key Finding
+      Key Findings
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware
     </span>
   </a>
   
@@ -1808,53 +1910,185 @@
 
 
 <h1 id="end-to-end-performance">End-to-End Performance</h1>
-<div class="admonition note">
-<p class="admonition-title">Documentation in Progress</p>
-</div>
-<p>This page is under construction.</p>
+<p>This benchmark compares the full basin stability estimation pipeline across MATLAB and Python implementations.</p>
 <h2 id="methodology">Methodology</h2>
-<p>Compare full basin stability estimation times:</p>
+<p>All implementations use the same:</p>
 <ul>
-<li>Same ODE system (Pendulum)</li>
-<li>Same parameters (t_span, tolerances)</li>
-<li>Vary sample sizes: 10,000 / 50,000 / 100,000</li>
+<li><strong>ODE system</strong>: Damped driven pendulum</li>
+<li><strong>Parameters</strong>: <code>α=0.1</code>, <code>T=0.5</code>, <code>K=1.0</code></li>
+<li><strong>Integration</strong>: <code>t_span=(0, 1000)</code>, <code>rtol=1e-8</code>, <code>atol=1e-6</code></li>
+<li><strong>Sample sizes</strong>: 100 to 100,000 initial conditions</li>
 </ul>
 <h2 id="implementations-compared">Implementations Compared</h2>
-<ul>
-<li>MATLAB bSTAB-M (CPU)</li>
-<li>pyBasin + JaxSolver (CPU)</li>
-<li>pyBasin + JaxSolver (CUDA GPU)</li>
-</ul>
-<h2 id="results">Results</h2>
 <table>
 <thead>
 <tr>
-<th>Samples</th>
-<th>MATLAB CPU</th>
-<th>pyBasin CPU</th>
-<th>pyBasin GPU</th>
-<th>GPU Speedup</th>
+<th>Implementation</th>
+<th>Platform</th>
+<th>Parallelization</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>10,000</td>
-<td>~11.3s</td>
-<td>~9.3s</td>
-<td>~11.7s</td>
-<td>0.97x</td>
+<td>MATLAB bSTAB-M</td>
+<td>CPU</td>
+<td>MATLAB <code>parfor</code></td>
 </tr>
 <tr>
-<td>100,000</td>
-<td>~122s</td>
-<td>~56s</td>
-<td>~11.7s</td>
-<td><strong>10.4x</strong></td>
+<td>pyBasin + JAX</td>
+<td>CPU</td>
+<td>Vectorized (<code>vmap</code>)</td>
+</tr>
+<tr>
+<td>pyBasin + JAX</td>
+<td>CUDA GPU</td>
+<td>Vectorized (<code>vmap</code>)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="key-finding">Key Finding</h2>
-<p>GPU time is nearly constant regardless of sample size due to parallelization.</p>
+<h2 id="results">Results</h2>
+<h3 id="performance-comparison">Performance Comparison</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">N</th>
+<th style="text-align: right;">MATLAB (s)</th>
+<th style="text-align: right;">Python CPU (s)</th>
+<th style="text-align: right;">Python CUDA (s)</th>
+<th style="text-align: right;">CPU vs MATLAB</th>
+<th style="text-align: right;">GPU vs MATLAB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">12.86</td>
+<td style="text-align: right;">0.6x</td>
+<td style="text-align: right;">0.1x</td>
+</tr>
+<tr>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">1.02</td>
+<td style="text-align: right;">1.50</td>
+<td style="text-align: right;">12.87</td>
+<td style="text-align: right;">0.7x</td>
+<td style="text-align: right;">0.1x</td>
+</tr>
+<tr>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">1.90</td>
+<td style="text-align: right;">1.62</td>
+<td style="text-align: right;">12.98</td>
+<td style="text-align: right;">1.2x</td>
+<td style="text-align: right;">0.1x</td>
+</tr>
+<tr>
+<td style="text-align: right;">1,000</td>
+<td style="text-align: right;">3.27</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">12.05</td>
+<td style="text-align: right;">1.6x</td>
+<td style="text-align: right;">0.3x</td>
+</tr>
+<tr>
+<td style="text-align: right;">2,000</td>
+<td style="text-align: right;">6.29</td>
+<td style="text-align: right;">2.72</td>
+<td style="text-align: right;">12.32</td>
+<td style="text-align: right;">2.3x</td>
+<td style="text-align: right;">0.5x</td>
+</tr>
+<tr>
+<td style="text-align: right;">5,000</td>
+<td style="text-align: right;">15.90</td>
+<td style="text-align: right;">5.73</td>
+<td style="text-align: right;">12.82</td>
+<td style="text-align: right;">2.8x</td>
+<td style="text-align: right;">1.2x</td>
+</tr>
+<tr>
+<td style="text-align: right;">10,000</td>
+<td style="text-align: right;">31.01</td>
+<td style="text-align: right;">10.52</td>
+<td style="text-align: right;">12.64</td>
+<td style="text-align: right;">2.9x</td>
+<td style="text-align: right;">2.5x</td>
+</tr>
+<tr>
+<td style="text-align: right;">20,000</td>
+<td style="text-align: right;">62.73</td>
+<td style="text-align: right;">20.94</td>
+<td style="text-align: right;">12.27</td>
+<td style="text-align: right;">3.0x</td>
+<td style="text-align: right;">5.1x</td>
+</tr>
+<tr>
+<td style="text-align: right;">50,000</td>
+<td style="text-align: right;">153.04</td>
+<td style="text-align: right;">30.07</td>
+<td style="text-align: right;">12.40</td>
+<td style="text-align: right;">5.1x</td>
+<td style="text-align: right;">12.3x</td>
+</tr>
+<tr>
+<td style="text-align: right;">100,000</td>
+<td style="text-align: right;">309.07</td>
+<td style="text-align: right;">62.94</td>
+<td style="text-align: right;">12.57</td>
+<td style="text-align: right;">4.9x</td>
+<td style="text-align: right;">24.6x</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scaling-analysis">Scaling Analysis</h3>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>Scaling</th>
+<th>Exponent α</th>
+<th>R²</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MATLAB</td>
+<td>O(N)</td>
+<td>0.90 ± 0.06</td>
+<td>0.992</td>
+</tr>
+<tr>
+<td>Python CPU</td>
+<td>O(N^0.59)</td>
+<td>0.59 ± 0.10</td>
+<td>0.942</td>
+</tr>
+<tr>
+<td>Python CUDA</td>
+<td>O(1)</td>
+<td>-0.00 ± 0.01</td>
+<td>0.168</td>
+</tr>
+</tbody>
+</table>
+<h3 id="comparison-plot">Comparison Plot</h3>
+<p><img alt="Benchmark Comparison" src="../../assets/benchmarks/end_to_end/end_to_end_comparison.png" /></p>
+<h3 id="scaling-plot-log-log">Scaling Plot (Log-Log)</h3>
+<p><img alt="Scaling Analysis" src="../../assets/benchmarks/end_to_end/end_to_end_scaling.png" /></p>
+<h2 id="key-findings">Key Findings</h2>
+<ol>
+<li><strong>Python CPU</strong> becomes <strong>3-5× faster</strong> than MATLAB for N &gt; 5,000</li>
+<li><strong>Python CUDA</strong> achieves near-constant time (~12s) regardless of N due to GPU parallelization</li>
+<li>At N=100,000: GPU is <strong>~25× faster</strong> than MATLAB (as long as data fits in GPU memory)</li>
+</ol>
+<h2 id="hardware">Hardware</h2>
+<p>Benchmarks run on:</p>
+<ul>
+<li><strong>CPU</strong>: Intel Core Ultra 9 275HX</li>
+<li><strong>GPU</strong>: NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB VRAM)</li>
+</ul>
 
 
 
