@@ -1,26 +1,21 @@
 # Benchmarks Overview
 
-!!! note "Documentation in Progress"
-This page is under construction.
-
 ## Purpose
 
 Compare pyBasin performance against MATLAB bSTAB-M and evaluate different solver and feature extraction backends.
 
 ## Test Hardware
 
-- CPU: (specify)
-- GPU: (specify)
-- Memory: (specify)
+- **CPU**: Intel Core Ultra 9 275HX
+- **GPU**: NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB VRAM)
 
 ## Key Findings
 
-| Benchmark              | pyBasin vs MATLAB | Notes              |
-| ---------------------- | ----------------- | ------------------ |
-| Solver (CPU)           | ~10-15x faster    | Dopri5 methods     |
-| Solver (GPU)           | ~10x faster       | At 100k samples    |
-| Feature Extraction     | ~20x faster       | PyTorch vs tsfresh |
-| End-to-End (GPU, 100k) | ~10x faster       | Full BS estimation |
+| Benchmark              | pyBasin vs MATLAB | Notes                          |
+| ---------------------- | ----------------- | ------------------------------ |
+| Solver (CPU, N=5k)     | ~1.2x faster      | JAX/Diffrax Dopri5             |
+| Solver (GPU, N=100k)   | ~8.9x faster      | JAX/Diffrax near-constant time |
+| End-to-End (GPU, 100k) | ~25x faster       | Full BS estimation pipeline    |
 
 ## Detailed Results
 

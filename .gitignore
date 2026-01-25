@@ -104,4 +104,8 @@ dmypy.json
 !artifacts/.gitkeep
 !benchmarks/end_to_end/results/
 !benchmarks/end_to_end/results/*.png
+!benchmarks/solver_comparison/results/
+!benchmarks/solver_comparison/results/*.png
 !benchmarks/time_integrations/results/
+!docs/assets/**/*.jpg
+!docs/assets/**/*.png

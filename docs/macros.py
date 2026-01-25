@@ -333,6 +333,98 @@ def load_snippet(spec: str) -> str:
 
 
 BENCHMARK_RESULTS_DIR = Path(__file__).parent.parent / "benchmarks" / "end_to_end" / "results"
+SOLVER_COMPARISON_RESULTS_DIR = (
+    Path(__file__).parent.parent / "benchmarks" / "solver_comparison" / "results"
+)
+
+
+def solver_comparison_table() -> str:
+    """Render solver comparison table from CSV data.
+
+    :return: Markdown table string.
+    """
+    csv_path = SOLVER_COMPARISON_RESULTS_DIR / "solver_comparison.csv"
+
+    if not csv_path.exists():
+        return '!!! warning "Missing Data"\n    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_matlab_vs_python.py` to generate.'
+
+    import pandas as pd
+
+    df = pd.read_csv(csv_path)
+
+    n_values = sorted(df["N"].unique())
+    sections: list[str] = []
+
+    for n in n_values:
+        n_data = df[df["N"] == n].sort_values("mean_time")
+        matlab_row = n_data[n_data["solver"] == "MATLAB ode45"]
+        matlab_time = matlab_row["mean_time"].values[0] if len(matlab_row) > 0 else None
+
+        table_lines: list[str] = [
+            f"### N = {n:,}",
+            "",
+            "| Solver | Device | Time (s) | Std Dev | vs MATLAB |",
+            "|--------|--------|----------:|--------:|----------:|",
+        ]
+
+        for _, row in n_data.iterrows():
+            if matlab_time is not None:
+                speedup = matlab_time / row["mean_time"]
+                speedup_str = f"{speedup:.2f}x"
+            else:
+                speedup_str = "-"
+            table_lines.append(
+                f"| {row['solver']} | {row['device'].upper()} | {row['mean_time']:.2f} | ±{row['std_time']:.2f} | {speedup_str} |"
+            )
+
+        sections.append("\n".join(table_lines))
+
+    return "\n\n".join(sections)
+
+
+def solver_matlab_speedup_table() -> str:
+    """Render speedup vs MATLAB table from CSV data.
+
+    :return: Markdown table string.
+    """
+    csv_path = SOLVER_COMPARISON_RESULTS_DIR / "solver_comparison.csv"
+
+    if not csv_path.exists():
+        return '!!! warning "Missing Data"\n    Solver comparison data not found.'
+
+    import pandas as pd
+
+    df = pd.read_csv(csv_path)
+
+    n_values = sorted(df["N"].unique())
+
+    table_lines: list[str] = [
+        "| N | Solver | Device | Time (s) | vs MATLAB |",
+        "|--:|--------|--------|----------:|----------:|",
+    ]
+
+    for n in n_values:
+        n_data = df[df["N"] == n]
+        matlab_row = n_data[n_data["solver"] == "MATLAB ode45"]
+
+        if matlab_row.empty:
+            continue
+
+        matlab_time = matlab_row["mean_time"].values[0]
+
+        for _, row in (
+            n_data[n_data["solver"] != "MATLAB ode45"].sort_values("mean_time").iterrows()
+        ):
+            speedup = matlab_time / row["mean_time"]
+            direction = "faster" if speedup > 1 else "slower"
+            speedup_str = f"{speedup:.2f}x {direction}"
+            table_lines.append(
+                f"| {n:,} | {row['solver']} | {row['device'].upper()} | {row['mean_time']:.2f} | {speedup_str} |"
+            )
+
+        table_lines.append(f"| {n:,} | MATLAB ode45 | CPU | {matlab_time:.2f} | *baseline* |")
+
+    return "\n".join(table_lines)
 
 
 def benchmark_comparison_table() -> str:
@@ -438,3 +530,5 @@ def define_env(env: Any) -> None:
     env.macro(load_snippet, "load_snippet")
     env.macro(benchmark_comparison_table, "benchmark_comparison_table")
     env.macro(benchmark_scaling_analysis, "benchmark_scaling_analysis")
+    env.macro(solver_comparison_table, "solver_comparison_table")
+    env.macro(solver_matlab_speedup_table, "solver_matlab_speedup_table")

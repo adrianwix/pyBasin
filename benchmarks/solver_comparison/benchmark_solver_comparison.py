@@ -1,0 +1,294 @@
+# pyright: basic
+# pyright: reportReturnType=false
+# pyright: reportArgumentType=false
+"""
+Pytest-benchmark comparing different ODE solver libraries for pendulum integration.
+
+Benchmarks ONLY the raw solver libraries (no pybasin abstractions):
+- JAX/Diffrax (Dopri5) - CPU and CUDA
+- torchdiffeq (dopri5) - CPU and CUDA
+- torchode (dopri5) - CUDA only (no CPU support)
+- scipy (DOP853) - CPU only
+
+Hardware:
+    CPU: Intel(R) Core(TM) Ultra 9 275HX
+    GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+
+Run with:
+    uv run pytest benchmarks/solver_comparison/benchmark_solver_comparison.py --benchmark-only
+    uv run pytest benchmarks/solver_comparison/benchmark_solver_comparison.py --benchmark-only --benchmark-json=benchmarks/solver_comparison/results/benchmark_results.json
+
+Compare results:
+    uv run pytest-benchmark compare
+"""
+
+# Benchmark settings (5 rounds)
+BENCHMARK_ROUNDS = 5
+BENCHMARK_WARMUP_ROUNDS = 1
+
+
+import logging
+from typing import Any
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+import pytest
+import torch
+import torchode as to
+from diffrax import Dopri5, ODETerm, PIDController, SaveAt, diffeqsolve
+from scipy.integrate import solve_ivp
+from sklearn.utils.parallel import Parallel, delayed
+from torchdiffeq import odeint
+
+logging.getLogger("pybasin").setLevel(logging.WARNING)
+logging.getLogger("jax").setLevel(logging.WARNING)
+
+# Benchmark configuration
+N_VALUES = [5_000, 10_000, 100_000]
+N_VALUES_SCIPY = [5_000, 10_000]  # Skip 100k for scipy to avoid memory issues
+N_VALUES_TORCHODE = [
+    5_000,
+    10_000,
+]  # Skip 100k - torchode dense output uses sequential interpolation
+
+# ODE parameters (same for all solvers)
+ALPHA = 0.1
+T = 0.5
+K = 1.0
+
+# Integration settings
+TIME_SPAN = (0.0, 1000.0)
+N_STEPS = 1000
+RTOL = 1e-8
+ATOL = 1e-6
+
+# Sampling region
+MIN_LIMITS = [-np.pi + np.arcsin(T / K), -10.0]
+MAX_LIMITS = [np.pi + np.arcsin(T / K), 10.0]
+
+
+# --- ODE definitions for each library ---
+
+
+def ode_jax(t: jax.Array, y: jax.Array, args: None) -> jax.Array:
+    """JAX/Diffrax pendulum ODE."""
+    theta, omega = y[0], y[1]
+    dtheta = omega
+    domega = -ALPHA * omega + T - K * jnp.sin(theta)
+    return jnp.array([dtheta, domega])
+
+
+def ode_torch(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    """PyTorch pendulum ODE - batched (used by torchdiffeq and torchode)."""
+    theta = y[..., 0]
+    omega = y[..., 1]
+    dtheta = omega
+    domega = -ALPHA * omega + T - K * torch.sin(theta)
+    return torch.stack([dtheta, domega], dim=-1)
+
+
+def ode_scipy(t: float, y: np.ndarray) -> np.ndarray:
+    """Scipy pendulum ODE - single trajectory."""
+    theta, omega = y
+    dtheta = omega
+    domega = -ALPHA * omega + T - K * np.sin(theta)
+    return np.array([dtheta, domega])
+
+
+# --- Initial conditions generation ---
+
+
+def generate_y0_numpy(n: int) -> np.ndarray:
+    """Generate initial conditions as numpy array."""
+    y0 = np.empty((n, 2), dtype=np.float64)
+    y0[:, 0] = np.random.uniform(MIN_LIMITS[0], MAX_LIMITS[0], n)
+    y0[:, 1] = np.random.uniform(MIN_LIMITS[1], MAX_LIMITS[1], n)
+    return y0
+
+
+def generate_y0_torch(n: int, device: str) -> torch.Tensor:
+    """Generate initial conditions as torch tensor."""
+    y0 = torch.empty((n, 2), dtype=torch.float64, device=device)
+    y0[:, 0].uniform_(MIN_LIMITS[0], MAX_LIMITS[0])
+    y0[:, 1].uniform_(MIN_LIMITS[1], MAX_LIMITS[1])
+    return y0
+
+
+# --- JAX/Diffrax (Dopri5) ---
+
+
+def run_jax_diffrax(y0_jax: jax.Array, device: str) -> jax.Array:
+    jax_device = jax.devices("gpu")[0] if device == "cuda" else jax.devices("cpu")[0]
+
+    t_eval = jnp.linspace(TIME_SPAN[0], TIME_SPAN[1], N_STEPS)
+    t_eval = jax.device_put(t_eval, jax_device)
+
+    term = ODETerm(ode_jax)
+    solver = Dopri5()
+    stepsize_controller = PIDController(rtol=RTOL, atol=ATOL)
+    saveat = SaveAt(ts=t_eval)
+
+    @jax.jit
+    def solve_single(y0_single: jax.Array) -> jax.Array:
+        sol = diffeqsolve(
+            term,
+            solver,
+            t0=TIME_SPAN[0],
+            t1=TIME_SPAN[1],
+            dt0=0.1,
+            y0=y0_single,
+            stepsize_controller=stepsize_controller,
+            saveat=saveat,
+            max_steps=16**5,
+        )
+        return sol.ys
+
+    solve_batch = jax.vmap(solve_single)
+    y_result = solve_batch(y0_jax)
+    y_result.block_until_ready()
+
+    return y_result
+
+
+# --- torchdiffeq (dopri5) ---
+
+
+def run_torchdiffeq(y0: torch.Tensor, device: str) -> torch.Tensor:
+    t_eval = torch.linspace(TIME_SPAN[0], TIME_SPAN[1], N_STEPS, device=device, dtype=torch.float64)
+
+    y_result = odeint(ode_torch, y0, t_eval, method="dopri5", rtol=RTOL, atol=ATOL)
+
+    if device == "cuda":
+        torch.cuda.synchronize()
+
+    return y_result
+
+
+# --- torchode (dopri5) - CUDA only ---
+
+
+def run_torchode(y0: torch.Tensor, device: str) -> torch.Tensor:
+    n = y0.shape[0]
+    t_eval = torch.linspace(TIME_SPAN[0], TIME_SPAN[1], N_STEPS, device=device, dtype=torch.float64)
+    t_eval_batch = t_eval.unsqueeze(0).expand(n, -1)
+
+    term = to.ODETerm(ode_torch)
+    step_method = to.Dopri5(term=term)
+    step_size_controller = to.PIDController(
+        atol=ATOL, rtol=RTOL, pcoeff=0.0, icoeff=1.0, dcoeff=0.0, term=term
+    )
+    adjoint = to.AutoDiffAdjoint(step_method, step_size_controller)
+
+    problem = to.InitialValueProblem(y0=y0, t_eval=t_eval_batch)
+    sol = adjoint.solve(problem)
+
+    if device == "cuda":
+        torch.cuda.synchronize()
+
+    return sol.ys
+
+
+# --- scipy (RK45) - CPU only, parallel ---
+
+
+def run_scipy(y0: np.ndarray) -> np.ndarray:
+    t_eval = np.linspace(TIME_SPAN[0], TIME_SPAN[1], N_STEPS)
+
+    def solve_single(y0_single: np.ndarray) -> np.ndarray:
+        sol = solve_ivp(
+            ode_scipy,
+            TIME_SPAN,
+            y0_single,
+            method="RK45",
+            t_eval=t_eval,
+            rtol=RTOL,
+            atol=ATOL,
+        )
+        return sol.y.T
+
+    n = y0.shape[0]
+    print(f"Running scipy with {n} trajectories using 8 workers...")
+    results = Parallel(n_jobs=8, backend="loky", verbose=10, batch_size=4)(
+        delayed(solve_single)(y0[i])  # type: ignore[misc]
+        for i in range(n)
+    )
+
+    return np.stack(results, axis=1)  # type: ignore[arg-type]
+
+
+# --- Pytest Benchmark Tests ---
+
+
+@pytest.mark.parametrize("n", N_VALUES)
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_benchmark_jax_diffrax(benchmark: Any, n: int, device: str) -> None:
+    if device == "cuda" and not jax.devices("gpu"):
+        pytest.skip("CUDA not available for JAX")
+
+    print(f"\nRunning: JAX/Diffrax, n={n}, device={device}")
+    jax_device = jax.devices("gpu")[0] if device == "cuda" else jax.devices("cpu")[0]
+    y0_np = generate_y0_numpy(n)
+    y0_jax = jax.device_put(jnp.array(y0_np), jax_device)
+
+    benchmark.pedantic(
+        run_jax_diffrax,
+        args=(y0_jax, device),
+        rounds=BENCHMARK_ROUNDS,
+        warmup_rounds=BENCHMARK_WARMUP_ROUNDS,
+    )
+    result = run_jax_diffrax(y0_jax, device)
+    assert result is not None
+    assert result.shape[1] == N_STEPS
+
+
+@pytest.mark.parametrize("n", N_VALUES)
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_benchmark_torchdiffeq(benchmark: Any, n: int, device: str) -> None:
+    if device == "cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA not available")
+
+    print(f"\nRunning: torchdiffeq, n={n}, device={device}")
+    y0 = generate_y0_torch(n, device)
+
+    benchmark.pedantic(
+        run_torchdiffeq,
+        args=(y0, device),
+        rounds=BENCHMARK_ROUNDS,
+        warmup_rounds=0,
+    )
+    result = run_torchdiffeq(y0, device)
+    assert result is not None
+    assert result.shape[0] == N_STEPS
+
+
+@pytest.mark.parametrize("n", N_VALUES_TORCHODE)
+def test_benchmark_torchode_cuda(benchmark: Any, n: int) -> None:
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available")
+
+    print(f"\nRunning: torchode, n={n}, device=cuda")
+    y0 = generate_y0_torch(n, "cuda")
+
+    benchmark.pedantic(
+        run_torchode,
+        args=(y0, "cuda"),
+        rounds=BENCHMARK_ROUNDS,
+        warmup_rounds=0,
+    )
+    result = run_torchode(y0, "cuda")
+    assert result is not None
+    assert result.shape[1] == N_STEPS
+
+
+@pytest.mark.skip(reason="Scipy parallel tests crash on WSL2")
+@pytest.mark.parametrize("n", N_VALUES_SCIPY)
+@pytest.mark.parametrize("device", ["cpu"])
+def test_benchmark_scipy(benchmark: Any, n: int, device: str) -> None:
+    print(f"\nRunning: scipy (parallel), n={n}, device=cpu")
+    y0 = generate_y0_numpy(n)
+
+    benchmark.pedantic(run_scipy, args=(y0,), rounds=BENCHMARK_ROUNDS, warmup_rounds=0)
+    result = run_scipy(y0)
+    assert result is not None
+    assert result.shape[0] == N_STEPS
