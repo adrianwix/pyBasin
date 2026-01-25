@@ -39,7 +39,7 @@ All implementations use the same:
 
 ## Key Findings
 
-1. **Python CPU** becomes **3-5× faster** than MATLAB for N > 5,000 (JAX JIT compilation overhead dominates at small N)
+1. **Python CPU** becomes **3-5× faster** than MATLAB for N > 5,000
 2. **Python CUDA** achieves near-constant time (~12s) regardless of N due to GPU parallelization
 3. At N=100,000: GPU is **~25× faster** than MATLAB (as long as data fits in GPU memory)
 
