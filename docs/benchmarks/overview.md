@@ -9,11 +9,12 @@ This section documents pyBasin's performance characteristics and compares it aga
 
 ## Key Findings
 
-| Benchmark              | pyBasin vs MATLAB | Notes                          |
-| ---------------------- | ----------------- | ------------------------------ |
-| Solver (CPU, N=5k)     | ~1.2x faster      | JAX/Diffrax Dopri5             |
-| Solver (GPU, N=100k)   | ~8.9x faster      | JAX/Diffrax near-constant time |
-| End-to-End (GPU, 100k) | ~25x faster       | Full BS estimation pipeline    |
+- **GPU delivers massive speedups at scale**: At N=100k samples, pyBasin on GPU (Diffrax) is **~25× faster** than MATLAB for end-to-end basin stability estimation (12s vs 309s)
+- **Near-constant GPU time**: JAX/Diffrax on CUDA maintains ~11-12s integration time regardless of sample size, enabling large-scale studies without linear time scaling
+- **CPU competitive for smaller workloads**: pyBasin CPU (Diffrax) is **~1.2× faster** than MATLAB at N=5k and scales to **3-5× faster** at N>5k
+- **GPU overhead at small N**: For sample sizes below ~10k, CPU solvers outperform GPU due to data transfer and kernel launch overhead
+- **JAX/Diffrax is the recommended solver**: Best performance on both CPU and GPU, plus unique support for per-trajectory event-based termination (critical for unbounded systems)
+- **Integration dominates runtime**: ODE integration accounts for ~70% of total estimation time, classification ~26%, and feature extraction ~2.5%. Solver selection has the most impact on performance.
 
 ## Benchmark Pages
 
