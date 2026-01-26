@@ -1904,32 +1904,14 @@
 <li><strong>GPU</strong>: NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB VRAM)</li>
 </ul>
 <h2 id="key-findings">Key Findings</h2>
-<table>
-<thead>
-<tr>
-<th>Benchmark</th>
-<th>pyBasin vs MATLAB</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Solver (CPU, N=5k)</td>
-<td>~1.2x faster</td>
-<td>JAX/Diffrax Dopri5</td>
-</tr>
-<tr>
-<td>Solver (GPU, N=100k)</td>
-<td>~8.9x faster</td>
-<td>JAX/Diffrax near-constant time</td>
-</tr>
-<tr>
-<td>End-to-End (GPU, 100k)</td>
-<td>~25x faster</td>
-<td>Full BS estimation pipeline</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>GPU delivers massive speedups at scale</strong>: At N=100k samples, pyBasin on GPU (Diffrax) is <strong>~25× faster</strong> than MATLAB for end-to-end basin stability estimation (12s vs 309s)</li>
+<li><strong>Near-constant GPU time</strong>: JAX/Diffrax on CUDA maintains ~11-12s integration time regardless of sample size, enabling large-scale studies without linear time scaling</li>
+<li><strong>CPU competitive for smaller workloads</strong>: pyBasin CPU (Diffrax) is <strong>~1.2× faster</strong> than MATLAB at N=5k and scales to <strong>3-5× faster</strong> at N&gt;5k</li>
+<li><strong>GPU overhead at small N</strong>: For sample sizes below ~10k, CPU solvers outperform GPU due to data transfer and kernel launch overhead</li>
+<li><strong>JAX/Diffrax is the recommended solver</strong>: Best performance on both CPU and GPU, plus unique support for per-trajectory event-based termination (critical for unbounded systems)</li>
+<li><strong>Integration dominates runtime</strong>: ODE integration accounts for ~70% of total estimation time, classification ~26%, and feature extraction ~2.5%. Solver selection has the most impact on performance.</li>
+</ul>
 <h2 id="benchmark-pages">Benchmark Pages</h2>
 <h3 id="basin-stability-estimator"><a href="../basin-stability-estimator/">Basin Stability Estimator</a></h3>
 <p>Detailed breakdown of the full estimation pipeline showing how time is distributed across each step (sampling, integration, feature extraction, classification). Includes an interactive flame graph for profiling analysis.</p>

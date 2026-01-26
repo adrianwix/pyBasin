@@ -12,6 +12,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+import pandas as pd
+from scipy import stats as scipy_stats
+
 ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"
 
 Z_THRESHOLD_OK = 2.0
@@ -348,8 +352,6 @@ def solver_comparison_table() -> str:
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_matlab_vs_python.py` to generate.'
 
-    import pandas as pd
-
     df = pd.read_csv(csv_path)
 
     n_values = sorted(df["N"].unique())
@@ -391,8 +393,6 @@ def solver_matlab_speedup_table() -> str:
 
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Solver comparison data not found.'
-
-    import pandas as pd
 
     df = pd.read_csv(csv_path)
 
@@ -437,8 +437,6 @@ def benchmark_comparison_table() -> str:
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Benchmark data not found. Run `uv run python benchmarks/end_to_end/compare_matlab_vs_python.py` to generate.'
 
-    import pandas as pd
-
     df = pd.read_csv(csv_path)
 
     n_values = sorted(df["N"].unique())
@@ -474,9 +472,6 @@ def benchmark_scaling_analysis() -> str:
 
     :return: Markdown summary string.
     """
-    import pandas as pd
-    from scipy import stats as scipy_stats
-
     csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
 
     if not csv_path.exists():
@@ -494,8 +489,6 @@ def benchmark_scaling_analysis() -> str:
         impl_data = df[df["implementation"] == impl].sort_values("N")
         if len(impl_data) < 3:
             continue
-
-        import numpy as np
 
         n_vals = impl_data["N"].values.astype(float)
         t_vals = impl_data["mean_time"].values

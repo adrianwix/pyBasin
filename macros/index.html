@@ -2131,7 +2131,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=474d7353">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9fc88fbd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2166,7 +2166,7 @@ and loading code snippets from source files.
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f1f1deb8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=949f6121">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2178,7 +2178,7 @@ pyright: reportUnknownVariableType=false, reportMissingTypeArgument=false</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1c9aff20">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b189e9af">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2211,7 +2211,7 @@ from typing import Any</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=362b4d17">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6e722a02">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2229,16 +2229,20 @@ from typing import Any</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">ARTIFACTS_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"results"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span> <span class="k">as</span> <span class="n">scipy_stats</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"</div>
+<div class="clipboard-copy-txt" id="cell-3">import numpy as np
+import pandas as pd
+from scipy import stats as scipy_stats</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6c4b558a">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4dc9befb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2256,18 +2260,16 @@ from typing import Any</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">Z_THRESHOLD_OK</span> <span class="o">=</span> <span class="mf">2.0</span>
-<span class="n">Z_THRESHOLD_WARNING</span> <span class="o">=</span> <span class="mf">3.0</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">ARTIFACTS_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"results"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">Z_THRESHOLD_OK = 2.0
-Z_THRESHOLD_WARNING = 3.0</div>
+<div class="clipboard-copy-txt" id="cell-4">ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=889b7895">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=86f08c38">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2285,20 +2287,18 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_format_bs_with_se</span><span class="p">(</span><span class="n">bs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Format basin stability with standard error."""</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bs</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">Z_THRESHOLD_OK</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">Z_THRESHOLD_WARNING</span> <span class="o">=</span> <span class="mf">3.0</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">def _format_bs_with_se(bs: float, se: float) -&gt; str:
-    """Format basin stability with standard error."""
-    return f"{bs:.4f} ± {se:.4f}"</div>
+<div class="clipboard-copy-txt" id="cell-5">Z_THRESHOLD_OK = 2.0
+Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=569f7393">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=28685611">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2307,6 +2307,37 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_format_bs_with_se</span><span class="p">(</span><span class="n">bs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Format basin stability with standard error."""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bs</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6">def _format_bs_with_se(bs: float, se: float) -&gt; str:
+    """Format basin stability with standard error."""
+    return f"{bs:.4f} ± {se:.4f}"</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=edaf5e99">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2368,7 +2399,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
         <span class="k">return</span> <span class="n">_render_unsupervised_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_render_single_point_table</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">def comparison_table(case_id: str) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-7">def comparison_table(case_id: str) -&gt; str:
     """Render a comparison table from a JSON artifact.
 
     For single-point tests, renders a table with columns:
@@ -2425,7 +2456,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7f2c6081">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0b9e5497">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2433,7 +2464,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2484,7 +2515,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">def _render_paper_validation_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-8">def _render_paper_validation_table(data: dict[str, Any]) -&gt; str:
     """Render table for paper validation (statistical comparison)."""
     attractors: list[dict[str, Any]] = data.get("attractors", [])
 
@@ -2530,7 +2561,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5e6aa28b">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=dcaf31f3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2538,7 +2569,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2583,7 +2614,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span> <span class="o">+</span> <span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">def _render_single_point_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-9">def _render_single_point_table(data: dict[str, Any]) -&gt; str:
     """Render table for single-point comparison."""
     attractors: list[dict[str, Any]] = data.get("attractors", [])
 
@@ -2623,7 +2654,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b65160ff">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=74b73bf8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2631,7 +2662,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2687,7 +2718,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">summary_lines</span> <span class="o">+</span> <span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">def _render_unsupervised_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-10">def _render_unsupervised_table(data: dict[str, Any]) -&gt; str:
     """Render table for unsupervised clustering comparison."""
     attractors: list[dict[str, Any]] = data.get("attractors", [])
 
@@ -2738,7 +2769,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5cfef8b9">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2f05bd59">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2746,7 +2777,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2808,7 +2839,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10">def _render_paper_validation_sweep_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-11">def _render_paper_validation_sweep_table(data: dict[str, Any]) -&gt; str:
     """Render table for paper validation parameter sweep (statistical comparison)."""
     parameter_results: list[dict[str, Any]] = data.get("parameter_results", [])
 
@@ -2865,7 +2896,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a67c96fd">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=31bea3c2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2873,7 +2904,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2920,7 +2951,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-11">def _render_parameter_sweep_table(data: dict[str, Any]) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-12">def _render_parameter_sweep_table(data: dict[str, Any]) -&gt; str:
     """Render table for parameter sweep comparison."""
     parameter_results: list[dict[str, Any]] = data.get("parameter_results", [])
 
@@ -2962,7 +2993,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a2f04003">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=382b904f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2970,7 +3001,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3019,7 +3050,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s1">'!!! error "Error"</span><span class="se">\n</span><span class="s1">    Failed to load snippet: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">'</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-12">def load_snippet(spec: str) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-13">def load_snippet(spec: str) -&gt; str:
     """Load a code snippet from a source file.
 
     :param spec: Specification in format "path/to/file.py::function_name"
@@ -3063,7 +3094,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ee7e0008">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=70ab2a35">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3071,7 +3102,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3086,7 +3117,7 @@ Z_THRESHOLD_WARNING = 3.0</div>
     <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"benchmarks"</span> <span class="o">/</span> <span class="s2">"solver_comparison"</span> <span class="o">/</span> <span class="s2">"results"</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-13">BENCHMARK_RESULTS_DIR = Path(__file__).parent.parent / "benchmarks" / "end_to_end" / "results"
+<div class="clipboard-copy-txt" id="cell-14">BENCHMARK_RESULTS_DIR = Path(__file__).parent.parent / "benchmarks" / "end_to_end" / "results"
 SOLVER_COMPARISON_RESULTS_DIR = (
     Path(__file__).parent.parent / "benchmarks" / "solver_comparison" / "results"
 )</div>
@@ -3096,7 +3127,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8454183c">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4f4a6c95">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3104,7 +3135,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-15">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3123,8 +3154,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="s1">'!!! warning "Missing Data"</span><span class="se">\n</span><span class="s1">    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_matlab_vs_python.py` to generate.'</span>
-
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
 
@@ -3157,7 +3186,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-14">def solver_comparison_table() -&gt; str:
+<div class="clipboard-copy-txt" id="cell-15">def solver_comparison_table() -&gt; str:
     """Render solver comparison table from CSV data.
 
     :return: Markdown table string.
@@ -3166,8 +3195,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_matlab_vs_python.py` to generate.'
-
-    import pandas as pd
 
     df = pd.read_csv(csv_path)
 
@@ -3205,7 +3232,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4d217e06">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6aa21157">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3213,7 +3240,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-15">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-16">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3232,8 +3259,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="s1">'!!! warning "Missing Data"</span><span class="se">\n</span><span class="s1">    Solver comparison data not found.'</span>
-
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
 
@@ -3267,7 +3292,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-15">def solver_matlab_speedup_table() -&gt; str:
+<div class="clipboard-copy-txt" id="cell-16">def solver_matlab_speedup_table() -&gt; str:
     """Render speedup vs MATLAB table from CSV data.
 
     :return: Markdown table string.
@@ -3276,8 +3301,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Solver comparison data not found.'
-
-    import pandas as pd
 
     df = pd.read_csv(csv_path)
 
@@ -3316,7 +3339,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=798558fa">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12a3c6bc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3324,7 +3347,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-16">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-17">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3343,8 +3366,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="s1">'!!! warning "Missing Data"</span><span class="se">\n</span><span class="s1">    Benchmark data not found. Run `uv run python benchmarks/end_to_end/compare_matlab_vs_python.py` to generate.'</span>
-
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
 
@@ -3375,7 +3396,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-16">def benchmark_comparison_table() -&gt; str:
+<div class="clipboard-copy-txt" id="cell-17">def benchmark_comparison_table() -&gt; str:
     """Render benchmark comparison table from CSV data.
 
     :return: Markdown table string.
@@ -3384,8 +3405,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     if not csv_path.exists():
         return '!!! warning "Missing Data"\n    Benchmark data not found. Run `uv run python benchmarks/end_to_end/compare_matlab_vs_python.py` to generate.'
-
-    import pandas as pd
 
     df = pd.read_csv(csv_path)
 
@@ -3421,7 +3440,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cd75db80">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0d475cc7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3429,7 +3448,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-17">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-18">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3444,9 +3463,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
 <span class="sd">    :return: Markdown summary string.</span>
 <span class="sd">    """</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span> <span class="k">as</span> <span class="n">scipy_stats</span>
-
     <span class="n">csv_path</span> <span class="o">=</span> <span class="n">BENCHMARK_RESULTS_DIR</span> <span class="o">/</span> <span class="s2">"end_to_end_comparison.csv"</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -3464,8 +3480,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
         <span class="n">impl_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">"implementation"</span><span class="p">]</span> <span class="o">==</span> <span class="n">impl</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"N"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">impl_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">continue</span>
-
-        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
         <span class="n">n_vals</span> <span class="o">=</span> <span class="n">impl_data</span><span class="p">[</span><span class="s2">"N"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">t_vals</span> <span class="o">=</span> <span class="n">impl_data</span><span class="p">[</span><span class="s2">"mean_time"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
@@ -3490,14 +3504,11 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-17">def benchmark_scaling_analysis() -&gt; str:
+<div class="clipboard-copy-txt" id="cell-18">def benchmark_scaling_analysis() -&gt; str:
     """Render scaling analysis summary from benchmark data.
 
     :return: Markdown summary string.
     """
-    import pandas as pd
-    from scipy import stats as scipy_stats
-
     csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
 
     if not csv_path.exists():
@@ -3515,8 +3526,6 @@ SOLVER_COMPARISON_RESULTS_DIR = (
         impl_data = df[df["implementation"] == impl].sort_values("N")
         if len(impl_data) &lt; 3:
             continue
-
-        import numpy as np
 
         n_vals = impl_data["N"].values.astype(float)
         t_vals = impl_data["mean_time"].values
@@ -3546,7 +3555,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=09d911a4">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7c097193">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3554,7 +3563,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-18">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-19">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -3576,7 +3585,7 @@ SOLVER_COMPARISON_RESULTS_DIR = (
     <span class="n">env</span><span class="o">.</span><span class="n">macro</span><span class="p">(</span><span class="n">solver_comparison_table</span><span class="p">,</span> <span class="s2">"solver_comparison_table"</span><span class="p">)</span>
     <span class="n">env</span><span class="o">.</span><span class="n">macro</span><span class="p">(</span><span class="n">solver_matlab_speedup_table</span><span class="p">,</span> <span class="s2">"solver_matlab_speedup_table"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-18">def define_env(env: Any) -&gt; None:
+<div class="clipboard-copy-txt" id="cell-19">def define_env(env: Any) -&gt; None:
     """Define macros for mkdocs-macros-plugin.
 
     :param env: The macro environment.
