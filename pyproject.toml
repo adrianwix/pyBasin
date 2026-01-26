@@ -45,22 +45,6 @@ dependencies = [
     "jaxtyping>=0.3.3",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest>=7.4.0", "pytest-cov>=4.1.0", "ruff>=0.1.0", "pyright>=1.1.0"]
-docs = [
-    "mkdocs-material>=9.4.0",
-    "mkdocstrings[python]>=0.24.0",
-    "mkdocs-jupyter>=0.24.0",
-    "mkdocs-macros-plugin>=1.0.0",
-]
-case-studies = [
-    "jupyter>=1.0.0",
-    "openpyxl>=3.1.0",
-    "notebook>=7.0.0",
-    "networkx>=3.6.1",
-]
-all = ["pybasin[dev,docs,case-studies]"]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -132,7 +116,25 @@ ignore_names = ["render", "layout"]
 
 [dependency-groups]
 dev = [
+    "austin-dist>=4.0.0",
+    "austin-python>=2.1.2",
     "pyright>=1.1.408",
+    "pytest>=7.4.0",
     "pytest-benchmark>=5.2.3",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "scalene>=2.1.0",
     "vulture>=2.14",
+]
+docs = [
+    "mkdocs-material>=9.4.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-jupyter>=0.24.0",
+    "mkdocs-macros-plugin>=1.0.0",
+]
+case-studies = [
+    "jupyter>=1.0.0",
+    "openpyxl>=3.1.0",
+    "notebook>=7.0.0",
+    "networkx>=3.6.1",
 ]

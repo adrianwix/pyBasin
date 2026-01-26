@@ -422,3 +422,4 @@
 2026-01-23 16:51:36 - main_friction.py: 10.913362741470337 seconds
 2026-01-23 16:55:02 - main_friction.py: 7.383359670639038 seconds
 2026-01-23 16:55:36 - main_friction.py: 10.101991653442383 seconds
+2026-01-25 21:10:56 - main_pendulum_case1.py: 2.345691442489624 seconds

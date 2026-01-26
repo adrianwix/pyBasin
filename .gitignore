@@ -87,6 +87,8 @@ execution_time.txt
 *.pdf
 lorenz_as_sigma.png
 .benchmarks
+benchmarks/profiling/profile.collapsed
+benchmarks/profiling/profile.mojo
 
 # MkDocs
 site/
@@ -109,3 +111,6 @@ dmypy.json
 !benchmarks/time_integrations/results/
 !docs/assets/**/*.jpg
 !docs/assets/**/*.png
+
+
+
