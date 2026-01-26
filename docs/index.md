@@ -2,8 +2,8 @@
 
 **Basin stability estimation for dynamical systems**
 
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 pyBasin is a Python library for estimating basin stability in dynamical systems. It's a port of the MATLAB bSTAB library with additional features including adaptive sampling and neural network-based classification.
 

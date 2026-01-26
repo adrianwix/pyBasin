@@ -57,6 +57,13 @@ _Note: torchode (CUDA) time is divided by 4 in the N=100,000 plot to improve rea
 unmatched performance with near-constant integration time regardless of sample size—making it
 the clear choice for any workload.
 
+Additionally, JAX/Diffrax is the only solver that supports **event-based termination with individual
+trajectory stopping**. This is critical for systems with unbounded trajectories (e.g., Lorenz "broken
+butterfly"), where some initial conditions diverge to infinity. With JAX events, each trajectory stops
+independently when it exceeds a threshold, while bounded trajectories continue integrating. Other solvers
+either stop all trajectories simultaneously or require workarounds like zero masking. See the
+[Handling Unbounded Trajectories](../guides/unbounded-trajectories.md) guide for details.
+
 For CPU-only systems, the choice depends on scale. At smaller sample sizes (N ≤ 10k), JAX/Diffrax
 on CPU is the fastest option. However, at larger scales (N = 100k), torchdiffeq on CPU offers a
 meaningful ~2x improvement over JAX/Diffrax CPU (32s vs 64s). While this difference is negligible

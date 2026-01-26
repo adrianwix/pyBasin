@@ -35,6 +35,9 @@ theme:
     - content.code.annotate
     - content.action.view
 
+not_in_nav: |
+  macros.py
+
 plugins:
   - search
   - macros:
@@ -106,6 +109,7 @@ nav:
       - Rössler Network: case-studies/rossler-network.md
   - Benchmarks:
       - Overview: benchmarks/overview.md
+      - Basin Stability Estimator: benchmarks/basin-stability-estimator.md
       - End-to-End Performance: benchmarks/end-to-end.md
       - Solver Comparison: benchmarks/solvers.md
       - Feature Extraction: benchmarks/feature-extraction.md
