@@ -1237,6 +1237,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../basin-stability-estimator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Basin Stability Estimator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../end-to-end/" class="md-nav__link">
         
   
@@ -2234,6 +2257,12 @@ indicating it is not properly optimized for GPU batch processing in this use cas
 <p><strong>JAX/Diffrax should be the default solver for pyBasin.</strong> When a GPU is available, it delivers
 unmatched performance with near-constant integration time regardless of sample size—making it
 the clear choice for any workload.</p>
+<p>Additionally, JAX/Diffrax is the only solver that supports <strong>event-based termination with individual
+trajectory stopping</strong>. This is critical for systems with unbounded trajectories (e.g., Lorenz "broken
+butterfly"), where some initial conditions diverge to infinity. With JAX events, each trajectory stops
+independently when it exceeds a threshold, while bounded trajectories continue integrating. Other solvers
+either stop all trajectories simultaneously or require workarounds like zero masking. See the
+<a href="../../guides/unbounded-trajectories/">Handling Unbounded Trajectories</a> guide for details.</p>
 <p>For CPU-only systems, the choice depends on scale. At smaller sample sizes (N ≤ 10k), JAX/Diffrax
 on CPU is the fastest option. However, at larger scales (N = 100k), torchdiffeq on CPU offers a
 meaningful ~2x improvement over JAX/Diffrax CPU (32s vs 64s). While this difference is negligible

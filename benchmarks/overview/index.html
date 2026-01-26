@@ -16,7 +16,7 @@
         <link rel="prev" href="../../case-studies/rossler-network/">
       
       
-        <link rel="next" href="../end-to-end/">
+        <link rel="next" href="../basin-stability-estimator/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -1264,15 +1264,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    <span class="md-ellipsis">
-      Purpose
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#test-hardware" class="md-nav__link">
     <span class="md-ellipsis">
       Test Hardware
@@ -1291,11 +1282,53 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detailed-results" class="md-nav__link">
+  <a href="#benchmark-pages" class="md-nav__link">
     <span class="md-ellipsis">
-      Detailed Results
+      Benchmark Pages
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Benchmark Pages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basin-stability-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basin Stability Estimator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      End-to-End Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1303,6 +1336,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../basin-stability-estimator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Basin Stability Estimator
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1745,15 +1801,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    <span class="md-ellipsis">
-      Purpose
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#test-hardware" class="md-nav__link">
     <span class="md-ellipsis">
       Test Hardware
@@ -1772,11 +1819,53 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detailed-results" class="md-nav__link">
+  <a href="#benchmark-pages" class="md-nav__link">
     <span class="md-ellipsis">
-      Detailed Results
+      Benchmark Pages
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Benchmark Pages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basin-stability-estimator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basin Stability Estimator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      End-to-End Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver Comparison
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1808,8 +1897,7 @@
 
 
 <h1 id="benchmarks-overview">Benchmarks Overview</h1>
-<h2 id="purpose">Purpose</h2>
-<p>Compare pyBasin performance against MATLAB bSTAB-M and evaluate different solver and feature extraction backends.</p>
+<p>This section documents pyBasin's performance characteristics and compares it against the original MATLAB implementation (<a href="https://github.com/TUHH-DYN/bSTAB">bSTAB-M</a>).</p>
 <h2 id="test-hardware">Test Hardware</h2>
 <ul>
 <li><strong>CPU</strong>: Intel Core Ultra 9 275HX</li>
@@ -1842,12 +1930,15 @@
 </tr>
 </tbody>
 </table>
-<h2 id="detailed-results">Detailed Results</h2>
-<ul>
-<li><a href="../end-to-end/">End-to-End Performance</a></li>
-<li><a href="../solvers/">Solver Comparison</a></li>
-<li><a href="../feature-extraction/">Feature Extraction</a></li>
-</ul>
+<h2 id="benchmark-pages">Benchmark Pages</h2>
+<h3 id="basin-stability-estimator"><a href="../basin-stability-estimator/">Basin Stability Estimator</a></h3>
+<p>Detailed breakdown of the full estimation pipeline showing how time is distributed across each step (sampling, integration, feature extraction, classification). Includes an interactive flame graph for profiling analysis.</p>
+<h3 id="end-to-end-performance"><a href="../end-to-end/">End-to-End Performance</a></h3>
+<p>Compares the complete basin stability estimation workflow between pyBasin and MATLAB bSTAB-M across different sample sizes. Demonstrates pyBasin's scalability advantage, especially on GPU.</p>
+<h3 id="solver-comparison"><a href="../solvers/">Solver Comparison</a></h3>
+<p>Evaluates different ODE solver backends (JAX/Diffrax, PyTorch/torchdiffeq, SciPy) across CPU and GPU. Shows how JAX achieves near-constant integration time on GPU regardless of sample size.</p>
+<h3 id="feature-extraction"><a href="../feature-extraction/">Feature Extraction</a></h3>
+<p>Compares feature extraction performance between pyBasin's PyTorch-based implementation and tsfresh. Analyzes the trade-offs between feature complexity and extraction speed.</p>
 
 
 
