@@ -8,9 +8,9 @@ grouped by N (number of samples).
 
 import json
 from pathlib import Path
+from typing import cast
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 
@@ -97,12 +97,12 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
 
     for n in n_values:
         fig, ax = plt.subplots(figsize=(10, 6))
-        n_data = df[df["N"] == n].copy()
+        n_data = cast(pd.DataFrame, df[df["N"] == n]).copy()
 
         n_data["label"] = n_data.apply(
             lambda row: f"{row['solver']} ({row['device'].upper()})", axis=1
         )
-        n_data = n_data.sort_values("mean_time", ascending=True)
+        n_data = n_data.sort_values(by="mean_time", ascending=True)
 
         # Scale down torchode CUDA for N=100000 only (divide by 4)
         plot_times = n_data["mean_time"].copy()
@@ -111,12 +111,12 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
         torchode_cuda_mask = (n_data["solver"] == "torchode") & (n_data["device"] == "cuda")
         should_scale = (n == 100000) & torchode_cuda_mask
 
-        plot_times[should_scale] = plot_times[should_scale] / scale_factor
-        plot_std[should_scale] = plot_std[should_scale] / scale_factor
+        plot_times.loc[should_scale] = plot_times.loc[should_scale] / scale_factor
+        plot_std.loc[should_scale] = plot_std.loc[should_scale] / scale_factor
 
         # Update labels for scaled bars
         labels = n_data["label"].tolist()
-        for i, (idx, row) in enumerate(n_data.iterrows()):
+        for i, (idx, _row) in enumerate(n_data.iterrows()):
             if should_scale.loc[idx]:
                 labels[i] = f"{labels[i]} (÷{scale_factor})"
 
@@ -160,9 +160,9 @@ def print_comparison_table(df: pd.DataFrame) -> None:
 
     for n in sorted(df["N"].unique()):
         print(f"\n--- N = {n:,} ---")
-        n_data = df[df["N"] == n].sort_values("mean_time")
+        n_data = cast(pd.DataFrame, df[df["N"] == n]).sort_values(by="mean_time")
 
-        fastest_time = n_data["mean_time"].min()
+        fastest_time = float(n_data["mean_time"].min())
 
         for _, row in n_data.iterrows():
             speedup = row["mean_time"] / fastest_time
@@ -177,18 +177,19 @@ def print_comparison_table(df: pd.DataFrame) -> None:
     print("=" * 80)
 
     for n in sorted(df["N"].unique()):
-        n_data = df[df["N"] == n]
-        matlab_row = n_data[n_data["solver"] == "MATLAB ode45"]
+        n_data = cast(pd.DataFrame, df[df["N"] == n])
+        matlab_data = cast(pd.DataFrame, n_data[n_data["solver"] == "MATLAB ode45"])
 
-        if matlab_row.empty:
+        if len(matlab_data) == 0:
             continue
 
-        matlab_time = matlab_row["mean_time"].values[0]
+        matlab_time = float(matlab_data["mean_time"].iloc[0])
         print(f"\n--- N = {n:,} (MATLAB baseline: {matlab_time:.2f}s) ---")
 
-        for _, row in (
-            n_data[n_data["solver"] != "MATLAB ode45"].sort_values("mean_time").iterrows()
-        ):
+        python_data = cast(pd.DataFrame, n_data[n_data["solver"] != "MATLAB ode45"]).sort_values(
+            by="mean_time"
+        )
+        for _, row in python_data.iterrows():
             speedup = matlab_time / row["mean_time"]
             direction = "faster" if speedup > 1 else "slower"
             print(

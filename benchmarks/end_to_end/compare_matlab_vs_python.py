@@ -8,6 +8,7 @@ grouped by N (number of samples).
 
 import json
 from pathlib import Path
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,8 +83,14 @@ def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
 
     for i, impl in enumerate(implementations):
         impl_data = df[df["implementation"] == impl].set_index("N")
-        means = [impl_data.loc[n, "mean_time"] if n in impl_data.index else 0 for n in n_values]
-        stds = [impl_data.loc[n, "std_time"] if n in impl_data.index else 0 for n in n_values]
+        means = np.array(
+            [impl_data.loc[n, "mean_time"] if n in impl_data.index else 0.0 for n in n_values],
+            dtype=float,
+        )
+        stds = np.array(
+            [impl_data.loc[n, "std_time"] if n in impl_data.index else 0.0 for n in n_values],
+            dtype=float,
+        )
 
         ax.bar(
             x + i * width,
@@ -115,11 +122,13 @@ def print_comparison_table(df: pd.DataFrame) -> None:
 
     print("\n=== Speedup Analysis ===")
     for n in sorted(df["N"].unique()):
-        n_data = df[df["N"] == n]
+        n_data = cast(pd.DataFrame, df[df["N"] == n])
         if len(n_data) == 2:
-            matlab_time = n_data[n_data["implementation"] == "MATLAB"]["mean_time"].values[0]
-            python_row = n_data[n_data["implementation"] != "MATLAB"].iloc[0]
-            python_time = python_row["mean_time"]
+            matlab_df = cast(pd.DataFrame, n_data[n_data["implementation"] == "MATLAB"])
+            matlab_time = float(matlab_df["mean_time"].iloc[0])
+            python_df = cast(pd.DataFrame, n_data[n_data["implementation"] != "MATLAB"])
+            python_row = python_df.iloc[0]
+            python_time = float(python_row["mean_time"])
             speedup = matlab_time / python_time
 
             print(
@@ -142,16 +151,19 @@ def analyze_scaling(df: pd.DataFrame) -> dict[str, dict]:
     print("\n=== Time Complexity Analysis ===")
 
     for impl in implementations:
-        impl_data = df[df["implementation"] == impl].sort_values("N")
+        impl_data = cast(pd.DataFrame, df[df["implementation"] == impl]).sort_values(by="N")
         if len(impl_data) < 3:
             continue
 
-        n_vals = impl_data["N"].values.astype(float)
-        t_vals = impl_data["mean_time"].values
+        n_vals = np.asarray(impl_data["N"].values, dtype=float)
+        t_vals = np.asarray(impl_data["mean_time"].values, dtype=float)
 
         log_n = np.log(n_vals)
         log_t = np.log(t_vals)
-        slope, intercept, r_value, p_value, std_err = scipy_stats.linregress(log_n, log_t)
+        result = scipy_stats.linregress(log_n, log_t)
+        slope = result.slope
+        r_value = result.rvalue
+        std_err = result.stderr
         alpha = slope
         alpha_ci = 1.96 * std_err
         r2_power = r_value**2
@@ -165,19 +177,19 @@ def analyze_scaling(df: pd.DataFrame) -> dict[str, dict]:
         try:
             popt_linear, _ = curve_fit(linear_model, n_vals, t_vals, p0=[1e-3, 1])
             residuals_linear = t_vals - linear_model(n_vals, *popt_linear)
-            ss_res_linear = np.sum(residuals_linear**2)
-            ss_tot = np.sum((t_vals - np.mean(t_vals)) ** 2)
+            ss_res_linear = float(np.sum(residuals_linear**2))
+            ss_tot = float(np.sum((t_vals - np.mean(t_vals)) ** 2))
             r2_linear = 1 - ss_res_linear / ss_tot
         except RuntimeError:
-            r2_linear = 0
+            r2_linear = 0.0
 
         try:
             popt_nlogn, _ = curve_fit(nlogn_model, n_vals, t_vals, p0=[1e-5, 1])
             residuals_nlogn = t_vals - nlogn_model(n_vals, *popt_nlogn)
-            ss_res_nlogn = np.sum(residuals_nlogn**2)
+            ss_res_nlogn = float(np.sum(residuals_nlogn**2))
             r2_nlogn = 1 - ss_res_nlogn / ss_tot
         except RuntimeError:
-            r2_nlogn = 0
+            r2_nlogn = 0.0
 
         if alpha < 0.15:
             complexity = "O(1) - constant"
@@ -219,13 +231,13 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
     markers = {"Python CPU": "o", "Python CUDA": "s", "MATLAB": "^"}
 
     for impl in implementations:
-        impl_data = df[df["implementation"] == impl].sort_values("N")
+        impl_data = cast(pd.DataFrame, df[df["implementation"] == impl]).sort_values(by="N")
         if len(impl_data) < 3:
             continue
 
-        n_vals = impl_data["N"].values.astype(float)
-        t_vals = impl_data["mean_time"].values
-        t_std = impl_data["std_time"].values
+        n_vals = np.asarray(impl_data["N"].values, dtype=float)
+        t_vals = np.asarray(impl_data["mean_time"].values, dtype=float)
+        t_std = np.asarray(impl_data["std_time"].values, dtype=float)
 
         ax.errorbar(
             n_vals,
@@ -240,7 +252,9 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
 
         log_n = np.log(n_vals)
         log_t = np.log(t_vals)
-        slope, intercept, _, _, _ = scipy_stats.linregress(log_n, log_t)
+        result = scipy_stats.linregress(log_n, log_t)
+        slope = result.slope
+        intercept = result.intercept
 
         n_fit = np.logspace(np.log10(n_vals.min()), np.log10(n_vals.max()), 100)
         t_fit = np.exp(intercept) * n_fit**slope
@@ -292,7 +306,7 @@ def main():
 
     print_comparison_table(combined_df)
 
-    scaling_results = analyze_scaling(combined_df)
+    analyze_scaling(combined_df)
 
     output_plot = docs_assets_dir / "end_to_end_comparison.png"
     create_comparison_plot(combined_df, output_plot)

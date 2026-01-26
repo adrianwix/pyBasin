@@ -1,12 +1,13 @@
 {
-  "include": ["src", "tests", "benchmarks", "case_studies"],
+  "include": ["src", "tests", "case_studies"],
   "exclude": [
     "**/__pycache__",
     "**/node_modules",
     "**/.venv",
     "cache",
     "artifacts",
-    "src/pybasin/plotters"
+    "src/pybasin/plotters",
+    "benchmarks"
   ],
   "venvPath": ".",
   "venv": ".venv",

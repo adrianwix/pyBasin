@@ -83,10 +83,7 @@ def compute_statistical_comparison(
     combined_se = float(np.sqrt(python_se**2 + expected_se**2))
     diff = abs(python_bs - expected_bs)
 
-    if combined_se > 0:
-        z_score = diff / combined_se
-    else:
-        z_score = 0.0
+    z_score = diff / combined_se if combined_se > 0 else 0.0
 
     # Two-tailed z-test at α=0.05: critical value is 1.96
     passes_test = z_score < 1.96
@@ -123,7 +120,9 @@ def compute_classification_metrics(
     f1_per_class_scores = f1_score(y_true, y_pred, labels=labels, average=None, zero_division=0)
     # Handle scalar or array return
     if isinstance(f1_per_class_scores, np.ndarray):
-        f1_per_class = {str(label): float(f1) for label, f1 in zip(labels, f1_per_class_scores)}
+        f1_per_class = {
+            str(label): float(f1) for label, f1 in zip(labels, f1_per_class_scores, strict=False)
+        }
     else:
         # Single class case
         f1_per_class = {str(labels[0]): float(f1_per_class_scores)}
@@ -414,10 +413,10 @@ def run_basin_stability_test(
     )
 
     # Print classification quality summary
-    print(f"\nClassification Metrics:")
+    print("\nClassification Metrics:")
     print(f"  Macro F1-score: {metrics.macro_f1:.4f}")
     print(f"  Matthews Correlation Coefficient: {metrics.matthews_corrcoef:.4f}")
-    print(f"  F1 per class:")
+    print("  F1 per class:")
     for label, f1 in sorted(metrics.f1_per_class.items()):
         print(f"    {label}: {f1:.4f}")
 
@@ -624,12 +623,12 @@ def run_adaptive_basin_stability_test(
     print(f"\n{'=' * 80}")
     print("Adaptive Basin Stability Classification Results")
     print(f"{'=' * 80}")
-    for i, result in enumerate(comparison_results):
+    for _i, result in enumerate(comparison_results):
         param_val = result.parameter_value
         print(f"\nParameter {param_val:.4f}:")
         print(f"  Macro F1: {result.macro_f1:.4f}")
         print(f"  MCC: {result.matthews_corrcoef:.4f}")
-        print(f"  F1 per class:")
+        print("  F1 per class:")
         for attractor in result.attractors:
             print(f"    {attractor.label}: {attractor.f1_score:.4f}")
     print(f"{'=' * 80}\n")

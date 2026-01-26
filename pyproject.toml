@@ -95,7 +95,7 @@ ignore = ["E501", "N803", "N806"] # Line length handled by formatter, allow lowe
     "N803",
     "N806",
 ] # X is standard for sklearn-compatible estimators
-"tests/*.py" = [
+"tests/**/*.py" = [
     "N803",
     "N806",
 ] # X, y, X_train, X_test are standard ML conventions

@@ -18,6 +18,7 @@ from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
     UnsupervisedAttractorComparison,
     UnsupervisedComparisonResult,
+    compute_classification_metrics,
     run_basin_stability_test,
 )
 
@@ -205,7 +206,6 @@ class TestDuffing:
         assert ground_truth_labels is not None, "Ground truth CSV must have label column"
 
         # Compute classification metrics
-        from tests.integration.test_helpers import compute_classification_metrics
 
         metrics = compute_classification_metrics(ground_truth_labels, relabeled)
 
