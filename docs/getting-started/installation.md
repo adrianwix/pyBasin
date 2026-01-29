@@ -19,7 +19,7 @@ pip install pybasin
 
 ```bash
 # Clone the repository
-git clone https://github.com/adrianwix/pyBSTAB.git
+git clone https://github.com/adrianwix/pyBasin.git
 cd pyBasinWorkspace
 
 # Install with UV
@@ -33,7 +33,7 @@ uv add -e ".[all]"
 
 ```bash
 # Clone the repository
-git clone https://github.com/adrianwix/pyBSTAB.git
+git clone https://github.com/adrianwix/pyBasin.git
 cd pyBasinWorkspace
 
 # Install in editable mode

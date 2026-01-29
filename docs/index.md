@@ -25,7 +25,7 @@ For development:
 
 ```bash
 # Clone the repository
-git clone https://github.com/adrianwix/pyBSTAB.git
+git clone https://github.com/adrianwix/pyBasin.git
 cd pyBasinWorkspace
 
 # Install with UV
@@ -69,7 +69,7 @@ print(f"Attractor distribution: {results.attractor_counts}")
 
 ## Documentation
 
-Full documentation is available at [https://adrianwix.github.io/pyBSTAB/](https://adrianwix.github.io/pyBSTAB/)
+Full documentation is available at [https://adrianwix.github.io/pyBasin/](https://adrianwix.github.io/pyBasin/)
 
 ## Case Studies
 
@@ -129,7 +129,7 @@ If you use pyBasin in your research, please cite:
   author = {Wix, Adrian},
   title = {pyBasin: Basin Stability Estimation for Dynamical Systems},
   year = {2025},
-  url = {https://github.com/adrianwix/pyBSTAB}
+  url = {https://github.com/adrianwix/pyBasin}
 }
 ```
 
