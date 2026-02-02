@@ -33,12 +33,3 @@ class PendulumODE(ODESystem[PendulumParams]):
         dtheta_dot_dt = -alpha * theta_dot + torque - k * torch.sin(theta)
 
         return torch.stack([dtheta_dt, dtheta_dot_dt], dim=1)
-
-    def get_str(self) -> str:
-        """
-        Returns a string representation of the ODE system with its parameters.
-        """
-        description = (
-            "Pendulum:\n  dtheta/dt = omega\n  domega/dt = -alpha·omega + T - K·sin(theta)\n"
-        )
-        return description

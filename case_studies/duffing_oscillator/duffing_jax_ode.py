@@ -67,10 +67,3 @@ class DuffingJaxODE(JaxODESystem[DuffingParams]):
         dx_dot_dt = -delta * x_dot - k3 * x**3 + amplitude * jnp.cos(t)
 
         return jnp.array([dx_dt, dx_dot_dt])  # pyright: ignore[reportUnknownMemberType]
-
-    def get_str(self) -> str:
-        """
-        Returns a string representation of the ODE system with its parameters.
-        """
-        description = "Duffing:\n  dx/dt = x_dot\n  dx_dot/dt = -delta·x_dot - k3·x³ + A·cos(t)\n"
-        return description

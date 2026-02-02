@@ -91,13 +91,3 @@ class RosslerNetworkJaxODE(JaxODESystem[RosslerNetworkParams]):
         dz_dt = b + z * (x - c)
 
         return jnp.concatenate([dx_dt, dy_dt, dz_dt])
-
-    def get_str(self) -> str:
-        """Returns a string representation of the ODE system."""
-        return (
-            f"Rössler Network (N={self._N}, sparse Laplacian):\n"
-            f"  dx_i/dt = -y_i - z_i - K·Σ_j(L_ij·x_j)\n"
-            f"  dy_i/dt = x_i + a·y_i\n"
-            f"  dz_i/dt = b + z_i·(x_i - c)\n"
-            f"  a={self.params['a']}, b={self.params['b']}, c={self.params['c']}, K={self.params['K']}"
-        )

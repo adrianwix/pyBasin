@@ -85,10 +85,3 @@ class FrictionJaxODE(JaxODESystem[FrictionParams]):
         )
 
         return jnp.array([ddisp_dt, dvel_dt])  # pyright: ignore[reportUnknownMemberType]
-
-    def get_str(self) -> str:
-        """
-        Returns a string representation of the ODE system with its parameters.
-        """
-        description = "Friction:\n  ddisp/dt = vel\n  dvel/dt = -disp - 2·xi·vel - sign(vel - v_d)·friction_law(...)\n"
-        return description

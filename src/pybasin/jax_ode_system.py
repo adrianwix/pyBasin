@@ -5,8 +5,11 @@ This module provides a base class for defining ODE systems using pure JAX operat
 enabling JIT compilation and efficient GPU execution without PyTorch callbacks.
 """
 
+import ast
+import inspect
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar
+from textwrap import dedent
+from typing import Any, TypeVar, cast
 
 from jax import Array
 
@@ -40,9 +43,6 @@ class JaxODESystem[P](ABC):
         def ode(self, t: Array, y: Array) -> Array:
             alpha = self.params["alpha"]
             return jnp.zeros_like(y)
-
-        def get_str(self) -> str:
-            return f"MyODE with alpha={self.params['alpha']}"
     ```
 
     :param P: Type parameter - the parameter dictionary type for this ODE system.
@@ -77,16 +77,40 @@ class JaxODESystem[P](ABC):
         """
         pass
 
-    @abstractmethod
     def get_str(self) -> str:
         """
         Returns a string representation of the ODE system with its parameters.
+
+        By default, auto-generates a representation from the ``ode()`` method source code
+        (with docstrings stripped). Override this method to provide a custom representation.
 
         Used for caching and logging purposes.
 
         :return: A human-readable description of the ODE system and its parameters.
         """
-        pass
+        return self._auto_get_str()
+
+    def _auto_get_str(self) -> str:
+        """
+        Auto-generate string representation from ode() method source code.
+
+        :return: The ode() method source with docstrings stripped, or a fallback string.
+        """
+        try:
+            source = inspect.getsource(self.ode)
+            source = dedent(source)
+            tree = ast.parse(source)
+            func_def = tree.body[0]
+            if isinstance(func_def, ast.FunctionDef) and ast.get_docstring(func_def):
+                func_def.body = func_def.body[1:]
+            return f"{self.__class__.__name__}:\n{ast.unparse(tree)}"
+        except (OSError, TypeError, SyntaxError):
+            if isinstance(self.params, dict):
+                params_dict = cast(dict[str, Any], self.params)  # pyright: ignore[reportUnknownMemberType]
+                params_str = ", ".join(f"{k}={v}" for k, v in params_dict.items())
+            else:
+                params_str = ""
+            return f"{self.__class__.__name__}({params_str})"
 
     def to(self, device: Any) -> "JaxODESystem[P]":
         """No-op for JAX systems - device handling is done on tensors.

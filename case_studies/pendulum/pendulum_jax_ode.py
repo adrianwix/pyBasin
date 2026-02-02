@@ -62,12 +62,3 @@ class PendulumJaxODE(JaxODESystem[PendulumParams]):
         dtheta_dot_dt = -alpha * theta_dot + torque - k * jnp.sin(theta)
 
         return jnp.array([dtheta_dt, dtheta_dot_dt])  # pyright: ignore[reportUnknownMemberType]
-
-    def get_str(self) -> str:
-        """
-        Returns a string representation of the ODE system with its parameters.
-        """
-        description = (
-            "Pendulum:\n  dtheta/dt = omega\n  domega/dt = -alpha·omega + T - K·sin(theta)\n"
-        )
-        return description
