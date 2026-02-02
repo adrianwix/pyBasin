@@ -40,4 +40,4 @@ plotter.run(port=8050)  # Opens web browser
 
 ## ASPlotter
 
-Used for visualizing parameter study results from `ASBasinStabilityEstimator`.
+Used for visualizing parameter study results from `BasinStabilityStudy`.

@@ -4,8 +4,8 @@ from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from typing import cast
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.plotters.interactive_plotter.basin_stability_aio import BasinStabilityAIO
 from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAIO
 from pybasin.plotters.interactive_plotter.feature_space_aio import FeatureSpaceAIO
@@ -27,7 +27,7 @@ class ASParameterManagerAIO:
 
     def __init__(
         self,
-        as_bse: ASBasinStabilityEstimator,
+        as_bse: BasinStabilityStudy,
         state_labels: dict[int, str] | None = None,
         compute_bse_callback: Callable[[int], BasinStabilityEstimator] | None = None,
     ):

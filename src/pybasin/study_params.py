@@ -2,7 +2,7 @@
 
 This module provides classes for defining parameter variations in basin stability
 studies. The generators produce RunConfig objects that can be iterated by the
-ASBasinStabilityEstimator.
+BasinStabilityStudy.
 
 Classes:
     - SweepStudyParams: Single parameter sweep (1D study)

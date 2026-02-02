@@ -22,12 +22,12 @@ from case_studies.rossler_network.setup_rossler_network_system import (
     K_VALUES_FROM_PAPER,
     setup_rossler_network_system,
 )
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
 
 
-def main() -> ASBasinStabilityEstimator:
+def main() -> BasinStabilityStudy:
     """Run adaptive parameter study for Rössler network coupling strength.
 
     Sweeps through K values from paper to analyze basin stability variation.
@@ -48,7 +48,7 @@ def main() -> ASBasinStabilityEstimator:
     assert feature_extractor is not None
     assert cluster_classifier is not None
 
-    bse = ASBasinStabilityEstimator(
+    bse = BasinStabilityStudy(
         n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],

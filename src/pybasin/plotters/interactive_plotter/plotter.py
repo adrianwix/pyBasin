@@ -8,8 +8,8 @@ import dash_mantine_components as dmc  # pyright: ignore[reportMissingTypeStubs]
 from dash import ALL, Dash, Input, NoUpdate, Output, State, ctx, dcc, html, no_update
 from dash.development.base_component import Component
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.plotters.types import InteractivePlotterOptions
 
 from .as_parameter_manager_aio import ASParameterManagerAIO
@@ -48,22 +48,22 @@ class InteractivePlotter:
 
     def __init__(
         self,
-        bse: BasinStabilityEstimator | ASBasinStabilityEstimator,
+        bse: BasinStabilityEstimator | BasinStabilityStudy,
         state_labels: dict[int, str] | None = None,
         options: InteractivePlotterOptions | None = None,
     ):
         """
         Initialize the Plotter.
 
-        :param bse: BasinStabilityEstimator or ASBasinStabilityEstimator instance.
+        :param bse: BasinStabilityEstimator or BasinStabilityStudy instance.
         :param state_labels: Optional dict mapping state indices to labels,
                             e.g., {0: "θ", 1: "ω"} for a pendulum system.
         :param options: Optional configuration for default control values.
         """
-        self.is_adaptive_study = isinstance(bse, ASBasinStabilityEstimator)
+        self.is_adaptive_study = isinstance(bse, BasinStabilityStudy)
 
-        if isinstance(bse, ASBasinStabilityEstimator):
-            self.as_bse: ASBasinStabilityEstimator = bse
+        if isinstance(bse, BasinStabilityStudy):
+            self.as_bse: BasinStabilityStudy = bse
         else:
             self.bse: BasinStabilityEstimator = bse
 

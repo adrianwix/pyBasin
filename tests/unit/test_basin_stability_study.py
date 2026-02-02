@@ -1,11 +1,11 @@
-"""Tests for ASBasinStabilityEstimator."""
+"""Tests for BasinStabilityStudy."""
 
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.study_params import (
     GridStudyParams,
     SweepStudyParams,
@@ -15,7 +15,7 @@ from pybasin.study_params import (
 
 @pytest.fixture
 def mock_components() -> dict[str, MagicMock]:
-    """Create mock components for ASBasinStabilityEstimator."""
+    """Create mock components for BasinStabilityStudy."""
     ode_system = MagicMock()
     ode_system.params = {"T": 0.5, "K": 0.1}
 
@@ -51,8 +51,8 @@ def mock_bse() -> MagicMock:
     return mock
 
 
-class TestASBasinStabilityEstimatorWithSweep:
-    """Tests for ASBasinStabilityEstimator with SweepStudyParams."""
+class TestBasinStabilityStudyWithSweep:
+    """Tests for BasinStabilityStudy with SweepStudyParams."""
 
     def test_calls_bse_correct_number_of_times(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
@@ -61,10 +61,10 @@ class TestASBasinStabilityEstimatorWithSweep:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -88,10 +88,10 @@ class TestASBasinStabilityEstimatorWithSweep:
             return mock_bse
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -116,10 +116,10 @@ class TestASBasinStabilityEstimatorWithSweep:
             return mock_bse
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -145,10 +145,10 @@ class TestASBasinStabilityEstimatorWithSweep:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -161,8 +161,8 @@ class TestASBasinStabilityEstimatorWithSweep:
             assert len(results) == 2
 
 
-class TestASBasinStabilityEstimatorWithGrid:
-    """Tests for ASBasinStabilityEstimator with GridStudyParams."""
+class TestBasinStabilityStudyWithGrid:
+    """Tests for BasinStabilityStudy with GridStudyParams."""
 
     def test_calls_bse_for_cartesian_product(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
@@ -176,10 +176,10 @@ class TestASBasinStabilityEstimatorWithGrid:
         )
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -201,10 +201,10 @@ class TestASBasinStabilityEstimatorWithGrid:
         )
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -221,8 +221,8 @@ class TestASBasinStabilityEstimatorWithGrid:
             assert labels == expected_labels
 
 
-class TestASBasinStabilityEstimatorWithZip:
-    """Tests for ASBasinStabilityEstimator with ZipStudyParams."""
+class TestBasinStabilityStudyWithZip:
+    """Tests for BasinStabilityStudy with ZipStudyParams."""
 
     def test_calls_bse_for_zipped_params(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
@@ -236,10 +236,10 @@ class TestASBasinStabilityEstimatorWithZip:
         )
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -261,10 +261,10 @@ class TestASBasinStabilityEstimatorWithZip:
         )
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -279,7 +279,7 @@ class TestASBasinStabilityEstimatorWithZip:
             assert labels == expected_labels
 
 
-class TestASBasinStabilityEstimatorWithSampler:
+class TestBasinStabilityStudyWithSampler:
     """Tests for varying sampler objects."""
 
     def test_passes_different_samplers_to_bse(
@@ -299,10 +299,10 @@ class TestASBasinStabilityEstimatorWithSampler:
             return mock_bse
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -335,10 +335,10 @@ class TestASBasinStabilityEstimatorWithSampler:
             return mock_bse
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -357,7 +357,7 @@ class TestASBasinStabilityEstimatorWithSampler:
             assert captured_args[1]["sampler"] is sampler2
 
 
-class TestASBasinStabilityEstimatorBSEArguments:
+class TestBasinStabilityStudyBSEArguments:
     """Tests that BSE is called with correct arguments."""
 
     def test_bse_receives_all_required_arguments(
@@ -367,10 +367,10 @@ class TestASBasinStabilityEstimatorBSEArguments:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.5])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -393,10 +393,10 @@ class TestASBasinStabilityEstimatorBSEArguments:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -413,10 +413,10 @@ class TestASBasinStabilityEstimatorBSEArguments:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -427,7 +427,7 @@ class TestASBasinStabilityEstimatorBSEArguments:
             assert mock_bse.get_errors.call_count == 2
 
 
-class TestASBasinStabilityEstimatorResults:
+class TestBasinStabilityStudyResults:
     """Tests for results storage."""
 
     def test_basin_stabilities_stored_correctly(
@@ -447,10 +447,10 @@ class TestASBasinStabilityEstimatorResults:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
@@ -468,10 +468,10 @@ class TestASBasinStabilityEstimatorResults:
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
 
         with patch(
-            "pybasin.as_basin_stability_estimator.BasinStabilityEstimator",
+            "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = ASBasinStabilityEstimator(
+            as_bse = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,

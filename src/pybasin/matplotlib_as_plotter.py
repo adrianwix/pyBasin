@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.utils import generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
@@ -18,14 +18,14 @@ class ASPlotter:
     """
     Matplotlib-based plotter for adaptive study basin stability results.
 
-    :ivar as_bse: ASBasinStabilityEstimator instance with computed results.
+    :ivar as_bse: BasinStabilityStudy instance with computed results.
     """
 
-    def __init__(self, as_bse: ASBasinStabilityEstimator):
+    def __init__(self, as_bse: BasinStabilityStudy):
         """
-        Initialize the plotter with an ASBasinStabilityEstimator instance.
+        Initialize the plotter with an BasinStabilityStudy instance.
 
-        :param as_bse: An instance of ASBasinStabilityEstimator.
+        :param as_bse: An instance of BasinStabilityStudy.
         """
         self.as_bse = as_bse
 

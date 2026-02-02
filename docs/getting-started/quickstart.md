@@ -61,10 +61,10 @@ results.plot_basin_2d()
 For more efficient sampling, use the adaptive sampling estimator:
 
 ```python
-from pybasin import ASBasinStabilityEstimator
+from pybasin import BasinStabilityStudy
 
 # Create adaptive sampling estimator
-as_estimator = ASBasinStabilityEstimator(
+as_estimator = BasinStabilityStudy(
     system=system,
     initial_samples=100,
     max_samples=1000,

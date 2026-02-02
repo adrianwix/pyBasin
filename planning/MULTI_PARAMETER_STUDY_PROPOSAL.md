@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-The current `ASBasinStabilityEstimator` only supports varying a single parameter at a time. Real-world basin stability studies often require:
+The current `BasinStabilityStudy` only supports varying a single parameter at a time. Real-world basin stability studies often require:
 
 1. **2D Parameter Grids**: Studying basin stability as a function of two parameters (e.g., coupling strength K vs. rewiring probability p)
 2. **Mixed Parameter Types**: Varying both ODE parameters and hyperparameters (N samples, solver tolerance, network topology)
@@ -26,7 +26,7 @@ as_params = AdaptiveStudyParams(
 
 ### Key Discovery: Current eval() Pattern Already Supports Object Parameters
 
-The current `ASBasinStabilityEstimator` implementation using `eval()` already works with object parameters like `Sampler` instances:
+The current `BasinStabilityStudy` implementation using `eval()` already works with object parameters like `Sampler` instances:
 
 ```python
 # This WORKS with current implementation!
@@ -43,7 +43,7 @@ This means we can extend the API without rewriting the estimator - just provide 
 
 ## ⭐ Proposal 7: Study Params Generators (RECOMMENDED)
 
-Keep the current `ASBasinStabilityEstimator` unchanged. Instead, create generator classes that produce `StudyConfig` objects - a list of parameter assignments per run that the existing `eval()` mechanism can apply.
+Keep the current `BasinStabilityStudy` unchanged. Instead, create generator classes that produce `StudyConfig` objects - a list of parameter assignments per run that the existing `eval()` mechanism can apply.
 
 ### Core Idea
 
@@ -201,12 +201,12 @@ class CustomStudyParams(StudyParams):
         return cls(configs)
 ```
 
-### Updated ASBasinStabilityEstimator
+### Updated BasinStabilityStudy
 
 Minimal changes to support the new `StudyParams`:
 
 ```python
-class ASBasinStabilityEstimator:
+class BasinStabilityStudy:
     def __init__(
         self,
         n: int,
@@ -259,7 +259,7 @@ study_params = SweepStudyParams(
     values=np.arange(0.01, 0.97, 0.05),
 )
 
-bse = ASBasinStabilityEstimator(
+bse = BasinStabilityStudy(
     n=1000,
     ode_system=ode,
     sampler=sampler,
@@ -859,7 +859,7 @@ estimator = MultiStudyEstimator(base, variations)
 - **Progressive complexity**: Start with `ode_params`, add `sampler`/`solver` overrides as needed
 - **Clear separation**: Fixed vs variable is explicit in the API
 - **Still flexible**: Full config fallback available
-- **Backward compatible**: Can implement `ASBasinStabilityEstimator` on top of this
+- **Backward compatible**: Can implement `BasinStabilityStudy` on top of this
 
 ### Cons
 
@@ -1138,7 +1138,7 @@ study = (
     .build()
 )
 
-bse = ASBasinStabilityEstimator(
+bse = BasinStabilityStudy(
     n=1000,
     ode_system=ode,
     sampler=sampler,
@@ -1186,7 +1186,7 @@ study = (
 
 ```python
 # Keep existing for 1D studies
-class ASBasinStabilityEstimator:
+class BasinStabilityStudy:
     """Single-parameter adaptive study."""
     ...
 
@@ -1280,7 +1280,7 @@ estimator = MultiStudyEstimator.from_configs(configs)
 
 ### Migration Path
 
-1. Keep `ASBasinStabilityEstimator` for backward compatibility
+1. Keep `BasinStabilityStudy` for backward compatibility
 2. Implement `BaseConfig`, `Variation`, and `MultiStudyEstimator`
 3. Add `BSERunConfig` and `from_configs()` for full flexibility
 4. Add helpers: `grid_variations()`, `zip_variations()`
@@ -1402,6 +1402,6 @@ estimator, results = run_multi_parameter_test(
 
 ## Open Questions
 
-1. Should `ASBasinStabilityEstimator` be deprecated in favor of the new class?
+1. Should `BasinStabilityStudy` be deprecated in favor of the new class?
 2. Should we support async/parallel execution across configurations?
 3. What plotting utilities are needed for 2D results (heatmaps, contour plots)?

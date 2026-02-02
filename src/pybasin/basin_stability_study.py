@@ -20,9 +20,9 @@ from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 logger = logging.getLogger(__name__)
 
 
-class ASBasinStabilityEstimator:
+class BasinStabilityStudy:
     """
-    Adaptive Study Basin Stability Estimator.
+    Basin Stability Study.
     """
 
     def __init__(
@@ -38,7 +38,7 @@ class ASBasinStabilityEstimator:
         verbose: bool = False,
     ):
         """
-        Initialize the Adaptive Study Basin Stability Estimator.
+        Initialize the Basin Stability Study.
 
         Sets up the estimator for a parameter study where one or more parameters are
         systematically varied across multiple values. Parameters can be in any component

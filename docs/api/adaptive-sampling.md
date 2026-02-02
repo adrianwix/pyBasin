@@ -1,6 +1,6 @@
-# ASBasinStabilityEstimator
+# BasinStabilityStudy
 
-::: pybasin.as_basin_stability_estimator.ASBasinStabilityEstimator
+::: pybasin.basin_stability_study.BasinStabilityStudy
 
 ---
 

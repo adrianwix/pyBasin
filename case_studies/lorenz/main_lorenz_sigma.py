@@ -6,7 +6,7 @@ from pybasin.utils import time_execution
 matplotlib.use("TkAgg")
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.matplotlib_as_plotter import ASPlotter
 from pybasin.study_params import SweepStudyParams
 
@@ -22,15 +22,11 @@ def main():
     solver = props.get("solver")
     feature_extractor = props.get("feature_extractor")
     cluster_classifier = props.get("cluster_classifier")
-    assert solver is not None, "solver is required for ASBasinStabilityEstimator"
-    assert feature_extractor is not None, (
-        "feature_extractor is required for ASBasinStabilityEstimator"
-    )
-    assert cluster_classifier is not None, (
-        "cluster_classifier is required for ASBasinStabilityEstimator"
-    )
+    assert solver is not None, "solver is required for BasinStabilityStudy"
+    assert feature_extractor is not None, "feature_extractor is required for BasinStabilityStudy"
+    assert cluster_classifier is not None, "cluster_classifier is required for BasinStabilityStudy"
 
-    bse = ASBasinStabilityEstimator(
+    bse = BasinStabilityStudy(
         n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],

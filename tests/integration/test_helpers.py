@@ -26,8 +26,8 @@ import numpy as np
 import pandas as pd  # pyright: ignore[reportMissingTypeStubs]
 from sklearn.metrics import f1_score, matthews_corrcoef  # type: ignore[reportMissingTypeStubs]
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.sampler import CsvSampler
 from pybasin.study_params import SweepStudyParams, ZipStudyParams
 from pybasin.types import SetupProperties
@@ -432,14 +432,14 @@ def run_adaptive_basin_stability_test(
     system_name: str = "",
     case_name: str = "",
     ground_truths_dir: Path | None = None,
-) -> tuple[ASBasinStabilityEstimator, list[ComparisonResult]]:
+) -> tuple[BasinStabilityStudy, list[ComparisonResult]]:
     """Run adaptive basin stability test with classification metrics validation against MATLAB reference.
 
     This function:
     1. Loads expected results from MATLAB JSON file with parameter sweep
     2. Extracts parameter values from JSON
     3. If ground_truths_dir is provided, uses CsvSampler for each parameter point with exact MATLAB ICs
-    4. Creates and runs ASBasinStabilityEstimator with SweepStudyParams
+    4. Creates and runs BasinStabilityStudy with SweepStudyParams
     5. For each parameter point, validates results using classification metrics (F1-score, MCC)
     6. Handles JSON with either "bs_<label>" format or "bs_<label>"+"err_<label>" format
 
@@ -452,7 +452,7 @@ def run_adaptive_basin_stability_test(
     :param case_name: Name of the case for artifact generation.
     :param ground_truths_dir: Path to directory with parameter_index.csv and param_XXX.csv files.
         If provided, uses CsvSampler with exact MATLAB ICs for each parameter point.
-    :return: Tuple of (ASBasinStabilityEstimator, list of ComparisonResult per parameter).
+    :return: Tuple of (BasinStabilityStudy, list of ComparisonResult per parameter).
     :raises AssertionError: If validation fails.
     """
     # Load expected results from JSON
@@ -520,11 +520,11 @@ def run_adaptive_basin_stability_test(
     assert cluster_classifier is not None
 
     # When using CSV samplers with ZipStudyParams, each sampler has its own n_samples
-    # The ASBasinStabilityEstimator will use the n from each sampler in the study_params
+    # The BasinStabilityStudy will use the n from each sampler in the study_params
     # For non-CSV cases, use the n from props
     n: int = props["n"] if csv_samplers is None else csv_samplers[0].n_samples
 
-    as_bse = ASBasinStabilityEstimator(
+    as_bse = BasinStabilityStudy(
         n=n,
         ode_system=props["ode_system"],
         sampler=props["sampler"],

@@ -20,7 +20,7 @@ from plotly.subplots import (  # pyright: ignore[reportMissingTypeStubs]
 )
 from sklearn.cluster import KMeans
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.utils import get_color
 
@@ -41,7 +41,7 @@ class ParamBifurcationAIO:
 
     def __init__(
         self,
-        as_bse: ASBasinStabilityEstimator,
+        as_bse: BasinStabilityStudy,
         aio_id: str,
         state_labels: dict[int, str] | None = None,
     ):

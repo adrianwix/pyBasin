@@ -5,9 +5,9 @@ This page is under construction.
 
 ## Use Case
 
-Study how basin stability changes with a system parameter using `ASBasinStabilityEstimator`.
+Study how basin stability changes with a system parameter using `BasinStabilityStudy`.
 
-## The `ASBasinStabilityEstimator` Class
+## The `BasinStabilityStudy` Class
 
 Runs BSE multiple times for different parameter values, returning parameter values, BS values, and full results per run.
 
@@ -15,7 +15,7 @@ Runs BSE multiple times for different parameter values, returning parameter valu
 
 ```python
 import numpy as np
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.study_params import SweepStudyParams
 
 study_params = SweepStudyParams(
@@ -23,7 +23,7 @@ study_params = SweepStudyParams(
     values=np.linspace(0.1, 0.5, 10),
 )
 
-as_bse = ASBasinStabilityEstimator(
+as_bse = BasinStabilityStudy(
     n=10_000,
     ode_system=pendulum_ode,
     sampler=sampler,

@@ -14,8 +14,8 @@ from tests.integration.artifact_generator import (
 )
 
 if TYPE_CHECKING:
-    from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
     from pybasin.basin_stability_estimator import BasinStabilityEstimator
+    from pybasin.basin_stability_study import BasinStabilityStudy
     from tests.integration.test_helpers import ComparisonResult, UnsupervisedComparisonResult
 
 
@@ -42,14 +42,14 @@ class ArtifactEntry:
     """Entry for artifact collection.
 
     :ivar bse: BasinStabilityEstimator instance (for single-point tests).
-    :ivar as_bse: ASBasinStabilityEstimator instance (for parameter sweep tests).
+    :ivar as_bse: BasinStabilityStudy instance (for parameter sweep tests).
     :ivar comparison: Single ComparisonResult (for single-point tests).
     :ivar comparisons: List of ComparisonResult (for parameter sweep tests).
     :ivar unsupervised_comparison: UnsupervisedComparisonResult (for unsupervised tests).
     """
 
     bse: BasinStabilityEstimator | None = None
-    as_bse: ASBasinStabilityEstimator | None = None
+    as_bse: BasinStabilityStudy | None = None
     comparison: ComparisonResult | None = None
     comparisons: list[ComparisonResult] | None = None
     unsupervised_comparison: UnsupervisedComparisonResult | None = None
@@ -71,7 +71,7 @@ class ArtifactCollector:
 
     def add_parameter_sweep(
         self,
-        as_bse: ASBasinStabilityEstimator,
+        as_bse: BasinStabilityStudy,
         comparisons: list[ComparisonResult],
     ) -> None:
         """Add a parameter sweep test result."""

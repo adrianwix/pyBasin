@@ -1,7 +1,7 @@
 import numpy as np
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
@@ -19,15 +19,11 @@ def main():
     solver = props.get("solver")
     feature_extractor = props.get("feature_extractor")
     cluster_classifier = props.get("cluster_classifier")
-    assert solver is not None, "solver is required for ASBasinStabilityEstimator"
-    assert feature_extractor is not None, (
-        "feature_extractor is required for ASBasinStabilityEstimator"
-    )
-    assert cluster_classifier is not None, (
-        "cluster_classifier is required for ASBasinStabilityEstimator"
-    )
+    assert solver is not None, "solver is required for BasinStabilityStudy"
+    assert feature_extractor is not None, "feature_extractor is required for BasinStabilityStudy"
+    assert cluster_classifier is not None, "cluster_classifier is required for BasinStabilityStudy"
 
-    bse = ASBasinStabilityEstimator(
+    bse = BasinStabilityStudy(
         n=props["n"],
         ode_system=props["ode_system"],
         sampler=props["sampler"],

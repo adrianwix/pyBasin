@@ -16,8 +16,8 @@ from case_studies.rossler_network.setup_rossler_network_system import (
     K_VALUES_FROM_PAPER,
     setup_rossler_network_system,
 )
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.study_params import SweepStudyParams
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
@@ -171,7 +171,7 @@ class TestRosslerNetwork:
         assert feature_extractor is not None
         assert cluster_classifier is not None
 
-        as_bse = ASBasinStabilityEstimator(
+        as_bse = BasinStabilityStudy(
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],

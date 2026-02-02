@@ -11,8 +11,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.matplotlib_as_plotter import ASPlotter
 from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
 from tests.integration.test_helpers import ComparisonResult, UnsupervisedComparisonResult
@@ -113,14 +113,14 @@ def generate_unsupervised_artifacts(
 
 
 def generate_parameter_sweep_artifacts(
-    as_bse: ASBasinStabilityEstimator,
+    as_bse: BasinStabilityStudy,
     comparisons: list[ComparisonResult],
 ) -> None:
     """Generate artifacts for a parameter sweep basin stability test.
 
     Writes comparison JSON to artifacts/results/ and plot images to docs/assets/.
 
-    :param as_bse: The ASBasinStabilityEstimator instance with results.
+    :param as_bse: The BasinStabilityStudy instance with results.
     :param comparisons: List of comparison results, one per parameter point.
     """
     if not comparisons:

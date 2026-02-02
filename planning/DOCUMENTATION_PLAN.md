@@ -176,7 +176,7 @@ Home
 │   └── Feature Extraction
 └── API Reference
     ├── BasinStabilityEstimator
-    ├── ASBasinStabilityEstimator
+    ├── BasinStabilityStudy
     ├── Samplers
     ├── Solvers
     ├── Feature Extractors
@@ -218,7 +218,7 @@ nav:
       - Feature Extraction: benchmarks/feature-extraction.md
   - API Reference:
       - BasinStabilityEstimator: api/basin-stability-estimator.md
-      - ASBasinStabilityEstimator: api/adaptive-sampling.md
+      - BasinStabilityStudy: api/adaptive-sampling.md
       - Samplers: api/samplers.md
       - Solvers: api/solvers.md
       - Feature Extractors: api/feature-extractors.md
@@ -364,13 +364,13 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 
 #### 4.3.2 Adaptive Parameter Studies (`user-guide/adaptive-studies.md`)
 
-**Purpose**: Explain `ASBasinStabilityEstimator` for parameter sweeps
+**Purpose**: Explain `BasinStabilityStudy` for parameter sweeps
 
 **Content Outline**:
 
 1. **Use Case**: Study how basin stability changes with a system parameter
 
-2. **The `ASBasinStabilityEstimator` Class**
+2. **The `BasinStabilityStudy` Class**
    - Runs BSE multiple times for different parameter values
    - Returns parameter values, BS values, and full results per run
 
@@ -378,7 +378,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 
    ```python
    import numpy as np
-   from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+   from pybasin.basin_stability_study import BasinStabilityStudy
    from pybasin.study_params import SweepStudyParams
 
    study_params = SweepStudyParams(
@@ -386,7 +386,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
        values=np.linspace(0.1, 0.5, 10),
    )
 
-   as_bse = ASBasinStabilityEstimator(
+   as_bse = BasinStabilityStudy(
        n=10_000,
        ode_system=pendulum_ode,
        sampler=sampler,
@@ -403,7 +403,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 
 **Source Files**:
 
-- `src/pybasin/as_basin_stability_estimator.py` (264 lines)
+- `src/pybasin/basin_stability_study.py` (264 lines)
 - `src/pybasin/plotters/as_plotter.py`
 
 #### 4.3.3 Samplers (`user-guide/samplers.md`)
@@ -1045,15 +1045,15 @@ members_order: source
 
 #### Pages to Create:
 
-| Page                               | Module Path                                                      |
-| ---------------------------------- | ---------------------------------------------------------------- |
-| `api/basin-stability-estimator.md` | `pybasin.basin_stability_estimator.BasinStabilityEstimator`      |
-| `api/adaptive-sampling.md`         | `pybasin.as_basin_stability_estimator.ASBasinStabilityEstimator` |
-| `api/samplers.md`                  | `pybasin.sampler` (all classes)                                  |
-| `api/solvers.md`                   | `pybasin.solver`, `pybasin.solvers.jax_solver`                   |
-| `api/feature-extractors.md`        | `pybasin.feature_extractors`                                     |
-| `api/predictors.md`                | `pybasin.predictors`                                             |
-| `api/plotters.md`                  | `pybasin.plotters`                                               |
+| Page                               | Module Path                                                 |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `api/basin-stability-estimator.md` | `pybasin.basin_stability_estimator.BasinStabilityEstimator` |
+| `api/adaptive-sampling.md`         | `pybasin.basin_stability_study.BasinStabilityStudy`         |
+| `api/samplers.md`                  | `pybasin.sampler` (all classes)                             |
+| `api/solvers.md`                   | `pybasin.solver`, `pybasin.solvers.jax_solver`              |
+| `api/feature-extractors.md`        | `pybasin.feature_extractors`                                |
+| `api/predictors.md`                | `pybasin.predictors`                                        |
+| `api/plotters.md`                  | `pybasin.plotters`                                          |
 
 ---
 
@@ -1150,17 +1150,17 @@ def main():
 
 ### 6.1 Core Library (`src/pybasin/`)
 
-| File                              | Lines | Key Classes                                                    |
-| --------------------------------- | ----- | -------------------------------------------------------------- |
-| `basin_stability_estimator.py`    | 694   | `BasinStabilityEstimator`                                      |
-| `as_basin_stability_estimator.py` | 264   | `ASBasinStabilityEstimator`                                    |
-| `sampler.py`                      | ~150  | `Sampler`, `UniformRandomSampler`, `GridSampler`               |
-| `solver.py`                       | 597   | `TorchDiffEqSolver`, `TorchOdeSolver`, `SklearnParallelSolver` |
-| `solvers/jax_solver.py`           | 301   | `JaxSolver`                                                    |
-| `ode_system.py`                   | ~100  | `ODESystem`                                                    |
-| `jax_ode_system.py`               | 144   | `JaxODESystem`                                                 |
-| `solution.py`                     | ~150  | `Solution`                                                     |
-| `protocols.py`                    | ~50   | `ODESystemProtocol`, `SolverProtocol`                          |
+| File                           | Lines | Key Classes                                                    |
+| ------------------------------ | ----- | -------------------------------------------------------------- |
+| `basin_stability_estimator.py` | 694   | `BasinStabilityEstimator`                                      |
+| `basin_stability_study.py`     | 264   | `BasinStabilityStudy`                                          |
+| `sampler.py`                   | ~150  | `Sampler`, `UniformRandomSampler`, `GridSampler`               |
+| `solver.py`                    | 597   | `TorchDiffEqSolver`, `TorchOdeSolver`, `SklearnParallelSolver` |
+| `solvers/jax_solver.py`        | 301   | `JaxSolver`                                                    |
+| `ode_system.py`                | ~100  | `ODESystem`                                                    |
+| `jax_ode_system.py`            | 144   | `JaxODESystem`                                                 |
+| `solution.py`                  | ~150  | `Solution`                                                     |
+| `protocols.py`                 | ~50   | `ODESystemProtocol`, `SolverProtocol`                          |
 
 ### 6.2 Feature Extractors (`src/pybasin/feature_extractors/`)
 

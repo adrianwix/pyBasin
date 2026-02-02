@@ -37,7 +37,7 @@ from case_studies.rossler_network.synchronization_classifier import (
 from case_studies.rossler_network.synchronization_feature_extractor import (
     SynchronizationFeatureExtractor,
 )
-from pybasin.as_basin_stability_estimator import ASBasinStabilityEstimator
+from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.study_params import SweepStudyParams
@@ -194,7 +194,7 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         values=list(k_values),
     )
 
-    bse = ASBasinStabilityEstimator(
+    bse = BasinStabilityStudy(
         n=N_SAMPLES,
         ode_system=ode_system,
         sampler=sampler,
