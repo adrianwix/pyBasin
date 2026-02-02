@@ -21,7 +21,11 @@ from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAI
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
-from pybasin.plotters.types import PhasePlotOptions
+from pybasin.plotters.types import (
+    TemplatesPhaseSpaceOptions,
+    filter_by_include_exclude,
+    infer_z_axis,
+)
 from pybasin.predictors.base import ClassifierPredictor
 
 
@@ -38,7 +42,7 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         aio_id: str,
         is_3d: bool = False,
         state_labels: dict[int, str] | None = None,
-        options: PhasePlotOptions | None = None,
+        options: TemplatesPhaseSpaceOptions | None = None,
     ):
         """
         Initialize phase plot AIO component.
@@ -51,7 +55,7 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         """
         super().__init__(bse, aio_id, state_labels)
         self.is_3d = is_3d
-        self.options = options or PhasePlotOptions()
+        self.options = options or {}
         TemplatePhasePlotAIO._instances[aio_id] = self
 
     def _get_template_labels(self) -> list[str]:
@@ -78,11 +82,15 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
         n_states = self.get_n_states()
         state_options = self.get_state_options()
         all_template_labels = self._get_template_labels()
-        selected_templates = self.options.filter_templates(all_template_labels)
+        selected_templates = filter_by_include_exclude(
+            all_template_labels,
+            self.options.get("include_templates"),
+            self.options.get("exclude_templates"),
+        )
 
         select_data = cast(Sequence[str], state_options)
-        default_x = str(self.options.x_var)
-        default_y = str(self.options.y_var) if n_states > 1 else "0"
+        default_x = str(self.options.get("x_axis", 0))
+        default_y = str(self.options.get("y_axis", 1)) if n_states > 1 else "0"
 
         controls: list[dmc.Select | dmc.MultiSelect] = [
             dmc.Select(
@@ -101,8 +109,14 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
             ),
         ]
 
-        z_var = self.options.get_z_var(n_states) if n_states > 2 else None
-        default_z = str(z_var) if z_var is not None else None
+        z_axis = self.options.get("z_axis")
+        if z_axis is None and n_states > 2:
+            z_axis = infer_z_axis(
+                self.options.get("x_axis", 0),
+                self.options.get("y_axis", 1),
+                n_states,
+            )
+        default_z = str(z_axis) if z_axis is not None else None
         controls.append(
             dmc.Select(
                 id=aio_id("PhasePlot", self.aio_id, "z-select"),
@@ -126,8 +140,6 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
             )
         )
 
-        z_var = self.options.get_z_var(n_states) if n_states > 2 else None
-
         return html.Div(
             [
                 dmc.Paper(
@@ -141,9 +153,9 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
                         dcc.Graph(
                             id=aio_id("PhasePlot", self.aio_id, "plot"),
                             figure=self.build_figure(
-                                x_var=int(default_x),
-                                y_var=int(default_y),
-                                z_var=z_var,
+                                x_axis=int(default_x),
+                                y_axis=int(default_y),
+                                z_axis=z_axis,
                                 selected_templates=selected_templates,
                             ),
                             style={"height": "70vh"},
@@ -162,9 +174,9 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
 
     def build_figure(
         self,
-        x_var: int = 0,
-        y_var: int = 1,
-        z_var: int | None = None,
+        x_axis: int = 0,
+        y_axis: int = 1,
+        z_axis: int | None = None,
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build phase plot figure."""
@@ -199,12 +211,12 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
             if label not in selected_templates:
                 continue
 
-            if z_var is not None:
+            if z_axis is not None:
                 fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                     go.Scatter3d(
-                        x=traj[:, x_var],
-                        y=traj[:, y_var],
-                        z=traj[:, z_var],
+                        x=traj[:, x_axis],
+                        y=traj[:, y_axis],
+                        z=traj[:, z_axis],
                         mode="lines",
                         name=str(label),
                         line={"color": get_color(i), "width": 3},
@@ -213,20 +225,20 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
             else:
                 fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                     go.Scatter(
-                        x=traj[:, x_var],
-                        y=traj[:, y_var],
+                        x=traj[:, x_axis],
+                        y=traj[:, y_axis],
                         mode="lines",
                         name=str(label),
                         line={"color": get_color(i), "width": 2},
                     )
                 )
 
-        title = "Phase Plot 3D" if z_var is not None else "Phase Plot 2D"
-        x_label = self.get_state_label(x_var)
-        y_label = self.get_state_label(y_var)
+        title = "Phase Space 3D" if z_axis is not None else "Phase Space 2D"
+        x_label = self.get_state_label(x_axis)
+        y_label = self.get_state_label(y_axis)
 
-        if z_var is not None:
-            z_label = self.get_state_label(z_var)
+        if z_axis is not None:
+            z_label = self.get_state_label(z_axis)
             fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
                 title=title,
                 scene={
@@ -262,9 +274,9 @@ class TemplatePhasePlotAIO(BseBasePageAIO):
     prevent_initial_call=True,
 )
 def update_phase_plot_figure_aio(
-    x_var: str,
-    y_var: str,
-    z_var: str | None,
+    x_axis: str,
+    y_axis: str,
+    z_axis: str | None,
     templates: list[str],
     plot_id: dict[str, Any],
 ) -> go.Figure:
@@ -274,16 +286,16 @@ def update_phase_plot_figure_aio(
     if instance is None or not isinstance(instance, TemplatePhasePlotAIO):
         return go.Figure()
 
-    z_var_int = None
-    if z_var is not None and z_var != "":
+    z_axis_int = None
+    if z_axis is not None and z_axis != "":
         try:
-            z_var_int = int(z_var)
+            z_axis_int = int(z_axis)
         except (ValueError, TypeError):
-            z_var_int = None
+            z_axis_int = None
 
     return instance.build_figure(
-        x_var=int(x_var),
-        y_var=int(y_var),
-        z_var=z_var_int,
+        x_axis=int(x_axis),
+        y_axis=int(y_axis),
+        z_axis=z_axis_int,
         selected_templates=templates if templates else None,
     )

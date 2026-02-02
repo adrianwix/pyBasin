@@ -6,11 +6,7 @@ from case_studies.comparison_utils import compare_with_expected
 from case_studies.lorenz.setup_lorenz_system import lorenz_stop_event, setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
-from pybasin.plotters.types import (
-    FeatureSpaceOptions,
-    InteractivePlotterOptions,
-    PhasePlotOptions,
-)
+from pybasin.plotters.types import InteractivePlotterOptions
 from pybasin.solvers.jax_solver import JaxSolver
 from pybasin.utils import time_execution
 
@@ -54,9 +50,9 @@ if __name__ == "__main__":
     if bse.bs_vals is not None:
         compare_with_expected(bse.bs_vals, label_mapping, expected_file)
 
-    options = InteractivePlotterOptions(
-        phase_plot=PhasePlotOptions(x_var=1, y_var=2, exclude_templates=["unbounded"]),
-        feature_space=FeatureSpaceOptions(exclude_labels=["unbounded"]),
-    )
+    options: InteractivePlotterOptions = {
+        "templates_phase_space": {"x_axis": 1, "y_axis": 2, "exclude_templates": ["unbounded"]},
+        "feature_space": {"exclude_labels": ["unbounded"]},
+    }
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y", 2: "z"}, options=options)
     plotter.run(port=8050)

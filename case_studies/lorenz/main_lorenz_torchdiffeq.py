@@ -3,11 +3,7 @@ import torch
 from case_studies.lorenz.lorenz_ode import LorenzODE, LorenzParams
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
-from pybasin.plotters.types import (
-    FeatureSpaceOptions,
-    InteractivePlotterOptions,
-    PhasePlotOptions,
-)
+from pybasin.plotters.types import InteractivePlotterOptions
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solver import TorchDiffEqSolver
 from pybasin.utils import time_execution
@@ -56,9 +52,9 @@ def main():
 
 if __name__ == "__main__":
     bse = time_execution("main_lorenz_torchdiffeq.py", main)
-    options = InteractivePlotterOptions(
-        phase_plot=PhasePlotOptions(x_var=1, y_var=2, exclude_templates=["unbounded"]),
-        feature_space=FeatureSpaceOptions(exclude_labels=["unbounded"]),
-    )
+    options: InteractivePlotterOptions = {
+        "templates_phase_space": {"x_axis": 1, "y_axis": 2, "exclude_templates": ["unbounded"]},
+        "feature_space": {"exclude_labels": ["unbounded"]},
+    }
     plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y", 2: "z"}, options=options)
     # plotter.run(port=8050)

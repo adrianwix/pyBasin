@@ -14,7 +14,7 @@ from pybasin.utils import generate_filename, resolve_folder
 logger = logging.getLogger(__name__)
 
 
-class ASPlotter:
+class MatplotlibStudyPlotter:
     """
     Matplotlib-based plotter for adaptive study basin stability results.
 

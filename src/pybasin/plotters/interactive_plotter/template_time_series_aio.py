@@ -22,7 +22,7 @@ from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAI
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
-from pybasin.plotters.types import TemplateTimeSeriesOptions
+from pybasin.plotters.types import TemplatesTimeSeriesOptions, filter_by_include_exclude
 from pybasin.predictors.base import ClassifierPredictor
 
 
@@ -38,7 +38,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         bse: BasinStabilityEstimator,
         aio_id: str,
         state_labels: dict[int, str] | None = None,
-        options: TemplateTimeSeriesOptions | None = None,
+        options: TemplatesTimeSeriesOptions | None = None,
     ):
         """
         Initialize template time series AIO component.
@@ -49,7 +49,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         :param options: Template time series configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
-        self.options = options or TemplateTimeSeriesOptions()
+        self.options = options or {}
         TemplateTimeSeriesAIO._instances[aio_id] = self
 
     def get_time_bounds(self) -> tuple[float, float]:
@@ -74,12 +74,20 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
         state_options = self.get_state_options()
         all_template_labels = list(self.bse.predictor.labels)
-        selected_templates = self.options.filter_templates(all_template_labels)
+        selected_templates = filter_by_include_exclude(
+            all_template_labels,
+            self.options.get("include_templates"),
+            self.options.get("exclude_templates"),
+        )
 
         t_min, t_max = self.get_time_bounds()
-        default_span = (t_min, t_min + (t_max - t_min) * self.options.time_range_percent)
+        time_range = self.options.get("time_range", (0.85, 1.0))
+        default_span = (
+            t_min + (t_max - t_min) * time_range[0],
+            t_min + (t_max - t_min) * time_range[1],
+        )
 
-        state_var = self.options.state_var
+        state_variable = self.options.get("state_variable", 0)
         select_data = cast(Sequence[str], state_options)
 
         controls: list[Component] = [
@@ -87,7 +95,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
                 id=aio_id("TemplateTimeSeries", self.aio_id, "state-select"),
                 label="State Variable",
                 data=select_data,
-                value=str(state_var),
+                value=str(state_variable),
                 w=150,
             ),
             dmc.MultiSelect(
@@ -128,7 +136,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
                         dcc.Graph(
                             id=aio_id("TemplateTimeSeries", self.aio_id, "plot"),
                             figure=self.build_figure(
-                                state_var=state_var,
+                                state_variable=state_variable,
                                 time_span=default_span,
                                 selected_templates=selected_templates,
                             ),
@@ -148,7 +156,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
     def build_figure(
         self,
-        state_var: int = 0,
+        state_variable: int = 0,
         time_span: tuple[float, float] | None = None,
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
@@ -192,7 +200,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                 go.Scatter(
                     x=t,
-                    y=traj[:, state_var],
+                    y=traj[:, state_variable],
                     mode="lines",
                     name=str(label),
                     line={"color": get_color(i), "width": 2},
@@ -200,9 +208,9 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             )
 
         fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
-            title=f"Template Trajectories - {self.get_state_label(state_var)}",
+            title=f"Template Trajectories - {self.get_state_label(state_variable)}",
             xaxis_title="Time",
-            yaxis_title=self.get_state_label(state_var),
+            yaxis_title=self.get_state_label(state_variable),
             template="plotly_dark",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
@@ -222,7 +230,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
     prevent_initial_call=True,
 )
 def update_template_time_series_figure_aio(
-    state_var: str,
+    state_variable: str,
     templates: list[str],
     time_range: list[float],
     plot_id: dict[str, Any],
@@ -234,7 +242,7 @@ def update_template_time_series_figure_aio(
         return go.Figure()
 
     return instance.build_figure(
-        state_var=int(state_var),
+        state_variable=int(state_variable),
         time_span=(time_range[0], time_range[1]),
         selected_templates=templates,
     )

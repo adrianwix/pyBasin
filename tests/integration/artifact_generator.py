@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
 from tests.integration.test_helpers import ComparisonResult, UnsupervisedComparisonResult
 
@@ -146,7 +146,7 @@ def generate_parameter_sweep_artifacts(
 
     print(f"  Written: {json_path}")
 
-    plotter = ASPlotter(as_bse)
+    plotter = MatplotlibStudyPlotter(as_bse)
 
     fig = plotter.plot_basin_stability_variation(show=False)
     path = DOCS_ASSETS_DIR / f"{prefix}_basin_stability_variation.png"

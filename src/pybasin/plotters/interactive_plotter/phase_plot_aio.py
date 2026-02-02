@@ -21,7 +21,11 @@ from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAI
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
-from pybasin.plotters.types import PhasePlotOptions
+from pybasin.plotters.types import (
+    TemplatesPhaseSpaceOptions,
+    filter_by_include_exclude,
+    infer_z_axis,
+)
 from pybasin.predictors.base import ClassifierPredictor
 
 
@@ -38,7 +42,7 @@ class PhasePlotAIO(BseBasePageAIO):
         aio_id: str,
         is_3d: bool = False,
         state_labels: dict[int, str] | None = None,
-        options: PhasePlotOptions | None = None,
+        options: TemplatesPhaseSpaceOptions | None = None,
     ):
         """
         Initialize phase plot AIO component.
@@ -51,7 +55,7 @@ class PhasePlotAIO(BseBasePageAIO):
         """
         super().__init__(bse, aio_id, state_labels)
         self.is_3d = is_3d
-        self.options = options or PhasePlotOptions()
+        self.options = options or {}
         PhasePlotAIO._instances[aio_id] = self
 
     def _get_template_labels(self) -> list[str]:
@@ -78,11 +82,15 @@ class PhasePlotAIO(BseBasePageAIO):
         n_states = self.get_n_states()
         state_options = self.get_state_options()
         all_template_labels = self._get_template_labels()
-        selected_templates = self.options.filter_templates(all_template_labels)
+        selected_templates = filter_by_include_exclude(
+            all_template_labels,
+            self.options.get("include_templates"),
+            self.options.get("exclude_templates"),
+        )
 
         select_data = cast(Sequence[str], state_options)
-        default_x = str(self.options.x_var)
-        default_y = str(self.options.y_var) if n_states > 1 else "0"
+        default_x = str(self.options.get("x_axis", 0))
+        default_y = str(self.options.get("y_axis", 1)) if n_states > 1 else "0"
 
         controls: list[dmc.Select | dmc.MultiSelect] = [
             dmc.Select(
@@ -101,7 +109,15 @@ class PhasePlotAIO(BseBasePageAIO):
             ),
         ]
 
-        z_var = self.options.get_z_var(n_states) if n_states > 2 else None
+        z_var = (
+            infer_z_axis(
+                self.options.get("x_axis", 0),
+                self.options.get("y_axis", 1),
+                n_states,
+            )
+            if n_states > 2
+            else None
+        )
         default_z = str(z_var) if z_var is not None else None
         controls.append(
             dmc.Select(
@@ -126,7 +142,15 @@ class PhasePlotAIO(BseBasePageAIO):
             )
         )
 
-        z_var = self.options.get_z_var(n_states) if n_states > 2 else None
+        z_var = (
+            infer_z_axis(
+                self.options.get("x_axis", 0),
+                self.options.get("y_axis", 1),
+                n_states,
+            )
+            if n_states > 2
+            else None
+        )
 
         return html.Div(
             [

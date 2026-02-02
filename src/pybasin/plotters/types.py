@@ -1,159 +1,258 @@
 # pyright: basic
-"""Type definitions for interactive plotter options."""
+"""Type definitions for interactive plotter options.
 
-from dataclasses import dataclass, field
-from typing import Literal
+This module provides TypedDict-based options for configuring the InteractivePlotter.
+All options use ``total=False`` so every field is optional - unspecified values
+use sensible defaults at runtime.
 
+Example usage::
 
-@dataclass
-class TemplateSelectionOptions:
-    """Base options for template selection (include or exclude, not both)."""
+    from pybasin.plotters import InteractivePlotter
 
-    include_templates: list[str] | None = None
-    exclude_templates: list[str] | None = None
+    plotter = InteractivePlotter(
+        bse,
+        state_labels={0: "θ", 1: "ω"},
+        options={
+            "initial_view": "templates_phase_space",
+            "templates_time_series": {"state_variable": 1},
+            "templates_phase_space": {"exclude_templates": ["unbounded"]},
+        },
+    )
+"""
 
-    def __post_init__(self) -> None:
-        if self.include_templates is not None and self.exclude_templates is not None:
-            raise ValueError(
-                "Cannot specify both include_templates and exclude_templates. "
-                "Use include_templates to show only specific templates, "
-                "or exclude_templates to hide specific templates."
-            )
-
-    def filter_templates(self, all_labels: list[str]) -> list[str]:
-        """Filter template labels based on include/exclude settings.
-
-        :param all_labels: All available template labels.
-        :return: Filtered list of template labels to display.
-        """
-        if self.include_templates is not None:
-            return [label for label in all_labels if label in self.include_templates]
-        elif self.exclude_templates is not None:
-            return [label for label in all_labels if label not in self.exclude_templates]
-        return all_labels
+from copy import deepcopy
+from typing import Any, Literal, TypedDict
 
 
-@dataclass
-class StateSpaceOptions:
+class StateSpaceOptions(TypedDict, total=False):
     """Options for the State Space page."""
 
-    x_var: int = 0
-    y_var: int = 1
-    time_range_percent: float = 0.15
+    x_axis: int
+    """Index of the state variable to plot on the X axis. Default: 0."""
+    y_axis: int
+    """Index of the state variable to plot on the Y axis. Default: 1."""
+    time_range: tuple[float, float]
+    """Fraction of trajectory to display as (start, end) where 0.0 is the beginning and 1.0 is the end. Default: (0.0, 1.0)."""
 
 
-@dataclass
-class FeatureSpaceOptions:
+class FeatureSpaceOptions(TypedDict, total=False):
     """Options for the Feature Space page."""
 
-    x_feature: int = 0
-    y_feature: int | None = 1
-    use_filtered: bool = True
-    include_labels: list[str] | None = None
-    exclude_labels: list[str] | None = None
-
-    def __post_init__(self) -> None:
-        if self.include_labels is not None and self.exclude_labels is not None:
-            raise ValueError(
-                "Cannot specify both include_labels and exclude_labels. "
-                "Use include_labels to show only specific labels, "
-                "or exclude_labels to hide specific labels."
-            )
-
-    def filter_labels(self, all_labels: list[str]) -> list[str]:
-        """Filter labels based on include/exclude settings.
-
-        :param all_labels: All available labels.
-        :return: Filtered list of labels to display.
-        """
-        if self.include_labels is not None:
-            return [label for label in all_labels if label in self.include_labels]
-        elif self.exclude_labels is not None:
-            return [label for label in all_labels if label not in self.exclude_labels]
-        return all_labels
+    x_axis: int
+    """Index of the feature to plot on the X axis. Default: 0."""
+    y_axis: int | None
+    """Index of the feature to plot on the Y axis. None for 1D strip plot. Default: 1."""
+    use_filtered: bool
+    """Whether to use filtered features. Default: True."""
+    include_labels: list[str]
+    """Show only these attractor labels. Mutually exclusive with exclude_labels."""
+    exclude_labels: list[str]
+    """Hide these attractor labels. Mutually exclusive with include_labels."""
 
 
-@dataclass
-class PhasePlotOptions(TemplateSelectionOptions):
-    """Options for the Phase Plot 2D/3D pages."""
+class TemplatesPhaseSpaceOptions(TypedDict, total=False):
+    """Options for the Templates Phase Space page (2D or 3D)."""
 
-    x_var: int = 0
-    y_var: int = 1
-    z_var: int | None = None  # None = auto-infer from remaining state
-
-    def get_z_var(self, n_states: int) -> int:
-        """Get the Z-axis variable index, inferring if not set.
-
-        :param n_states: Total number of state variables.
-        :return: Z-axis variable index.
-        """
-        if self.z_var is not None:
-            return self.z_var
-        if n_states >= 3:
-            # Find the first state not used by X or Y
-            used = {self.x_var, self.y_var}
-            remaining = [i for i in range(n_states) if i not in used]
-            return remaining[0] if remaining else 0
-        return 0
+    x_axis: int
+    """Index of the state variable to plot on the X axis. Default: 0."""
+    y_axis: int
+    """Index of the state variable to plot on the Y axis. Default: 1."""
+    z_axis: int | None
+    """Index of the state variable for 3D plot Z axis. None for 2D plot. Default: None (2D)."""
+    include_templates: list[str]
+    """Show only these template labels. Mutually exclusive with exclude_templates."""
+    exclude_templates: list[str]
+    """Hide these template labels. Mutually exclusive with include_templates."""
 
 
-@dataclass
-class TemplateTimeSeriesOptions(TemplateSelectionOptions):
-    """Options for the Template Time Series page."""
+class TemplatesTimeSeriesOptions(TypedDict, total=False):
+    """Options for the Templates Time Series page."""
 
-    state_var: int = 0
-    time_range_percent: float = 0.15
+    state_variable: int
+    """Index of the state variable to plot over time. Default: 0."""
+    time_range: tuple[float, float]
+    """Fraction of trajectory to display as (start, end) where 0.0 is the beginning and 1.0 is the end. Default: (0.0, 1.0)."""
+    include_templates: list[str]
+    """Show only these template labels. Mutually exclusive with exclude_templates."""
+    exclude_templates: list[str]
+    """Hide these template labels. Mutually exclusive with include_templates."""
 
 
-@dataclass
-class ParamOverviewOptions:
+class ParamOverviewOptions(TypedDict, total=False):
     """Options for the Parameter Overview page."""
 
-    x_scale: Literal["linear", "log"] = "linear"
-    selected_labels: list[str] | None = None
+    x_scale: Literal["linear", "log"]
+    """Scale for the X axis. Default: "linear"."""
+    selected_labels: list[str]
+    """Attractor labels to display. Default: all labels."""
 
 
-@dataclass
-class ParamBifurcationOptions:
+class ParamBifurcationOptions(TypedDict, total=False):
     """Options for the Parameter Bifurcation page."""
 
-    selected_dofs: list[int] | None = None
+    state_dimensions: list[int]
+    """Indices of state dimensions to show. Default: all dimensions."""
 
 
 ViewType = Literal[
-    "bs",
-    "state",
-    "feature",
-    "phase-2d",
-    "phase-3d",
-    "template-ts",
-    "param-overview",
-    "param-bifurcation",
+    "basin_stability",
+    "state_space",
+    "feature_space",
+    "templates_phase_space",
+    "templates_time_series",
+    "param_overview",
+    "param_bifurcation",
 ]
 
 
-@dataclass
-class InteractivePlotterOptions:
+class InteractivePlotterOptions(TypedDict, total=False):
     """Configuration options for InteractivePlotter defaults.
 
-    Use this to customize the initial state of controls for each visualization
-    page. Invalid values (e.g., out-of-bounds indices) will trigger a warning
-    and fall back to safe defaults.
+    All options are optional. Unspecified values use sensible defaults.
+    Invalid values (e.g., out-of-bounds indices) trigger a warning and
+    fall back to safe defaults.
 
-    ```python
-    options = InteractivePlotterOptions(
-        initial_view="phase-2d",
-        phase_plot=PhasePlotOptions(x_var=0, y_var=2, exclude_templates=["unbounded"]),
-        template_ts=TemplateTimeSeriesOptions(time_range_percent=0.10),
-    )
-    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
-    ```
+    Example::
+
+        options: InteractivePlotterOptions = {
+            "initial_view": "templates_phase_space",
+            "templates_time_series": {"state_variable": 1, "time_range": (0.0, 1.0)},
+            "templates_phase_space": {"x_axis": 0, "y_axis": 2, "exclude_templates": ["unbounded"]},
+        }
+        plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
     """
 
-    initial_view: ViewType = "bs"
-    state_space: StateSpaceOptions = field(default_factory=StateSpaceOptions)
-    feature_space: FeatureSpaceOptions = field(default_factory=FeatureSpaceOptions)
-    phase_plot: PhasePlotOptions = field(default_factory=PhasePlotOptions)
-    template_ts: TemplateTimeSeriesOptions = field(default_factory=TemplateTimeSeriesOptions)
-    param_overview: ParamOverviewOptions = field(default_factory=ParamOverviewOptions)
-    param_bifurcation: ParamBifurcationOptions = field(default_factory=ParamBifurcationOptions)
+    initial_view: ViewType
+    """The page to display when the plotter opens. Default: "basin_stability"."""
+    state_space: StateSpaceOptions
+    """Options for the State Space visualization."""
+    feature_space: FeatureSpaceOptions
+    """Options for the Feature Space visualization."""
+    templates_phase_space: TemplatesPhaseSpaceOptions
+    """Options for the Templates Phase Space visualization."""
+    templates_time_series: TemplatesTimeSeriesOptions
+    """Options for the Templates Time Series visualization."""
+    param_overview: ParamOverviewOptions
+    """Options for the Parameter Overview visualization."""
+    param_bifurcation: ParamBifurcationOptions
+    """Options for the Parameter Bifurcation visualization."""
+
+
+# Default values for all options
+_DEFAULT_STATE_SPACE: StateSpaceOptions = {
+    "x_axis": 0,
+    "y_axis": 1,
+    "time_range": (0.0, 1.0),
+}
+
+_DEFAULT_FEATURE_SPACE: FeatureSpaceOptions = {
+    "x_axis": 0,
+    "y_axis": 1,
+    "use_filtered": True,
+}
+
+_DEFAULT_TEMPLATES_PHASE_SPACE: TemplatesPhaseSpaceOptions = {
+    "x_axis": 0,
+    "y_axis": 1,
+    "z_axis": None,
+}
+
+_DEFAULT_TEMPLATES_TIME_SERIES: TemplatesTimeSeriesOptions = {
+    "state_variable": 0,
+    "time_range": (0.0, 1.0),
+}
+
+_DEFAULT_PARAM_OVERVIEW: ParamOverviewOptions = {
+    "x_scale": "linear",
+}
+
+_DEFAULT_PARAM_BIFURCATION: ParamBifurcationOptions = {}
+
+_DEFAULT_OPTIONS: InteractivePlotterOptions = {
+    "initial_view": "basin_stability",
+    "state_space": _DEFAULT_STATE_SPACE,
+    "feature_space": _DEFAULT_FEATURE_SPACE,
+    "templates_phase_space": _DEFAULT_TEMPLATES_PHASE_SPACE,
+    "templates_time_series": _DEFAULT_TEMPLATES_TIME_SERIES,
+    "param_overview": _DEFAULT_PARAM_OVERVIEW,
+    "param_bifurcation": _DEFAULT_PARAM_BIFURCATION,
+}
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Deep merge override dict into base dict.
+
+    :param base: Base dictionary with default values.
+    :param override: Dictionary with user-provided overrides.
+    :return: Merged dictionary.
+    """
+    result = deepcopy(base)
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = deepcopy(value)
+    return result
+
+
+def merge_options(user_options: InteractivePlotterOptions | None) -> InteractivePlotterOptions:
+    """Merge user-provided options with defaults.
+
+    :param user_options: Partial options dict from user, or None for all defaults.
+    :return: Complete options dict with all defaults filled in.
+    """
+    if user_options is None:
+        return deepcopy(_DEFAULT_OPTIONS)
+    return _deep_merge(_DEFAULT_OPTIONS, user_options)  # type: ignore[return-value]
+
+
+def filter_by_include_exclude(
+    all_items: list[str],
+    include: list[str] | None,
+    exclude: list[str] | None,
+) -> list[str]:
+    """Filter items based on include/exclude lists.
+
+    :param all_items: All available items.
+    :param include: If provided, show only these items (mutually exclusive with exclude).
+    :param exclude: If provided, hide these items (mutually exclusive with include).
+    :return: Filtered list of items.
+    :raises ValueError: If both include and exclude are provided.
+    """
+    if include is not None and exclude is not None:
+        raise ValueError(
+            "Cannot specify both include and exclude lists. "
+            "Use include to show only specific items, or exclude to hide specific items."
+        )
+    if include is not None:
+        return [item for item in all_items if item in include]
+    if exclude is not None:
+        return [item for item in all_items if item not in exclude]
+    return all_items
+
+
+def infer_z_axis(x_axis: int, y_axis: int, n_states: int) -> int:
+    """Infer the Z-axis variable index from unused state variables.
+
+    :param x_axis: X-axis state variable index.
+    :param y_axis: Y-axis state variable index.
+    :param n_states: Total number of state variables.
+    :return: Z-axis variable index (first unused state, or 0 if none available).
+    """
+    if n_states >= 3:
+        used = {x_axis, y_axis}
+        remaining = [i for i in range(n_states) if i not in used]
+        return remaining[0] if remaining else 0
+    return 0
+
+
+# Mapping from old ViewType to URL paths (for navbar routing)
+VIEW_TO_PATH: dict[ViewType, str] = {
+    "basin_stability": "/basin-stability",
+    "state_space": "/state-space",
+    "feature_space": "/feature-space",
+    "templates_phase_space": "/phase",
+    "templates_time_series": "/time-series",
+    "param_overview": "/param-overview",
+    "param_bifurcation": "/param-bifurcation",
+}

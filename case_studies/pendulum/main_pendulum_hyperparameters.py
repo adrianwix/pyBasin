@@ -9,7 +9,7 @@ import numpy as np
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
 
@@ -49,7 +49,7 @@ def main():
 if __name__ == "__main__":
     bse = time_execution("main_pendulum_hyperparameters.py", main)
 
-    plotter = ASPlotter(bse)
+    plotter = MatplotlibStudyPlotter(bse)
 
     plotter.plot_basin_stability_variation()
 

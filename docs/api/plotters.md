@@ -8,4 +8,4 @@
 
 ---
 
-::: pybasin.matplotlib_as_plotter.ASPlotter
+::: pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter

@@ -118,13 +118,13 @@ class ASParameterManagerAIO:
                 aio_id=f"{aio_id_base}-basin-stability",
                 state_labels=self.state_labels,
             ),
-            "template-phase-plot": TemplatePhasePlotAIO(
+            "templates-phase-space": TemplatePhasePlotAIO(
                 bse=bse,
                 aio_id=f"{aio_id_base}-phase",
                 is_3d=False,
                 state_labels=self.state_labels,
             ),
-            "template-time-series": TemplateTimeSeriesAIO(
+            "templates-time-series": TemplateTimeSeriesAIO(
                 bse=bse,
                 aio_id=f"{aio_id_base}-template-ts",
                 state_labels=self.state_labels,

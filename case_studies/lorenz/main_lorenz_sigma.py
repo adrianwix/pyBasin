@@ -7,7 +7,7 @@ matplotlib.use("TkAgg")
 
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.matplotlib_as_plotter import ASPlotter
+from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.study_params import SweepStudyParams
 
 
@@ -45,7 +45,7 @@ def main():
 if __name__ == "__main__":
     bse = time_execution("main_lorenz_sigma.py", main)
 
-    plotter = ASPlotter(bse)
+    plotter = MatplotlibStudyPlotter(bse)
 
     plotter.plot_basin_stability_variation()
     plotter.plot_bifurcation_diagram(dof=[0, 1, 2])

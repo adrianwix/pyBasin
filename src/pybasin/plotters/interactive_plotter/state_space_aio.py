@@ -50,7 +50,7 @@ class StateSpaceAIO(BseBasePageAIO):
         :param options: State space plot configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
-        self.options = options or StateSpaceOptions()
+        self.options = options or {}
         StateSpaceAIO._instances[aio_id] = self
         self.trajectory_modal = TrajectoryModalAIO(bse, aio_id, state_labels)
 
@@ -60,8 +60,8 @@ class StateSpaceAIO(BseBasePageAIO):
         select_data = cast(Sequence[str], state_options)
         n_states = self.get_n_states()
 
-        x_var = self.options.x_var
-        y_var = self.options.y_var
+        x_axis = self.options.get("x_axis", 0)
+        y_axis = self.options.get("y_axis", 1)
 
         return html.Div(
             [
@@ -75,13 +75,13 @@ class StateSpaceAIO(BseBasePageAIO):
                                             id=aio_id("StateSpace", self.aio_id, "x-select"),
                                             label="X Axis",
                                             data=select_data,
-                                            value=str(x_var),
+                                            value=str(x_axis),
                                         ),
                                         dmc.Select(
                                             id=aio_id("StateSpace", self.aio_id, "y-select"),
                                             label="Y Axis",
                                             data=select_data,
-                                            value=str(y_var) if n_states > 1 else "0",
+                                            value=str(y_axis) if n_states > 1 else "0",
                                         ),
                                     ],
                                     direction={"base": "row", "md": "column"},  # pyright: ignore[reportArgumentType]
@@ -100,10 +100,10 @@ class StateSpaceAIO(BseBasePageAIO):
                             [
                                 dcc.Graph(
                                     id=aio_id("StateSpace", self.aio_id, "plot"),
-                                    figure=self.build_figure(x_var=x_var, y_var=y_var),
+                                    figure=self.build_figure(x_axis=x_axis, y_axis=y_axis),
                                     style={
                                         "width": "100%",
-                                        "aspectRatio": "1 / 1",
+                                        "height": "calc(100vh - 60px)",
                                     },
                                     config={
                                         "displayModeBar": True,
@@ -119,7 +119,7 @@ class StateSpaceAIO(BseBasePageAIO):
             ]
         )
 
-    def build_figure(self, x_var: int = 0, y_var: int = 1) -> go.Figure:
+    def build_figure(self, x_axis: int = 0, y_axis: int = 1) -> go.Figure:
         """Build state space scatter plot."""
         fig = go.Figure()
 
@@ -148,8 +148,8 @@ class StateSpaceAIO(BseBasePageAIO):
         for i, label in enumerate(unique_labels):
             mask = labels == label
             indices = np.where(mask)[0]
-            x_data = y0_np[mask, x_var]
-            y_data = y0_np[mask, y_var]
+            x_data = y0_np[mask, x_axis]
+            y_data = y0_np[mask, y_axis]
 
             # customdata must be 2D array - each point gets a list of values
             customdata_2d = [[idx] for idx in indices]
@@ -169,23 +169,23 @@ class StateSpaceAIO(BseBasePageAIO):
                     },
                     hovertemplate=(
                         f"<b>{label}</b><br>"
-                        + f"{self.get_state_label(x_var)}: %{{x:.4f}}<br>"
-                        + f"{self.get_state_label(y_var)}: %{{y:.4f}}<extra></extra>"
+                        + f"{self.get_state_label(x_axis)}: %{{x:.4f}}<br>"
+                        + f"{self.get_state_label(y_axis)}: %{{y:.4f}}<extra></extra>"
                     ),
                 )
             )
 
         fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
             title="State Space",
-            xaxis_title=self.get_state_label(x_var),
-            yaxis_title=self.get_state_label(y_var),
+            xaxis_title=self.get_state_label(x_axis),
+            yaxis_title=self.get_state_label(y_axis),
             template="plotly_dark",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             legend={
                 "orientation": "h",
                 "yanchor": "bottom",
-                "y": 1.02,
+                "y": 1.0,
                 "xanchor": "left",
                 "x": 0,
             },
@@ -205,8 +205,8 @@ class StateSpaceAIO(BseBasePageAIO):
     prevent_initial_call=True,
 )
 def update_state_space_figure_aio(
-    x_var: str,
-    y_var: str,
+    x_axis: str,
+    y_axis: str,
     plot_id: dict[str, Any],
 ) -> go.Figure:
     """Update figure when axis selection changes."""
@@ -215,7 +215,7 @@ def update_state_space_figure_aio(
     if instance is None or not isinstance(instance, StateSpaceAIO):
         return go.Figure()
 
-    return instance.build_figure(x_var=int(x_var), y_var=int(y_var))
+    return instance.build_figure(x_axis=int(x_axis), y_axis=int(y_axis))
 
 
 @callback(

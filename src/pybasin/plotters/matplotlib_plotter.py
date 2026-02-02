@@ -24,6 +24,7 @@ class MatplotlibPlotter:
         """
         self.bse = bse
 
+    # Do we need this if the methods save on their own alrady?
     def save_plot(self, plot_name: str):
         if self.bse.save_to is None:
             raise ValueError("save_to is not defined.")
@@ -63,6 +64,7 @@ class MatplotlibPlotter:
         # Show/save if standalone
         if standalone:
             plt.tight_layout()
+            # TODO: review this is always called
             if self.bse.save_to:
                 self.save_plot("basin_stability_bars")
             else:
@@ -241,7 +243,7 @@ class MatplotlibPlotter:
             plt.show()  # type: ignore[misc]
 
     # Plots 2 states over time for the same trajectory in the same space
-    def plot_phase(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
+    def plot_templates_phase_space(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
         """
@@ -298,7 +300,9 @@ class MatplotlibPlotter:
             plt.show()  # type: ignore[misc]
 
     # Plots over time
-    def plot_templates(self, plotted_var: int, time_span: tuple[float, float] | None = None):
+    def plot_templates_trajectories(
+        self, plotted_var: int, time_span: tuple[float, float] | None = None
+    ):
         """
         Plot trajectories for the template initial conditions.
 

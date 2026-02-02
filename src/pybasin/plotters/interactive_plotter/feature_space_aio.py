@@ -25,7 +25,7 @@ from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAI
 from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_modal_aio import TrajectoryModalAIO
 from pybasin.plotters.interactive_plotter.utils import get_color
-from pybasin.plotters.types import FeatureSpaceOptions
+from pybasin.plotters.types import FeatureSpaceOptions, filter_by_include_exclude
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
         :param options: Feature space plot configuration options.
         """
         super().__init__(bse, aio_id, state_labels)
-        self.options = options or FeatureSpaceOptions()
+        self.options = options or {}
         FeatureSpaceAIO._instances[aio_id] = self
         self.trajectory_modal = TrajectoryModalAIO(bse, aio_id, state_labels)
 
@@ -108,14 +108,18 @@ class FeatureSpaceAIO(BseBasePageAIO):
 
     def render(self) -> html.Div:
         """Render complete page layout with controls, plot, and modal."""
-        use_filtered = self.options.use_filtered
+        use_filtered = self.options.get("use_filtered", True)
         feature_options = self.get_feature_options(use_filtered=use_filtered)
         all_labels = self.get_all_labels()
-        selected_labels = self.options.filter_labels(all_labels)
+        selected_labels = filter_by_include_exclude(
+            all_labels,
+            self.options.get("include_labels"),
+            self.options.get("exclude_labels"),
+        )
 
         feature_select_data = cast(Sequence[str], feature_options)
-        x_feature = self.options.x_feature
-        y_feature = self.options.y_feature
+        x_axis = self.options.get("x_axis", 0)
+        y_axis = self.options.get("y_axis", 1)
 
         show_feature_switch = (
             self.bse.solution is not None
@@ -136,13 +140,13 @@ class FeatureSpaceAIO(BseBasePageAIO):
                                             id=aio_id("FeatureSpace", self.aio_id, "x-select"),
                                             label="X Axis",
                                             data=feature_select_data,
-                                            value=str(x_feature),
+                                            value=str(x_axis),
                                         ),
                                         dmc.Select(
                                             id=aio_id("FeatureSpace", self.aio_id, "y-select"),
                                             label="Y Axis",
                                             data=feature_select_data,
-                                            value=str(y_feature) if y_feature is not None else "1",
+                                            value=str(y_axis) if y_axis is not None else "1",
                                         ),
                                         dmc.MultiSelect(
                                             id=aio_id("FeatureSpace", self.aio_id, "label-select"),
@@ -194,14 +198,14 @@ class FeatureSpaceAIO(BseBasePageAIO):
                                 dcc.Graph(
                                     id=aio_id("FeatureSpace", self.aio_id, "plot"),
                                     figure=self.build_figure(
-                                        x_feature=x_feature,
-                                        y_feature=y_feature,
+                                        x_axis=x_axis,
+                                        y_axis=y_axis,
                                         selected_labels=selected_labels,
                                         use_filtered=use_filtered,
                                     ),
                                     style={
                                         "width": "100%",
-                                        "aspectRatio": "1 / 1",
+                                        "height": "calc(100vh - 60px)",
                                     },
                                     config={
                                         "displayModeBar": True,
@@ -219,8 +223,8 @@ class FeatureSpaceAIO(BseBasePageAIO):
 
     def build_figure(
         self,
-        x_feature: int = 0,
-        y_feature: int | None = 1,
+        x_axis: int = 0,
+        y_axis: int | None = 1,
         selected_labels: list[str] | None = None,
         use_filtered: bool = True,
     ) -> go.Figure:
@@ -321,21 +325,21 @@ class FeatureSpaceAIO(BseBasePageAIO):
         feature_options = self.get_feature_options(use_filtered=use_filtered)
         n_features = features.shape[1]
 
-        if x_feature >= n_features:
-            x_feature = 0
-        if y_feature is None or y_feature >= n_features:
-            y_feature = 0
+        if x_axis >= n_features:
+            x_axis = 0
+        if y_axis is None or y_axis >= n_features:
+            y_axis = 0
 
         x_label = (
-            feature_options[x_feature]["label"]
-            if x_feature < len(feature_options)
-            else f"Feature {x_feature}"
+            feature_options[x_axis]["label"]
+            if x_axis < len(feature_options)
+            else f"Feature {x_axis}"
         )
 
         y_label = (
-            feature_options[y_feature]["label"]
-            if y_feature < len(feature_options)
-            else f"Feature {y_feature}"
+            feature_options[y_axis]["label"]
+            if y_axis < len(feature_options)
+            else f"Feature {y_axis}"
         )
 
         if n_features == 1:
@@ -343,7 +347,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
             for i, label in enumerate(unique_labels):
                 mask = labels == label
                 indices = original_indices[mask]
-                x_data = features[mask, x_feature]
+                x_data = features[mask, x_axis]
                 y_data = rng.uniform(-0.4, 0.4, size=len(x_data))
 
                 # customdata must be 2D array - each point gets a list of values
@@ -379,7 +383,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
                 legend={
                     "orientation": "h",
                     "yanchor": "bottom",
-                    "y": 1.02,
+                    "y": 1.0,
                     "xanchor": "left",
                     "x": 0,
                 },
@@ -389,8 +393,8 @@ class FeatureSpaceAIO(BseBasePageAIO):
             for i, label in enumerate(unique_labels):
                 mask = labels == label
                 indices = original_indices[mask]
-                x_data = features[mask, x_feature]
-                y_data = features[mask, y_feature]
+                x_data = features[mask, x_axis]
+                y_data = features[mask, y_axis]
 
                 # customdata must be 2D array - each point gets a list of values
                 customdata_2d = [[idx] for idx in indices]
@@ -454,8 +458,8 @@ class FeatureSpaceAIO(BseBasePageAIO):
     prevent_initial_call=True,
 )
 def update_feature_space_figure_aio(
-    x_feature: str,
-    y_feature: str | None,
+    x_axis_str: str,
+    y_axis_str: str | None,
     selected_labels: list[str],
     use_filtered: bool,
     plot_id: dict[str, Any],
@@ -479,18 +483,18 @@ def update_feature_space_figure_aio(
         # Reset to first two features when switching
         new_x = "0"
         new_y = "1" if len(feature_options) > 1 else None
-        x_idx = 0
-        y_idx = 1 if len(feature_options) > 1 else None
+        x_axis = 0
+        y_axis = 1 if len(feature_options) > 1 else None
     else:
         # Keep current selections
-        new_x = x_feature
-        new_y = y_feature
-        x_idx = int(x_feature)
-        y_idx = int(y_feature) if y_feature is not None else None
+        new_x = x_axis_str
+        new_y = y_axis_str
+        x_axis = int(x_axis_str)
+        y_axis = int(y_axis_str) if y_axis_str is not None else None
 
     figure = instance.build_figure(
-        x_feature=x_idx,
-        y_feature=y_idx,
+        x_axis=x_axis,
+        y_axis=y_axis,
         selected_labels=selected_labels,
         use_filtered=use_filtered,
     )

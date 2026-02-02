@@ -423,3 +423,14 @@
 2026-01-23 16:55:02 - main_friction.py: 7.383359670639038 seconds
 2026-01-23 16:55:36 - main_friction.py: 10.101991653442383 seconds
 2026-01-25 21:10:56 - main_pendulum_case1.py: 2.345691442489624 seconds
+2026-02-02 09:53:47 - main_pendulum_case1.py: 1.3957619667053223 seconds
+2026-02-02 09:55:45 - main_pendulum_case1.py: 3.5638580322265625 seconds
+2026-02-02 10:04:57 - main_pendulum_case1.py: 0.627612829208374 seconds
+2026-02-02 12:10:02 - main_pendulum_case1.py: 0.7862818241119385 seconds
+2026-02-02 12:17:45 - main_pendulum_case1.py: 0.7304964065551758 seconds
+2026-02-02 12:20:56 - main_pendulum_case1.py: 0.7345435619354248 seconds
+2026-02-02 12:23:53 - main_pendulum_case1.py: 0.747199296951294 seconds
+2026-02-02 12:24:14 - main_pendulum_case1.py: 0.6448049545288086 seconds
+2026-02-02 12:24:58 - main_pendulum_case1.py: 0.6308565139770508 seconds
+2026-02-02 12:25:03 - main_pendulum_case1.py: 0.714026927947998 seconds
+2026-02-02 12:25:33 - main_pendulum_case1.py: 0.6434812545776367 seconds

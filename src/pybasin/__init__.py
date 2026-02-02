@@ -9,10 +9,9 @@ from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
 from pybasin.plotters.types import (
     FeatureSpaceOptions,
     InteractivePlotterOptions,
-    PhasePlotOptions,
     StateSpaceOptions,
-    TemplateSelectionOptions,
-    TemplateTimeSeriesOptions,
+    TemplatesPhaseSpaceOptions,
+    TemplatesTimeSeriesOptions,
 )
 from pybasin.study_params import (
     CustomStudyParams,
@@ -43,12 +42,11 @@ __all__ = [
     "InteractivePlotterOptions",
     "MatplotlibPlotter",
     "ParamAssignment",
-    "PhasePlotOptions",
     "RunConfig",
     "StateSpaceOptions",
     "StudyParams",
     "SweepStudyParams",
-    "TemplateSelectionOptions",
-    "TemplateTimeSeriesOptions",
+    "TemplatesPhaseSpaceOptions",
+    "TemplatesTimeSeriesOptions",
     "ZipStudyParams",
 ]

@@ -10,7 +10,10 @@ from dash.development.base_component import Component
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.plotters.types import InteractivePlotterOptions
+from pybasin.plotters.types import (
+    InteractivePlotterOptions,
+    merge_options,
+)
 
 from .as_parameter_manager_aio import ASParameterManagerAIO
 from .basin_stability_aio import BasinStabilityAIO
@@ -68,11 +71,11 @@ class InteractivePlotter:
             self.bse: BasinStabilityEstimator = bse
 
         self.state_labels = state_labels or {}
-        self.options = options or InteractivePlotterOptions()
+        self.options = merge_options(options)
 
         # Override initial view for AS mode if not explicitly set
         if self.is_adaptive_study and options is None:
-            self.options.initial_view = IDs.PARAM_OVERVIEW
+            self.options["initial_view"] = IDs.PARAM_OVERVIEW
 
         self.app: Dash | None = None
 
@@ -170,23 +173,27 @@ class InteractivePlotter:
     def _init_bse_pages(self) -> None:
         """Initialize BSE mode pages with AIO components."""
         self.state_space = StateSpaceAIO(
-            self.bse, "main-state", self.state_labels, self.options.state_space
+            self.bse, "main-state", self.state_labels, self.options.get("state_space")
         )
         self.feature_space = FeatureSpaceAIO(
-            self.bse, "main-feature", self.state_labels, self.options.feature_space
+            self.bse, "main-feature", self.state_labels, self.options.get("feature_space")
         )
         self.basin_stability = BasinStabilityAIO(self.bse, "main-basin", self.state_labels)
-        self.phase_plot = TemplatePhasePlotAIO(
-            self.bse, "main-phase", False, self.state_labels, self.options.phase_plot
+        self.templates_phase_space = TemplatePhasePlotAIO(
+            self.bse,
+            "main-phase",
+            False,
+            self.state_labels,
+            self.options.get("templates_phase_space"),
         )
-        self.template_ts = TemplateTimeSeriesAIO(
-            self.bse, "main-template", self.state_labels, self.options.template_ts
+        self.templates_time_series = TemplateTimeSeriesAIO(
+            self.bse, "main-template", self.state_labels, self.options.get("templates_time_series")
         )
 
     def _create_layout(self) -> dmc.MantineProvider:
         """Create the Dash app layout with navigation and page container."""
         n_states = self._get_n_states()
-        initial_view = self.options.initial_view
+        initial_view = self.options.get("initial_view", "basin_stability")
 
         if self.is_adaptive_study:
             nav_items = self._build_as_nav_items(initial_view)
@@ -198,8 +205,8 @@ class InteractivePlotter:
                 IDs.BASIN_STABILITY: self.basin_stability,
                 IDs.STATE_SPACE: self.state_space,
                 IDs.FEATURE_SPACE: self.feature_space,
-                IDs.PHASE_PLOT: self.phase_plot,
-                IDs.TEMPLATE_TS: self.template_ts,
+                IDs.TEMPLATES_PHASE_SPACE: self.templates_phase_space,
+                IDs.TEMPLATES_TIME_SERIES: self.templates_time_series,
             }
             component = page_components.get(initial_view, self.basin_stability)
             initial_page_content = component.render()
@@ -268,37 +275,37 @@ class InteractivePlotter:
             dmc.NavLink(
                 label="Basin Stability",
                 leftSection=html.Span("📊"),
-                id="nav-bs",
+                id="nav-basin-stability",
                 active=self._nav_active_state(initial_view == IDs.BASIN_STABILITY),
                 n_clicks=0,
             ),
             dmc.NavLink(
                 label="State Space",
                 leftSection=html.Span("🎯"),
-                id="nav-state",
+                id="nav-state-space",
                 active=self._nav_active_state(initial_view == IDs.STATE_SPACE),
                 n_clicks=0,
             ),
             dmc.NavLink(
                 label="Feature Space",
                 leftSection=html.Span("📈"),
-                id="nav-feature",
+                id="nav-feature-space",
                 active=self._nav_active_state(initial_view == IDs.FEATURE_SPACE),
                 n_clicks=0,
             ),
             dmc.Divider(label="Template Trajectories", my="sm"),
             dmc.NavLink(
-                label="Phase Plot",
+                label="Phase Space",
                 leftSection=html.Span("〰️"),
-                id="nav-phase",
-                active=self._nav_active_state(initial_view == IDs.PHASE_PLOT),
+                id="nav-templates-phase-space",
+                active=self._nav_active_state(initial_view == IDs.TEMPLATES_PHASE_SPACE),
                 n_clicks=0,
             ),
             dmc.NavLink(
                 label="Time Series",
                 leftSection=html.Span("📉"),
-                id="nav-template-ts",
-                active=self._nav_active_state(initial_view == IDs.TEMPLATE_TS),
+                id="nav-templates-time-series",
+                active=self._nav_active_state(initial_view == IDs.TEMPLATES_TIME_SERIES),
                 n_clicks=0,
             ),
         ]
@@ -398,36 +405,36 @@ class InteractivePlotter:
             "/basin-stability": IDs.BASIN_STABILITY,
             "/state-space": IDs.STATE_SPACE,
             "/feature-space": IDs.FEATURE_SPACE,
-            "/phase": IDs.PHASE_PLOT,
-            "/time-series": IDs.TEMPLATE_TS,
+            "/phase": IDs.TEMPLATES_PHASE_SPACE,
+            "/time-series": IDs.TEMPLATES_TIME_SERIES,
         }
         view_to_path = {
             IDs.BASIN_STABILITY: "/basin-stability",
             IDs.STATE_SPACE: "/state-space",
             IDs.FEATURE_SPACE: "/feature-space",
-            IDs.PHASE_PLOT: "/phase",
-            IDs.TEMPLATE_TS: "/time-series",
+            IDs.TEMPLATES_PHASE_SPACE: "/phase",
+            IDs.TEMPLATES_TIME_SERIES: "/time-series",
         }
 
         @self.app.callback(
             Output(self.URL, "pathname"),
             [
-                Input("nav-bs", "n_clicks"),
-                Input("nav-state", "n_clicks"),
-                Input("nav-feature", "n_clicks"),
-                Input("nav-phase", "n_clicks"),
-                Input("nav-template-ts", "n_clicks"),
+                Input("nav-basin-stability", "n_clicks"),
+                Input("nav-state-space", "n_clicks"),
+                Input("nav-feature-space", "n_clicks"),
+                Input("nav-templates-phase-space", "n_clicks"),
+                Input("nav-templates-time-series", "n_clicks"),
             ],
             prevent_initial_call=True,
         )
         def update_url(*_args: int) -> str:
             triggered = ctx.triggered_id
             views = {
-                "nav-bs": IDs.BASIN_STABILITY,
-                "nav-state": IDs.STATE_SPACE,
-                "nav-feature": IDs.FEATURE_SPACE,
-                "nav-phase": IDs.PHASE_PLOT,
-                "nav-template-ts": IDs.TEMPLATE_TS,
+                "nav-basin-stability": IDs.BASIN_STABILITY,
+                "nav-state-space": IDs.STATE_SPACE,
+                "nav-feature-space": IDs.FEATURE_SPACE,
+                "nav-templates-phase-space": IDs.TEMPLATES_PHASE_SPACE,
+                "nav-templates-time-series": IDs.TEMPLATES_TIME_SERIES,
             }
             view = (
                 views.get(triggered, IDs.BASIN_STABILITY)
@@ -440,11 +447,11 @@ class InteractivePlotter:
             [
                 Output(self.CURRENT_VIEW, "data"),
                 Output(self.PAGE_CONTAINER, "children"),
-                Output("nav-bs", "active"),
-                Output("nav-state", "active"),
-                Output("nav-feature", "active"),
-                Output("nav-phase", "active"),
-                Output("nav-template-ts", "active"),
+                Output("nav-basin-stability", "active"),
+                Output("nav-state-space", "active"),
+                Output("nav-feature-space", "active"),
+                Output("nav-templates-phase-space", "active"),
+                Output("nav-templates-time-series", "active"),
                 Output("page-loading-overlay", "visible"),
             ],
             Input(self.URL, "pathname"),
@@ -469,29 +476,29 @@ class InteractivePlotter:
                 IDs.BASIN_STABILITY: self.basin_stability,
                 IDs.STATE_SPACE: self.state_space,
                 IDs.FEATURE_SPACE: self.feature_space,
-                IDs.PHASE_PLOT: self.phase_plot,
-                IDs.TEMPLATE_TS: self.template_ts,
+                IDs.TEMPLATES_PHASE_SPACE: self.templates_phase_space,
+                IDs.TEMPLATES_TIME_SERIES: self.templates_time_series,
             }
             component = page_components.get(view, self.basin_stability)
             page_layout = component.render()
 
             view_to_nav = {
-                IDs.BASIN_STABILITY: "nav-bs",
-                IDs.STATE_SPACE: "nav-state",
-                IDs.FEATURE_SPACE: "nav-feature",
-                IDs.PHASE_PLOT: "nav-phase",
-                IDs.TEMPLATE_TS: "nav-template-ts",
+                IDs.BASIN_STABILITY: "nav-basin-stability",
+                IDs.STATE_SPACE: "nav-state-space",
+                IDs.FEATURE_SPACE: "nav-feature-space",
+                IDs.TEMPLATES_PHASE_SPACE: "nav-templates-phase-space",
+                IDs.TEMPLATES_TIME_SERIES: "nav-templates-time-series",
             }
-            active_nav = view_to_nav.get(view, "nav-bs")
+            active_nav = view_to_nav.get(view, "nav-basin-stability")
 
             return (
                 view,
                 page_layout,
-                self._nav_active_state(active_nav == "nav-bs"),
-                self._nav_active_state(active_nav == "nav-state"),
-                self._nav_active_state(active_nav == "nav-feature"),
-                self._nav_active_state(active_nav == "nav-phase"),
-                self._nav_active_state(active_nav == "nav-template-ts"),
+                self._nav_active_state(active_nav == "nav-basin-stability"),
+                self._nav_active_state(active_nav == "nav-state-space"),
+                self._nav_active_state(active_nav == "nav-feature-space"),
+                self._nav_active_state(active_nav == "nav-templates-phase-space"),
+                self._nav_active_state(active_nav == "nav-templates-time-series"),
                 False,
             )
 
@@ -597,15 +604,15 @@ class InteractivePlotter:
                 ),
                 dmc.Divider(label="Template Trajectories", my="sm"),
                 dmc.NavLink(
-                    label="Phase Plot",
+                    label="Phase Space",
                     leftSection=html.Span("〰️"),
-                    id={"type": "nav-param-page", "page": "template-phase-plot"},
+                    id={"type": "nav-param-page", "page": "templates-phase-space"},
                     n_clicks=0,
                 ),
                 dmc.NavLink(
                     label="Time Series",
                     leftSection=html.Span("📉"),
-                    id={"type": "nav-param-page", "page": "template-time-series"},
+                    id={"type": "nav-param-page", "page": "templates-time-series"},
                     n_clicks=0,
                 ),
             ]
