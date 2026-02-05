@@ -21,6 +21,13 @@ pyBasin is a Python library for estimating basin stability in dynamical systems.
 
 ## 📦 Installation
 
+**Requirements:** Python 3.12 or higher, [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
 ### From PyPI (when published)
 
 ```bash
@@ -34,15 +41,14 @@ pip install pybasin
 git clone https://github.com/adrianwix/pyBasin.git
 cd pyBasinWorkspace
 
-# Create virtual environment with UV
-uv venv
+# Install Python 3.12 (reads version from .python-version file)
+uv python install
+
+# Install all dependencies (creates .venv automatically)
+uv sync --all-groups
+
+# Activate the virtual environment
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install in editable mode
-uv add -e .
-
-# Or install with all optional dependencies
-uv add -e ".[all]"
 ```
 
 ## 🚀 Quick Start
@@ -251,8 +257,21 @@ pyBasinWorkspace/
 ### Setup Development Environment
 
 ```bash
-# Install all dependencies including dev tools
-uv add -e ".[all]"
+# Clone the repository
+git clone https://github.com/adrianwix/pyBasin.git
+cd pyBasinWorkspace
+
+# Install all dependencies including dev tools (creates .venv automatically)
+uv sync --all-groups
+
+# Activate the virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# To add a new dependency
+uv add <package>
+
+# To add a new dev dependency
+uv add --dev <package>
 ```
 
 ### Running Tests
@@ -274,25 +293,20 @@ uv run pytest tests/unit/
 uv run pytest tests/integration/test_duffing.py
 ```
 
+### Generating Artifacts
+
+Generate documentation artifacts (JSON and plots) after tests pass:
+
+```bash
+uv run pytest --generate-artifacts
+```
+
 ### Code Quality
 
 Run all code quality checks (linter, formatter, and type checker):
 
 ```bash
 sh scripts/ci.sh
-```
-
-Or run individual tools:
-
-```bash
-# Lint and auto-fix issues
-uv run ruff check --fix
-
-# Format code
-uv run ruff format
-
-# Type check
-uv run pyright
 ```
 
 ## 📊 Validation

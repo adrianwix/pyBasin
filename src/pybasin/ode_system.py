@@ -88,6 +88,7 @@ class ODESystem[P](ABC, nn.Module):
                 params_str = ""
             return f"{self.__class__.__name__}({params_str})"
 
+    # TODO: review if forward is needed for a solver
     def forward(self, t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
         Calls the ODE function in a manner consistent with nn.Module.
