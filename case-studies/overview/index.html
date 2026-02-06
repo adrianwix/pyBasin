@@ -2137,34 +2137,34 @@
 
 
 <h1 id="case-studies-overview">Case Studies Overview</h1>
-<p>This section documents the case studies used to validate pyBasin against the original MATLAB bSTAB implementation.</p>
+<p>Documented here are the case studies that validate pyBasin against its original MATLAB counterpart, bSTAB. Each study targets a specific dynamical system and compares the two implementations on identical initial conditions.</p>
 <h2 id="classification-quality-metrics">Classification Quality Metrics</h2>
-<p>All case study comparisons evaluate classification quality by comparing predicted labels from pyBasin against ground truth labels from MATLAB bSTAB on identical initial conditions.</p>
+<p>To assess whether pyBasin reproduces the MATLAB bSTAB results, we compare predicted attractor labels from pyBasin with ground truth labels produced by bSTAB. Both tools classify trajectories into discrete attractor categories (e.g., "FP", "LC", "chaos"), which makes it possible to apply standard classification metrics directly.</p>
 <h3 id="methodology">Methodology</h3>
-<p>Since both implementations classify trajectories into attractor labels (e.g., "FP", "LC", "chaos"), we use standard classification metrics to validate that pyBasin correctly replicates MATLAB bSTAB's behavior.</p>
-<p>For each test case, we:</p>
+<p>Given that attractor labels from two independent implementations are compared, we treat the problem as a classification task and evaluate agreement using established metrics.</p>
+<p>Concretely, each test case proceeds as follows:</p>
 <ol>
-<li>Load exact initial conditions from MATLAB ground truth CSV files</li>
-<li>Run pyBasin classification on those same initial conditions</li>
-<li>Compare predicted labels against MATLAB's ground truth labels</li>
-<li>Compute classification metrics</li>
+<li>Load the exact initial conditions exported from MATLAB ground truth CSV files</li>
+<li>Classify those initial conditions with pyBasin</li>
+<li>Match the resulting labels against the MATLAB ground truth</li>
+<li>Evaluate the classification metrics described below</li>
 </ol>
 <h3 id="metrics-used">Metrics Used</h3>
 <h4 id="1-f1-score-per-class">1. F1-Score (Per Class)</h4>
-<p>The <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html#sklearn.metrics.f1_score">F1-score</a> measures classification quality for each attractor type:</p>
+<p>Per-class classification quality is measured by the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html#sklearn.metrics.f1_score">F1-score</a>:</p>
 <div class="arithmatex">\[F1 = \frac{2 \cdot TP}{2 \cdot TP + FP + FN}\]</div>
 <p>where TP = true positives, FP = false positives, FN = false negatives for that class.</p>
 <p><strong>Range:</strong> [0, 1], where 1.0 = perfect classification for that class</p>
 <h4 id="2-macro-f1-score-overall">2. Macro F1-Score (Overall)</h4>
-<p>The macro-averaged F1-score summarizes overall classification quality:</p>
+<p>Averaging the per-class F1-scores yields the macro F1-score, which captures overall classification quality without weighting by class frequency:</p>
 <div class="arithmatex">\[\text{Macro F1} = \frac{1}{K} \sum_{k=1}^{K} F1_k\]</div>
 <p>where <span class="arithmatex">\(K\)</span> is the number of classes (attractor types).</p>
 <p><strong>Range:</strong> [0, 1], where 1.0 = perfect classification across all classes</p>
 <h4 id="3-matthews-correlation-coefficient-mcc">3. Matthews Correlation Coefficient (MCC)</h4>
-<p>The <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#matthews-corrcoef">Matthews correlation coefficient</a> is a global metric measuring correlation between predictions and ground truth.</p>
+<p>As a global measure of prediction–ground truth correlation, we also report the <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#matthews-corrcoef">Matthews correlation coefficient</a>.</p>
 <p>For <strong>binary classification</strong>:</p>
 <div class="arithmatex">\[\text{MCC} = \frac{TP \cdot TN - FP \cdot FN}{\sqrt{(TP + FP)(TP + FN)(TN + FP)(TN + FN)}}\]</div>
-<p>For <strong>multiclass classification</strong>, scikit-learn uses a generalization based on the confusion matrix <span class="arithmatex">\(C\)</span>:</p>
+<p>For <strong>multiclass classification</strong>, scikit-learn implements a generalization based on the confusion matrix <span class="arithmatex">\(C\)</span>:</p>
 <div class="arithmatex">\[\text{MCC} = \frac{c \cdot s - \sum_k p_k \cdot t_k}{\sqrt{(s^2 - \sum_k p_k^2)(s^2 - \sum_k t_k^2)}}\]</div>
 <p>where:</p>
 <ul>
@@ -2179,7 +2179,7 @@
 <li>0 = random prediction</li>
 <li>-1 = complete disagreement</li>
 </ul>
-<p>MCC is particularly useful for imbalanced datasets (common in basin stability with dominant attractors).</p>
+<p>Because basin stability problems often feature one dominant attractor, MCC is well-suited here; it remains informative even under class imbalance.</p>
 <h3 id="quality-thresholds">Quality Thresholds</h3>
 <table>
 <thead>
@@ -2215,92 +2215,76 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Interpretation:</strong></p>
-<ul>
-<li><strong>Excellent/Good</strong>: Confirms correct implementation - pyBasin matches MATLAB behavior</li>
-<li><strong>Acceptable</strong>: Minor discrepancies, may be due to numerical differences or edge cases</li>
-<li><strong>Poor</strong>: Significant differences requiring investigation</li>
-</ul>
+<p>Scores in the Excellent or Good range confirm that pyBasin faithfully reproduces the MATLAB behaviour. Acceptable scores point to minor discrepancies—often numerical precision or boundary-case effects. Poor scores warrant further investigation.</p>
 <h3 id="reading-comparison-tables">Reading Comparison Tables</h3>
-<p>The comparison tables in each case study show:</p>
+<p>Each case study contains a comparison table with the following columns:</p>
 <ul>
 <li><strong>Attractor</strong>: The attractor type (e.g., "FP", "LC", "chaos")</li>
-<li><strong>pyBasin BS ± SE</strong>: Python implementation basin stability with standard error</li>
-<li><strong>bSTAB BS ± SE</strong>: MATLAB reference basin stability with standard error</li>
-<li><strong>F1</strong>: F1-score for this specific attractor class (classification quality)</li>
-<li><strong>MCC</strong>: Matthews correlation coefficient (same value repeated for all rows - it's a global metric)</li>
+<li><strong>pyBasin BS +/- SE</strong>: Basin stability and standard error from the Python implementation</li>
+<li><strong>bSTAB BS +/- SE</strong>: Corresponding values from the MATLAB reference</li>
+<li><strong>F1</strong>: Per-class F1-score</li>
 </ul>
-<p>Additionally, a summary section displays:</p>
-<ul>
-<li><strong>Macro F1-score</strong>: Overall classification quality across all attractors</li>
-<li><strong>Matthews Correlation Coefficient</strong>: Global classification correlation</li>
-</ul>
+<p>Above each table, a summary line reports the macro F1-score and the MCC for that comparison.</p>
 <h2 id="purpose">Purpose</h2>
-<p>The case studies serve multiple purposes:</p>
-<ol>
-<li><strong>Validation</strong>: Verify correctness by comparing results with MATLAB bSTAB</li>
-<li><strong>Examples</strong>: Demonstrate usage patterns for different types of systems</li>
-<li><strong>Thesis Artifacts</strong>: Generate figures and results for the bachelor thesis</li>
-<li><strong>Benchmarking</strong>: Compare performance and accuracy</li>
-</ol>
+<p>These case studies fulfil several roles at once. First, they provide a systematic validation path: comparing pyBasin results against MATLAB bSTAB on the same initial conditions establishes correctness. Beyond validation, they double as usage examples for different classes of dynamical systems. They also produce the figures and numerical tables needed for documentation. Finally, they serve as performance benchmarks.</p>
 <h2 id="available-case-studies">Available Case Studies</h2>
 <h3 id="duffing-oscillator"><a href="../duffing/">Duffing Oscillator</a></h3>
-<p>A forced Duffing oscillator exhibiting bistability with two coexisting attractors.</p>
+<p>A periodically forced Duffing oscillator that exhibits multistability with five coexisting limit cycle attractors.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Five coexisting limit cycle attractors</li>
 <li>Supervised vs. unsupervised classification comparison</li>
-<li>Feature extraction using maximum and standard deviation</li>
+<li>Feature extraction based on maximum amplitude and standard deviation</li>
 </ul>
 <p><strong>Reference:</strong> Thomson, J. M. T., &amp; Stewart, H. B. (2002). <em>Nonlinear dynamics and chaos</em> (2nd ed.). Wiley. (See p. 9, Fig. 1.9)</p>
 <p><strong>Files:</strong> <code>case_studies/duffing_oscillator/</code></p>
 <hr />
 <h3 id="lorenz-system"><a href="../lorenz/">Lorenz System</a></h3>
-<p>A version of the Lorenz system exhibiting two stable co-existing chaotic attractors.</p>
+<p>A modified Lorenz system in which two chaotic attractors coexist alongside unbounded trajectories.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Two coexisting chaotic attractors and unbounded solutions</li>
-<li>Parameter sweep study (σ)</li>
+<li>Parameter sweep over σ</li>
 <li>Sample size (N) convergence study</li>
-<li>Tolerance (rtol/atol) sensitivity study</li>
+<li>Sensitivity analysis of integrator tolerances (rtol/atol)</li>
 </ul>
 <p><strong>Reference:</strong> Li, C., &amp; Sprott, J. C. (2014). Multistability in the Lorenz system: A broken butterfly. <em>International Journal of Bifurcation and Chaos</em>, <em>24</em>(10), Article 1450131. https://doi.org/10.1142/S0218127414501314</p>
 <p><strong>Files:</strong> <code>case_studies/lorenz/</code></p>
 <hr />
 <h3 id="pendulum"><a href="../pendulum/">Pendulum</a></h3>
-<p>A forced pendulum system with different forcing parameters.</p>
+<p>A periodically forced pendulum, studied under several different forcing parameter configurations.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Multiple parameter cases</li>
 <li>Fixed point and limit cycle attractors</li>
-<li>Supervised classification approach</li>
+<li>Supervised classification</li>
 </ul>
 <p><strong>Reference:</strong> Menck, P., Heitzig, J., Marwan, N., &amp; Kurths, J. (2013). How basin stability complements the linear-stability paradigm. <em>Nature Physics</em>, <em>9</em>, 89–92. https://doi.org/10.1038/nphys2516</p>
 <p><strong>Files:</strong> <code>case_studies/pendulum/</code></p>
 <hr />
 <h3 id="friction-system"><a href="../friction/">Friction System</a></h3>
-<p>A mechanical system with friction effects.</p>
+<p>A mechanical oscillator subject to dry friction, resulting in non-smooth dynamics and coexisting fixed point and limit cycle attractors.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Fixed point and limit cycle attractors</li>
-<li>Non-smooth dynamics with friction</li>
-<li>Driving velocity (v_d) parameter sweep study</li>
+<li>Non-smooth dynamics due to friction</li>
+<li>Parameter sweep over the driving velocity <span class="arithmatex">\(v_d\)</span></li>
 </ul>
 <p><strong>Reference:</strong> Stender, M., Hoffmann, N., &amp; Papangelo, A. (2020). The basin stability of bi-stable friction-excited oscillators. <em>Lubricants</em>, <em>8</em>(12), Article 105. https://doi.org/10.3390/lubricants8120105</p>
 <p><strong>Files:</strong> <code>case_studies/friction/</code></p>
 <hr />
 <h3 id="rossler-network"><a href="../rossler-network/">Rössler Network</a></h3>
-<p>A network of coupled Rössler oscillators exhibiting synchronization dynamics.</p>
+<p>A network of coupled Rössler oscillators, used to study synchronization and its basin stability.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Coupled oscillator dynamics</li>
 <li>Synchronization analysis</li>
-<li>Network-based basin stability</li>
+<li>Network-level basin stability estimation</li>
 </ul>
 <p><strong>Reference:</strong> Menck, P., Heitzig, J., Marwan, N., &amp; Kurths, J. (2013). How basin stability complements the linear-stability paradigm. <em>Nature Physics</em>, <em>9</em>, 89–92. https://doi.org/10.1038/nphys2516</p>
 <p><strong>Files:</strong> <code>case_studies/rossler/</code></p>
 <h2 id="running-case-studies">Running Case Studies</h2>
-<p>All case studies can be run from the project root:</p>
+<p>From the project root, individual case studies can be executed as follows:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Navigate to project root</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/pyBasinWorkspace
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -2310,7 +2294,7 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.pendulum.main_case1
 </code></pre></div>
 <h2 id="integration-tests">Integration Tests</h2>
-<p>The case studies are also converted into integration tests that automatically validate correctness:</p>
+<p>Each case study has a corresponding integration test that automatically checks correctness:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Run all integration tests</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -2318,12 +2302,12 @@
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/test_duffing.py
 </code></pre></div>
 <h2 id="generated-artifacts">Generated Artifacts</h2>
-<p>Case studies save their outputs to:</p>
+<p>Outputs are written to two locations:</p>
 <ul>
-<li><strong>Figures</strong>: <code>docs/assets/</code> — Generated plots and visualizations</li>
-<li><strong>Results</strong>: <code>artifacts/results/</code> — Numerical results (JSON, CSV)</li>
+<li><strong>Figures</strong>: <code>docs/assets/</code> — plots and visualisations</li>
+<li><strong>Results</strong>: <code>artifacts/results/</code> — numerical data (JSON, CSV)</li>
 </ul>
-<p>To generate new artifacts, run the integration tests with the <code>--generate-artifacts</code> flag:</p>
+<p>Passing the <code>--generate-artifacts</code> flag to the test runner regenerates these outputs:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Generate artifacts for all case studies</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/<span class="w"> </span>--generate-artifacts
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
@@ -2331,15 +2315,15 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/test_duffing.py<span class="w"> </span>--generate-artifacts
 </code></pre></div>
 <h2 id="contributing-new-case-studies">Contributing New Case Studies</h2>
-<p>To add a new case study:</p>
+<p>Adding a new case study involves the following steps:</p>
 <ol>
-<li>Create a new directory under <code>case_studies/</code></li>
+<li>Create a directory under <code>case_studies/</code></li>
 <li>Implement the ODE system and feature extractor</li>
-<li>Create a main script that runs the analysis</li>
-<li>Add corresponding integration test</li>
-<li>Document in this section</li>
+<li>Write a main script that runs the analysis</li>
+<li>Add a matching integration test</li>
+<li>Document the study in this section</li>
 </ol>
-<p>See <a href="../../development/contributing/">Contributing Guide</a> for details.</p>
+<p>See the <a href="../../development/contributing/">Contributing Guide</a> for further details.</p>
 
 
 
