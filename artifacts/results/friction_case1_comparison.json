@@ -1,0 +1,27 @@
+{
+  "system_name": "friction",
+  "case_name": "case1",
+  "parameter_value": null,
+  "macro_f1": 1.0,
+  "matthews_corrcoef": 1.0,
+  "attractors": [
+    {
+      "label": "FP",
+      "python_bs": 0.304,
+      "python_se": 0.006505136432081959,
+      "matlab_bs": 0.304,
+      "matlab_se": 0.006505136432081959,
+      "f1_score": 1.0,
+      "matthews_corrcoef": 1.0
+    },
+    {
+      "label": "LC",
+      "python_bs": 0.696,
+      "python_se": 0.0065051364320819595,
+      "matlab_bs": 0.696,
+      "matlab_se": 0.0065051364320819595,
+      "f1_score": 1.0,
+      "matthews_corrcoef": 1.0
+    }
+  ]
+}

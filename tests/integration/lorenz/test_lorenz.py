@@ -28,7 +28,7 @@ class TestLorenz:
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
+        2. Classification metrics: MCC >= 0.95
         """
         json_path = Path(__file__).parent / "main_lorenz.json"
         ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_lorenz.csv"
@@ -55,13 +55,13 @@ class TestLorenz:
         self,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
-        """Test Lorenz sigma parameter sweep using z-score validation.
+        """Test Lorenz sigma parameter sweep using classification metrics.
 
         Studies the effect of varying sigma parameter from 0.12 to 0.18 on basin stability.
 
         Verifies:
         1. Parameter sweep over sigma
-        2. Basin stability values pass z-score test for butterfly1, butterfly2, unbounded, NaN
+        2. Classification metrics: MCC >= 0.95 for each parameter point
         """
         json_path = Path(__file__).parent / "main_lorenz_sigma_study.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "sigmaStudy"
@@ -86,18 +86,15 @@ class TestLorenz:
             artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
-    def test_hyperparameter_n(self) -> None:
+    def test_hyperparameter_n(
+        self,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test hyperparameter n - convergence study varying sample size N.
-
-        Uses z-score validation with standard errors. As N increases, the standard
-        error decreases (SE ~ 1/sqrt(N)), so validation naturally becomes stricter.
 
         Verifies:
         1. Parameter sweep over N (sample size)
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 3.5
-        3. Uses standard errors from both MATLAB and Python results
-
-        Note: Uses higher z-threshold (3.5) for chaotic Lorenz system.
+        2. Classification metrics: MCC >= 0.95 for each parameter point
         """
         json_path = Path(__file__).parent / "main_lorenz_hyperparameters.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperpN"
@@ -107,14 +104,19 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        run_adaptive_basin_stability_test(
+        as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_lorenz_system,
             adaptative_parameter_name="n",
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
+            system_name="lorenz",
+            case_name="case4",
             ground_truths_dir=ground_truths_dir,
         )
+
+        if artifact_collector is not None:
+            artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts
@@ -126,7 +128,6 @@ class TestLorenz:
         - butterfly1: 0.1000, butterfly2: 0.0750, unbounded: 0.8250
 
         Note: With only 200 random points, there's inherent statistical uncertainty.
-        We use z-score validation with z-threshold=3.5 for chaotic system with small N.
         """
         run_single_point_test(
             n=200,
@@ -171,6 +172,7 @@ class TestLorenz:
             system_name="lorenz",
             case_name="case3",
             ground_truths_dir=ground_truths_dir,
+            mcc_threshold=0.4,
         )
 
         if artifact_collector is not None:

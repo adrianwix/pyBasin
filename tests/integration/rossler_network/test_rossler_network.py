@@ -129,6 +129,7 @@ class TestRosslerNetwork:
             system_name="rossler_network",
             case_name="baseline",
             attractors=attractor_comparisons,
+            paper_validation=True,
         )
 
         assert stats_comp.z_score < z_threshold, (
@@ -263,6 +264,7 @@ class TestRosslerNetwork:
                 case_name="k_sweep",
                 attractors=attractor_comparisons_for_param,
                 parameter_value=param_val,
+                paper_validation=True,
             )
             comparison_results.append(comparison_result)
 

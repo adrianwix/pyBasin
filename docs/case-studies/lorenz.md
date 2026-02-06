@@ -85,3 +85,21 @@ This hyperparameter study demonstrates the effect of ODE solver relative toleran
 #### Bifurcation Diagram
 
 ![Bifurcation Diagram](../assets/case_studies/lorenz_case3_bifurcation_diagram.png)
+
+## Case 4: Sample Size Convergence Study
+
+This hyperparameter study varies the number of initial conditions $N$ from 200 to 20,000 (using $2 \times \text{logspace}(2, 4, 50)$) to assess how basin stability estimates converge as sample size increases. The relative standard error decreases as $\text{SE}/\mathcal{S}_{\mathcal{B}} \sim 1/\sqrt{N}$.
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("lorenz_case4") }}
+
+### Visualizations
+
+#### Basin Stability Variation
+
+![Basin Stability Variation](../assets/case_studies/lorenz_case4_basin_stability_variation.png)
+
+#### Bifurcation Diagram
+
+![Bifurcation Diagram](../assets/case_studies/lorenz_case4_bifurcation_diagram.png)

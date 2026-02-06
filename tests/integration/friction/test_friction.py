@@ -27,9 +27,7 @@ class TestFriction:
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
-        2. Basin stability values pass z-score test: z = |A-B|/sqrt(SE_A^2 + SE_B^2) < 0.5
-
-        Note: Uses tight z-threshold since exact MATLAB ICs eliminate sampling variance.
+        2. Classification metrics: MCC >= 0.95
         """
         json_path = Path(__file__).parent / "main_friction_case1.json"
         ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_friction.csv"

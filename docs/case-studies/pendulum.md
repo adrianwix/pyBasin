@@ -56,3 +56,21 @@ $$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
 #### Bifurcation Diagram
 
 ![Bifurcation Diagram](../assets/case_studies/pendulum_case2_bifurcation_diagram.png)
+
+## Case 3: Sample Size Convergence Study
+
+This hyperparameter study varies the number of initial conditions $N$ from ~50 to ~5000 (using $5 \times \text{logspace}(1, 3, 20)$) to assess how basin stability estimates converge as sample size increases. The relative standard error decreases as $\text{SE}/\mathcal{S}_{\mathcal{B}} \sim 1/\sqrt{N}$.
+
+### Comparison with MATLAB bSTAB
+
+{{ comparison_table("pendulum_case3") }}
+
+### Visualizations
+
+#### Basin Stability Variation
+
+![Basin Stability Variation](../assets/case_studies/pendulum_case3_basin_stability_variation.png)
+
+#### Bifurcation Diagram
+
+![Bifurcation Diagram](../assets/case_studies/pendulum_case3_bifurcation_diagram.png)

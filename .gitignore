@@ -111,6 +111,7 @@ dmypy.json
 !benchmarks/time_integrations/results/
 !docs/assets/**/*.jpg
 !docs/assets/**/*.png
+!artifacts/results/
 
 
 

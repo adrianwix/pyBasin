@@ -80,7 +80,10 @@ class TestPendulum:
             artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
-    def test_hyperparameter_n(self) -> None:
+    def test_hyperparameter_n(
+        self,
+        artifact_collector: ArtifactCollector | None,
+    ) -> None:
         """Test hyperparameter n - convergence study varying sample size N with exact MATLAB ICs.
 
         Uses CsvSampler for each N value to load exact ICs from MATLAB, eliminating sampling
@@ -94,13 +97,18 @@ class TestPendulum:
         json_path = Path(__file__).parent / "main_pendulum_hyperparameters.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperparameters"
 
-        _as_bse, _comparisons = run_adaptive_basin_stability_test(
+        as_bse, comparisons = run_adaptive_basin_stability_test(
             json_path,
             setup_pendulum_system,
             adaptative_parameter_name="n",
             label_keys=["FP", "LC", "NaN"],
+            system_name="pendulum",
+            case_name="case3",
             ground_truths_dir=ground_truths_dir,
         )
+
+        if artifact_collector is not None:
+            artifact_collector.add_parameter_sweep(as_bse, comparisons)
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts
@@ -112,7 +120,6 @@ class TestPendulum:
         - FP: 0.1000, LC: 0.9000
 
         Note: With only 50 random points, there's inherent statistical uncertainty.
-        We use z-score validation with z-threshold=3.0 for small sample size.
         """
         run_single_point_test(
             n=50,

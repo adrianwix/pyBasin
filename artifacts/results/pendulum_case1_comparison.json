@@ -1,0 +1,27 @@
+{
+  "system_name": "pendulum",
+  "case_name": "case1",
+  "parameter_value": null,
+  "macro_f1": 1.0,
+  "matthews_corrcoef": 1.0,
+  "attractors": [
+    {
+      "label": "FP",
+      "python_bs": 0.152,
+      "python_se": 0.0035902089075706997,
+      "matlab_bs": 0.152,
+      "matlab_se": 0.0035902089075707,
+      "f1_score": 1.0,
+      "matthews_corrcoef": 1.0
+    },
+    {
+      "label": "LC",
+      "python_bs": 0.848,
+      "python_se": 0.0035902089075707,
+      "matlab_bs": 0.848,
+      "matlab_se": 0.0035902089075707006,
+      "f1_score": 1.0,
+      "matthews_corrcoef": 1.0
+    }
+  ]
+}

@@ -10,11 +10,10 @@ Test Naming Convention:
 System Parameter Tests vs Hyperparameter Tests:
 ------------------------------------------------
 System parameter tests vary dynamical system parameters (period T, sigma, velocity v_d, etc.)
-and can easily use the standard utilities with z-score validation.
+and use classification metrics (MCC >= 0.95) for validation.
 
 Hyperparameter tests vary method settings (N, solver tolerance) independent of the
-dynamical system. These typically need custom validation logic (e.g., adaptive tolerance
-for convergence studies) and may not fit the z-score validation pattern.
+dynamical system. These use the same classification metrics validation.
 """
 
 import json
@@ -31,9 +30,6 @@ from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.sampler import CsvSampler
 from pybasin.study_params import SweepStudyParams, ZipStudyParams
 from pybasin.types import SetupProperties
-
-Z_THRESHOLD_OK = 2.0
-Z_THRESHOLD_WARNING = 3.0
 
 
 @dataclass
@@ -204,18 +200,19 @@ class ComparisonResult:
     parameter_value: float | None = None
     macro_f1: float = 0.0
     matthews_corrcoef: float = 0.0
+    paper_validation: bool = False
 
-    def all_passed(self, f1_threshold: float = 0.9) -> bool:
+    def all_passed(self, mcc_threshold: float = 0.95) -> bool:
         """Check if classification quality is above threshold.
 
-        :param f1_threshold: F1-score threshold for validation.
-        :return: True if macro F1-score is above threshold.
+        :param mcc_threshold: MCC threshold for validation.
+        :return: True if MCC is above threshold.
         """
-        return self.macro_f1 >= f1_threshold
+        return self.matthews_corrcoef >= mcc_threshold
 
-    def to_dict(self) -> dict[str, str | float | list[dict[str, str | float | int]] | None]:
+    def to_dict(self) -> dict[str, str | float | bool | list[dict[str, str | float | int]] | None]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result: dict[str, str | float | bool | list[dict[str, str | float | int]] | None] = {
             "system_name": self.system_name,
             "case_name": self.case_name,
             "parameter_value": self.parameter_value,
@@ -223,6 +220,9 @@ class ComparisonResult:
             "matthews_corrcoef": self.matthews_corrcoef,
             "attractors": [a.to_dict() for a in self.attractors],
         }
+        if self.paper_validation:
+            result["paper_validation"] = True
+        return result
 
 
 @dataclass
@@ -267,6 +267,7 @@ def run_basin_stability_test(
     system_name: str = "",
     case_name: str = "",
     ground_truth_csv: Path | None = None,
+    mcc_threshold: float = 0.95,
 ) -> tuple[BasinStabilityEstimator, ComparisonResult]:
     """Run basin stability test with classification metrics validation against MATLAB reference.
 
@@ -284,6 +285,7 @@ def run_basin_stability_test(
     :param case_name: Name of the case for artifact generation.
     :param ground_truth_csv: Path to CSV with exact MATLAB initial conditions. If provided,
         uses CsvSampler instead of the sampler from setup_function.
+    :param mcc_threshold: Minimum MCC to pass the test. Default 0.95.
     :return: Tuple of (BasinStabilityEstimator, ComparisonResult).
     :raises AssertionError: If validation fails.
     """
@@ -339,6 +341,8 @@ def run_basin_stability_test(
         )
         y_true = ground_truth_sampler.labels
         assert y_true is not None, "Ground truth CSV must have label column"
+        if label_map:
+            y_true = np.array([label_map.get(str(l), str(l)) for l in y_true])
     else:
         raise ValueError("ground_truth_csv must be provided to compute classification metrics")
 
@@ -420,6 +424,10 @@ def run_basin_stability_test(
     for label, f1 in sorted(metrics.f1_per_class.items()):
         print(f"    {label}: {f1:.4f}")
 
+    assert metrics.matthews_corrcoef >= mcc_threshold, (
+        f"MCC {metrics.matthews_corrcoef:.4f} < {mcc_threshold} for {system_name} {case_name}"
+    )
+
     return bse, comparison_result
 
 
@@ -432,6 +440,7 @@ def run_adaptive_basin_stability_test(
     system_name: str = "",
     case_name: str = "",
     ground_truths_dir: Path | None = None,
+    mcc_threshold: float = 0.95,
 ) -> tuple[BasinStabilityStudy, list[ComparisonResult]]:
     """Run adaptive basin stability test with classification metrics validation against MATLAB reference.
 
@@ -452,6 +461,7 @@ def run_adaptive_basin_stability_test(
     :param case_name: Name of the case for artifact generation.
     :param ground_truths_dir: Path to directory with parameter_index.csv and param_XXX.csv files.
         If provided, uses CsvSampler with exact MATLAB ICs for each parameter point.
+    :param mcc_threshold: Minimum MCC to pass the test. Default 0.95.
     :return: Tuple of (BasinStabilityStudy, list of ComparisonResult per parameter).
     :raises AssertionError: If validation fails.
     """
@@ -557,6 +567,8 @@ def run_adaptive_basin_stability_test(
         if ground_truths_dir is not None and csv_samplers is not None:
             y_true = csv_samplers[i].labels
             assert y_true is not None, "Ground truth CSV must have label column"
+            if label_map:
+                y_true = np.array([label_map.get(str(l), str(l)) for l in y_true])
 
             # Get predicted labels for this parameter point from results
             result_labels_obj = as_bse.results[i]["labels"]
@@ -623,6 +635,7 @@ def run_adaptive_basin_stability_test(
     print(f"\n{'=' * 80}")
     print("Adaptive Basin Stability Classification Results")
     print(f"{'=' * 80}")
+    mcc_values: list[float] = []
     for _i, result in enumerate(comparison_results):
         param_val = result.parameter_value
         print(f"\nParameter {param_val:.4f}:")
@@ -631,7 +644,17 @@ def run_adaptive_basin_stability_test(
         print("  F1 per class:")
         for attractor in result.attractors:
             print(f"    {attractor.label}: {attractor.f1_score:.4f}")
+        mcc_values.append(result.matthews_corrcoef)
     print(f"{'=' * 80}\n")
+
+    # Assert MCC >= threshold for each parameter point (skip mono-stable points where MCC=0.0 is expected)
+    for result in comparison_results:
+        n_attractors = len(result.attractors)
+        if n_attractors >= 2:
+            assert result.matthews_corrcoef >= mcc_threshold, (
+                f"MCC {result.matthews_corrcoef:.4f} < {mcc_threshold} for {system_name} {case_name} "
+                f"at parameter={result.parameter_value}"
+            )
 
     return as_bse, comparison_results
 

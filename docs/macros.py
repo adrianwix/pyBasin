@@ -55,18 +55,12 @@ def comparison_table(case_id: str) -> str:
     with open(json_path) as f:
         data: dict[str, Any] = json.load(f)
 
-    # Detect paper validation case: attractors have f1_score == 0.0 (N/A)
-    is_paper_validation = False
-    if "attractors" in data:
-        attractors: list[dict[str, Any]] = data["attractors"]
-        if attractors and attractors[0].get("f1_score", 1.0) == 0.0:
-            is_paper_validation = True
-    elif "parameter_results" in data:
+    # Detect paper validation case: explicit flag in JSON
+    is_paper_validation = data.get("paper_validation", False)
+    if not is_paper_validation and "parameter_results" in data:
         param_results: list[dict[str, Any]] = data["parameter_results"]
-        if param_results and "attractors" in param_results[0]:
-            first_attractors: list[dict[str, Any]] = param_results[0]["attractors"]
-            if first_attractors and first_attractors[0].get("f1_score", 1.0) == 0.0:
-                is_paper_validation = True
+        if param_results:
+            is_paper_validation = param_results[0].get("paper_validation", False)
 
     if is_paper_validation:
         if "parameter_results" in data:
