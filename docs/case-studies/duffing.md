@@ -30,15 +30,15 @@ $$\ddot{x} + \delta \dot{x} + \alpha x + \beta x^3 = \gamma \cos(\omega t)$$
 
 #### Basin Stability
 
-![Basin Stability](../assets/duffing_case1_basin_stability.png)
+![Basin Stability](../assets/case_studies/duffing_case1_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/duffing_case1_state_space.png)
+![State Space](../assets/case_studies/duffing_case1_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/duffing_case1_feature_space.png)
+![Feature Space](../assets/case_studies/duffing_case1_feature_space.png)
 
 ## Case 2: Unsupervised Clustering with Template Relabeling
 
@@ -52,12 +52,12 @@ This case demonstrates unsupervised attractor discovery using DBSCAN clustering,
 
 #### Basin Stability
 
-![Basin Stability](../assets/duffing_case2_basin_stability.png)
+![Basin Stability](../assets/case_studies/duffing_case2_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/duffing_case2_state_space.png)
+![State Space](../assets/case_studies/duffing_case2_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/duffing_case2_feature_space.png)
+![Feature Space](../assets/case_studies/duffing_case2_feature_space.png)

@@ -42,15 +42,15 @@ Demonstrates unboundedness detection with `event_fn`.
 
 #### Basin Stability
 
-![Basin Stability](../assets/lorenz_case1_basin_stability.png)
+![Basin Stability](../assets/case_studies/lorenz_case1_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/lorenz_case1_state_space.png)
+![State Space](../assets/case_studies/lorenz_case1_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/lorenz_case1_feature_space.png)
+![Feature Space](../assets/case_studies/lorenz_case1_feature_space.png)
 
 ## Case 2: Sigma Parameter Sweep
 
@@ -62,11 +62,11 @@ Demonstrates unboundedness detection with `event_fn`.
 
 #### Basin Stability Variation
 
-![Basin Stability Variation](../assets/lorenz_case2_basin_stability_variation.png)
+![Basin Stability Variation](../assets/case_studies/lorenz_case2_basin_stability_variation.png)
 
 #### Bifurcation Diagram
 
-![Bifurcation Diagram](../assets/lorenz_case2_bifurcation_diagram.png)
+![Bifurcation Diagram](../assets/case_studies/lorenz_case2_bifurcation_diagram.png)
 
 ## Case 3: Solver rtol Convergence Study
 
@@ -80,8 +80,8 @@ This hyperparameter study demonstrates the effect of ODE solver relative toleran
 
 #### Basin Stability Variation
 
-![Basin Stability Variation](../assets/lorenz_case3_basin_stability_variation.png)
+![Basin Stability Variation](../assets/case_studies/lorenz_case3_basin_stability_variation.png)
 
 #### Bifurcation Diagram
 
-![Bifurcation Diagram](../assets/lorenz_case3_bifurcation_diagram.png)
+![Bifurcation Diagram](../assets/case_studies/lorenz_case3_bifurcation_diagram.png)

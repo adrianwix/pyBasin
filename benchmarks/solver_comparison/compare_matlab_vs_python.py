@@ -3,7 +3,7 @@
 Compare MATLAB and Python solver benchmark results.
 
 Loads benchmark results from both implementations and creates comparison plots
-grouped by N (number of samples).
+grouped by N (number of samples). Uses CPSME styling for thesis-quality plots.
 """
 
 import json
@@ -12,6 +12,8 @@ from typing import cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from pybasin.thesis_utils import THESIS_PALETTE, thesis_export
 
 
 def load_matlab_results(matlab_json_path: Path) -> dict:
@@ -88,11 +90,11 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
     n_values = sorted(df["N"].unique())
 
     colors = {
-        "MATLAB ode45": "#d62728",
-        "JAX/Diffrax": "#1f77b4",
-        "torchdiffeq": "#ff7f0e",
-        "torchode": "#2ca02c",
-        "scipy": "#9467bd",
+        "MATLAB ode45": THESIS_PALETTE[1],  # red
+        "JAX/Diffrax": THESIS_PALETTE[0],  # dark blue
+        "torchdiffeq": THESIS_PALETTE[5],  # grey (was teal blue, too similar to torchode)
+        "torchode": THESIS_PALETTE[2],  # teal green
+        "scipy": THESIS_PALETTE[4],  # medium blue
     }
 
     for n in n_values:
@@ -148,8 +150,7 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
 
         plt.tight_layout()
         output_path = output_dir / f"solver_comparison_n{n}.png"
-        plt.savefig(output_path, dpi=300, bbox_inches="tight")
-        plt.close()
+        thesis_export(fig, output_path.name, output_dir)
         print(f"Plot saved to: {output_path}")
 
 

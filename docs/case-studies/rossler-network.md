@@ -61,15 +61,15 @@ This case study uses custom feature extraction and classification:
 
 #### Basin Stability
 
-![Basin Stability](../assets/rossler_network_baseline_basin_stability.png)
+![Basin Stability](../assets/case_studies/rossler_network_baseline_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/rossler_network_baseline_state_space.png)
+![State Space](../assets/case_studies/rossler_network_baseline_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/rossler_network_baseline_feature_space.png)
+![Feature Space](../assets/case_studies/rossler_network_baseline_feature_space.png)
 
 ## K Parameter Sweep
 
@@ -81,7 +81,7 @@ This case study uses custom feature extraction and classification:
 
 #### Basin Stability Variation
 
-![Basin Stability Variation](../assets/rossler_network_k_sweep_basin_stability_variation.png)
+![Basin Stability Variation](../assets/case_studies/rossler_network_k_sweep_basin_stability_variation.png)
 
 ## References
 

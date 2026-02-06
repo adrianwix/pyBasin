@@ -118,6 +118,7 @@ ignore_names = ["render", "layout"]
 dev = [
     "austin-dist>=4.0.0",
     "austin-python>=2.1.2",
+    "cpsmehelper>=1.0.1",
     "pyright>=1.1.408",
     "pytest>=7.4.0",
     "pytest-benchmark>=5.2.3",

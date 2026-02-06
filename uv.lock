@@ -519,6 +519,20 @@ wheels = [
 ]
 
 [[package]]
+name = "cpsmehelper"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "tikzplotlib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ca/77/84b7b63b78bdadec2d7816b8eeea5e0b36cddf26fc16235fa38605088236/cpsmehelper-1.0.1.tar.gz", hash = "sha256:3e4d40b317f10250bbb053af67ee41a409734cde8705b2d46b4d3f7373489272", size = 6440, upload-time = "2024-09-13T07:49:45.709Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/77/18/d424bccc649b263bb3587333bd3c76d3c0c4117de138386c99826d708b22/cpsmehelper-1.0.1-py3-none-any.whl", hash = "sha256:f62c283f278eed3efcdf5efddd0758013b805a3e6eac6bd9de6f7d1fbdbf414e", size = 7592, upload-time = "2024-09-13T07:49:44.149Z" },
+]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2667,6 +2681,7 @@ case-studies = [
 dev = [
     { name = "austin-dist" },
     { name = "austin-python" },
+    { name = "cpsmehelper" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
@@ -2716,6 +2731,7 @@ case-studies = [
 dev = [
     { name = "austin-dist", specifier = ">=4.0.0" },
     { name = "austin-python", specifier = ">=2.1.2" },
+    { name = "cpsmehelper", specifier = ">=1.0.1" },
     { name = "pyright", specifier = ">=1.1.408" },
     { name = "pytest", specifier = ">=7.4.0" },
     { name = "pytest-benchmark", specifier = ">=5.2.3" },
@@ -3593,6 +3609,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b7/4d/08c89e34946fce2aec4fbb45c9016efd5f4d7f24af8e5d93296e935631d8/threadpoolctl-3.6.0.tar.gz", hash = "sha256:8ab8b4aa3491d812b623328249fab5302a68d2d71745c8a4c719a2fcaba9f44e", size = 21274, upload-time = "2025-03-13T13:49:23.031Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/d5/f9a850d79b0851d1d4ef6456097579a9005b31fea68726a4ae5f2d82ddd9/threadpoolctl-3.6.0-py3-none-any.whl", hash = "sha256:43a0b8fd5a2928500110039e43a5eed8480b918967083ea48dc3ab9f13c4a7fb", size = 18638, upload-time = "2025-03-13T13:49:21.846Z" },
+]
+
+[[package]]
+name = "tikzplotlib"
+version = "0.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pillow" },
+    { name = "webcolors" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/98/22/3ed358885b75c222f39221d0cc2793f4059c02788b669363a0e7df03241f/tikzplotlib-0.10.1.tar.gz", hash = "sha256:93d141342d143804fc1dfabe03e6d4e38e547cf72803bdf124615affdd56f59d", size = 104475, upload-time = "2022-01-31T13:43:33.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/3e/24d1c41cbe520d17cfb887e1d527937ad3b6a1c3dc42c12cd48fa60d2dc7/tikzplotlib-0.10.1-py3-none-any.whl", hash = "sha256:bf0451b86fe4db40aa742f7e5a180dfaaadf57c746ddb2ab7e58a5163d8be75f", size = 54151, upload-time = "2022-01-31T13:43:31.014Z" },
 ]
 
 [[package]]

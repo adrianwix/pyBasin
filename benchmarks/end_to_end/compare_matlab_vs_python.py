@@ -3,7 +3,7 @@
 Compare MATLAB and Python benchmark results for basin stability estimation.
 
 Loads benchmark results from both implementations and creates comparison plots
-grouped by N (number of samples).
+grouped by N (number of samples). Uses CPSME styling for thesis-quality plots.
 """
 
 import json
@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats as scipy_stats
 from scipy.optimize import curve_fit
+
+from pybasin.thesis_utils import THESIS_PALETTE, thesis_export
 
 
 def load_matlab_results(matlab_json_path: Path) -> dict:
@@ -76,7 +78,11 @@ def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
 
     n_values = sorted(df["N"].unique())
     implementations = ["Python CPU", "Python CUDA", "MATLAB"]
-    colors = {"Python CPU": "#1f77b4", "Python CUDA": "#2ca02c", "MATLAB": "#d62728"}
+    colors = {
+        "Python CPU": THESIS_PALETTE[0],
+        "Python CUDA": THESIS_PALETTE[2],
+        "MATLAB": THESIS_PALETTE[1],
+    }
 
     x = np.arange(len(n_values))
     width = 0.25
@@ -111,7 +117,7 @@ def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
     ax.grid(True, alpha=0.3, axis="y")
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    thesis_export(fig, output_path.name, output_path.parent)
     print(f"Comparison plot saved to: {output_path}")
 
 
@@ -227,7 +233,11 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(10, 7))
 
     implementations = ["MATLAB", "Python CPU", "Python CUDA"]
-    colors = {"Python CPU": "#1f77b4", "Python CUDA": "#2ca02c", "MATLAB": "#d62728"}
+    colors = {
+        "Python CPU": THESIS_PALETTE[0],
+        "Python CUDA": THESIS_PALETTE[2],
+        "MATLAB": THESIS_PALETTE[1],
+    }
     markers = {"Python CPU": "o", "Python CUDA": "s", "MATLAB": "^"}
 
     for impl in implementations:
@@ -271,7 +281,7 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
     ax.grid(True, alpha=0.3, which="both")
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    thesis_export(fig, output_path.name, output_path.parent)
     print(f"Scaling plot saved to: {output_path}")
 
 

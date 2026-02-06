@@ -31,15 +31,15 @@ $$m\ddot{x} + c\dot{x} + kx = F_{friction}(v_{belt} - \dot{x})$$
 
 #### Basin Stability
 
-![Basin Stability](../assets/friction_case1_basin_stability.png)
+![Basin Stability](../assets/case_studies/friction_case1_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/friction_case1_state_space.png)
+![State Space](../assets/case_studies/friction_case1_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/friction_case1_feature_space.png)
+![Feature Space](../assets/case_studies/friction_case1_feature_space.png)
 
 ## Case 2: v_d Parameter Sweep
 
@@ -51,8 +51,8 @@ $$m\ddot{x} + c\dot{x} + kx = F_{friction}(v_{belt} - \dot{x})$$
 
 #### Basin Stability Variation
 
-![Basin Stability Variation](../assets/friction_case2_basin_stability_variation.png)
+![Basin Stability Variation](../assets/case_studies/friction_case2_basin_stability_variation.png)
 
 #### Bifurcation Diagram
 
-![Bifurcation Diagram](../assets/friction_case2_bifurcation_diagram.png)
+![Bifurcation Diagram](../assets/case_studies/friction_case2_bifurcation_diagram.png)

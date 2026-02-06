@@ -31,15 +31,15 @@ $$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
 
 #### Basin Stability
 
-![Basin Stability](../assets/pendulum_case1_basin_stability.png)
+![Basin Stability](../assets/case_studies/pendulum_case1_basin_stability.png)
 
 #### State Space
 
-![State Space](../assets/pendulum_case1_state_space.png)
+![State Space](../assets/case_studies/pendulum_case1_state_space.png)
 
 #### Feature Space
 
-![Feature Space](../assets/pendulum_case1_feature_space.png)
+![Feature Space](../assets/case_studies/pendulum_case1_feature_space.png)
 
 ## Case 2: Parameter Sweep
 
@@ -51,8 +51,8 @@ $$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
 
 #### Basin Stability Variation
 
-![Basin Stability Variation](../assets/pendulum_case2_basin_stability_variation.png)
+![Basin Stability Variation](../assets/case_studies/pendulum_case2_basin_stability_variation.png)
 
 #### Bifurcation Diagram
 
-![Bifurcation Diagram](../assets/pendulum_case2_bifurcation_diagram.png)
+![Bifurcation Diagram](../assets/case_studies/pendulum_case2_bifurcation_diagram.png)
