@@ -2282,16 +2282,16 @@
 <li>Network-level basin stability estimation</li>
 </ul>
 <p><strong>Reference:</strong> Menck, P., Heitzig, J., Marwan, N., &amp; Kurths, J. (2013). How basin stability complements the linear-stability paradigm. <em>Nature Physics</em>, <em>9</em>, 89–92. https://doi.org/10.1038/nphys2516</p>
-<p><strong>Files:</strong> <code>case_studies/rossler/</code></p>
+<p><strong>Files:</strong> <code>case_studies/rossler_network/</code></p>
 <h2 id="running-case-studies">Running Case Studies</h2>
 <p>From the project root, individual case studies can be executed as follows:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Navigate to project root</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/pyBasinWorkspace
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Run a specific case study</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.duffing_oscillator.main_supervised
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.duffing_oscillator.main_duffing_oscillator_supervised
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.lorenz.main_lorenz
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.pendulum.main_case1
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>case_studies.pendulum.main_pendulum_case1
 </code></pre></div>
 <h2 id="integration-tests">Integration Tests</h2>
 <p>Each case study has a corresponding integration test that automatically checks correctness:</p>

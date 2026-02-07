@@ -2438,12 +2438,12 @@
 
 <h1 id="lorenz-system">Lorenz System</h1>
 <h2 id="system-description">System Description</h2>
-<p>Modified Lorenz system with additional perturbation term:</p>
+<p>Lorenz system:</p>
 <div class="arithmatex">\[
 \begin{aligned}
-\dot{x} &amp;= 10(y - x) \\
-\dot{y} &amp;= x(\rho - z) - y \\
-\dot{z} &amp;= xy - bz + \sigma x^2
+\dot{x} &amp;= \sigma(y - x) \\
+\dot{y} &amp;= rx - xz - y \\
+\dot{z} &amp;= xy - bz
 \end{aligned}
 \]</div>
 <h3 id="system-parameters">System Parameters</h3>
@@ -2457,17 +2457,17 @@
 </thead>
 <tbody>
 <tr>
-<td>Perturbation coefficient</td>
+<td>Prandtl number</td>
 <td><span class="arithmatex">\(\sigma\)</span></td>
 <td>0.12</td>
 </tr>
 <tr>
-<td>Bifurcation offset</td>
+<td>Rayleigh number</td>
 <td><span class="arithmatex">\(r\)</span></td>
 <td>0.0</td>
 </tr>
 <tr>
-<td>Damping offset</td>
+<td>Geometric factor</td>
 <td><span class="arithmatex">\(b\)</span></td>
 <td>-0.6</td>
 </tr>

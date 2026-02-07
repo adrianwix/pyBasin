@@ -1195,9 +1195,55 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="System Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Parameters
+    </span>
+  </a>
+  
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sampling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clustering
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#attractors" class="md-nav__link">
     <span class="md-ellipsis">
       Attractors
@@ -1205,13 +1251,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Features
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1930,9 +1972,55 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="System Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Parameters
+    </span>
+  </a>
+  
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sampling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clustering
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#attractors" class="md-nav__link">
     <span class="md-ellipsis">
       Attractors
@@ -1940,13 +2028,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Features
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2153,26 +2237,106 @@
 \end{aligned}
 \]</div>
 <p>where <span class="arithmatex">\(i = 1, \ldots, 100\)</span> and <span class="arithmatex">\(\mathcal{N}_i\)</span> denotes the neighbors of node <span class="arithmatex">\(i\)</span> in the network.</p>
-<p><strong>Parameters:</strong></p>
+<h3 id="system-parameters">System Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Symbol</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rössler parameter</td>
+<td><span class="arithmatex">\(a\)</span></td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>Rössler parameter</td>
+<td><span class="arithmatex">\(b\)</span></td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>Rössler parameter</td>
+<td><span class="arithmatex">\(c\)</span></td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>Coupling strength</td>
+<td><span class="arithmatex">\(K\)</span></td>
+<td>0.218 (baseline)</td>
+</tr>
+<tr>
+<td>Network topology</td>
+<td>—</td>
+<td>Scale-free, 100 nodes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sampling">Sampling</h3>
 <ul>
-<li><span class="arithmatex">\(a = 0.2\)</span>, <span class="arithmatex">\(b = 0.2\)</span>, <span class="arithmatex">\(c = 7.0\)</span> (Rössler system parameters)</li>
-<li><span class="arithmatex">\(K\)</span> = coupling strength (varied from 0.119 to 0.317)</li>
-<li>Network topology: Scale-free network with 100 nodes</li>
+<li><strong>Dimension</strong>: <span class="arithmatex">\(D = 300\)</span> (3 states <span class="arithmatex">\(\times\)</span> 100 nodes)</li>
+<li><strong>Sample size</strong>: <span class="arithmatex">\(N = 500\)</span></li>
+<li><strong>Distribution</strong>: <span class="arithmatex">\(\rho\)</span> = Uniform</li>
+<li><strong>Region of interest</strong>: <span class="arithmatex">\(\mathcal{Q}(x_i, y_i, z_i) : [-15, 15] \times [-15, 15] \times [-5, 35]\)</span> per node</li>
 </ul>
-<h2 id="attractors">Attractors</h2>
+<h3 id="solver">Solver</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Method</td>
+<td>Dopri5 (Diffrax)</td>
+</tr>
+<tr>
+<td>Time span</td>
+<td><span class="arithmatex">\([0, 1000]\)</span></td>
+</tr>
+<tr>
+<td>Steps</td>
+<td>1000 (<span class="arithmatex">\(f_s\)</span> = 1 Hz)</td>
+</tr>
+<tr>
+<td>Relative tolerance</td>
+<td>1e-03</td>
+</tr>
+<tr>
+<td>Absolute tolerance</td>
+<td>1e-06</td>
+</tr>
+<tr>
+<td>Event function</td>
+<td>Divergence at <span class="arithmatex">\(\lvert y \rvert &gt; 400\)</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="feature-extraction">Feature Extraction</h3>
+<p>Maximum pairwise deviation at final time step:</p>
+<ul>
+<li>States: all <span class="arithmatex">\(x_i, y_i, z_i\)</span></li>
+<li>Formula: <span class="arithmatex">\(\Delta_x = \max_i(x_i) - \min_i(x_i)\)</span>, similarly for <span class="arithmatex">\(y\)</span>, <span class="arithmatex">\(z\)</span>; plus <span class="arithmatex">\(\Delta_{\text{all}} = \max(\Delta_x, \Delta_y, \Delta_z)\)</span></li>
+<li>Transient cutoff: <span class="arithmatex">\(t^* = 950.0\)</span></li>
+</ul>
+<h3 id="clustering">Clustering</h3>
+<ul>
+<li><strong>Method</strong>: Threshold classifier (<code>SynchronizationClassifier</code>)</li>
+<li><strong>Threshold</strong>: <span class="arithmatex">\(\epsilon = 1.5\)</span></li>
+<li><strong>Rule</strong>: Synchronized if <span class="arithmatex">\(\Delta_{\text{all}} &lt; \epsilon\)</span>, desynchronized otherwise</li>
+</ul>
+<h3 id="attractors">Attractors</h3>
 <p>The system exhibits three types of behavior:</p>
 <ul>
 <li><strong>Synchronized</strong>: All oscillators converge to a common trajectory</li>
 <li><strong>Desynchronized</strong>: Oscillators remain coupled but do not synchronize</li>
-<li><strong>Unbounded</strong>: Some trajectories diverge to infinity</li>
+<li><strong>Unbounded</strong>: Some trajectories diverge to infinity (detected by event function)</li>
 </ul>
 <p>Basin stability is computed for non-unbounded states (synchronized + desynchronized).</p>
-<h2 id="key-features">Key Features</h2>
-<p>This case study uses custom feature extraction and classification:</p>
-<ul>
-<li><strong><code>SynchronizationFeatureExtractor</code></strong>: Computes maximum pairwise deviation across all node pairs</li>
-<li><strong><code>SynchronizationClassifier</code></strong>: Classifies based on synchronization threshold</li>
-</ul>
 <h2 id="reproduction-code">Reproduction Code</h2>
 <h3 id="setup">Setup</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">setup_rossler_network_system</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SetupProperties</span><span class="p">:</span>

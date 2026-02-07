@@ -2306,10 +2306,10 @@
 </div>
 <p>The JAX implementation uses a <span class="arithmatex">\(\tanh\)</span> approximation for the sign function with <span class="arithmatex">\(k_{\text{smooth}} = 200\)</span>, while MATLAB uses hard switching.</p>
 <h3 id="feature-extraction">Feature Extraction</h3>
-<p>Velocity range after transient:</p>
+<p>Maximum absolute velocity after transient:</p>
 <ul>
 <li>States: <span class="arithmatex">\(v\)</span> (state 1)</li>
-<li>Formula: <span class="arithmatex">\(\Delta v = \max(v) - \min(v)\)</span>, threshold = 0.01</li>
+<li>Formula: <span class="arithmatex">\(\max(|v|)\)</span>, threshold = 0.2 (FP if <span class="arithmatex">\(\leq 0.2\)</span>, LC otherwise)</li>
 <li>Transient cutoff: <span class="arithmatex">\(t^* = 400.0\)</span></li>
 </ul>
 <h3 id="clustering">Clustering</h3>
