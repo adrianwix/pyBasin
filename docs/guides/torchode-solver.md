@@ -94,7 +94,7 @@ from pybasin.solver import TorchOdeSolver
 # Create solver with default settings (dopri5)
 solver = TorchOdeSolver(
     time_span=(0, 1000),
-    fs=25,
+    n_steps=25001,
     device="cuda"
 )
 ```
@@ -104,7 +104,7 @@ solver = TorchOdeSolver(
 ```python
 solver = TorchOdeSolver(
     time_span=(0, 1000),
-    fs=25,
+    n_steps=25001,
     device="cuda",
     method="tsit5",      # Use Tsitouras method
     rtol=1e-8,           # Relative tolerance
@@ -157,17 +157,15 @@ python case_studies/pendulum/main_pendulum_case1_torchode.py
 1. **Enable JIT Compilation**: Set `use_jit=True` for repeated solves with the same system
 
    ```python
-   solver = TorchOdeSolver(time_span=(0, 1000), fs=25, use_jit=True)
+   solver = TorchOdeSolver(time_span=(0, 1000), n_steps=25001, use_jit=True)
    ```
 
 2. **Choose the Right Method**:
-
    - For general problems: `dopri5` (default)
    - For better efficiency: `tsit5`
    - For simple/fast problems: `euler` or `midpoint` (fixed step)
 
 3. **Adjust Tolerances**:
-
    - Tighter tolerances (smaller rtol/atol) = more accurate but slower
    - Looser tolerances = faster but less accurate
 

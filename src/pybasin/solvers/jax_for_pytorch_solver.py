@@ -49,7 +49,6 @@ class JaxForPytorchSolver(Solver):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float | None = None,
         n_steps: int | None = None,
         device: str | None = None,
         solver: Any | None = None,
@@ -62,8 +61,7 @@ class JaxForPytorchSolver(Solver):
         Initialize JaxForPytorchSolver.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz). DEPRECATED: use n_steps instead.
-        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
         :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). If None, defaults to Dopri5().
         :param rtol: Relative tolerance for adaptive stepping.
@@ -75,7 +73,7 @@ class JaxForPytorchSolver(Solver):
 
         # Call parent with normalized device string for PyTorch compatibility
         device_str = "cuda:0" if self.jax_device.platform == "gpu" else "cpu"
-        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device_str, **kwargs)
+        super().__init__(time_span, n_steps=n_steps, device=device_str, **kwargs)
 
         # Use provided solver or default to Dopri5 (similar to MATLAB's ode45)
         self.diffrax_solver = solver if solver is not None else Dopri5()
@@ -87,7 +85,6 @@ class JaxForPytorchSolver(Solver):
         """Create a copy of this solver configured for a different device."""
         new_solver = JaxForPytorchSolver(
             time_span=self.time_span,
-            fs=self.fs,
             n_steps=self.n_steps,
             device=device,
             solver=self.diffrax_solver,

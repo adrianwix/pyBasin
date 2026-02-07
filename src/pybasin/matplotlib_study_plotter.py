@@ -61,7 +61,7 @@ class MatplotlibStudyPlotter:
         labels_set: set[str] = set()
         for bs_dict in self.as_bse.basin_stabilities:
             labels_set.update(bs_dict.keys())
-        labels: list[str] = list(labels_set)  # Convert to list for consistent ordering
+        labels: list[str] = sorted(labels_set)  # Sort for consistent legend ordering
 
         # Convert list of dictionaries to arrays for plotting
         bs_values: dict[str, list[float]] = {label: [] for label in labels}
@@ -83,14 +83,12 @@ class MatplotlibStudyPlotter:
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # Different colors
 
         for i, label in enumerate(labels):
-            # Format label: "Unbounded" for unbounded, "State X" for numbered states
-            display_label = "Unbounded" if label == "unbounded" else f"State {label}"
             plt.plot(  # type: ignore[misc]
                 self.as_bse.parameter_values,
                 bs_values[label],
                 "o-",  # Use consistent marker 'o' for all
                 color=colors[i % len(colors)],
-                label=display_label,
+                label=label,
                 markersize=8,
                 linewidth=2,
                 alpha=0.8,

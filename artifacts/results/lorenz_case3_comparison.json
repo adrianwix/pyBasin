@@ -10,7 +10,7 @@
       "matthews_corrcoef": 0.4477798340093641,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.02355,
           "python_se": 0.0010722732277735933,
           "matlab_bs": 0.0895,
@@ -19,7 +19,7 @@
           "matthews_corrcoef": 0.4477798340093641
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.02115,
           "python_se": 0.0010174152913142204,
           "matlab_bs": 0.08585,
@@ -46,7 +46,7 @@
       "matthews_corrcoef": 0.9771201949983892,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.08705,
           "python_se": 0.0019933928049935368,
           "matlab_bs": 0.08745,
@@ -55,7 +55,7 @@
           "matthews_corrcoef": 0.9771201949983892
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.08595,
           "python_se": 0.001981951027396994,
           "matlab_bs": 0.08615,
@@ -82,7 +82,7 @@
       "matthews_corrcoef": 0.9951701925412679,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.0871,
           "python_se": 0.001993910604816575,
           "matlab_bs": 0.08705,
@@ -91,7 +91,7 @@
           "matthews_corrcoef": 0.9951701925412679
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.0855,
           "python_se": 0.001977242397886511,
           "matlab_bs": 0.085,
@@ -118,7 +118,7 @@
       "matthews_corrcoef": 0.9983623492918131,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.0871,
           "python_se": 0.001993910604816575,
           "matlab_bs": 0.08715,
@@ -127,7 +127,7 @@
           "matthews_corrcoef": 0.9983623492918131
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.08875,
           "python_se": 0.002010888329818441,
           "matlab_bs": 0.0887,
@@ -154,7 +154,7 @@
       "matthews_corrcoef": 0.9978555965610834,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.086,
           "python_se": 0.0019824732028453753,
           "matlab_bs": 0.0862,
@@ -163,7 +163,7 @@
           "matthews_corrcoef": 0.9978555965610834
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.0882,
           "python_se": 0.002005252602541635,
           "matlab_bs": 0.08825,
@@ -190,7 +190,7 @@
       "matthews_corrcoef": 0.9983532991790525,
       "attractors": [
         {
-          "label": "chaos y_1",
+          "label": "chaotic attractor 1",
           "python_bs": 0.0876,
           "python_se": 0.0019990777873809713,
           "matlab_bs": 0.0874,
@@ -199,7 +199,7 @@
           "matthews_corrcoef": 0.9983532991790525
         },
         {
-          "label": "chaos y_2",
+          "label": "chaotic attractor 2",
           "python_bs": 0.0872,
           "python_se": 0.0019949456132937558,
           "matlab_bs": 0.0871,

@@ -7,8 +7,10 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
+from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.predictors.base import ClassifierPredictor
 from pybasin.utils import generate_filename, resolve_folder
 
@@ -243,9 +245,24 @@ class MatplotlibPlotter:
             plt.show()  # type: ignore[misc]
 
     # Plots 2 states over time for the same trajectory in the same space
-    def plot_templates_phase_space(self, x_var: int = 0, y_var: int = 1, z_var: int | None = None):
+    def plot_templates_phase_space(
+        self,
+        x_var: int = 0,
+        y_var: int = 1,
+        z_var: int | None = None,
+        time_range: tuple[float, float] = (700, 1000),
+    ) -> Figure:
         """
         Plot trajectories for the template initial conditions in 2D or 3D phase space.
+
+        Creates a CPU copy of the solver with 10x the original n_steps for smoother
+        visualization. Caching is disabled to avoid polluting the cache with
+        visualization-specific integrations.
+
+        :param x_var: State variable index for x-axis.
+        :param y_var: State variable index for y-axis.
+        :param z_var: State variable index for z-axis (3D plot if provided).
+        :param time_range: Time range (t_start, t_end) to plot.
         """
         if not isinstance(self.bse.predictor, ClassifierPredictor):
             raise ValueError(
@@ -253,7 +270,12 @@ class MatplotlibPlotter:
             )
 
         # Use classifier's solver if available, otherwise use main solver
-        solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
+        base_solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
+
+        # Create CPU copy with 10x n_steps for smoother plots, no caching
+        solver = base_solver.with_device("cpu")
+        solver.n_steps = base_solver.n_steps * 10
+        solver.use_cache = False
 
         # Convert template_y0 list to tensor on solver's device
         template_tensor = torch.tensor(
@@ -262,30 +284,49 @@ class MatplotlibPlotter:
             device=solver.device,
         )
 
-        _t, trajectories = solver.integrate(
+        t, trajectories = solver.integrate(
             self.bse.ode_system,
             template_tensor,
         )
 
         # Move tensors to CPU for plotting
-        trajectories = trajectories.cpu()
+        t = t.cpu().numpy()
+        trajectories = trajectories.cpu().numpy()
+
+        # Filter to time range
+        t_min, t_max = time_range
+        mask = (t >= t_min) & (t <= t_max)
+        trajectories = trajectories[mask, :, :]
 
         fig = plt.figure(figsize=(8, 6))  # type: ignore[misc]
         if z_var is None:
             ax: Axes = fig.add_subplot(111)  # type: ignore[assignment]
-            for _i, (label, traj) in enumerate(
-                zip(self.bse.predictor.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
-            ):
-                ax.plot(traj[:, x_var], traj[:, y_var], label=str(label))  # type: ignore[misc]
+            for i, (label, traj) in enumerate(
+                zip(self.bse.predictor.labels, np.transpose(trajectories, (1, 0, 2)), strict=True)
+            ):  # type: ignore[arg-type]
+                ax.plot(
+                    traj[:, x_var],
+                    traj[:, y_var],
+                    label=str(label),
+                    color=get_color(i),
+                    linewidth=2.5,
+                )  # type: ignore[misc]
             ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
             ax.set_ylabel(f"State {y_var}")  # type: ignore[misc]
             ax.set_title("2D Phase Plot")  # type: ignore[misc]
         else:
             ax = fig.add_subplot(111, projection="3d")  # type: ignore[assignment]
-            for _i, (label, traj) in enumerate(
-                zip(self.bse.predictor.labels, trajectories.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
-            ):
-                ax.plot(traj[:, x_var], traj[:, y_var], traj[:, z_var], label=str(label))  # type: ignore[misc,attr-defined]
+            for i, (label, traj) in enumerate(
+                zip(self.bse.predictor.labels, np.transpose(trajectories, (1, 0, 2)), strict=True)
+            ):  # type: ignore[arg-type]
+                ax.plot(
+                    traj[:, x_var],
+                    traj[:, y_var],
+                    traj[:, z_var],
+                    label=str(label),
+                    color=get_color(i),
+                    linewidth=2.5,
+                )  # type: ignore[misc,attr-defined]
             ax.set_xlabel(f"State {x_var}")  # type: ignore[misc]
             ax.set_ylabel(f"State {y_var}")  # type: ignore[misc]
             ax.set_zlabel(f"State {z_var}")  # type: ignore[misc,attr-defined]
@@ -294,66 +335,89 @@ class MatplotlibPlotter:
         plt.legend()  # type: ignore[misc]
         plt.tight_layout()
 
-        if self.bse.save_to:
-            self.save_plot("phase_plot")
-        else:
-            plt.show()  # type: ignore[misc]
+        return fig
 
-    # Plots over time
     def plot_templates_trajectories(
-        self, plotted_var: int, time_span: tuple[float, float] | None = None
-    ):
+        self,
+        plotted_var: int,
+        y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+        x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+    ) -> Figure:
         """
-        Plot trajectories for the template initial conditions.
+        Plot template trajectories as vertically stacked subplots.
 
-        :param plotted_var: Index of the variable to plot.
-        :param time_span: Time range to plot (t_start, t_end).
+        Each trajectory gets its own row with independent y-axis scaling.
+        This handles different amplitudes across attractors cleanly.
+
+        Creates a CPU copy of the solver with 10x the original n_steps for smoother
+        visualization. Caching is disabled to avoid polluting the cache with
+        visualization-specific integrations.
+
+        :param plotted_var: Index of the state variable to plot.
+        :param y_limits: Y-axis limits. Tuple applies to all, dict maps label to (y_min, y_max).
+        :param x_limits: X-axis limits. Tuple applies to all, dict maps label to (x_min, x_max).
         """
         if not isinstance(self.bse.predictor, ClassifierPredictor):
             raise ValueError(
                 "plot_templates requires a ClassifierPredictor with template initial conditions."
             )
 
-        # Use classifier's solver if available, otherwise use main solver
-        solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
+        base_solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
 
-        # Convert template_y0 list to tensor on solver's device
+        # Create CPU copy with 10x n_steps for smoother plots, no caching
+        solver = base_solver.with_device("cpu")
+        solver.n_steps = base_solver.n_steps * 10
+        solver.use_cache = False
+
         template_tensor = torch.tensor(
             self.bse.predictor.template_y0,  # type: ignore[misc]
             dtype=torch.float32,
             device=solver.device,
         )
 
-        # Get trajectories for template initial conditions
         t, y = solver.integrate(
             self.bse.ode_system,
             template_tensor,
         )
 
-        # Move tensors to CPU for plotting
-        t = t.cpu()
-        y = y.cpu()
+        t = t.cpu().numpy()
+        y = y.cpu().numpy()
 
-        plt.figure(figsize=(8, 6))  # type: ignore[misc]
+        labels = list(self.bse.predictor.labels)
+        trajectories = np.transpose(y, (1, 0, 2))  # (n_templates, n_time, n_states)
+        n_templates = len(labels)
 
-        # Filter time if specified
-        idx = (t >= time_span[0]) & (t <= time_span[1]) if time_span is not None else slice(None)
+        use_shared_x = x_limits is None or isinstance(x_limits, tuple)
+        fig, axes = plt.subplots(  # type: ignore[misc]
+            n_templates,
+            1,
+            figsize=(8, 1.5 * n_templates),
+            sharex=use_shared_x,
+        )
+        if n_templates == 1:
+            axes = [axes]
 
-        # Plot each trajectory
-        # Use permute instead of transpose for 3D tensors
-        for _i, (label, traj) in enumerate(
-            zip(self.bse.predictor.labels, y.permute(1, 0, 2), strict=True)  # type: ignore[arg-type]
-        ):
-            plt.plot(t[idx], traj[idx, plotted_var], label=f"{label}")  # type: ignore[misc]
+        for i, (label, traj) in enumerate(zip(labels, trajectories, strict=True)):
+            ax_i: Axes = axes[i]  # type: ignore[misc]
+            color = get_color(i)
 
-        plt.xlabel("Time")  # type: ignore[misc]
-        plt.ylabel(f"State {plotted_var}")  # type: ignore[misc]
-        plt.title("Template Trajectories")  # type: ignore[misc]
-        plt.legend()  # type: ignore[misc]
-        plt.grid(True)  # type: ignore[misc]
+            x_lim = x_limits[label] if isinstance(x_limits, dict) else x_limits
+            if x_lim is not None:
+                x_min, x_max = x_lim
+                traj_mask = (t >= x_min) & (t <= x_max)
+                ax_i.plot(t[traj_mask], traj[traj_mask, plotted_var], linewidth=2.5, color=color)  # type: ignore[misc]
+                ax_i.set_xlim(x_min, x_max)  # type: ignore[misc]
+            else:
+                ax_i.plot(t, traj[:, plotted_var], linewidth=2.5, color=color)  # type: ignore[misc]
 
-        # Save plot
-        if self.bse.save_to:
-            self.save_plot("template_trajectories_plot")
-        else:
-            plt.show()  # type: ignore[misc]
+            ax_i.set_ylabel(f"$\\bar{{y}}_{{{i + 1}}}$", fontsize=10)  # type: ignore[misc]
+            ax_i.tick_params(axis="both", which="major", labelsize=8)  # type: ignore[misc]
+
+            y_lim = y_limits[label] if isinstance(y_limits, dict) else y_limits
+            if y_lim is not None:
+                ax_i.set_ylim(y_lim)  # type: ignore[misc]
+
+        axes[-1].set_xlabel("time")  # type: ignore[misc]
+        plt.tight_layout()
+
+        return fig

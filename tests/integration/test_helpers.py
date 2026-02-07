@@ -342,7 +342,7 @@ def run_basin_stability_test(
         y_true = ground_truth_sampler.labels
         assert y_true is not None, "Ground truth CSV must have label column"
         if label_map:
-            y_true = np.array([label_map.get(str(l), str(l)) for l in y_true])
+            y_true = np.array([label_map.get(str(label), str(label)) for label in y_true])
     else:
         raise ValueError("ground_truth_csv must be provided to compute classification metrics")
 
@@ -568,7 +568,7 @@ def run_adaptive_basin_stability_test(
             y_true = csv_samplers[i].labels
             assert y_true is not None, "Ground truth CSV must have label column"
             if label_map:
-                y_true = np.array([label_map.get(str(l), str(l)) for l in y_true])
+                y_true = np.array([label_map.get(str(lbl), str(lbl)) for lbl in y_true])
 
             # Get predicted labels for this parameter point from results
             result_labels_obj = as_bse.results[i]["labels"]

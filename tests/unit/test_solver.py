@@ -91,12 +91,14 @@ def test_solver_y0_shape_validation(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = SklearnParallelSolver(time_span=(0, 1), fs=10, device="cpu", n_jobs=1, use_cache=False)
+    solver = SklearnParallelSolver(
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=1, use_cache=False
+    )
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_ode, y0)
 
-    # 11 time points (fs=10 means 10 samples per second, so 0 to 1 = 11 points)
+    # 11 time points
     assert t.shape == (11,)
     # Single trajectory: 11 steps × 1 batch × 1 state
     assert y.shape == (11, 1, 1)
@@ -107,7 +109,9 @@ def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_sklearn_solver_batched(simple_ode: ExponentialDecayODE) -> None:
-    solver = SklearnParallelSolver(time_span=(0, 1), fs=10, device="cpu", n_jobs=2, use_cache=False)
+    solver = SklearnParallelSolver(
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
+    )
 
     y0 = torch.tensor([[1.0], [2.0]])
     t, y = solver.integrate(simple_ode, y0)

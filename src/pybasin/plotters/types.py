@@ -76,6 +76,8 @@ class TemplatesTimeSeriesOptions(TypedDict, total=False):
     """Show only these template labels. Mutually exclusive with exclude_templates."""
     exclude_templates: list[str]
     """Hide these template labels. Mutually exclusive with include_templates."""
+    y_limits: tuple[float, float] | dict[str, tuple[float, float]]
+    """Y-axis limits. Tuple applies to all, dict maps label to (y_min, y_max)."""
 
 
 class ParamOverviewOptions(TypedDict, total=False):

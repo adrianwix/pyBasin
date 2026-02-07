@@ -170,7 +170,7 @@ A network of coupled Rössler oscillators, used to study synchronization and its
 
 **Reference:** Menck, P., Heitzig, J., Marwan, N., & Kurths, J. (2013). How basin stability complements the linear-stability paradigm. _Nature Physics_, _9_, 89–92. https://doi.org/10.1038/nphys2516
 
-**Files:** `case_studies/rossler/`
+**Files:** `case_studies/rossler_network/`
 
 ## Running Case Studies
 
@@ -181,9 +181,9 @@ From the project root, individual case studies can be executed as follows:
 cd /path/to/pyBasinWorkspace
 
 # Run a specific case study
-uv run python -m case_studies.duffing_oscillator.main_supervised
+uv run python -m case_studies.duffing_oscillator.main_duffing_oscillator_supervised
 uv run python -m case_studies.lorenz.main_lorenz
-uv run python -m case_studies.pendulum.main_case1
+uv run python -m case_studies.pendulum.main_pendulum_case1
 ```
 
 ## Integration Tests

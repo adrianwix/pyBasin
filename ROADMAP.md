@@ -10,3 +10,13 @@
   - This would enable more flexible template matching across parameter spaces
 - [ ] When varying parameters we should not vary initial conditions
 - [ ] Optimize parameters variation (not hyper-parameters)
+- [ ] Improve plotter API. Calling plt.show does not feels right
+
+```python
+plotter.plot_templates_trajectories(
+  plotted_var=0,
+  y_limits=(-1.4, 1.4),
+  x_limits=(0, 50),
+)
+plt.show()  # type: ignore[misc]
+```

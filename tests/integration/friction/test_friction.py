@@ -40,7 +40,13 @@ class TestFriction:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_single_point(bse, comparison)
+            artifact_collector.add_single_point(
+                bse,
+                comparison,
+                trajectory_state=1,
+                trajectory_x_limits={"FP": (0, 250), "LC": (0, 25)},
+                trajectory_y_limits={"FP": (-1.1, 1.1), "LC": (-2.2, 2.2)},
+            )
 
     @pytest.mark.integration
     def test_parameter_v_d(

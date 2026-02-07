@@ -44,7 +44,7 @@ def setup_friction_system() -> SetupProperties:
     feature_extractor = FrictionFeatureExtractor(time_steady=400)
 
     classifier_initial_conditions = [
-        [0.1, 0.1],
+        [1.0, 1.0],
         [2.0, 2.0],
     ]
 

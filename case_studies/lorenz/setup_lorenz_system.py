@@ -21,7 +21,7 @@ def lorenz_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
     - Returns positive when under threshold (continue integration)
     - Returns negative/zero when over threshold (stop integration)
     """
-    max_val = 196.0
+    max_val = 200.0
     max_abs_y = jnp.max(jnp.abs(y))
     return max_val - max_abs_y
 
@@ -66,7 +66,7 @@ def setup_lorenz_system() -> SetupProperties:
         [10.0, 50.0, 0.0],
     ]
 
-    classifier_labels = ["chaos y_1", "chaos y_2", "unbounded"]
+    classifier_labels = ["chaotic attractor 1", "chaotic attractor 2", "unbounded"]
 
     knn = KNeighborsClassifier(n_neighbors=1)
 

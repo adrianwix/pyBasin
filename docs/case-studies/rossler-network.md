@@ -14,28 +14,57 @@ $$
 
 where $i = 1, \ldots, 100$ and $\mathcal{N}_i$ denotes the neighbors of node $i$ in the network.
 
-**Parameters:**
+### System Parameters
 
-- $a = 0.2$, $b = 0.2$, $c = 7.0$ (Rössler system parameters)
-- $K$ = coupling strength (varied from 0.119 to 0.317)
-- Network topology: Scale-free network with 100 nodes
+| Parameter         | Symbol | Value                 |
+| ----------------- | ------ | --------------------- |
+| Rössler parameter | $a$    | 0.2                   |
+| Rössler parameter | $b$    | 0.2                   |
+| Rössler parameter | $c$    | 7.0                   |
+| Coupling strength | $K$    | 0.218 (baseline)      |
+| Network topology  | —      | Scale-free, 100 nodes |
 
-## Attractors
+### Sampling
+
+- **Dimension**: $D = 300$ (3 states $\times$ 100 nodes)
+- **Sample size**: $N = 500$
+- **Distribution**: $\rho$ = Uniform
+- **Region of interest**: $\mathcal{Q}(x_i, y_i, z_i) : [-15, 15] \times [-15, 15] \times [-5, 35]$ per node
+
+### Solver
+
+| Setting            | Value                                 |
+| ------------------ | ------------------------------------- |
+| Method             | Dopri5 (Diffrax)                      |
+| Time span          | $[0, 1000]$                           |
+| Steps              | 1000 ($f_s$ = 1 Hz)                   |
+| Relative tolerance | 1e-03                                 |
+| Absolute tolerance | 1e-06                                 |
+| Event function     | Divergence at $\lvert y \rvert > 400$ |
+
+### Feature Extraction
+
+Maximum pairwise deviation at final time step:
+
+- States: all $x_i, y_i, z_i$
+- Formula: $\Delta_x = \max_i(x_i) - \min_i(x_i)$, similarly for $y$, $z$; plus $\Delta_{\text{all}} = \max(\Delta_x, \Delta_y, \Delta_z)$
+- Transient cutoff: $t^* = 950.0$
+
+### Clustering
+
+- **Method**: Threshold classifier (`SynchronizationClassifier`)
+- **Threshold**: $\epsilon = 1.5$
+- **Rule**: Synchronized if $\Delta_{\text{all}} < \epsilon$, desynchronized otherwise
+
+### Attractors
 
 The system exhibits three types of behavior:
 
 - **Synchronized**: All oscillators converge to a common trajectory
 - **Desynchronized**: Oscillators remain coupled but do not synchronize
-- **Unbounded**: Some trajectories diverge to infinity
+- **Unbounded**: Some trajectories diverge to infinity (detected by event function)
 
 Basin stability is computed for non-unbounded states (synchronized + desynchronized).
-
-## Key Features
-
-This case study uses custom feature extraction and classification:
-
-- **`SynchronizationFeatureExtractor`**: Computes maximum pairwise deviation across all node pairs
-- **`SynchronizationClassifier`**: Classifies based on synchronization threshold
 
 ## Reproduction Code
 

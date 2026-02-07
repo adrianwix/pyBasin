@@ -36,7 +36,6 @@ class Solver(ABC):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float | None = None,
         n_steps: int | None = None,
         device: str | None = None,
         use_cache: bool = True,
@@ -46,17 +45,15 @@ class Solver(ABC):
         Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz) - number of samples per time unit. DEPRECATED: use n_steps instead.
-        :param n_steps: Number of evaluation points. If None, defaults to 500 (recommended for most cases).
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param use_cache: Whether to use caching for integration results (default: True).
         """
         self.time_span = time_span
-        self.fs = fs  # Keep for backward compatibility
         self.params = kwargs  # Additional solver parameters
         self.use_cache = use_cache
 
-        self._set_n_steps(n_steps, fs)
+        self.n_steps = n_steps if n_steps is not None else 1000
         self._set_device(device)
 
         # Only create cache manager if caching is enabled
@@ -66,27 +63,6 @@ class Solver(ABC):
         if use_cache:
             self._cache_dir = resolve_folder("cache")
             self._cache_manager = CacheManager(self._cache_dir)
-
-    def _set_n_steps(self, n_steps: int | None, fs: float | None) -> None:
-        """
-        Set the number of evaluation steps with backward compatibility for fs parameter.
-
-        :param n_steps: Number of evaluation points. If provided, used directly.
-        :param fs: Sampling frequency (Hz). DEPRECATED: used only if n_steps is None.
-        """
-        if n_steps is not None:
-            self.n_steps = n_steps
-        elif fs is not None:
-            # Legacy behavior: compute from fs (not recommended)
-            self.n_steps = int((self.time_span[1] - self.time_span[0]) * fs) + 1
-            logger.warning(
-                "Using fs=%s results in %d steps. Consider using n_steps parameter directly.",
-                fs,
-                self.n_steps,
-            )
-        else:
-            # Default: use 500 evaluation points (sufficient for most ODEs)
-            self.n_steps = 500
 
     def _set_device(self, device: str | None) -> None:
         """
@@ -250,7 +226,6 @@ class TorchDiffEqSolver(Solver):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float | None = None,
         n_steps: int | None = None,
         device: str | None = None,
         method: str = "dopri5",
@@ -262,14 +237,13 @@ class TorchDiffEqSolver(Solver):
         Initialize TorchDiffEqSolver.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz). DEPRECATED: use n_steps instead.
-        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param method: Integration method from tordiffeq.odeint.
         :param rtol: Relative tolerance for adaptive stepping.
         :param atol: Absolute tolerance for adaptive stepping.
         """
-        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device, **kwargs)
+        super().__init__(time_span, n_steps=n_steps, device=device, **kwargs)
         self.method = method
         self.rtol = rtol
         self.atol = atol
@@ -282,7 +256,6 @@ class TorchDiffEqSolver(Solver):
         """Create a copy of this solver configured for a different device."""
         new_solver = TorchDiffEqSolver(
             time_span=self.time_span,
-            fs=self.fs,
             n_steps=self.n_steps,
             device=device,
             method=self.method,
@@ -346,7 +319,6 @@ class TorchOdeSolver(Solver):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float | None = None,
         n_steps: int | None = None,
         device: str | None = None,
         method: str = "dopri5",
@@ -359,15 +331,14 @@ class TorchOdeSolver(Solver):
         Initialize TorchOdeSolver.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param fs: Sampling frequency (Hz). DEPRECATED: use n_steps instead.
-        :param n_steps: Number of evaluation points. If None, defaults to 500.
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param method: Integration method ('dopri5', 'tsit5', 'euler', 'heun').
         :param rtol: Relative tolerance for adaptive stepping.
         :param atol: Absolute tolerance for adaptive stepping.
         :param use_jit: Whether to use JIT compilation (can improve performance).
         """
-        super().__init__(time_span, fs=fs, n_steps=n_steps, device=device, **kwargs)
+        super().__init__(time_span, n_steps=n_steps, device=device, **kwargs)
         self.method = method.lower()
         self.rtol = rtol
         self.atol = atol
@@ -386,7 +357,6 @@ class TorchOdeSolver(Solver):
         """Create a copy of this solver configured for a different device."""
         new_solver = TorchOdeSolver(
             time_span=self.time_span,
-            fs=self.fs,
             n_steps=self.n_steps,
             device=device,
             method=self.method,
@@ -493,7 +463,7 @@ class SklearnParallelSolver(Solver):
     def __init__(
         self,
         time_span: tuple[float, float],
-        fs: float,
+        n_steps: int | None = None,
         device: str | None = None,
         n_jobs: int = -1,
         batch_size: int | None = None,
@@ -507,7 +477,7 @@ class SklearnParallelSolver(Solver):
         Initialize SklearnParallelSolver.
 
         :param time_span: Integration interval (t_start, t_end).
-        :param fs: Sampling frequency (Hz).
+        :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use (only 'cpu' supported).
         :param n_jobs: Number of parallel jobs (-1 for all CPUs).
         :param batch_size: Unused, kept for API compatibility.
@@ -522,7 +492,7 @@ class SklearnParallelSolver(Solver):
             )
             device = "cpu"
 
-        super().__init__(time_span, fs, device="cpu", **kwargs)
+        super().__init__(time_span, n_steps=n_steps, device="cpu", **kwargs)
 
         self.n_jobs = n_jobs
         self.batch_size = batch_size
@@ -549,7 +519,7 @@ class SklearnParallelSolver(Solver):
             logger.warning("  Warning: SklearnParallelSolver does not support CUDA - using CPU")
         new_solver = SklearnParallelSolver(
             time_span=self.time_span,
-            fs=self.fs,  # type: ignore[arg-type]
+            n_steps=self.n_steps,
             device="cpu",
             n_jobs=self.n_jobs,
             batch_size=self.batch_size,

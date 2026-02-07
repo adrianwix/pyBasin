@@ -52,7 +52,14 @@ class TestDuffing:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_single_point(bse, comparison)
+            artifact_collector.add_single_point(
+                bse,
+                comparison,
+                trajectory_state=0,
+                trajectory_x_limits=(0, 50),
+                trajectory_y_limits=(-1.4, 1.4),
+                phase_space_axes=(0, 1),
+            )
 
     @pytest.mark.integration
     def test_baseline_unsupervised(
@@ -265,4 +272,11 @@ class TestDuffing:
         assert abs(total_bs - 1.0) < 0.01, f"Basin stabilities should sum to 1.0, got {total_bs}"
 
         if artifact_collector is not None:
-            artifact_collector.add_unsupervised(bse, comparison)
+            artifact_collector.add_unsupervised(
+                bse,
+                comparison,
+                trajectory_state=0,
+                trajectory_x_limits=(0, 50),
+                trajectory_y_limits=(-1.4, 1.4),
+                phase_space_axes=(0, 1),
+            )

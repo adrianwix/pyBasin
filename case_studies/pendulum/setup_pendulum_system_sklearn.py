@@ -42,12 +42,12 @@ def setup_pendulum_system_sklearn() -> SetupProperties:
         device=device,
     )
 
-    # Create the sklearn parallel solver with specified integration time and frequency
+    # Create the sklearn parallel solver with specified integration time
     # n_jobs=-1 uses all available CPU cores
     # Python 3.14's free-threading allows true parallel execution without GIL
     solver = SklearnParallelSolver(
         time_span=(0, 1000),
-        fs=25,
+        n_steps=25001,
         device=device,
         n_jobs=-1,  # Use all available CPUs
         rtol=1e-6,

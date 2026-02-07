@@ -59,8 +59,7 @@ def benchmark_template_solving():
     print(f"Template initial conditions:\n{cluster_classifier.template_y0}")
     print(f"Template labels: {cluster_classifier.labels}")
     print(f"Integration time span: {solver.time_span}")
-    print(f"Sampling frequency: {solver.fs} Hz")  # type: ignore[attr-defined]
-    print(f"Number of time steps: {solver.n_steps}")  # type: ignore[attr-defined]
+    print(f"Number of time steps: {solver.n_steps}")
 
     print("\n" + "-" * 80)
     print("BENCHMARKING TEMPLATE INTEGRATION (Cache Disabled)")

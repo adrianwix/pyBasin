@@ -4,12 +4,52 @@
 
 Driven damped pendulum:
 
-$$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
+$$
+\begin{aligned}
+\dot{\theta} &= \omega \\
+\dot{\omega} &= -\alpha \omega - K \sin(\theta) + T
+\end{aligned}
+$$
 
-## Attractors
+### System Parameters
 
-- **Fixed Point (FP)**: Pendulum settles to equilibrium
-- **Limit Cycle (LC)**: Periodic oscillation
+| Parameter           | Symbol   | Value |
+| ------------------- | -------- | ----- |
+| Damping coefficient | $\alpha$ | 0.1   |
+| Torque              | $T$      | 0.5   |
+| Stiffness           | $K$      | 1.0   |
+
+### Sampling
+
+- **Dimension**: $D = 2$
+- **Sample size**: $N = 10000$
+- **Distribution**: $\rho$ = Uniform
+- **Region of interest**: $\mathcal{Q}(\theta, \omega) : [\psi - \pi, \psi + \pi] \times [-10, 10]$ where $\psi = \arcsin(T/K)$
+
+### Solver
+
+| Setting            | Value               |
+| ------------------ | ------------------- |
+| Method             | Dopri5 (Diffrax)    |
+| Time span          | $[0, 1000]$         |
+| Steps              | 1000 ($f_s$ = 1 Hz) |
+| Relative tolerance | 1e-08               |
+| Absolute tolerance | 1e-06               |
+
+### Feature Extraction
+
+Log-delta feature on angular velocity:
+
+- States: $\omega$ (state 1)
+- Formula: $\Delta = \log_{10}(|\max(\omega) - \text{mean}(\omega)| + \epsilon)$
+- Transient cutoff: $t^* = 950.0$
+
+### Clustering
+
+- **Method**: k-NN (k=1)
+- **Template ICs**:
+  - FP: $[0.4, 0.0]$ — Fixed point (stable equilibrium)
+  - LC: $[2.7, 0.0]$ — Limit cycle (rotational motion)
 
 ## Reproduction Code
 
@@ -40,6 +80,10 @@ $$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
 #### Feature Space
 
 ![Feature Space](../assets/case_studies/pendulum_case1_feature_space.png)
+
+#### Template Trajectories
+
+![Trajectories](../assets/case_studies/pendulum_case1_trajectories.png)
 
 ## Case 2: Parameter Sweep
 

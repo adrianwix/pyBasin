@@ -39,10 +39,10 @@ def benchmark_sklearn_solver():
 
     # Solver configuration
     time_span = (0, 1000)
-    fs = 25  # 25 Hz sampling frequency
+    n_steps = 25001  # 25 Hz equivalent: 25*1000 + 1 = 25001 points
 
     print(f"\nIntegration time span: {time_span}")
-    print(f"Sampling frequency: {fs} Hz")
+    print(f"Number of evaluation points: {n_steps}")
 
     # Test 1: Parallel processing
     print("\n" + "-" * 80)
@@ -51,7 +51,7 @@ def benchmark_sklearn_solver():
 
     solver_parallel = SklearnParallelSolver(
         time_span=time_span,
-        fs=fs,
+        n_steps=n_steps,
         n_jobs=-1,  # Use all available CPUs
         method="RK45",
         rtol=1e-8,
@@ -74,7 +74,7 @@ def benchmark_sklearn_solver():
 
     solver_serial = SklearnParallelSolver(
         time_span=time_span,
-        fs=fs,
+        n_steps=n_steps,
         n_jobs=1,  # Force serial execution
         method="RK45",
         rtol=1e-8,

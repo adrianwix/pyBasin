@@ -1,5 +1,6 @@
 """Integration tests for the pendulum case study."""
 
+import math
 from pathlib import Path
 
 import pytest
@@ -45,7 +46,13 @@ class TestPendulum:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_single_point(bse, comparison)
+            artifact_collector.add_single_point(
+                bse,
+                comparison,
+                trajectory_state=1,
+                trajectory_x_limits=(0, 50 * math.pi),
+                trajectory_y_limits={"FP": (-0.12, 0.12), "LC": (0, 6)},
+            )
 
     @pytest.mark.integration
     def test_parameter_t(

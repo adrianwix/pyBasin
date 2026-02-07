@@ -15,7 +15,13 @@ from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
-from pybasin.thesis_utils import recolor_axes, recolor_figure, thesis_export
+from pybasin.thesis_utils import (
+    LORENZ_PALETTE,
+    recolor_axes,
+    recolor_figure,
+    recolor_stacked_figure,
+    thesis_export,
+)
 from tests.integration.test_helpers import ComparisonResult, UnsupervisedComparisonResult
 
 ARTIFACTS_DIR = Path(__file__).parent.parent.parent / "artifacts"
@@ -32,6 +38,10 @@ def ensure_directories() -> None:
 def generate_single_point_artifacts(
     bse: BasinStabilityEstimator,
     comparison: ComparisonResult,
+    trajectory_state: int = 0,
+    trajectory_x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+    trajectory_y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+    phase_space_axes: tuple[int, int] | None = None,
 ) -> None:
     """Generate artifacts for a single-point basin stability test.
 
@@ -39,12 +49,19 @@ def generate_single_point_artifacts(
 
     :param bse: The BasinStabilityEstimator instance with results.
     :param comparison: The comparison result with validation metrics.
+    :param trajectory_state: State variable index for trajectory plot.
+    :param trajectory_x_limits: X-axis limits. Tuple applies to all, dict maps label to limits.
+    :param trajectory_y_limits: Y-axis limits. Tuple applies to all, dict maps label to limits.
+    :param phase_space_axes: Tuple (x_axis, y_axis) for 2D phase space plot. If None, skipped.
     """
     ensure_directories()
 
     system_name = comparison.system_name
     case_name = comparison.case_name
     prefix = f"{system_name}_{case_name}" if case_name else system_name
+
+    # Use Lorenz-specific palette for Lorenz system
+    palette = LORENZ_PALETTE if system_name == "lorenz" else None
 
     json_path = RESULTS_DIR / f"{prefix}_comparison.json"
     with open(json_path, "w") as f:
@@ -56,23 +73,46 @@ def generate_single_point_artifacts(
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_basin_stability_bars(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_basin_stability.png", DOCS_ASSETS_DIR)
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_state_space(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_state_space.png", DOCS_ASSETS_DIR)
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_feature_space(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_feature_space.png", DOCS_ASSETS_DIR)
+
+    # Generate stacked trajectory plot if ClassifierPredictor is used
+    if hasattr(bse.predictor, "template_y0"):
+        fig = plotter.plot_templates_trajectories(
+            plotted_var=trajectory_state,
+            x_limits=trajectory_x_limits,
+            y_limits=trajectory_y_limits,
+        )
+        recolor_stacked_figure(fig, palette)
+        thesis_export(fig, f"{prefix}_trajectories.png", DOCS_ASSETS_DIR)
+
+    # Generate 2D phase space plot if axes specified
+    if phase_space_axes is not None and hasattr(bse.predictor, "template_y0"):
+        fig = plotter.plot_templates_phase_space(
+            x_var=phase_space_axes[0],
+            y_var=phase_space_axes[1],
+        )
+        recolor_figure(fig, palette)
+        thesis_export(fig, f"{prefix}_phase_space.png", DOCS_ASSETS_DIR)
 
 
 def generate_unsupervised_artifacts(
     bse: BasinStabilityEstimator,
     comparison: UnsupervisedComparisonResult,
+    trajectory_state: int = 0,
+    trajectory_x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+    trajectory_y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
+    phase_space_axes: tuple[int, int] | None = None,
 ) -> None:
     """Generate artifacts for an unsupervised clustering test.
 
@@ -81,12 +121,19 @@ def generate_unsupervised_artifacts(
 
     :param bse: The BasinStabilityEstimator instance with results.
     :param comparison: The unsupervised comparison result with cluster metrics.
+    :param trajectory_state: State variable index for trajectory plot.
+    :param trajectory_x_limits: X-axis limits. Tuple applies to all, dict maps label to limits.
+    :param trajectory_y_limits: Y-axis limits. Tuple applies to all, dict maps label to limits.
+    :param phase_space_axes: Tuple (x_axis, y_axis) for 2D phase space plot. If None, skipped.
     """
     ensure_directories()
 
     system_name = comparison.system_name
     case_name = comparison.case_name
     prefix = f"{system_name}_{case_name}" if case_name else system_name
+
+    # Use Lorenz-specific palette for Lorenz system
+    palette = LORENZ_PALETTE if system_name == "lorenz" else None
 
     json_path = RESULTS_DIR / f"{prefix}_comparison.json"
     with open(json_path, "w") as f:
@@ -98,18 +145,37 @@ def generate_unsupervised_artifacts(
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_basin_stability_bars(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_basin_stability.png", DOCS_ASSETS_DIR)
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_state_space(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_state_space.png", DOCS_ASSETS_DIR)
 
     fig, ax = plt.subplots(figsize=(6, 5))
     plotter.plot_feature_space(ax=ax)
-    recolor_axes(ax)
+    recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_feature_space.png", DOCS_ASSETS_DIR)
+
+    # Generate stacked trajectory plot if ClassifierPredictor is used
+    if hasattr(bse.predictor, "template_y0"):
+        fig = plotter.plot_templates_trajectories(
+            plotted_var=trajectory_state,
+            x_limits=trajectory_x_limits,
+            y_limits=trajectory_y_limits,
+        )
+        recolor_stacked_figure(fig, palette)
+        thesis_export(fig, f"{prefix}_trajectories.png", DOCS_ASSETS_DIR)
+
+    # Generate 2D phase space plot if axes specified
+    if phase_space_axes is not None and hasattr(bse.predictor, "template_y0"):
+        fig = plotter.plot_templates_phase_space(
+            x_var=phase_space_axes[0],
+            y_var=phase_space_axes[1],
+        )
+        recolor_figure(fig, palette)
+        thesis_export(fig, f"{prefix}_phase_space.png", DOCS_ASSETS_DIR)
 
 
 def generate_parameter_sweep_artifacts(
@@ -132,13 +198,25 @@ def generate_parameter_sweep_artifacts(
     case_name = comparisons[0].case_name
     prefix = f"{system_name}_{case_name}" if case_name else system_name
 
+    # Use Lorenz-specific palette for Lorenz system
+    palette = LORENZ_PALETTE if system_name == "lorenz" else None
+
+    # Check if this is a paper validation (propagate from first comparison)
+    is_paper_validation = comparisons[0].paper_validation if comparisons else False
+
     data: dict[
-        str, str | float | list[dict[str, str | float | list[dict[str, str | float | bool]] | None]]
+        str,
+        str
+        | float
+        | bool
+        | list[dict[str, str | float | list[dict[str, str | float | bool]] | None]],
     ] = {
         "system_name": system_name,
         "case_name": case_name,
         "parameter_results": [c.to_dict() for c in comparisons],
     }
+    if is_paper_validation:
+        data["paper_validation"] = True
 
     json_path = RESULTS_DIR / f"{prefix}_comparison.json"
     with open(json_path, "w") as f:
@@ -149,7 +227,7 @@ def generate_parameter_sweep_artifacts(
     plotter = MatplotlibStudyPlotter(as_bse)
 
     fig = plotter.plot_basin_stability_variation(show=False)
-    recolor_figure(fig)
+    recolor_figure(fig, palette)
     thesis_export(fig, f"{prefix}_basin_stability_variation.png", DOCS_ASSETS_DIR)
 
     state_dim = as_bse.sampler.state_dim
@@ -161,7 +239,7 @@ def generate_parameter_sweep_artifacts(
 
     try:
         fig = plotter.plot_bifurcation_diagram(dof=dof, show=False)
-        recolor_figure(fig)
+        recolor_figure(fig, palette)
         thesis_export(fig, f"{prefix}_bifurcation_diagram.png", DOCS_ASSETS_DIR)
     except (ValueError, KeyError) as e:
         print(f"  Skipped bifurcation_diagram plot: {e}")

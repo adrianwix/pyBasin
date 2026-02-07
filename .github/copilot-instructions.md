@@ -1,5 +1,18 @@
 # GitHub Copilot Instructions
 
+## Complete Changes Policy
+
+When making any change, consider ALL places affected by that change:
+
+- **Delete dead code**: Remove unused imports, functions, variables, and parameters
+- **Update comments and docstrings**: If behavior changes, update all related documentation
+- **Update callers**: If an API changes, update all call sites
+- **Update tests**: If functionality changes, update corresponding tests
+- **Update configuration**: If a value changes (e.g., `n_steps`), update related metadata/config that references it
+- **Regenerate artifacts**: If source data changes, regenerate any derived files (e.g., SUMMARY.md from JSONs)
+
+Do not make partial changes that leave the codebase in an inconsistent state.
+
 ## General Guidelines
 
 - Always use uv to run python commands

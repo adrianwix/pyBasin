@@ -1,11 +1,13 @@
 from pathlib import Path
 
+# from matplotlib import pyplot as plt
 from case_studies.comparison_utils import compare_with_expected
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
 from pybasin.utils import time_execution
 
 
@@ -44,5 +46,24 @@ if __name__ == "__main__":
         errors = bse.get_errors()
         compare_with_expected(bse.bs_vals, label_mapping, expected_file, errors)
 
-    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "v"})
-    # plotter.run(port=8050)
+    # Test stacked trajectory plot with custom axis limits
+    plotter = MatplotlibPlotter(bse)
+
+    # Duffing: all y from -1 to 1, all x from 0 to 50
+    # plotter.plot_templates_trajectories(
+    #     plotted_var=0,
+    #     y_limits=(-1.4, 1.4),
+    #     x_limits=(0, 50),
+    # )
+    # plt.show()  # type: ignore[misc]
+
+    # Test 2D phase space plot (y1 vs y2)
+    # plotter.plot_templates_phase_space(x_var=0, y_var=1, time_range=(700, 1000))
+    # plt.show()  # type: ignore[misc]
+
+    interactive_plotter = InteractivePlotter(
+        bse,
+        state_labels={0: "x", 1: "v"},
+        options={"templates_time_series": {"time_range": (0, 0.15)}},
+    )
+    interactive_plotter.run(port=8050)

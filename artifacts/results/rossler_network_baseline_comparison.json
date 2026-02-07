@@ -23,5 +23,6 @@
       "f1_score": 0.0,
       "matthews_corrcoef": 0.0
     }
-  ]
+  ],
+  "paper_validation": true
 }

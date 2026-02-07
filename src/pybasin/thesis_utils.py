@@ -18,16 +18,23 @@ from matplotlib.patches import Patch
 _CPSME_COLORS: dict[str, str] = get_colors(format="hash")  # type: ignore[assignment]
 
 # Semantic color mapping for basin stability plots
-# Order: first attractor, second attractor, third, etc.
+# Order optimized for maximum visual contrast with 5+ attractors
 THESIS_PALETTE: list[str] = [
-    _CPSME_COLORS["blue_4"],  # #1D3557 - dark blue
+    _CPSME_COLORS["blue_3"],  # #457B9D - medium blue
     _CPSME_COLORS["red"],  # #E63946 - red
     _CPSME_COLORS["green"],  # #00b695 - teal green
-    _CPSME_COLORS["blue_2"],  # #008b9a - teal blue
-    _CPSME_COLORS["blue_3"],  # #457B9D - medium blue
     _CPSME_COLORS["grey_4"],  # #646464 - dark grey
     _CPSME_COLORS["blue_1"],  # #A8DADC - light blue
+    _CPSME_COLORS["blue_2"],  # #008b9a - teal blue
+    _CPSME_COLORS["blue_4"],  # #1D3557 - dark blue
     _CPSME_COLORS["grey_3"],  # #969696 - medium grey
+]
+
+# Lorenz-specific palette: red, blue, gray (sorted alphabetically: chaotic attractor 1, chaotic attractor 2, unbounded)
+LORENZ_PALETTE: list[str] = [
+    _CPSME_COLORS["red"],  # chaotic attractor 1
+    _CPSME_COLORS["blue_4"],  # chaotic attractor 2
+    _CPSME_COLORS["grey_4"],  # unbounded
 ]
 
 # Export CPSME colors for direct use
@@ -73,9 +80,7 @@ def recolor_scatters(ax: Axes, palette: list[str] | None = None) -> None:
     if palette is None:
         palette = THESIS_PALETTE
 
-    collections: list[PathCollection] = [
-        c for c in ax.collections if isinstance(c, PathCollection)
-    ]
+    collections: list[PathCollection] = [c for c in ax.collections if isinstance(c, PathCollection)]
     for i, collection in enumerate(collections):
         collection.set_facecolor(palette[i % len(palette)])
         collection.set_edgecolor(palette[i % len(palette)])
@@ -137,6 +142,28 @@ def recolor_figure(fig: Figure, palette: list[str] | None = None) -> None:
 
     for ax in fig.axes:
         recolor_axes(ax, palette)  # type: ignore[arg-type]
+
+
+def recolor_stacked_figure(fig: Figure, palette: list[str] | None = None) -> None:
+    """Recolor stacked subplot figure with consistent colors across all axes.
+
+    Unlike recolor_figure, this maintains a global color index so that each subplot
+    gets a unique color from the palette. Useful for stacked trajectory plots where
+    each subplot shows one trajectory.
+
+    :param fig: Matplotlib figure with stacked subplots to recolor.
+    :param palette: Color list to cycle through. Defaults to THESIS_PALETTE.
+    """
+    if palette is None:
+        palette = THESIS_PALETTE
+
+    for i, ax in enumerate(fig.axes):
+        color = palette[i % len(palette)]
+        lines: list[Any] = ax.get_lines()  # type: ignore[assignment]
+        for line in lines:
+            line.set_color(color)
+            line.set_markerfacecolor(color)
+            line.set_markeredgecolor(color)
 
 
 def thesis_export(

@@ -50,7 +50,7 @@ def setup_pendulum_system() -> SetupProperties:
     )
 
     template_y0 = [
-        [0.5, 0.0],
+        [0.4, 0.0],
         [2.7, 0.0],
     ]
     classifier_labels = ["FP", "LC"]

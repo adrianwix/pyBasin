@@ -16,6 +16,9 @@ from dash import (
     html,
 )
 from dash.development.base_component import Component
+from plotly.subplots import (  # pyright: ignore[reportMissingTypeStubs]
+    make_subplots,  # pyright: ignore[reportUnknownVariableType]
+)
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter.bse_base_page_aio import BseBasePageAIO
@@ -160,7 +163,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         time_span: tuple[float, float] | None = None,
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
-        """Build template time series plot."""
+        """Build stacked template time series plot with one subplot per trajectory."""
         if not isinstance(self.bse.predictor, ClassifierPredictor):
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
@@ -181,39 +184,80 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             t = t[mask]
             y = y[mask]
 
-        fig = go.Figure()
-
-        # After isinstance check, type is narrowed to ClassifierPredictor
-        all_labels = self.bse.predictor.labels
+        all_labels = list(self.bse.predictor.labels)
         if selected_templates is None:
-            selected_templates = list(all_labels)
+            selected_templates = all_labels
 
-        for i, (label, traj) in enumerate(
-            zip(
-                all_labels,
-                np.transpose(y, (1, 0, 2)),
-                strict=True,
+        filtered_indices: list[int] = [
+            i for i, label in enumerate(all_labels) if label in selected_templates
+        ]
+        n_plots = len(filtered_indices)
+
+        if n_plots == 0:
+            fig = go.Figure()
+            fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
+                text="No templates selected",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font={"size": 14},
             )
-        ):
-            if label not in selected_templates:
-                continue
+            return fig
+
+        y_limits = self.options.get("y_limits")
+
+        row_titles = [f"ȳ<sub>{i + 1}</sub>" for i in filtered_indices]
+        fig = make_subplots(
+            rows=n_plots,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.02,
+            row_titles=row_titles,
+        )
+
+        trajectories = np.transpose(y, (1, 0, 2))  # (n_templates, n_time, n_states)
+
+        for row_idx, i in enumerate(filtered_indices, start=1):
+            label = all_labels[i]
+            traj = trajectories[i]
+            t_plot = t
+            y_plot = traj[:, state_variable]
+
             fig.add_trace(  # pyright: ignore[reportUnknownMemberType]
                 go.Scatter(
-                    x=t,
-                    y=traj[:, state_variable],
+                    x=t_plot,
+                    y=y_plot,
                     mode="lines",
-                    name=str(label),
-                    line={"color": get_color(i), "width": 2},
-                )
+                    name=label,
+                    line={"color": get_color(i), "width": 1.5},
+                    showlegend=False,
+                ),
+                row=row_idx,
+                col=1,
             )
 
+            y_lim = y_limits[label] if isinstance(y_limits, dict) else y_limits
+            if y_lim is not None:
+                y_min, y_max = y_lim
+                fig.update_yaxes(  # pyright: ignore[reportUnknownMemberType]
+                    range=[y_min, y_max],
+                    row=row_idx,
+                    col=1,
+                )
+
+        fig.update_xaxes(  # pyright: ignore[reportUnknownMemberType]
+            title_text="time",
+            row=n_plots,
+            col=1,
+        )
         fig.update_layout(  # pyright: ignore[reportUnknownMemberType]
             title=f"Template Trajectories - {self.get_state_label(state_variable)}",
-            xaxis_title="Time",
-            yaxis_title=self.get_state_label(state_variable),
             template="plotly_dark",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
+            height=max(400, 120 * n_plots),
         )
 
         return fig

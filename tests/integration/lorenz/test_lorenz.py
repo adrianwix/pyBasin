@@ -24,7 +24,7 @@ class TestLorenz:
         """Test Lorenz system case 1 - broken butterfly attractor parameters.
 
         Parameters: sigma=0.12, r=0.0, b=-0.6
-        Expected attractors: chaos y_1, chaos y_2, unbounded
+        Expected attractors: chaotic attractor 1, chaotic attractor 2, unbounded
 
         Verifies:
         1. Number of ICs used matches sum of absNumMembers from MATLAB
@@ -33,8 +33,8 @@ class TestLorenz:
         json_path = Path(__file__).parent / "main_lorenz.json"
         ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_lorenz.csv"
         label_map = {
-            "butterfly1": "chaos y_1",
-            "butterfly2": "chaos y_2",
+            "butterfly1": "chaotic attractor 1",
+            "butterfly2": "chaotic attractor 2",
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
@@ -48,7 +48,11 @@ class TestLorenz:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_single_point(bse, comparison)
+            artifact_collector.add_single_point(
+                bse,
+                comparison,
+                phase_space_axes=(0, 2),
+            )
 
     @pytest.mark.integration
     def test_parameter_sigma(
@@ -66,8 +70,8 @@ class TestLorenz:
         json_path = Path(__file__).parent / "main_lorenz_sigma_study.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "sigmaStudy"
         label_map = {
-            "butterfly1": "chaos y_1",
-            "butterfly2": "chaos y_2",
+            "butterfly1": "chaotic attractor 1",
+            "butterfly2": "chaotic attractor 2",
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
@@ -99,8 +103,8 @@ class TestLorenz:
         json_path = Path(__file__).parent / "main_lorenz_hyperparameters.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperpN"
         label_map = {
-            "butterfly1": "chaos y_1",
-            "butterfly2": "chaos y_2",
+            "butterfly1": "chaotic attractor 1",
+            "butterfly2": "chaotic attractor 2",
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
@@ -132,8 +136,8 @@ class TestLorenz:
         run_single_point_test(
             n=200,
             expected_bs={
-                "chaos y_1": 0.1,
-                "chaos y_2": 0.075,
+                "chaotic attractor 1": 0.1,
+                "chaotic attractor 2": 0.075,
                 "unbounded": 0.825,
             },
             setup_function=setup_lorenz_system,
@@ -158,8 +162,8 @@ class TestLorenz:
         json_path = Path(__file__).parent / "main_lorenz_hyperpTol.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperpTol"
         label_map = {
-            "butterfly1": "chaos y_1",
-            "butterfly2": "chaos y_2",
+            "butterfly1": "chaotic attractor 1",
+            "butterfly2": "chaotic attractor 2",
             "unbounded": "unbounded",
             "NaN": "NaN",
         }

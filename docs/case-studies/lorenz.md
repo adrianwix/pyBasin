@@ -2,24 +2,59 @@
 
 ## System Description
 
-Lorenz "broken butterfly" attractor:
+Lorenz system:
 
 $$
 \begin{aligned}
 \dot{x} &= \sigma(y - x) \\
-\dot{y} &= rx - y - xz \\
+\dot{y} &= rx - xz - y \\
 \dot{z} &= xy - bz
 \end{aligned}
 $$
 
-## Attractors
+### System Parameters
 
-- **chaos y_1**: Positive x wing (butterfly1)
-- **chaos y_2**: Negative x wing (butterfly2)
-- **unbounded**: Trajectories that escape to infinity
+| Parameter        | Symbol   | Value |
+| ---------------- | -------- | ----- |
+| Prandtl number   | $\sigma$ | 0.12  |
+| Rayleigh number  | $r$      | 0.0   |
+| Geometric factor | $b$      | -0.6  |
 
-## Key Feature
+### Sampling
 
+- **Dimension**: $D = 3$
+- **Sample size**: $N = 20000$
+- **Distribution**: $\rho$ = Uniform
+- **Region of interest**: $\mathcal{Q}(x, y, z) : [-10, 10] \times [-20, 20] \times [0]$
+
+### Solver
+
+| Setting            | Value                               |
+| ------------------ | ----------------------------------- |
+| Method             | Dopri5 (Diffrax)                    |
+| Time span          | $[0, 1000]$                         |
+| Steps              | 4000 ($f_s$ = 4 Hz)                 |
+| Relative tolerance | 1e-08                               |
+| Absolute tolerance | 1e-06                               |
+| Event function     | Divergence at $\vert y \vert > 200$ |
+
+### Feature Extraction
+
+Mean of $x$ coordinate after transient:
+
+- States: $x$ (state 0)
+- Formula: $\bar{x} = \text{mean}(x_{t > t^*})$
+- Transient cutoff: $t^* = 900.0$
+
+### Clustering
+
+- **Method**: k-NN (k=1)
+- **Template ICs**:
+  - chaotic attractor 1: $[0.8, -3.0, 0.0]$ — Positive wing chaotic attractor
+  - chaotic attractor 2: $[-0.8, 3.0, 0.0]$ — Negative wing chaotic attractor
+  - unbounded: $[10.0, 50.0, 0.0]$ — Diverging trajectories
+
+!!! note "Key Feature"
 Demonstrates unboundedness detection with `event_fn`.
 
 ## Reproduction Code
@@ -51,6 +86,10 @@ Demonstrates unboundedness detection with `event_fn`.
 #### Feature Space
 
 ![Feature Space](../assets/case_studies/lorenz_case1_feature_space.png)
+
+#### Template Phase Space
+
+![Phase Space](../assets/case_studies/lorenz_case1_phase_space.png)
 
 ## Case 2: Sigma Parameter Sweep
 
