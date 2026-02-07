@@ -18,9 +18,6 @@ from scipy import stats as scipy_stats
 
 ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"
 
-Z_THRESHOLD_OK = 2.0
-Z_THRESHOLD_WARNING = 3.0
-
 
 def _format_bs_with_se(bs: float, se: float) -> str:
     """Format basin stability with standard error."""
@@ -200,28 +197,34 @@ def _render_unsupervised_table(data: dict[str, Any]) -> str:
 
 
 def _render_paper_validation_sweep_table(data: dict[str, Any]) -> str:
-    """Render table for paper validation parameter sweep (statistical comparison)."""
+    """Render table for paper validation parameter sweep as a single consolidated table."""
     parameter_results: list[dict[str, Any]] = data.get("parameter_results", [])
 
     if not parameter_results:
         return '!!! warning "No Data"\n    No parameter data found in comparison.'
 
     param_name: str = data.get("parameter_name", "Parameter")
-    sections: list[str] = []
+
+    # Build single consolidated table
+    table_lines: list[str] = [
+        f"| {param_name} | Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |",
+        "|-------------|-----------|-----------------|---------------|------------|--------|--------|",
+    ]
 
     for result in parameter_results:
-        param_value: float | None = result.get("parameter_value")
-        param_str = f"{param_value:.4f}" if param_value is not None else "-"
-
-        lines: list[str] = [
-            f"#### {param_name} = {param_str}",
-            "",
-            "| Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status |",
-            "|-----------|-----------------|---------------|------------|--------|--------|",
-        ]
+        param_value = result.get("parameter_value")
+        if param_value is None:
+            param_str = "-"
+        elif isinstance(param_value, float):
+            if param_value < 0.01:
+                param_str = f"{param_value:.1e}"
+            else:
+                param_str = f"{param_value:.4f}".rstrip("0").rstrip(".")
+        else:
+            param_str = str(param_value)
 
         attractors: list[dict[str, Any]] = result.get("attractors", [])
-        for a in attractors:
+        for i, a in enumerate(attractors):
             python_bs: float = a["python_bs"]
             python_se: float = a["python_se"]
             matlab_bs: float = a["matlab_bs"]
@@ -232,62 +235,101 @@ def _render_paper_validation_sweep_table(data: dict[str, Any]) -> str:
 
             # Compute difference and 95% confidence interval
             diff = python_bs - matlab_bs
-            # For 95% confidence, z = 1.96
             combined_se = (python_se**2 + matlab_se**2) ** 0.5
             ci_margin = 1.96 * combined_se
 
-            # Check if difference is within CI (difference should contain 0)
             within_ci = abs(diff) <= ci_margin
             status = "✓" if within_ci else "✗"
 
             diff_str = f"{diff:+.4f}"
             ci_str = f"±{ci_margin:.4f}"
 
-            lines.append(
-                f"| {a['label']} | {python_str} | {matlab_str} | {diff_str} | {ci_str} | {status} |"
-            )
+            if i == 0:
+                table_lines.append(
+                    f"| {param_str} | {a['label']} | {python_str} | {matlab_str} | {diff_str} | {ci_str} | {status} |"
+                )
+            else:
+                table_lines.append(
+                    f"| | {a['label']} | {python_str} | {matlab_str} | {diff_str} | {ci_str} | |"
+                )
 
-        sections.append("\n".join(lines))
-
-    return "\n\n".join(sections)
+    return "\n".join(table_lines)
 
 
 def _render_parameter_sweep_table(data: dict[str, Any]) -> str:
-    """Render table for parameter sweep comparison."""
+    """Render table for parameter sweep comparison as a single consolidated table."""
     parameter_results: list[dict[str, Any]] = data.get("parameter_results", [])
 
     if not parameter_results:
         return '!!! warning "No Data"\n    No parameter data found in comparison.'
 
     param_name: str = data.get("parameter_name", "Parameter")
-    sections: list[str] = []
+
+    # Compute average MCC, excluding trivial cases (single attractor with matching BS)
+    mcc_values_for_avg: list[float] = []
+    excluded_count = 0
 
     for result in parameter_results:
-        param_value: float | None = result.get("parameter_value")
-        param_str = f"{param_value:.4f}" if param_value is not None else "-"
-        macro_f1 = result.get("macro_f1", 0.0)
         mcc = result.get("matthews_corrcoef", 0.0)
+        attractors = result.get("attractors", [])
 
-        lines: list[str] = [
-            f"#### {param_name} = {param_str}",
-            "",
-            f"**Macro F1:** {macro_f1:.4f} | **MCC:** {mcc:.4f}",
-            "",
-            "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
-            "|-----------|-----------------|---------------|-----|",
-        ]
+        # Check if this is a trivial case: single attractor with matching BS
+        is_trivial = False
+        if len(attractors) == 1:
+            a = attractors[0]
+            if abs(a["python_bs"] - a["matlab_bs"]) < 1e-8:
+                is_trivial = True
+                excluded_count += 1
 
+        if not is_trivial:
+            mcc_values_for_avg.append(mcc)
+
+    # Build header with average
+    header_lines: list[str] = []
+    if mcc_values_for_avg:
+        avg_mcc = sum(mcc_values_for_avg) / len(mcc_values_for_avg)
+        header_lines.append(f"**Average MCC = {avg_mcc:.4f}**")
+        if excluded_count > 0:
+            header_lines.append("")
+            header_lines.append(
+                "*The average excludes cases where there is only a single attractor and the basin stability "
+                "values are the same since MCC is 0 for single class cases, and would therefore drop the average.*"
+            )
+        header_lines.append("")
+
+    # Build single consolidated table
+    table_lines: list[str] = [
+        f"| {param_name} | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | MCC |",
+        "|-------------|-----------|-----------------|---------------|-----|",
+    ]
+
+    for result in parameter_results:
+        param_value = result.get("parameter_value")
+        if param_value is None:
+            param_str = "-"
+        elif isinstance(param_value, float):
+            if param_value < 0.01:
+                param_str = f"{param_value:.1e}"
+            else:
+                param_str = f"{param_value:.4f}".rstrip("0").rstrip(".")
+        else:
+            param_str = str(param_value)
+
+        mcc = result.get("matthews_corrcoef", 0.0)
         attractors: list[dict[str, Any]] = result.get("attractors", [])
-        for a in attractors:
+
+        for i, a in enumerate(attractors):
             python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
             matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-            f1_score: float = a["f1_score"]
 
-            lines.append(f"| {a['label']} | {python_str} | {matlab_str} | {f1_score:.4f} |")
+            if i == 0:
+                table_lines.append(
+                    f"| {param_str} | {a['label']} | {python_str} | {matlab_str} | {mcc:.4f} |"
+                )
+            else:
+                table_lines.append(f"| | {a['label']} | {python_str} | {matlab_str} | |")
 
-        sections.append("\n".join(lines))
-
-    return "\n\n".join(sections)
+    return "\n".join(header_lines + table_lines)
 
 
 def load_snippet(spec: str) -> str:
@@ -489,7 +531,7 @@ def benchmark_scaling_analysis() -> str:
 
         log_n = np.log(n_vals)
         log_t = np.log(t_vals)
-        slope, intercept, r_value, p_value, std_err = scipy_stats.linregress(log_n, log_t)
+        slope, _, r_value, _, std_err = scipy_stats.linregress(log_n, log_t)
         alpha = slope
         alpha_ci = 1.96 * std_err
         r2 = r_value**2

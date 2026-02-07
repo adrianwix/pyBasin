@@ -1126,14 +1126,56 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attractors" class="md-nav__link">
+    <nav class="md-nav" aria-label="System Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Attractors
+      System Parameters
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sampling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clustering
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1221,6 +1263,24 @@
   <a href="#feature-space" class="md-nav__link">
     <span class="md-ellipsis">
       Feature Space
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-trajectories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Template Trajectories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-phase-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      Template Phase Space
     </span>
   </a>
   
@@ -1921,14 +1981,56 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attractors" class="md-nav__link">
+    <nav class="md-nav" aria-label="System Description">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Attractors
+      System Parameters
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sampling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    <span class="md-ellipsis">
+      Solver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clustering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clustering
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2016,6 +2118,24 @@
   <a href="#feature-space" class="md-nav__link">
     <span class="md-ellipsis">
       Feature Space
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-trajectories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Template Trajectories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-phase-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      Template Phase Space
     </span>
   </a>
   
@@ -2127,10 +2247,93 @@
 <h1 id="duffing-oscillator">Duffing Oscillator</h1>
 <h2 id="system-description">System Description</h2>
 <p>Duffing oscillator with cubic nonlinearity:</p>
-<div class="arithmatex">\[\ddot{x} + \delta \dot{x} + \alpha x + \beta x^3 = \gamma \cos(\omega t)\]</div>
-<h2 id="attractors">Attractors</h2>
+<div class="arithmatex">\[
+\begin{aligned}
+\dot{x} &amp;= v \\
+\dot{v} &amp;= -\delta v - k_3 x^3 + A \cos(t)
+\end{aligned}
+\]</div>
+<h3 id="system-parameters">System Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Symbol</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Damping coefficient</td>
+<td><span class="arithmatex">\(\delta\)</span></td>
+<td>0.08</td>
+</tr>
+<tr>
+<td>Cubic stiffness</td>
+<td><span class="arithmatex">\(k_3\)</span></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Forcing amplitude</td>
+<td><span class="arithmatex">\(A\)</span></td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sampling">Sampling</h3>
 <ul>
-<li><strong>y1-y5</strong>: Various n-cycle attractors (period-n oscillations)</li>
+<li><strong>Dimension</strong>: <span class="arithmatex">\(D = 2\)</span></li>
+<li><strong>Sample size</strong>: <span class="arithmatex">\(N = 10000\)</span></li>
+<li><strong>Distribution</strong>: <span class="arithmatex">\(\rho\)</span> = Uniform</li>
+<li><strong>Region of interest</strong>: <span class="arithmatex">\(\mathcal{Q}(x, v) : [-1, 1] \times [-0.5, 1]\)</span></li>
+</ul>
+<h3 id="solver">Solver</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Method</td>
+<td>Dopri5 (Diffrax)</td>
+</tr>
+<tr>
+<td>Time span</td>
+<td><span class="arithmatex">\([0, 1000]\)</span></td>
+</tr>
+<tr>
+<td>Steps</td>
+<td>5000 (<span class="arithmatex">\(f_s\)</span> = 5 Hz)</td>
+</tr>
+<tr>
+<td>Relative tolerance</td>
+<td>1e-08</td>
+</tr>
+<tr>
+<td>Absolute tolerance</td>
+<td>1e-06</td>
+</tr>
+</tbody>
+</table>
+<h3 id="feature-extraction">Feature Extraction</h3>
+<p>Maximum and standard deviation of position:</p>
+<ul>
+<li>States: <span class="arithmatex">\(x\)</span> (state 0)</li>
+<li>Formula: <span class="arithmatex">\([\max(x), \sigma(x)]\)</span></li>
+<li>Transient cutoff: <span class="arithmatex">\(t^* = 900.0\)</span></li>
+</ul>
+<h3 id="clustering">Clustering</h3>
+<ul>
+<li><strong>Method</strong>: k-NN (k=1)</li>
+<li><strong>Template ICs</strong>:</li>
+<li>y1: <span class="arithmatex">\([-0.21, 0.02]\)</span> — Period-1 limit cycle (small amplitude)</li>
+<li>y2: <span class="arithmatex">\([1.05, 0.77]\)</span> — Period-1 limit cycle (large amplitude)</li>
+<li>y3: <span class="arithmatex">\([-0.67, 0.02]\)</span> — Period-2 limit cycle</li>
+<li>y4: <span class="arithmatex">\([-0.46, 0.30]\)</span> — Period-2 limit cycle (symmetric)</li>
+<li>y5: <span class="arithmatex">\([-0.43, 0.12]\)</span> — Period-3 limit cycle</li>
 </ul>
 <h2 id="reproduction-code">Reproduction Code</h2>
 <h3 id="setup">Setup</h3>
@@ -2147,7 +2350,7 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="n">n_steps</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
@@ -2258,6 +2461,10 @@
 <p><img alt="State Space" src="../../assets/case_studies/duffing_case1_state_space.png" /></p>
 <h4 id="feature-space">Feature Space</h4>
 <p><img alt="Feature Space" src="../../assets/case_studies/duffing_case1_feature_space.png" /></p>
+<h4 id="template-trajectories">Template Trajectories</h4>
+<p><img alt="Trajectories" src="../../assets/case_studies/duffing_case1_trajectories.png" /></p>
+<h4 id="template-phase-space">Template Phase Space</h4>
+<p><img alt="Phase Space" src="../../assets/case_studies/duffing_case1_phase_space.png" /></p>
 <h2 id="case-2-unsupervised-clustering-with-template-relabeling">Case 2: Unsupervised Clustering with Template Relabeling</h2>
 <p>This case demonstrates unsupervised attractor discovery using DBSCAN clustering, followed by relabeling using KNN template matching to assign meaningful attractor names.</p>
 <h3 id="comparison-with-matlab-bstab_1">Comparison with MATLAB bSTAB</h3>
