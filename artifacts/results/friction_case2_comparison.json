@@ -96,26 +96,26 @@
       "system_name": "friction",
       "case_name": "case2",
       "parameter_value": 1.175,
-      "macro_f1": 1.0,
-      "matthews_corrcoef": 1.0,
+      "macro_f1": 0.9960123489577477,
+      "matthews_corrcoef": 0.9920562548163665,
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.0132,
-          "python_se": 0.0016140483264140513,
-          "matlab_bs": 0.0132,
-          "matlab_se": 0.0016140483264140513,
-          "f1_score": 1.0,
-          "matthews_corrcoef": 1.0
+          "python_bs": 0.0128,
+          "python_se": 0.0015897270205919003,
+          "matlab_bs": 0.0126,
+          "matlab_se": 0.0015774181436765586,
+          "f1_score": 0.9921259842519685,
+          "matthews_corrcoef": 0.9920562548163665
         },
         {
           "label": "LC",
-          "python_bs": 0.9868,
-          "python_se": 0.0016140483264140506,
-          "matlab_bs": 0.9868,
-          "matlab_se": 0.0016140483264140506,
-          "f1_score": 1.0,
-          "matthews_corrcoef": 1.0
+          "python_bs": 0.9872,
+          "python_se": 0.0015897270205919023,
+          "matlab_bs": 0.9874,
+          "matlab_se": 0.001577418143676555,
+          "f1_score": 0.9998987136635268,
+          "matthews_corrcoef": 0.9920562548163665
         }
       ]
     },
@@ -128,19 +128,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.08,
-          "python_se": 0.0038366652186501756,
-          "matlab_bs": 0.08,
-          "matlab_se": 0.0038366652186501756,
+          "python_bs": 0.0838,
+          "python_se": 0.003918610978395278,
+          "matlab_bs": 0.0838,
+          "matlab_se": 0.003918610978395278,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.92,
-          "python_se": 0.0038366652186501747,
-          "matlab_bs": 0.92,
-          "matlab_se": 0.0038366652186501747,
+          "python_bs": 0.9162,
+          "python_se": 0.003918610978395278,
+          "matlab_bs": 0.9162,
+          "matlab_se": 0.003918610978395278,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -155,19 +155,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.1478,
-          "python_se": 0.005019066845540115,
-          "matlab_bs": 0.1478,
-          "matlab_se": 0.005019066845540115,
+          "python_bs": 0.1378,
+          "python_se": 0.00487465198757819,
+          "matlab_bs": 0.1378,
+          "matlab_se": 0.00487465198757819,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.8522,
-          "python_se": 0.005019066845540115,
-          "matlab_bs": 0.8522,
-          "matlab_se": 0.005019066845540115,
+          "python_bs": 0.8622,
+          "python_se": 0.004874651987578191,
+          "matlab_bs": 0.8622,
+          "matlab_se": 0.00487465198757819,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -182,19 +182,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.213,
-          "python_se": 0.005790181344310383,
-          "matlab_bs": 0.213,
-          "matlab_se": 0.005790181344310383,
+          "python_bs": 0.211,
+          "python_se": 0.005770251294354519,
+          "matlab_bs": 0.211,
+          "matlab_se": 0.005770251294354518,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.787,
-          "python_se": 0.005790181344310383,
-          "matlab_bs": 0.787,
-          "matlab_se": 0.0057901813443103824,
+          "python_bs": 0.789,
+          "python_se": 0.005770251294354519,
+          "matlab_bs": 0.789,
+          "matlab_se": 0.005770251294354518,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -209,19 +209,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.2776,
-          "python_se": 0.006333059923923031,
-          "matlab_bs": 0.2776,
-          "matlab_se": 0.006333059923923031,
+          "python_bs": 0.2824,
+          "python_se": 0.0063663213867978736,
+          "matlab_bs": 0.2824,
+          "matlab_se": 0.006366321386797873,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.7224,
-          "python_se": 0.006333059923923031,
-          "matlab_bs": 0.7224,
-          "matlab_se": 0.006333059923923031,
+          "python_bs": 0.7176,
+          "python_se": 0.0063663213867978736,
+          "matlab_bs": 0.7176,
+          "matlab_se": 0.006366321386797873,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -236,19 +236,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.3544,
-          "python_se": 0.0067646232711068245,
-          "matlab_bs": 0.3544,
-          "matlab_se": 0.0067646232711068245,
+          "python_bs": 0.3636,
+          "python_se": 0.006802867630639303,
+          "matlab_bs": 0.3636,
+          "matlab_se": 0.006802867630639304,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.6456,
-          "python_se": 0.006764623271106825,
-          "matlab_bs": 0.6456,
-          "matlab_se": 0.006764623271106825,
+          "python_bs": 0.6364,
+          "python_se": 0.006802867630639303,
+          "matlab_bs": 0.6364,
+          "matlab_se": 0.006802867630639303,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -263,19 +263,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.4202,
-          "python_se": 0.006980429213164474,
-          "matlab_bs": 0.4202,
-          "matlab_se": 0.006980429213164475,
+          "python_bs": 0.4336,
+          "python_se": 0.007008438342455472,
+          "matlab_bs": 0.4336,
+          "matlab_se": 0.007008438342455472,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.5798,
-          "python_se": 0.006980429213164474,
-          "matlab_bs": 0.5798,
-          "matlab_se": 0.006980429213164475,
+          "python_bs": 0.5664,
+          "python_se": 0.007008438342455472,
+          "matlab_bs": 0.5664,
+          "matlab_se": 0.007008438342455472,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -290,19 +290,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.4922,
-          "python_se": 0.007070207351980563,
-          "matlab_bs": 0.4922,
-          "matlab_se": 0.007070207351980563,
+          "python_bs": 0.4912,
+          "python_se": 0.007069972560059904,
+          "matlab_bs": 0.4912,
+          "matlab_se": 0.007069972560059904,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.5078,
-          "python_se": 0.007070207351980562,
-          "matlab_bs": 0.5078,
-          "matlab_se": 0.007070207351980562,
+          "python_bs": 0.5088,
+          "python_se": 0.007069972560059904,
+          "matlab_bs": 0.5088,
+          "matlab_se": 0.007069972560059904,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }
@@ -317,19 +317,19 @@
       "attractors": [
         {
           "label": "FP",
-          "python_bs": 0.5678,
-          "python_se": 0.007005757061160485,
-          "matlab_bs": 0.5678,
-          "matlab_se": 0.007005757061160485,
+          "python_bs": 0.5552,
+          "python_se": 0.007027844050631744,
+          "matlab_bs": 0.5552,
+          "matlab_se": 0.007027844050631744,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         },
         {
           "label": "LC",
-          "python_bs": 0.4322,
-          "python_se": 0.007005757061160485,
-          "matlab_bs": 0.4322,
-          "matlab_se": 0.007005757061160485,
+          "python_bs": 0.4448,
+          "python_se": 0.007027844050631744,
+          "matlab_bs": 0.4448,
+          "matlab_se": 0.007027844050631744,
           "f1_score": 1.0,
           "matthews_corrcoef": 1.0
         }

@@ -1,1 +1,1 @@
-[{"label":"FP","basinStability":0.304,"absNumMembers":1520,"standardError":0.0065051364320819587},{"label":"LC","basinStability":0.696,"absNumMembers":3480,"standardError":0.0065051364320819595},{"label":"NaN","basinStability":0,"absNumMembers":0,"standardError":0}]
+[{"label":"FP","basinStability":0.312,"absNumMembers":1560,"standardError":0.0065521904734218463},{"label":"LC","basinStability":0.688,"absNumMembers":3440,"standardError":0.0065521904734218463},{"label":"NaN","basinStability":0,"absNumMembers":0,"standardError":0}]

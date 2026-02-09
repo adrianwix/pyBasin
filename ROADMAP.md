@@ -20,3 +20,5 @@ plotter.plot_templates_trajectories(
 )
 plt.show()  # type: ignore[misc]
 ```
+
+- [ ] Look into https://github.com/lmcinnes/umap for feature space visualization

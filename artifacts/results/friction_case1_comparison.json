@@ -7,19 +7,19 @@
   "attractors": [
     {
       "label": "FP",
-      "python_bs": 0.304,
-      "python_se": 0.006505136432081959,
-      "matlab_bs": 0.304,
-      "matlab_se": 0.006505136432081959,
+      "python_bs": 0.312,
+      "python_se": 0.006552190473421846,
+      "matlab_bs": 0.312,
+      "matlab_se": 0.006552190473421846,
       "f1_score": 1.0,
       "matthews_corrcoef": 1.0
     },
     {
       "label": "LC",
-      "python_bs": 0.696,
-      "python_se": 0.0065051364320819595,
-      "matlab_bs": 0.696,
-      "matlab_se": 0.0065051364320819595,
+      "python_bs": 0.688,
+      "python_se": 0.006552190473421846,
+      "matlab_bs": 0.688,
+      "matlab_se": 0.006552190473421846,
       "f1_score": 1.0,
       "matthews_corrcoef": 1.0
     }
