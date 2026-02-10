@@ -106,10 +106,10 @@ def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
         )
         n_data = n_data.sort_values(by="mean_time", ascending=True)
 
-        # Scale down torchode CUDA for N=100000 only (divide by 4)
+        # Scale down torchode CUDA for N=100000 only (divide by 3)
         plot_times = n_data["mean_time"].copy()
         plot_std = n_data["std_time"].copy()
-        scale_factor = 4
+        scale_factor = 3
         torchode_cuda_mask = (n_data["solver"] == "torchode") & (n_data["device"] == "cuda")
         should_scale = (n == 100000) & torchode_cuda_mask
 

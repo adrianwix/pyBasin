@@ -29,12 +29,14 @@ from pybasin.cache_manager import CacheManager
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.protocols import ODESystemProtocol
-from pybasin.utils import resolve_folder
+from pybasin.utils import DisplayNameMixin, resolve_folder
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_MAX_STEPS: int = 16**5
 
-class JaxSolver:
+
+class JaxSolver(DisplayNameMixin):
     """
     High-performance ODE solver using JAX and Diffrax for native JAX ODE systems.
 
@@ -77,20 +79,17 @@ class JaxSolver:
     ```
     """
 
-    display_name: str = "JAX Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float] = (0, 1000),
-        n_steps: int | None = 1000,
+        n_steps: int = 1000,
         device: str | None = None,
         solver: Any | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        max_steps: int = 16**5,
+        max_steps: int = DEFAULT_MAX_STEPS,
         use_cache: bool = True,
         event_fn: Callable[[Any, Array, Any], Array] | None = None,
-        **kwargs: Any,
     ):
         """
         Initialize JaxSolver.
@@ -101,18 +100,17 @@ class JaxSolver:
         :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5().
         :param rtol: Relative tolerance for adaptive stepping. Defaults to 1e-8.
         :param atol: Absolute tolerance for adaptive stepping. Defaults to 1e-6.
-        :param max_steps: Maximum number of steps for the integrator.
+        :param max_steps: Maximum number of steps for the integrator. Defaults to 16^5 (Diffrax default).
         :param use_cache: Whether to use caching for integration results. Defaults to True.
         :param event_fn: Optional event function for early termination. Should return positive
                          when integration should continue, negative/zero to stop.
                          Signature: (t, y, args) -> scalar Array.
         """
         self.time_span = time_span
+        self.n_steps = n_steps
         self.use_cache = use_cache
-        self.params = kwargs
         self.event_fn = event_fn
 
-        self._set_n_steps(n_steps)
         self._set_device(device)
 
         # Diffrax solver settings
@@ -128,14 +126,6 @@ class JaxSolver:
         if use_cache:
             self._cache_dir = resolve_folder("cache")
             self._cache_manager = CacheManager(self._cache_dir)
-
-    def _set_n_steps(self, n_steps: int | None) -> None:
-        """
-        Set the number of evaluation steps.
-
-        :param n_steps: Number of evaluation points. If None, defaults to 1000.
-        """
-        self.n_steps = n_steps if n_steps is not None else 1000
 
     def _set_device(self, device: str | None) -> None:
         """
@@ -168,7 +158,6 @@ class JaxSolver:
             max_steps=self.max_steps,
             use_cache=self.use_cache,
             event_fn=self.event_fn,
-            **self.params,
         )
         # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
@@ -231,21 +220,21 @@ class JaxSolver:
 
             if cached_result is not None:
                 cache_path = f"{self._cache_manager.cache_dir}/{cache_key}.pkl"
-                logger.info(
+                logger.debug(
                     "[%s] Loaded result from cache: %s", self.__class__.__name__, cache_path
                 )
                 return cached_result
 
         # Compute integration
         if self.use_cache:
-            logger.info("[%s] Cache miss - integrating...", self.__class__.__name__)
+            logger.debug("[%s] Cache miss - integrating...", self.__class__.__name__)
         else:
-            logger.info("[%s] Cache disabled - integrating...", self.__class__.__name__)
+            logger.debug("[%s] Cache disabled - integrating...", self.__class__.__name__)
 
         # Cast to concrete type for internal implementation
         ode_system_concrete = cast(JaxODESystem[Any], ode_system)
         t_result_jax, y_result_jax = self._integrate_jax(ode_system_concrete, y0_jax, t_eval_jax)
-        logger.info("[%s] Integration complete", self.__class__.__name__)
+        logger.debug("[%s] Integration complete", self.__class__.__name__)
 
         # Convert back to PyTorch
         torch_device = str(y0.device)
@@ -300,7 +289,7 @@ class JaxSolver:
             return sol.ys  # type: ignore[return-value]
 
         # JIT compile and vmap for batch processing
-        solve_batch = jax.jit(jax.vmap(solve_single))
+        solve_batch = jax.vmap(solve_single)
 
         try:
             # Integrate all trajectories in parallel

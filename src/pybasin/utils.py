@@ -19,6 +19,18 @@ R = TypeVar("R")
 FEATURE_NAME_PATTERN = re.compile(r"^state_(\d+)__(.+)$")
 
 
+class DisplayNameMixin:
+    """Mixin that provides a computed display_name property from the class name."""
+
+    @property
+    def display_name(self) -> str:
+        """Human-readable name derived from class name (e.g., 'TorchDiffEqSolver' -> 'Torch Diff Eq Solver')."""
+        class_name = self.__class__.__name__
+        spaced = re.sub(r"([a-z])([A-Z])", r"\1 \2", class_name)
+        spaced = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", spaced)
+        return spaced
+
+
 def parse_feature_name(feature_name: str) -> tuple[int, str] | None:
     """Parse a feature name into state index and feature identifier.
 

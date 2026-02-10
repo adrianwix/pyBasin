@@ -44,8 +44,6 @@ class JaxForPytorchSolver(Solver):
     which avoids the PyTorch callback overhead.
     """
 
-    display_name: str = "JAX for PyTorch Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float],

@@ -13,12 +13,12 @@ from torchdiffeq import odeint  # type: ignore[import-untyped]
 from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
 from pybasin.protocols import ODESystemProtocol
-from pybasin.utils import resolve_folder
+from pybasin.utils import DisplayNameMixin, resolve_folder
 
 logger = logging.getLogger(__name__)
 
 
-class Solver(ABC):
+class Solver(DisplayNameMixin, ABC):
     """Abstract base class for ODE solvers with persistent caching.
 
     The cache is stored both in-memory and on disk.
@@ -31,15 +31,14 @@ class Solver(ABC):
     The persistent cache is stored in the folder given by resolve_folder("cache").
     """
 
-    display_name: str = "Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float],
         n_steps: int | None = None,
         device: str | None = None,
+        rtol: float = 1e-8,
+        atol: float = 1e-6,
         use_cache: bool = True,
-        **kwargs: Any,
     ):
         """
         Initialize the solver with integration parameters.
@@ -47,11 +46,14 @@ class Solver(ABC):
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
+        :param rtol: Relative tolerance for adaptive stepping (default: 1e-8).
+        :param atol: Absolute tolerance for adaptive stepping (default: 1e-6).
         :param use_cache: Whether to use caching for integration results (default: True).
         """
         self.time_span = time_span
-        self.params = kwargs  # Additional solver parameters
         self.use_cache = use_cache
+        self.rtol = rtol
+        self.atol = atol
 
         self.n_steps = n_steps if n_steps is not None else 1000
         self._set_device(device)
@@ -178,11 +180,11 @@ class Solver(ABC):
     def _get_cache_config(self) -> dict[str, Any]:
         """
         Get solver-specific configuration for cache key.
-        Subclasses should override this to include relevant parameters.
+        Subclasses should override this to include additional relevant parameters.
 
         :return: Dictionary of configuration parameters that affect integration results.
         """
-        return {}
+        return {"rtol": self.rtol, "atol": self.atol}
 
     @abstractmethod
     def _integrate(
@@ -221,8 +223,6 @@ class TorchDiffEqSolver(Solver):
     ```
     """
 
-    display_name: str = "TorchDiffEq Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float],
@@ -231,7 +231,7 @@ class TorchDiffEqSolver(Solver):
         method: str = "dopri5",
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        **kwargs: Any,
+        use_cache: bool = True,
     ):
         """
         Initialize TorchDiffEqSolver.
@@ -242,15 +242,18 @@ class TorchDiffEqSolver(Solver):
         :param method: Integration method from tordiffeq.odeint.
         :param rtol: Relative tolerance for adaptive stepping.
         :param atol: Absolute tolerance for adaptive stepping.
+        :param use_cache: Whether to use caching for integration results.
         """
-        super().__init__(time_span, n_steps=n_steps, device=device, **kwargs)
+        super().__init__(
+            time_span, n_steps=n_steps, device=device, rtol=rtol, atol=atol, use_cache=use_cache
+        )
         self.method = method
-        self.rtol = rtol
-        self.atol = atol
 
     def _get_cache_config(self) -> dict[str, Any]:
-        """Include method, rtol, and atol in cache key."""
-        return {"method": self.method, "rtol": self.rtol, "atol": self.atol}
+        """Include method in cache key (rtol/atol handled by base class)."""
+        config = super()._get_cache_config()
+        config["method"] = self.method
+        return config
 
     def with_device(self, device: str) -> "TorchDiffEqSolver":
         """Create a copy of this solver configured for a different device."""
@@ -262,7 +265,6 @@ class TorchDiffEqSolver(Solver):
             rtol=self.rtol,
             atol=self.atol,
             use_cache=self.use_cache,
-            **self.params,
         )
         # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
@@ -281,13 +283,11 @@ class TorchDiffEqSolver(Solver):
         :param t_eval: Time points at which the solution is evaluated (1D tensor).
         :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
-        try:
-            # odeint returns Tensor, but type stubs are incomplete
+        # odeint returns Tensor, but type stubs are incomplete
+        with torch.no_grad():
             y_torch: torch.Tensor = odeint(  # type: ignore[assignment]
                 ode_system, y0, t_eval, method=self.method, rtol=self.rtol, atol=self.atol
             )
-        except RuntimeError as e:
-            raise e
         return t_eval, y_torch
 
 
@@ -314,8 +314,6 @@ class TorchOdeSolver(Solver):
     ```
     """
 
-    display_name: str = "TorchODE Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float],
@@ -324,8 +322,7 @@ class TorchOdeSolver(Solver):
         method: str = "dopri5",
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_jit: bool = False,
-        **kwargs: Any,
+        use_cache: bool = True,
     ):
         """
         Initialize TorchOdeSolver.
@@ -336,22 +333,18 @@ class TorchOdeSolver(Solver):
         :param method: Integration method ('dopri5', 'tsit5', 'euler', 'heun').
         :param rtol: Relative tolerance for adaptive stepping.
         :param atol: Absolute tolerance for adaptive stepping.
-        :param use_jit: Whether to use JIT compilation (can improve performance).
+        :param use_cache: Whether to use caching for integration results.
         """
-        super().__init__(time_span, n_steps=n_steps, device=device, **kwargs)
+        super().__init__(
+            time_span, n_steps=n_steps, device=device, rtol=rtol, atol=atol, use_cache=use_cache
+        )
         self.method = method.lower()
-        self.rtol = rtol
-        self.atol = atol
-        self.use_jit = use_jit
 
     def _get_cache_config(self) -> dict[str, Any]:
-        """Include method, rtol , atol, and use_jit in cache key."""
-        return {
-            "method": self.method,
-            "rtol": self.rtol,
-            "atol": self.atol,
-            "use_jit": self.use_jit,
-        }
+        """Include method in cache key (rtol/atol handled by base class)."""
+        config = super()._get_cache_config()
+        config["method"] = self.method
+        return config
 
     def with_device(self, device: str) -> "TorchOdeSolver":
         """Create a copy of this solver configured for a different device."""
@@ -362,9 +355,7 @@ class TorchOdeSolver(Solver):
             method=self.method,
             rtol=self.rtol,
             atol=self.atol,
-            use_jit=self.use_jit,
             use_cache=self.use_cache,
-            **self.params,
         )
         # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
@@ -383,8 +374,6 @@ class TorchOdeSolver(Solver):
         :param t_eval: Time points at which the solution is evaluated (1D tensor).
         :return: (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
-        # y0 is guaranteed to be 2D (batch, n_dims) by Solver.integrate validation
-        y0_batched = y0
         batch_size = y0.shape[0]
 
         # For torchode, we need t_start and t_end as (batch,) tensors
@@ -428,22 +417,20 @@ class TorchOdeSolver(Solver):
 
         # Create initial value problem with matching batch sizes
         problem = to.InitialValueProblem(
-            y0=y0_batched,  # pyright: ignore[reportArgumentType]
+            y0=y0,  # pyright: ignore[reportArgumentType]
             t_start=t_start,  # pyright: ignore[reportArgumentType]
             t_end=t_end,  # pyright: ignore[reportArgumentType]
             t_eval=t_eval_batched,  # pyright: ignore[reportArgumentType]
         )
 
         # Solve
-        try:
+        with torch.inference_mode():
             solution = solver.solve(problem)
-        except RuntimeError as e:
-            raise RuntimeError(f"torchode integration failed: {e}") from e
 
-        # Extract solution and transpose to match expected format
-        # torchode returns (batch, n_steps, n_dims)
-        # We need (n_steps, batch, n_dims) to match TorchDiffEqSolver
-        y_result = solution.ys.transpose(0, 1)
+            # Extract solution and transpose to match expected format
+            # torchode returns (batch, n_steps, n_dims)
+            # We need (n_steps, batch, n_dims) to match TorchDiffEqSolver
+            y_result = solution.ys.transpose(0, 1)
 
         return t_eval, y_result
 
@@ -458,20 +445,17 @@ class SklearnParallelSolver(Solver):
     See also: [scipy.integrate.solve_ivp](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html)
     """
 
-    display_name: str = "Sklearn Parallel Solver"
-
     def __init__(
         self,
         time_span: tuple[float, float],
         n_steps: int | None = None,
         device: str | None = None,
         n_jobs: int = -1,
-        batch_size: int | None = None,
         method: str = "RK45",
         rtol: float = 1e-6,
         atol: float = 1e-8,
         max_step: float | None = None,
-        **kwargs: Any,
+        use_cache: bool = True,
     ):
         """
         Initialize SklearnParallelSolver.
@@ -480,11 +464,11 @@ class SklearnParallelSolver(Solver):
         :param n_steps: Number of evaluation points. If None, defaults to 1000.
         :param device: Device to use (only 'cpu' supported).
         :param n_jobs: Number of parallel jobs (-1 for all CPUs).
-        :param batch_size: Unused, kept for API compatibility.
         :param method: Integration method ('RK45', 'RK23', 'DOP853', 'Radau', 'BDF', 'LSODA', etc).
         :param rtol: Relative tolerance for the solver.
         :param atol: Absolute tolerance for the solver.
         :param max_step: Maximum step size for the solver.
+        :param use_cache: Whether to use caching for integration results.
         """
         if device and "cuda" in device:
             logger.warning(
@@ -492,23 +476,20 @@ class SklearnParallelSolver(Solver):
             )
             device = "cpu"
 
-        super().__init__(time_span, n_steps=n_steps, device="cpu", **kwargs)
+        super().__init__(
+            time_span, n_steps=n_steps, device="cpu", rtol=rtol, atol=atol, use_cache=use_cache
+        )
 
         self.n_jobs = n_jobs
-        self.batch_size = batch_size
         self.method = method
-        self.rtol = rtol
-        self.atol = atol
         self.max_step = max_step or (time_span[1] - time_span[0]) / 100
 
     def _get_cache_config(self) -> dict[str, Any]:
-        """Include method, rtol, atol, and max_step in cache key."""
-        return {
-            "method": self.method,
-            "rtol": self.rtol,
-            "atol": self.atol,
-            "max_step": self.max_step,
-        }
+        """Include method and max_step in cache key (rtol/atol handled by base class)."""
+        config = super()._get_cache_config()
+        config["method"] = self.method
+        config["max_step"] = self.max_step
+        return config
 
     def with_device(self, device: str) -> "SklearnParallelSolver":
         """Create a copy of this solver configured for a different device.
@@ -522,13 +503,11 @@ class SklearnParallelSolver(Solver):
             n_steps=self.n_steps,
             device="cpu",
             n_jobs=self.n_jobs,
-            batch_size=self.batch_size,
             method=self.method,
             rtol=self.rtol,
             atol=self.atol,
             max_step=self.max_step,
             use_cache=self.use_cache,
-            **self.params,
         )
         # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
@@ -542,13 +521,6 @@ class SklearnParallelSolver(Solver):
         """Integrate using sklearn parallel processing with scipy's solve_ivp."""
         t_eval_np = t_eval.cpu().numpy()
         y0_np = y0.cpu().numpy()
-
-        if y0_np.ndim == 1:
-            y0_np = y0_np.reshape(1, -1)
-            single_trajectory = True
-        else:
-            single_trajectory = False
-
         batch_size = y0_np.shape[0]
 
         def ode_func(t: float, y: np.ndarray) -> np.ndarray:
@@ -589,13 +561,9 @@ class SklearnParallelSolver(Solver):
                 for i in range(batch_size)
             )
 
-        # Stack results into array
-        if single_trajectory:
-            y_result_np: np.ndarray = results[0]  # type: ignore[index]
-        else:
-            # Filter out None values and stack
-            valid_results = [r for r in results if r is not None]  # type: ignore[misc]
-            y_result_np = np.stack(valid_results, axis=1)  # type: ignore[arg-type]
+        # Filter out None values and stack
+        valid_results = [r for r in results if r is not None]  # type: ignore[misc]
+        y_result_np: np.ndarray = np.stack(valid_results, axis=1)  # type: ignore[arg-type]
 
         y_result = torch.tensor(y_result_np, dtype=torch.float32, device=self.device)
 

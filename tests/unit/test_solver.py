@@ -123,6 +123,27 @@ def test_sklearn_solver_batched(simple_ode: ExponentialDecayODE) -> None:
     assert torch.allclose(y[:, 1, :] / y[:, 0, :], torch.tensor([[2.0]]), atol=1e-5)  # type: ignore[misc]
 
 
+def test_sklearn_solver_single_trajectory_with_parallel_enabled(
+    simple_ode: ExponentialDecayODE,
+) -> None:
+    """Test single trajectory works correctly even when n_jobs > 1."""
+    solver = SklearnParallelSolver(
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
+    )
+
+    y0 = torch.tensor([[1.0]])
+    t, y = solver.integrate(simple_ode, y0)
+
+    # 11 time points
+    assert t.shape == (11,)
+    # Single trajectory: 11 steps × 1 batch × 1 state
+    assert y.shape == (11, 1, 1)
+    # Initial condition preserved
+    assert y[0].item() == pytest.approx(1.0, abs=1e-5)  # type: ignore[misc]
+    # Exponential decay: final value should be e^(-1) ≈ 0.368
+    assert y[-1].item() == pytest.approx(0.368, abs=0.01)  # type: ignore[misc]
+
+
 def test_jax_solver_integration(simple_ode: ExponentialDecayODE) -> None:
     solver = JaxForPytorchSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
 

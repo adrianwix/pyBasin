@@ -1,0 +1,784 @@
+{
+  "machine_info": {
+    "node": "adrianlaptop",
+    "processor": "x86_64",
+    "machine": "x86_64",
+    "python_compiler": "Clang 21.1.4 ",
+    "python_implementation": "CPython",
+    "python_implementation_version": "3.12.12",
+    "python_version": "3.12.12",
+    "python_build": ["main", "Jan 14 2026 19:35:58"],
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "system": "Linux",
+    "cpu": {
+      "python_version": "3.12.12.final.0 (64 bit)",
+      "cpuinfo_version": [9, 0, 0],
+      "cpuinfo_version_string": "9.0.0",
+      "arch": "X86_64",
+      "bits": 64,
+      "count": 24,
+      "arch_string_raw": "x86_64",
+      "vendor_id_raw": "GenuineIntel",
+      "brand_raw": "Intel(R) Core(TM) Ultra 9 275HX",
+      "hz_advertised_friendly": "3.0720 GHz",
+      "hz_actual_friendly": "3.0720 GHz",
+      "hz_advertised": [3071999000, 0],
+      "hz_actual": [3071999000, 0],
+      "stepping": 2,
+      "model": 198,
+      "family": 6,
+      "flags": [
+        "3dnowprefetch",
+        "abm",
+        "adx",
+        "aes",
+        "apic",
+        "arch_capabilities",
+        "avx",
+        "avx2",
+        "avx_vnni",
+        "bmi1",
+        "bmi2",
+        "clflush",
+        "clflushopt",
+        "clwb",
+        "cmov",
+        "constant_tsc",
+        "cpuid",
+        "cx16",
+        "cx8",
+        "de",
+        "ept",
+        "ept_ad",
+        "erms",
+        "f16c",
+        "flush_l1d",
+        "fma",
+        "fpu",
+        "fsgsbase",
+        "fsrm",
+        "fxsr",
+        "gfni",
+        "ht",
+        "hypervisor",
+        "ibpb",
+        "ibrs",
+        "ibrs_enhanced",
+        "invpcid",
+        "lahf_lm",
+        "lm",
+        "mca",
+        "mce",
+        "md_clear",
+        "mmx",
+        "movbe",
+        "movdir64b",
+        "movdiri",
+        "msr",
+        "mtrr",
+        "nonstop_tsc",
+        "nopl",
+        "nx",
+        "osxsave",
+        "pae",
+        "pat",
+        "pcid",
+        "pclmulqdq",
+        "pdpe1gb",
+        "pge",
+        "pni",
+        "popcnt",
+        "pse",
+        "pse36",
+        "rdpid",
+        "rdrand",
+        "rdrnd",
+        "rdseed",
+        "rdtscp",
+        "rep_good",
+        "sep",
+        "serialize",
+        "sha",
+        "sha_ni",
+        "smap",
+        "smep",
+        "ss",
+        "ssbd",
+        "sse",
+        "sse2",
+        "sse4_1",
+        "sse4_2",
+        "ssse3",
+        "stibp",
+        "syscall",
+        "tpr_shadow",
+        "tsc",
+        "tsc_adjust",
+        "tsc_deadline_timer",
+        "tsc_known_freq",
+        "tsc_reliable",
+        "tscdeadline",
+        "umip",
+        "vaes",
+        "vme",
+        "vmx",
+        "vnmi",
+        "vpclmulqdq",
+        "vpid",
+        "waitpkg",
+        "x2apic",
+        "xgetbv1",
+        "xsave",
+        "xsavec",
+        "xsaveopt",
+        "xsaves",
+        "xtopology"
+      ],
+      "l3_cache_size": 37748736,
+      "l2_cache_size": 75497472,
+      "l1_data_cache_size": "1.1 MiB",
+      "l1_instruction_cache_size": "1.5 MiB",
+      "l2_cache_line_size": 3072,
+      "l2_cache_associativity": 7
+    }
+  },
+  "commit_info": {
+    "id": "026593119e310e7a6912a7ea2e69f3bfcf97c0b8",
+    "time": "2026-01-25T15:56:40+01:00",
+    "author_time": "2026-01-25T15:56:40+01:00",
+    "dirty": true,
+    "project": "pyBasin",
+    "branch": "main"
+  },
+  "benchmarks": [
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cpu-5000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-5000]",
+      "params": {
+        "device": "cpu",
+        "n": 5000
+      },
+      "param": "cpu-5000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 4.820155428000021,
+        "max": 4.929487836000021,
+        "mean": 4.8674590566000235,
+        "stddev": 0.05541085506047378,
+        "rounds": 5,
+        "median": 4.835818316000029,
+        "iqr": 0.1027224187499911,
+        "q1": 4.824281837250027,
+        "q3": 4.927004256000018,
+        "iqr_outliers": 0,
+        "stddev_outliers": 2,
+        "outliers": "2;0",
+        "ld15iqr": 4.820155428000021,
+        "hd15iqr": 4.929487836000021,
+        "ops": 0.20544600136780844,
+        "total": 24.337295283000117,
+        "data": [
+          4.820155428000021, 4.835818316000029, 4.926176396000017,
+          4.825657307000029, 4.929487836000021
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cpu-10000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-10000]",
+      "params": {
+        "device": "cpu",
+        "n": 10000
+      },
+      "param": "cpu-10000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 9.542985808999958,
+        "max": 9.964794811000047,
+        "mean": 9.679801210599999,
+        "stddev": 0.17151167517172852,
+        "rounds": 5,
+        "median": 9.654047376999983,
+        "iqr": 0.20920243700004448,
+        "q1": 9.54781312999998,
+        "q3": 9.757015567000025,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 9.542985808999958,
+        "hd15iqr": 9.964794811000047,
+        "ops": 0.10330790666495675,
+        "total": 48.399006052999994,
+        "data": [
+          9.654047376999983, 9.542985808999958, 9.964794811000047,
+          9.549422236999987, 9.687755819000017
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cpu-100000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-100000]",
+      "params": {
+        "device": "cpu",
+        "n": 100000
+      },
+      "param": "cpu-100000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 60.039591313000074,
+        "max": 66.00190174300002,
+        "mean": 63.65684685300006,
+        "stddev": 2.700042470109889,
+        "rounds": 5,
+        "median": 65.19597696800008,
+        "iqr": 4.522758153749933,
+        "q1": 61.13634414550009,
+        "q3": 65.65910229925002,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 60.039591313000074,
+        "hd15iqr": 66.00190174300002,
+        "ops": 0.015709229241424035,
+        "total": 318.2842342650003,
+        "data": [
+          66.00190174300002, 65.19597696800008, 65.54483581800002,
+          61.501928423000095, 60.039591313000074
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cuda-5000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-5000]",
+      "params": {
+        "device": "cuda",
+        "n": 5000
+      },
+      "param": "cuda-5000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 11.217621183000006,
+        "max": 12.251069722000011,
+        "mean": 11.562231145400006,
+        "stddev": 0.43659041471595816,
+        "rounds": 5,
+        "median": 11.309662720999995,
+        "iqr": 0.5957763670000134,
+        "q1": 11.272998967500001,
+        "q3": 11.868775334500015,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 11.217621183000006,
+        "hd15iqr": 12.251069722000011,
+        "ops": 0.08648849754208958,
+        "total": 57.81115572700003,
+        "data": [
+          11.741343872000016, 12.251069722000011, 11.309662720999995,
+          11.291458229, 11.217621183000006
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cuda-10000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-10000]",
+      "params": {
+        "device": "cuda",
+        "n": 10000
+      },
+      "param": "cuda-10000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 11.186111487999938,
+        "max": 12.05021710099993,
+        "mean": 11.452560403799954,
+        "stddev": 0.36421883979981695,
+        "rounds": 5,
+        "median": 11.271808835999991,
+        "iqr": 0.4724413787500339,
+        "q1": 11.201319606999931,
+        "q3": 11.673760985749965,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 11.186111487999938,
+        "hd15iqr": 12.05021710099993,
+        "ops": 0.08731671912144646,
+        "total": 57.262802018999764,
+        "data": [
+          11.271808835999991, 12.05021710099993, 11.206388979999929,
+          11.548275613999976, 11.186111487999938
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_jax_diffrax[cuda-100000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-100000]",
+      "params": {
+        "device": "cuda",
+        "n": 100000
+      },
+      "param": "cuda-100000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 11.39192092799999,
+        "max": 11.634490791999951,
+        "mean": 11.464255548999972,
+        "stddev": 0.09904290183835958,
+        "rounds": 5,
+        "median": 11.433586371000047,
+        "iqr": 0.10595411499997454,
+        "q1": 11.398304277749958,
+        "q3": 11.504258392749932,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 11.39192092799999,
+        "hd15iqr": 11.634490791999951,
+        "ops": 0.087227643847073,
+        "total": 57.32127774499986,
+        "data": [
+          11.39192092799999, 11.634490791999951, 11.433586371000047,
+          11.460847592999926, 11.400432060999947
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cpu-5000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-5000]",
+      "params": {
+        "device": "cpu",
+        "n": 5000
+      },
+      "param": "cpu-5000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 6.980553618000158,
+        "max": 10.366315661000044,
+        "mean": 7.858988357600038,
+        "stddev": 1.4206753640615892,
+        "rounds": 5,
+        "median": 7.3897461209999165,
+        "iqr": 1.2174494397500553,
+        "q1": 7.019006335500023,
+        "q3": 8.236455775250079,
+        "iqr_outliers": 1,
+        "stddev_outliers": 1,
+        "outliers": "1;1",
+        "ld15iqr": 6.980553618000158,
+        "hd15iqr": 10.366315661000044,
+        "ops": 0.12724284023565827,
+        "total": 39.29494178800019,
+        "data": [
+          7.3897461209999165, 7.52650248000009, 7.0318239079999785,
+          6.980553618000158, 10.366315661000044
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cpu-10000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-10000]",
+      "params": {
+        "device": "cpu",
+        "n": 10000
+      },
+      "param": "cpu-10000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 9.358299333000105,
+        "max": 10.18313554700012,
+        "mean": 9.609751247400027,
+        "stddev": 0.3297743369656046,
+        "rounds": 5,
+        "median": 9.496224777999942,
+        "iqr": 0.3034320882500765,
+        "q1": 9.420124532999978,
+        "q3": 9.723556621250054,
+        "iqr_outliers": 1,
+        "stddev_outliers": 1,
+        "outliers": "1;1",
+        "ld15iqr": 9.358299333000105,
+        "hd15iqr": 10.18313554700012,
+        "ops": 0.10406096622642087,
+        "total": 48.048756237000134,
+        "data": [
+          9.358299333000105, 10.18313554700012, 9.570363646000033,
+          9.496224777999942, 9.440732932999936
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cpu-100000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-100000]",
+      "params": {
+        "device": "cpu",
+        "n": 100000
+      },
+      "param": "cpu-100000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 31.483491630000117,
+        "max": 34.07973775200003,
+        "mean": 32.575219669000035,
+        "stddev": 1.1046293692268419,
+        "rounds": 5,
+        "median": 32.06962644500004,
+        "iqr": 1.7941072769997959,
+        "q1": 31.764565978500116,
+        "q3": 33.55867325549991,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 31.483491630000117,
+        "hd15iqr": 34.07973775200003,
+        "ops": 0.03069818132190963,
+        "total": 162.87609834500017,
+        "data": [
+          32.06962644500004, 31.858257428000115, 34.07973775200003,
+          33.38498508999987, 31.483491630000117
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cuda-5000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-5000]",
+      "params": {
+        "device": "cuda",
+        "n": 5000
+      },
+      "param": "cuda-5000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 30.433439887000077,
+        "max": 32.341193965,
+        "mean": 31.822923833000004,
+        "stddev": 0.7853931150628567,
+        "rounds": 5,
+        "median": 32.10395464399994,
+        "iqr": 0.6066842257500298,
+        "q1": 31.631998619499996,
+        "q3": 32.238682845250025,
+        "iqr_outliers": 1,
+        "stddev_outliers": 1,
+        "outliers": "1;1",
+        "ld15iqr": 32.03151819699997,
+        "hd15iqr": 32.341193965,
+        "ops": 0.031423888177208016,
+        "total": 159.11461916500002,
+        "data": [
+          32.20451247200003, 30.433439887000077, 32.10395464399994,
+          32.03151819699997, 32.341193965
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cuda-10000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-10000]",
+      "params": {
+        "device": "cuda",
+        "n": 10000
+      },
+      "param": "cuda-10000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 31.10343729600004,
+        "max": 32.43126865699992,
+        "mean": 31.7691809378,
+        "stddev": 0.48106427861671747,
+        "rounds": 5,
+        "median": 31.792045892000033,
+        "iqr": 0.552945353749692,
+        "q1": 31.485047883750156,
+        "q3": 32.03799323749985,
+        "iqr_outliers": 0,
+        "stddev_outliers": 2,
+        "outliers": "2;0",
+        "ld15iqr": 31.10343729600004,
+        "hd15iqr": 32.43126865699992,
+        "ops": 0.03147704695182014,
+        "total": 158.845904689,
+        "data": [
+          31.10343729600004, 31.612251413000195, 32.43126865699992,
+          31.792045892000033, 31.906901430999824
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchdiffeq[cuda-100000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-100000]",
+      "params": {
+        "device": "cuda",
+        "n": 100000
+      },
+      "param": "cuda-100000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 28.34882825500017,
+        "max": 28.979960293999966,
+        "mean": 28.630394307400003,
+        "stddev": 0.2409938681753845,
+        "rounds": 5,
+        "median": 28.58993129800001,
+        "iqr": 0.3378453767500105,
+        "q1": 28.45964526399996,
+        "q3": 28.79749064074997,
+        "iqr_outliers": 0,
+        "stddev_outliers": 2,
+        "outliers": "2;0",
+        "ld15iqr": 28.34882825500017,
+        "hd15iqr": 28.979960293999966,
+        "ops": 0.034927915740983466,
+        "total": 143.151971537,
+        "data": [
+          28.979960293999966, 28.73666742299997, 28.34882825500017,
+          28.49658426699989, 28.58993129800001
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchode_cuda[5000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[5000]",
+      "params": {
+        "n": 5000
+      },
+      "param": "5000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 29.383529610999176,
+        "max": 30.379199262999464,
+        "mean": 29.8700769805997,
+        "stddev": 0.40094895814512344,
+        "rounds": 5,
+        "median": 29.84109907400125,
+        "iqr": 0.6545366737491349,
+        "q1": 29.548031630499736,
+        "q3": 30.20256830424887,
+        "iqr_outliers": 0,
+        "stddev_outliers": 2,
+        "outliers": "2;0",
+        "ld15iqr": 29.383529610999176,
+        "hd15iqr": 30.379199262999464,
+        "ops": 0.03347832014793566,
+        "total": 149.35038490299848,
+        "data": [
+          30.143691317998673, 29.383529610999176, 30.379199262999464,
+          29.84109907400125, 29.602865636999923
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchode_cuda[10000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[10000]",
+      "params": {
+        "n": 10000
+      },
+      "param": "10000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 30.650119683999947,
+        "max": 31.27660471099989,
+        "mean": 30.94319652300037,
+        "stddev": 0.2956269741879028,
+        "rounds": 5,
+        "median": 30.873388617001183,
+        "iqr": 0.5635867660012082,
+        "q1": 30.677498267499686,
+        "q3": 31.241085033500894,
+        "iqr_outliers": 0,
+        "stddev_outliers": 1,
+        "outliers": "1;0",
+        "ld15iqr": 30.650119683999947,
+        "hd15iqr": 31.27660471099989,
+        "ops": 0.032317281740969796,
+        "total": 154.71598261500185,
+        "data": [
+          31.22924514100123, 31.27660471099989, 30.6866244619996,
+          30.650119683999947, 30.873388617001183
+        ],
+        "iterations": 1
+      }
+    },
+    {
+      "group": null,
+      "name": "test_benchmark_torchode_cuda[100000]",
+      "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[100000]",
+      "params": {
+        "n": 100000
+      },
+      "param": "100000",
+      "extra_info": {},
+      "options": {
+        "disable_gc": false,
+        "timer": "perf_counter",
+        "min_rounds": 5,
+        "max_time": 1.0,
+        "min_time": 5e-6,
+        "warmup": false
+      },
+      "stats": {
+        "min": 620.0285596050016,
+        "max": 632.8474081559998,
+        "mean": 626.5920303128005,
+        "stddev": 5.584075896667222,
+        "rounds": 5,
+        "median": 628.861139554001,
+        "iqr": 9.519611075998455,
+        "q1": 621.0583320255009,
+        "q3": 630.5779431014994,
+        "iqr_outliers": 0,
+        "stddev_outliers": 2,
+        "outliers": "2;0",
+        "ld15iqr": 620.0285596050016,
+        "hd15iqr": 632.8474081559998,
+        "ops": 0.0015959347575818844,
+        "total": 3132.9601515640024,
+        "data": [
+          632.8474081559998, 629.8214547499992, 628.861139554001,
+          621.4015894990007, 620.0285596050016
+        ],
+        "iterations": 1
+      }
+    }
+  ],
+  "datetime": "2026-01-25T18:29:18.799977+00:00",
+  "version": "5.2.3"
+}

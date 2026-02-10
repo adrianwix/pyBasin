@@ -22,6 +22,8 @@ def mock_components() -> dict[str, MagicMock]:
     sampler = MagicMock()
     sampler.min_limits = [0.0, 0.0]
     sampler.max_limits = [1.0, 1.0]
+    # Remove n_samples so hasattr() returns False (MagicMock returns True by default)
+    del sampler.n_samples
 
     solver = MagicMock()
     feature_extractor = MagicMock()

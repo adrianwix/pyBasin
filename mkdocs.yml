@@ -8,8 +8,8 @@ edit_uri: blob/main/
 theme:
   name: material
   palette:
-    # Light mode
-    - media: "(prefers-color-scheme: light)"
+    # Light mode (default)
+    - media: ""
       scheme: default
       primary: indigo
       accent: indigo

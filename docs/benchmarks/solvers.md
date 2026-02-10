@@ -41,7 +41,9 @@ indicating it is not properly optimized for GPU batch processing in this use cas
 
 ![Solver Comparison N=100000](../assets/benchmarks/solver_comparison/solver_comparison_n100000.png)
 
-_Note: torchode (CUDA) time is divided by 4 in the N=100,000 plot to improve readability._
+_Note: torchode (CUDA) time is divided by 3 in the N=100,000 plot to improve readability._
+
+_Note: the first round of torchode tooks 2x longer than any following run inflating the average. The real average duration is around 310 seconds_
 
 ## Key Findings
 
@@ -65,8 +67,8 @@ either stop all trajectories simultaneously or require workarounds like zero mas
 [Handling Unbounded Trajectories](../guides/unbounded-trajectories.md) guide for details.
 
 For CPU-only systems, the choice depends on scale. At smaller sample sizes (N ≤ 10k), JAX/Diffrax
-on CPU is the fastest option. However, at larger scales (N = 100k), torchdiffeq on CPU offers a
-meaningful ~2x improvement over JAX/Diffrax CPU (32s vs 64s). While this difference is negligible
+on CPU is the fastest option. **However, at larger scales (N = 100k), torchdiffeq on CPU offers a
+meaningful ~2x improvement over JAX/Diffrax CPU (32s vs 64s)** . While this difference is negligible
 for single runs, it becomes significant for parameter studies that require evaluating many ODE
 configurations. A study testing 50 parameter combinations at N=100k would save roughly 26 minutes
 by using torchdiffeq instead of JAX/Diffrax on CPU—though JAX/Diffrax on GPU would complete the
