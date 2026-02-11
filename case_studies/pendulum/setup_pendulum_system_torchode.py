@@ -4,9 +4,9 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import GridSampler
 from pybasin.solver import TorchOdeSolver
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import SetupProperties
 
 
@@ -45,10 +45,9 @@ def setup_pendulum_system_torchode() -> SetupProperties:
         time_span=(0, 1000),
         n_steps=1000,
         device=device,
-        method="dopri5",  # Dormand-Prince 5(4) - similar to ode45
+        method="dopri5",
         rtol=1e-8,
         atol=1e-6,
-        use_jit=True,  # Set to True to enable JIT compilation for performance
     )
 
     # Instantiate the feature extractor with a steady state time.
@@ -64,9 +63,7 @@ def setup_pendulum_system_torchode() -> SetupProperties:
     # Create a KNeighborsClassifier with k=1.
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    # Instantiate the KNNClassifier with the training data.
-    knn_cluster = KNNClassifier(
-        classifier=knn,
+    template_integrator = TemplateIntegrator(
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
         ode_params=params,
@@ -78,5 +75,6 @@ def setup_pendulum_system_torchode() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster,
+        "estimator": knn,
+        "template_integrator": template_integrator,
     }

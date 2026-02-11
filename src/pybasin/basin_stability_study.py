@@ -10,10 +10,10 @@ import torch
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.study_params import StudyParams
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import AdaptiveStudyResult, ErrorInfo
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
@@ -32,8 +32,9 @@ class BasinStabilityStudy:
         sampler: Sampler,
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
-        cluster_classifier: LabelPredictor,
+        estimator: Any,
         study_params: StudyParams,
+        template_integrator: TemplateIntegrator | None = None,
         save_to: str | None = "results",
         verbose: bool = False,
     ):
@@ -49,8 +50,9 @@ class BasinStabilityStudy:
         :param sampler: The Sampler object to generate initial conditions.
         :param solver: The Solver object to integrate the ODE system (Solver or JaxSolver).
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
-        :param cluster_classifier: The LabelPredictor object to assign attractor labels.
+        :param estimator: Any sklearn-compatible estimator (classifier or clusterer).
         :param study_params: Parameter study specification (SweepStudyParams, GridStudyParams, etc.).
+        :param template_integrator: Template integrator for supervised classifiers.
         :param save_to: Folder path where results will be saved, or None to disable saving.
         :param verbose: If True, show detailed logs from BasinStabilityEstimator instances.
                         If False, suppress INFO logs to reduce output clutter during parameter sweeps.
@@ -60,8 +62,9 @@ class BasinStabilityStudy:
         self.sampler = sampler
         self.solver = solver
         self.feature_extractor = feature_extractor
-        self.cluster_classifier = cluster_classifier
+        self.estimator = estimator
         self.study_params = study_params
+        self.template_integrator = template_integrator
         self.save_to = save_to
         self.verbose = verbose
 
@@ -155,7 +158,8 @@ class BasinStabilityStudy:
                 "sampler": self.sampler,
                 "solver": self.solver,
                 "feature_extractor": self.feature_extractor,
-                "cluster_classifier": self.cluster_classifier,
+                "estimator": self.estimator,
+                "template_integrator": self.template_integrator,
             }
 
             # Apply all parameter assignments for this run
@@ -182,7 +186,8 @@ class BasinStabilityStudy:
                 sampler=context["sampler"],
                 solver=context["solver"],
                 feature_extractor=context["feature_extractor"],
-                predictor=context["cluster_classifier"],
+                predictor=context["estimator"],
+                template_integrator=context["template_integrator"],
                 feature_selector=None,
             )
 
@@ -286,7 +291,7 @@ class BasinStabilityStudy:
             "sampling_points": self.n,
             "sampling_method": self.sampler.__class__.__name__,
             "solver": self.solver.__class__.__name__,
-            "cluster_classifier": self.cluster_classifier.__class__.__name__,
+            "estimator": self.estimator.__class__.__name__,
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }
 

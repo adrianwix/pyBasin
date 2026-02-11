@@ -2,9 +2,9 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.duffing_oscillator.duffing_jax_ode import DuffingJaxODE, DuffingParams
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.types import SetupProperties
 
@@ -56,8 +56,7 @@ def setup_duffing_oscillator_system() -> SetupProperties:
 
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    knn_cluster = KNNClassifier(
-        classifier=knn,
+    template_integrator = TemplateIntegrator(
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
         ode_params=params,
@@ -69,5 +68,6 @@ def setup_duffing_oscillator_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster,
+        "estimator": knn,
+        "template_integrator": template_integrator,
     }

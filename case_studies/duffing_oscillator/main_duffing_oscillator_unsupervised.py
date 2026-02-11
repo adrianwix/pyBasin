@@ -13,7 +13,7 @@ from pybasin.utils import time_execution
 def main():
     setup = setup_duffing_oscillator_system()
 
-    cluster_classifier = DBSCANClusterer(eps=0.08)
+    estimator = DBSCANClusterer(auto_tune=True, assign_noise=True)
 
     bse = BasinStabilityEstimator(
         n=setup["n"],
@@ -21,7 +21,7 @@ def main():
         sampler=setup["sampler"],
         solver=setup.get("solver"),
         feature_extractor=setup.get("feature_extractor"),
-        predictor=cluster_classifier,
+        predictor=estimator,
         save_to="results_unsupervised",
         feature_selector=None,
     )

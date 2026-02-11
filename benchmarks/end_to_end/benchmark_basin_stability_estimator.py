@@ -28,9 +28,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.template_integrator import TemplateIntegrator
 
 logging.getLogger("pybasin").setLevel(logging.WARNING)
 
@@ -73,8 +73,9 @@ def create_bse(n: int, device: str) -> BasinStabilityEstimator:
 
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    predictor = KNNClassifier(
-        classifier=knn,
+    knn = KNeighborsClassifier(n_neighbors=1)
+
+    template_integrator = TemplateIntegrator(
         template_y0=template_y0,
         labels=classifier_labels,
         ode_params=PARAMS,
@@ -86,7 +87,8 @@ def create_bse(n: int, device: str) -> BasinStabilityEstimator:
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        predictor=predictor,
+        predictor=knn,
+        template_integrator=template_integrator,
         feature_selector=None,
         detect_unbounded=False,
         save_to=None,

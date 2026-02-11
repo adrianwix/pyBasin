@@ -1,15 +1,18 @@
 # pyright: basic
 """Dynamical system clusterer for two-stage attractor type classification."""
 
+from typing import Any
+
 import numpy as np
+from sklearn.base import BaseEstimator, ClusterMixin  # type: ignore[import-untyped]
+from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
 from sklearn.preprocessing import StandardScaler
 
-from pybasin.predictors.base import ClustererPredictor, LabelPredictor
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
 from pybasin.utils import get_feature_indices_by_base_name, validate_feature_names
 
 
-class DynamicalSystemClusterer(ClustererPredictor):
+class DynamicalSystemClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
     """Two-stage hierarchical clustering for dynamical systems.
 
     This clusterer uses physics-based heuristics to classify trajectories into
@@ -71,7 +74,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
         - spectral_frequency_ratio: Ratio for period-n detection
 
     Note: This clusterer requires feature names to be set via set_feature_names()
-    before calling predict_labels(). The BasinStabilityEstimator handles this
+    before calling fit_predict(). The BasinStabilityEstimator handles this
     automatically during the estimation process.
     """
 
@@ -94,13 +97,13 @@ class DynamicalSystemClusterer(ClustererPredictor):
         tiers: list[str] | None = None,
         # Fixed Point (FP) settings
         fp_variance_threshold: float = 1e-6,
-        fp_sub_classifier: LabelPredictor | None = None,
+        fp_sub_classifier: Any = None,
         # Limit Cycle (LC) settings
         lc_periodicity_threshold: float = 0.5,
-        lc_sub_classifier: LabelPredictor | None = None,
+        lc_sub_classifier: Any = None,
         # Chaos settings
         chaos_variance_threshold: float = 5.0,
-        chaos_sub_classifier: LabelPredictor | None = None,
+        chaos_sub_classifier: Any = None,
     ):
         """Initialize the dynamical system clusterer.
 
@@ -316,7 +319,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
         fp_features = features[indices][:, non_drifting_mean_indices]
 
         if self.fp_sub_classifier is not None:
-            return self.fp_sub_classifier.predict_labels(fp_features)
+            return self.fp_sub_classifier.fit_predict(fp_features)
 
         if len(indices) < 2:
             return np.zeros(len(indices), dtype=int)
@@ -330,9 +333,11 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         min_cluster_size = max(50, len(indices) // 10)
         clusterer = HDBSCANClusterer(
-            min_cluster_size=min_cluster_size, auto_tune=False, assign_noise=True
+            hdbscan=HDBSCAN(min_cluster_size=min_cluster_size, copy=True),  # type: ignore[call-arg]
+            auto_tune=False,
+            assign_noise=True,
         )
-        labels = clusterer.predict_labels(fp_scaled)
+        labels = clusterer.fit_predict(fp_scaled)
         return labels
 
     def _sub_classify_limit_cycles(
@@ -382,7 +387,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
 
         if self.lc_sub_classifier is not None:
             lc_features = features[indices][:, [freq_ratio_idx, amp_idx, mean_idx]]
-            return self.lc_sub_classifier.predict_labels(lc_features)
+            return self.lc_sub_classifier.fit_predict(lc_features)
 
         finite_mask = np.isfinite(freq_ratios) & np.isfinite(amplitudes) & np.isfinite(means)
         if not np.any(finite_mask):
@@ -454,11 +459,11 @@ class DynamicalSystemClusterer(ClustererPredictor):
             min_cluster_size = max(15, n_samples // 20)
             use_auto_tune = n_samples >= 500
             clusterer = HDBSCANClusterer(
-                min_cluster_size=min_cluster_size,
+                hdbscan=HDBSCAN(min_cluster_size=min_cluster_size, copy=True),
                 auto_tune=use_auto_tune,
                 assign_noise=True,
             )
-            return clusterer.predict_labels(scaled)
+            return clusterer.fit_predict(scaled)
 
     def _cluster_1d_with_gaps(
         self, data: np.ndarray, min_gap_ratio: float = 5.0, max_clusters: int = 5
@@ -527,7 +532,7 @@ class DynamicalSystemClusterer(ClustererPredictor):
         chaos_features = features[indices][:, non_drifting_mean_indices]
 
         if self.chaos_sub_classifier is not None:
-            return self.chaos_sub_classifier.predict_labels(chaos_features)
+            return self.chaos_sub_classifier.fit_predict(chaos_features)
 
         finite_mask = np.all(np.isfinite(chaos_features), axis=1)
         if np.sum(finite_mask) < 2:
@@ -539,13 +544,14 @@ class DynamicalSystemClusterer(ClustererPredictor):
         chaos_scaled = scaler.fit_transform(chaos_features_clean)
 
         clusterer = HDBSCANClusterer(auto_tune=True, assign_noise=True)
-        labels = clusterer.predict_labels(chaos_scaled)
+        labels = clusterer.fit_predict(chaos_scaled)
         return labels
 
-    def predict_labels(self, features: np.ndarray) -> np.ndarray:
+    def fit_predict(self, X: np.ndarray, y: Any = None) -> np.ndarray:  # type: ignore[override]
         """Predict labels using two-stage hierarchical clustering.
 
-        :param features: Feature array of shape (n_samples, n_features).
+        :param X: Feature array of shape (n_samples, n_features).
+        :param y: Ignored (present for sklearn API compatibility).
         :return: Array of predicted labels with format "TYPE_subcluster".
         :raises RuntimeError: If set_feature_names() was not called before prediction.
         """
@@ -556,10 +562,10 @@ class DynamicalSystemClusterer(ClustererPredictor):
                 "which handles this automatically."
             )
 
-        self._detect_drifting_dims(features)
+        self._detect_drifting_dims(X)
 
-        n_samples = features.shape[0]
-        type_labels = self._classify_attractor_type(features)
+        n_samples = X.shape[0]
+        type_labels = self._classify_attractor_type(X)
 
         final_labels = np.empty(n_samples, dtype=object)
         current_label = 0
@@ -574,11 +580,11 @@ class DynamicalSystemClusterer(ClustererPredictor):
                 continue
 
             if attractor_type == "FP":
-                sub_labels = self._sub_classify_fixed_points(features, type_indices)
+                sub_labels = self._sub_classify_fixed_points(X, type_indices)
             elif attractor_type == "LC":
-                sub_labels = self._sub_classify_limit_cycles(features, type_indices)
+                sub_labels = self._sub_classify_limit_cycles(X, type_indices)
             else:
-                sub_labels = self._sub_classify_chaos(features, type_indices)
+                sub_labels = self._sub_classify_chaos(X, type_indices)
 
             for sub_label in np.unique(sub_labels):
                 mask = sub_labels == sub_label

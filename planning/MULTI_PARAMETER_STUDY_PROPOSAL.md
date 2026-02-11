@@ -214,7 +214,7 @@ class BasinStabilityStudy:
         sampler: Sampler,
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
-        cluster_classifier: LabelPredictor,
+        estimator: LabelPredictor,
         study_params: StudyParams,  # NEW: replaces as_params
         save_to: str | None = "results",
         verbose: bool = False,
@@ -230,7 +230,7 @@ class BasinStabilityStudy:
                 "sampler": self.sampler,
                 "solver": self.solver,
                 "feature_extractor": self.feature_extractor,
-                "cluster_classifier": self.cluster_classifier,
+                "estimator": self.estimator,
             }
 
             # Apply all parameter assignments for this run
@@ -265,7 +265,7 @@ bse = BasinStabilityStudy(
     sampler=sampler,
     solver=solver,
     feature_extractor=fe,
-    cluster_classifier=cc,
+    estimator=cc,
     study_params=study_params,
 )
 ```
@@ -415,7 +415,7 @@ class BSERunConfig:
     sampler: Sampler
     solver: SolverProtocol
     feature_extractor: FeatureExtractor
-    cluster_classifier: LabelPredictor
+    estimator: LabelPredictor
     n: int
 
     # Metadata for results indexing/labeling
@@ -453,7 +453,7 @@ def make_pendulum_configs(t_values: np.ndarray) -> list[BSERunConfig]:
             sampler=props["sampler"],
             solver=props["solver"],
             feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            estimator=props["estimator"],
             n=props["n"],
             label={"T": t},
         ))
@@ -482,7 +482,7 @@ def make_test_configs(t_values: np.ndarray, csv_dir: Path) -> list[BSERunConfig]
             sampler=sampler,  # Different sampler per T!
             solver=props["solver"],
             feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            estimator=props["estimator"],
             n=sampler.n_samples,
             label={"T": t},
         ))
@@ -515,7 +515,7 @@ def make_rossler_2d_configs(k_values: np.ndarray, p_values: np.ndarray) -> list[
             sampler=sampler,
             solver=solver,
             feature_extractor=fe,
-            cluster_classifier=cc,
+            estimator=cc,
             n=1000,
             label={"K": K, "p": p},
         ))
@@ -650,7 +650,7 @@ class BaseConfig:
     sampler: Sampler
     solver: SolverProtocol
     feature_extractor: FeatureExtractor
-    cluster_classifier: LabelPredictor
+    estimator: LabelPredictor
 
     @classmethod
     def from_setup(cls, props: SetupProperties) -> "BaseConfig":
@@ -661,7 +661,7 @@ class BaseConfig:
             sampler=props["sampler"],
             solver=props["solver"],
             feature_extractor=props["feature_extractor"],
-            cluster_classifier=props["cluster_classifier"],
+            estimator=props["estimator"],
         )
 
 
@@ -722,7 +722,7 @@ class MultiStudyEstimator:
             sampler=var.sampler or self.base.sampler,
             solver=var.solver or self.base.solver,
             feature_extractor=self.base.feature_extractor,
-            cluster_classifier=self.base.cluster_classifier,
+            estimator=self.base.estimator,
             n=var.n or self.base.n,
             label=var.label,
         )
@@ -897,7 +897,7 @@ def grid_configs(
             sampler=base_props["sampler"],
             solver=base_props["solver"],
             feature_extractor=base_props["feature_extractor"],
-            cluster_classifier=base_props["cluster_classifier"],
+            estimator=base_props["estimator"],
             n=base_props["n"],
             label=label,
         ))
@@ -1012,7 +1012,7 @@ class ParameterUpdater(Protocol):
         sampler: Sampler,
         solver: SolverProtocol,
         feature_extractor: FeatureExtractor,
-        cluster_classifier: LabelPredictor,
+        estimator: LabelPredictor,
         n: int,
         param_values: dict[str, Any],
     ) -> tuple[ODESystemProtocol, Sampler, SolverProtocol, FeatureExtractor, LabelPredictor, int]:
@@ -1044,7 +1044,7 @@ config = ParameterStudyConfig(
 
 ```python
 def rossler_network_updater(
-    ode_system, sampler, solver, feature_extractor, cluster_classifier, n, param_values
+    ode_system, sampler, solver, feature_extractor, estimator, n, param_values
 ):
     """Update Rössler network for new (K, p) combination."""
     p = param_values["p"]
@@ -1061,7 +1061,7 @@ def rossler_network_updater(
     new_params["edges_j"] = edges_j
     new_ode = RosslerNetworkJaxODE(new_params)
 
-    return new_ode, sampler, solver, feature_extractor, cluster_classifier, n
+    return new_ode, sampler, solver, feature_extractor, estimator, n
 
 config = ParameterStudyConfig(
     parameter_grid={
@@ -1144,7 +1144,7 @@ bse = BasinStabilityStudy(
     sampler=sampler,
     solver=solver,
     feature_extractor=fe,
-    cluster_classifier=cc,
+    estimator=cc,
     study=study,  # Replaces as_params
 )
 ```
@@ -1219,7 +1219,7 @@ estimator = GridStudyEstimator(
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": fe,
-        "cluster_classifier": cc,
+        "estimator": cc,
     },
     parameter_axes={
         "K": ParameterAxis(values=k_values, type="ode"),

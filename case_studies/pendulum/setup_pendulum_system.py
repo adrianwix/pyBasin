@@ -7,9 +7,9 @@ from sklearn.neighbors import KNeighborsClassifier
 # )
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
 from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.template_integrator import TemplateIntegrator
 
 # from pybasin.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.types import SetupProperties
@@ -57,8 +57,7 @@ def setup_pendulum_system() -> SetupProperties:
 
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    knn_cluster = KNNClassifier(
-        classifier=knn,
+    template_integrator = TemplateIntegrator(
         template_y0=template_y0,
         labels=classifier_labels,
         ode_params=params,
@@ -70,5 +69,6 @@ def setup_pendulum_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster,
+        "estimator": knn,
+        "template_integrator": template_integrator,
     }

@@ -10,7 +10,7 @@ from case_studies.friction.main_friction_with_defaults import main as friction_m
 from case_studies.lorenz.main_lorenz_with_defaults import main as lorenz_main
 from case_studies.pendulum.main_pendulum_case1_with_defaults import main as pendulum_main
 
-warnings.filterwarnings("ignore", message="No cluster_classifier provided")
+warnings.filterwarnings("ignore", message="No predictor provided")
 warnings.filterwarnings("ignore", message="os.fork\\(\\) was called")
 
 

@@ -71,7 +71,9 @@ def solve_trajectories(
     initial_conditions: torch.Tensor,
 ) -> Solution:
     """Solve ODE system for given initial conditions."""
-    solver = setup["solver"]
+    solver = setup.get("solver")
+    assert solver is not None, "Setup must include a solver for ground truth labeling"
+
     ode_system = setup["ode_system"]
 
     time_arr, y_arr = solver.integrate(ode_system, initial_conditions)
@@ -94,13 +96,21 @@ def get_ground_truth_labels(
 
     This uses the exact same classification pipeline as the actual case studies.
     """
-    solver = setup["solver"]
+    solver = setup.get("solver")
     ode_system = setup["ode_system"]
-    feature_extractor = setup["feature_extractor"]
-    cluster_classifier = setup["cluster_classifier"]
+    feature_extractor = setup.get("feature_extractor")
+    template_integrator = setup.get("template_integrator")
 
-    template_y0 = cluster_classifier.template_y0  # type: ignore[attr-defined]
-    template_labels = cluster_classifier.labels  # type: ignore[attr-defined]
+    assert solver is not None, "Setup must include a solver for ground truth labeling"
+    assert feature_extractor is not None, (
+        "Setup must include a feature_extractor for ground truth labeling"
+    )
+    assert template_integrator is not None, (
+        "Setup must include a template_integrator for ground truth labeling"
+    )
+
+    template_y0 = template_integrator.template_y0
+    template_labels = template_integrator.labels
 
     template_tensor = torch.tensor(template_y0, dtype=torch.float32, device=solver.device)
     time_arr, y_arr = solver.integrate(ode_system, template_tensor)
@@ -312,14 +322,16 @@ def run_experiment_for_case_study(
     n_samples: int = 500,
 ) -> dict[str, Any]:
     """Run the full experiment for a single case study."""
-    cluster_classifier = setup["cluster_classifier"]
-    template_labels = cluster_classifier.labels  # type: ignore[attr-defined]
-    feature_extractor = setup["feature_extractor"]
+    template_integrator = setup.get("template_integrator")
+    assert template_integrator is not None, "Setup must include a template_integrator"
+    template_labels = template_integrator.labels
+    feature_extractor = setup.get("feature_extractor")
+    assert feature_extractor is not None, "Setup must include a feature_extractor"
 
     print(f"\n{'=' * 80}")
     print(f"Case Study: {name}")
     print(f"{'=' * 80}")
-    print(f"Templates: {len(cluster_classifier.template_y0)} attractors")  # type: ignore[attr-defined]
+    print(f"Templates: {len(template_integrator.template_y0)} attractors")
     print(f"Labels: {template_labels}")
 
     print(f"\n1. Sampling {n_samples} initial conditions from state space...")
@@ -410,7 +422,7 @@ def run_experiment_for_case_study(
 
     return {
         "name": name,
-        "n_templates": len(cluster_classifier.template_y0),  # type: ignore[attr-defined]
+        "n_templates": len(template_integrator.template_y0),
         "n_samples": len(ground_truth),
         "n_features": features_df.shape[1],
         "top_individual_features": feature_importance.head(10).to_dict("records"),

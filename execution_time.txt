@@ -457,3 +457,6 @@
 2026-02-07 14:18:08 - main_duffing_oscillator_supervised.py: 1.4537465572357178 seconds
 2026-02-07 17:07:43 - main_duffing_oscillator_supervised.py: 5.317180633544922 seconds
 2026-02-07 17:11:56 - main_duffing_oscillator_supervised.py: 1.469935417175293 seconds
+2026-02-11 13:28:14 - main_duffing_oscillator_unsupervised.py: 8.077105045318604 seconds
+2026-02-11 13:43:27 - main_duffing_oscillator_unsupervised.py: 10.717177867889404 seconds
+2026-02-11 14:10:55 - main_duffing_oscillator_unsupervised.py: 8.041083097457886 seconds

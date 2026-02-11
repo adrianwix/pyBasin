@@ -20,7 +20,8 @@ def main():
         sampler=setup["sampler"],
         solver=setup.get("solver"),
         feature_extractor=setup.get("feature_extractor"),
-        predictor=setup.get("cluster_classifier"),
+        predictor=setup.get("estimator"),
+        template_integrator=setup.get("template_integrator"),
         save_to="results",
         feature_selector=None,
     )

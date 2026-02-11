@@ -3,9 +3,9 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.friction.friction_feature_extractor import FrictionFeatureExtractor
 from case_studies.friction.friction_jax_ode import FrictionJaxODE, FrictionParams
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import SetupProperties
 
 
@@ -52,8 +52,7 @@ def setup_friction_system() -> SetupProperties:
 
     knn = KNeighborsClassifier(n_neighbors=1)
 
-    knn_cluster = KNNClassifier(
-        classifier=knn,
+    template_integrator = TemplateIntegrator(
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
         ode_params=params,
@@ -65,5 +64,6 @@ def setup_friction_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": knn_cluster,
+        "estimator": knn,
+        "template_integrator": template_integrator,
     }

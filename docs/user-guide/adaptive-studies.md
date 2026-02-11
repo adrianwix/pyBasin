@@ -29,7 +29,7 @@ as_bse = BasinStabilityStudy(
     sampler=sampler,
     solver=solver,
     feature_extractor=feature_extractor,
-    cluster_classifier=predictor,
+    estimator=predictor,
     study_params=study_params,
 )
 labels, bs_vals, results = as_bse.estimate_as_bs()

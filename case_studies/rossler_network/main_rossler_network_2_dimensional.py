@@ -200,7 +200,7 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=sync_classifier,
+        estimator=sync_classifier,
         study_params=study_params,
         save_to=save_dir,
         verbose=False,

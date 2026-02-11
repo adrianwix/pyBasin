@@ -133,7 +133,7 @@ bse = BasinStabilityEstimator(
     sampler=props["sampler"],
     solver=props["solver"],  # Using TorchOdeSolver
     feature_extractor=props["feature_extractor"],
-    cluster_classifier=props["cluster_classifier"],
+    estimator=props["estimator"],
 )
 
 # Estimate basin stability

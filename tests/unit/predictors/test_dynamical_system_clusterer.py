@@ -131,14 +131,14 @@ class TestSetFeatureNames:
 
 
 class TestPredictLabelsValidation:
-    """Test predict_labels() validation."""
+    """Test fit_predict() validation."""
 
     def test_predict_without_feature_names_raises_error(self):
         clusterer = DynamicalSystemClusterer()
         features = np.random.randn(100, 14)
 
         with pytest.raises(RuntimeError, match="requires feature names"):
-            clusterer.predict_labels(features)
+            clusterer.fit_predict(features)
 
 
 class TestAttractorTypeClassification:
@@ -156,7 +156,7 @@ class TestAttractorTypeClassification:
             periodicity_strength=0.0,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("FP" in label for label in labels)
 
@@ -175,7 +175,7 @@ class TestAttractorTypeClassification:
             periodicity_strength=0.8,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("LC" in label for label in labels)
 
@@ -195,7 +195,7 @@ class TestAttractorTypeClassification:
             periodicity_strength=0.2,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("chaos" in label for label in labels)
 
@@ -212,7 +212,7 @@ class TestAttractorTypeClassification:
             slope=0.5,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("LC" in label for label in labels)
 
@@ -239,7 +239,7 @@ class TestMixedAttractorTypes:
         )
         features = np.vstack([fp_features, lc_features])
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         fp_labels = labels[:25]
         lc_labels = labels[25:]
@@ -264,7 +264,7 @@ class TestSubClassification:
 
         features = np.vstack([features1, features2])
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         unique_labels = set(labels)
         assert len(unique_labels) >= 1
@@ -288,7 +288,7 @@ class TestSubClassification:
 
         features = np.vstack([features1, features2])
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         unique_labels = set(labels)
         assert len(unique_labels) >= 1
@@ -309,7 +309,7 @@ class TestTiersConfiguration:
             periodicity_strength=0.0,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("FP" in label for label in labels)
 
@@ -325,7 +325,7 @@ class TestTiersConfiguration:
             periodicity_strength=0.8,
         )
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert all("LC" in label for label in labels)
 
@@ -340,7 +340,7 @@ class TestLabelFormat:
 
         features = create_feature_array(n_samples=50, n_states=2)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         for label in labels:
             parts = label.split("_")
@@ -356,7 +356,7 @@ class TestLabelFormat:
         n_samples = 100
         features = create_feature_array(n_samples=n_samples, n_states=2)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert len(labels) == n_samples
 
@@ -371,7 +371,7 @@ class TestEdgeCases:
 
         features = create_feature_array(n_samples=1, n_states=2)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert len(labels) == 1
 
@@ -382,7 +382,7 @@ class TestEdgeCases:
 
         features = create_feature_array(n_samples=50, n_states=2)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         unique_labels = set(labels)
         assert len(unique_labels) == 1
@@ -394,7 +394,7 @@ class TestEdgeCases:
 
         features = create_feature_array(n_samples=50, n_states=2, periodicity_strength=0.8)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert len(labels) == 50
         assert all(label is not None and isinstance(label, str) for label in labels)
@@ -406,7 +406,7 @@ class TestEdgeCases:
 
         features = create_feature_array(n_samples=50, n_states=1)
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert len(labels) == 50
 
@@ -434,6 +434,6 @@ class TestDriftingDimensionDetection:
         features = create_feature_array(n_samples=50, n_states=2, variance=1e-8)
         features[:, 3] = 0.5
 
-        labels = clusterer.predict_labels(features)
+        labels = clusterer.fit_predict(features)
 
         assert len(labels) == 50

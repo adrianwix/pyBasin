@@ -27,14 +27,14 @@ def mock_components() -> dict[str, MagicMock]:
 
     solver = MagicMock()
     feature_extractor = MagicMock()
-    cluster_classifier = MagicMock()
+    estimator = MagicMock()
 
     return {
         "ode_system": ode_system,
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": cluster_classifier,
+        "estimator": estimator,
     }
 
 
@@ -385,7 +385,7 @@ class TestBasinStabilityStudyBSEArguments:
             assert call_kwargs["ode_system"] is mock_components["ode_system"]
             assert call_kwargs["solver"] is mock_components["solver"]
             assert call_kwargs["feature_extractor"] is mock_components["feature_extractor"]
-            assert call_kwargs["predictor"] is mock_components["cluster_classifier"]
+            assert call_kwargs["predictor"] is mock_components["estimator"]
             assert call_kwargs["feature_selector"] is None
 
     def test_bse_estimate_bs_called_for_each_run(

@@ -10,7 +10,42 @@ the required methods, without requiring explicit inheritance.
 
 from typing import Any, Protocol, runtime_checkable
 
+import numpy as np
 import torch
+
+
+@runtime_checkable
+class SklearnClassifier(Protocol):
+    """Protocol for sklearn-compatible classifiers.
+
+    Any class with ``fit()`` and ``predict()`` methods satisfies this protocol.
+    Used for type narrowing in BSE when ``is_classifier()`` returns True.
+    """
+
+    def fit(self, X: np.ndarray, y: Any) -> Any: ...
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
+
+
+@runtime_checkable
+class SklearnClusterer(Protocol):
+    """Protocol for sklearn-compatible clusterers.
+
+    Any class with ``fit_predict()`` satisfies this protocol.
+    Used for type narrowing in BSE when ``is_clusterer()`` returns True.
+    """
+
+    def fit_predict(self, X: np.ndarray, y: Any = None) -> np.ndarray: ...
+
+
+@runtime_checkable
+class FeatureNameAware(Protocol):
+    """Protocol for predictors that accept feature names.
+
+    Predictors like ``HDBSCANClusterer`` and ``DynamicalSystemClusterer``
+    use feature names for domain-specific logic.
+    """
+
+    def set_feature_names(self, feature_names: list[str]) -> None: ...
 
 
 @runtime_checkable

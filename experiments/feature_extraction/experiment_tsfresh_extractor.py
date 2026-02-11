@@ -32,10 +32,10 @@ from tsfresh.feature_extraction import MinimalFCParameters
 
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.feature_extractors.tsfresh_feature_extractor import TsfreshFeatureExtractor
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import GridSampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
+from pybasin.template_integrator import TemplateIntegrator
 
 
 def test_tsfresh_extractor():
@@ -179,8 +179,7 @@ def test_tsfresh_extractor():
 
     # Create and train KNN classifier
     knn = KNeighborsClassifier(n_neighbors=1)
-    knn_cluster = KNNClassifier(
-        classifier=knn,
+    template_integrator = TemplateIntegrator(
         template_y0=classifier_initial_conditions,
         labels=classifier_labels,
         ode_params=params,
@@ -189,11 +188,9 @@ def test_tsfresh_extractor():
     # Fit the classifier with tsfresh features
     print("\n8. Training KNN classifier with tsfresh features")
     try:
-        knn_cluster.fit(
-            solver=solver,
-            ode_system=ode_system,
-            feature_extractor=feature_extractor,
-        )
+        template_integrator.integrate(solver, ode_system)
+        X_train, y_train = template_integrator.get_training_data(feature_extractor)
+        knn.fit(X_train, y_train)
         print("   ✓ Classifier trained successfully!")
 
         # Extract features for the test data using the same feature extractor
@@ -206,7 +203,7 @@ def test_tsfresh_extractor():
 
         # Predict on test data
         print(f"\n10. Testing predictions on {n_test} samples")
-        predictions = knn_cluster.predict_labels(test_features.cpu().numpy())
+        predictions = knn.predict(test_features.cpu().numpy())
         print(f"   ✓ Predictions shape: {predictions.shape}")
         print(f"   ✓ Unique labels: {set(predictions)}")
         print("   ✓ Label distribution:")

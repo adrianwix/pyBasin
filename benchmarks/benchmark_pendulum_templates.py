@@ -8,12 +8,10 @@ Cache is always cleared before benchmarking to get accurate timing measurements.
 import shutil
 import time
 from pathlib import Path
-from typing import cast
 
 import torch
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.predictors import ClassifierPredictor
 
 
 def clear_cache():
@@ -49,15 +47,15 @@ def benchmark_template_solving():
 
     ode_system = props["ode_system"]
     solver = props.get("solver")
-    cluster_classifier = cast(ClassifierPredictor, props.get("cluster_classifier"))
+    template_integrator = props.get("template_integrator")
 
-    if solver is None:
-        raise ValueError("Solver not found in setup properties")
+    assert template_integrator is not None
+    assert solver is not None
 
     print(f"\nDevice: {solver.device}")
-    print(f"Number of templates: {len(cluster_classifier.template_y0)}")
-    print(f"Template initial conditions:\n{cluster_classifier.template_y0}")
-    print(f"Template labels: {cluster_classifier.labels}")
+    print(f"Number of templates: {len(template_integrator.template_y0)}")
+    print(f"Template initial conditions:\n{template_integrator.template_y0}")
+    print(f"Template labels: {template_integrator.labels}")
     print(f"Integration time span: {solver.time_span}")
     print(f"Number of time steps: {solver.n_steps}")
 
@@ -74,7 +72,7 @@ def benchmark_template_solving():
     # Use no_grad() to disable gradient computation for faster inference
     with torch.no_grad():
         template_tensor = torch.tensor(
-            cluster_classifier.template_y0, dtype=torch.float32, device=solver.device
+            template_integrator.template_y0, dtype=torch.float32, device=solver.device
         )
         _, y = solver.integrate(ode_system, template_tensor)
 

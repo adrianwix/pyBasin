@@ -35,7 +35,7 @@ Command-line Arguments
     are scaled to zero mean and unit variance.
 
 --verbose
-    Enable verbose logging from pybasin modules (ClassifierPredictor, JaxSolver).
+    Enable verbose logging from pybasin modules (solver, template integrator).
     By default, only WARNING level and above are shown.
 
 Requirements: the ``nolds`` package and the project's case-study setup modules.
@@ -68,8 +68,8 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 from case_studies.friction.setup_friction_system import setup_friction_system
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.predictors import ClassifierPredictor
 from pybasin.solution import Solution
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import SetupProperties
 
 # Suppress nolds warnings about autocorrelation lag and RANSAC consensus
@@ -255,9 +255,10 @@ def cluster_and_report(
 
 def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Namespace) -> None:
     props = setup_fn()
-    classifier = props.get("cluster_classifier")
-    if not isinstance(classifier, ClassifierPredictor):
-        print(f"  Skipping {system_name}: classifier is not ClassifierPredictor")
+    classifier = props.get("estimator")
+    template_integrator = props.get("template_integrator")
+    if not isinstance(template_integrator, TemplateIntegrator):
+        print(f"  Skipping {system_name}: no template_integrator available")
         return
     solver = props.get("solver")
     ode_system = props["ode_system"]

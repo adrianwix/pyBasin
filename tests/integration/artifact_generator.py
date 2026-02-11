@@ -86,8 +86,8 @@ def generate_single_point_artifacts(
     recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_feature_space.png", DOCS_ASSETS_DIR)
 
-    # Generate stacked trajectory plot if ClassifierPredictor is used
-    if hasattr(bse.predictor, "template_y0"):
+    # Generate stacked trajectory plot if template_integrator is available
+    if bse.template_integrator is not None:
         fig = plotter.plot_templates_trajectories(
             plotted_var=trajectory_state,
             x_limits=trajectory_x_limits,
@@ -97,7 +97,7 @@ def generate_single_point_artifacts(
         thesis_export(fig, f"{prefix}_trajectories.png", DOCS_ASSETS_DIR)
 
     # Generate 2D phase space plot if axes specified
-    if phase_space_axes is not None and hasattr(bse.predictor, "template_y0"):
+    if phase_space_axes is not None and bse.template_integrator is not None:
         fig = plotter.plot_templates_phase_space(
             x_var=phase_space_axes[0],
             y_var=phase_space_axes[1],
@@ -158,8 +158,8 @@ def generate_unsupervised_artifacts(
     recolor_axes(ax, palette)
     thesis_export(fig, f"{prefix}_feature_space.png", DOCS_ASSETS_DIR)
 
-    # Generate stacked trajectory plot if ClassifierPredictor is used
-    if hasattr(bse.predictor, "template_y0"):
+    # Generate stacked trajectory plot if template_integrator is available
+    if bse.template_integrator is not None:
         fig = plotter.plot_templates_trajectories(
             plotted_var=trajectory_state,
             x_limits=trajectory_x_limits,
@@ -169,7 +169,7 @@ def generate_unsupervised_artifacts(
         thesis_export(fig, f"{prefix}_trajectories.png", DOCS_ASSETS_DIR)
 
     # Generate 2D phase space plot if axes specified
-    if phase_space_axes is not None and hasattr(bse.predictor, "template_y0"):
+    if phase_space_axes is not None and bse.template_integrator is not None:
         fig = plotter.plot_templates_phase_space(
             x_var=phase_space_axes[0],
             y_var=phase_space_axes[1],

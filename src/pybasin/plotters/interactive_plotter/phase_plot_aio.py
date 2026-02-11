@@ -26,7 +26,6 @@ from pybasin.plotters.types import (
     filter_by_include_exclude,
     infer_z_axis,
 )
-from pybasin.predictors.base import ClassifierPredictor
 
 
 class PhasePlotAIO(BseBasePageAIO):
@@ -59,18 +58,18 @@ class PhasePlotAIO(BseBasePageAIO):
         PhasePlotAIO._instances[aio_id] = self
 
     def _get_template_labels(self) -> list[str]:
-        """Get list of template labels if using ClassifierPredictor."""
-        if isinstance(self.bse.predictor, ClassifierPredictor):
-            return list(self.bse.predictor.labels)
+        """Get list of template labels if template_integrator is available."""
+        if self.bse.template_integrator is not None:
+            return list(self.bse.template_integrator.labels)
         return []
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and phase plot."""
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
-                        "Phase plot requires ClassifierPredictor with template ICs",
+                        "Phase plot requires a template_integrator with template ICs",
                         size="lg",
                         c="gray",
                     ),
@@ -191,10 +190,10 @@ class PhasePlotAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build phase plot figure."""
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
-                text="Phase plot requires ClassifierPredictor with template ICs",
+                text="Phase plot requires a template_integrator with template ICs",
                 xref="paper",
                 yref="paper",
                 x=0.5,
@@ -208,7 +207,7 @@ class PhasePlotAIO(BseBasePageAIO):
 
         fig = go.Figure()
 
-        all_labels = self.bse.predictor.labels
+        all_labels = self.bse.template_integrator.labels
         if selected_templates is None:
             selected_templates = list(all_labels)
 

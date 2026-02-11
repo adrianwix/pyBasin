@@ -2,18 +2,20 @@
 
 import json
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
 from sklearn.metrics import adjusted_rand_score
+from sklearn.neighbors import KNeighborsClassifier
 
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import CsvSampler
+from pybasin.template_integrator import TemplateIntegrator
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
     UnsupervisedAttractorComparison,
@@ -83,10 +85,11 @@ class TestDuffing:
         with open(json_path) as f:
             expected_results = json.load(f)
 
-        # Setup system - we'll use its KNN classifier for relabeling
+        # Setup system - we'll use its KNN classifier and template integrator for relabeling
         props = setup_duffing_oscillator_system()
-        knn_classifier = props.get("cluster_classifier")
-        assert isinstance(knn_classifier, KNNClassifier)
+        knn_classifier = cast(KNeighborsClassifier, props.get("estimator"))
+        template_integrator = props.get("template_integrator")
+        assert isinstance(template_integrator, TemplateIntegrator)
 
         # Use ground truth CSV for exact MATLAB ICs
         state_dim = props["sampler"].state_dim
@@ -97,7 +100,7 @@ class TestDuffing:
         n_samples = sampler.n_samples
 
         # Use DBSCAN clustering for unsupervised discovery
-        dbscan_clusterer = DBSCANClusterer(eps=0.08)
+        dbscan_clusterer = DBSCANClusterer(auto_tune=True)
 
         bse = BasinStabilityEstimator(
             n=n_samples,
@@ -130,13 +133,14 @@ class TestDuffing:
         # First integrate templates, then fit with features from the feature extractor
         feature_extractor = props.get("feature_extractor")
         assert feature_extractor is not None
-        knn_classifier.integrate_templates(props.get("solver"), props["ode_system"])
-        knn_classifier.fit_with_features(feature_extractor)
+        template_integrator.integrate(props.get("solver"), props["ode_system"])
+        X_train, y_train = template_integrator.get_training_data(feature_extractor)
+        knn_classifier.fit(X_train, y_train)
 
         # For bounded trajectories, get KNN predictions
         bounded_mask = dbscan_labels != "NaN"
         bounded_features = features
-        knn_predictions = knn_classifier.predict_labels(bounded_features)
+        knn_predictions = knn_classifier.predict(bounded_features)
 
         # Build mapping: DBSCAN cluster → template label (majority vote)
         # Also store purity info per cluster for later merging with attractor results

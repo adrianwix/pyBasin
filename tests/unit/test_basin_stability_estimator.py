@@ -6,10 +6,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
-from pybasin.predictors.knn_classifier import KNNClassifier
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchOdeSolver
+from pybasin.template_integrator import TemplateIntegrator
 
 
 class LinearParams(TypedDict):
@@ -42,8 +42,9 @@ def test_basin_stability_estimator_basic():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[1.0]]
-    knn: KNNClassifier = KNNClassifier(
-        classifier=KNeighborsClassifier(n_neighbors=1),
+    knn = KNeighborsClassifier(n_neighbors=1)
+
+    template_integrator = TemplateIntegrator(
         template_y0=template_ics,
         labels=["stable"],
         ode_params=params,
@@ -56,6 +57,7 @@ def test_basin_stability_estimator_basic():
         solver=solver,
         feature_extractor=feature_extractor,
         predictor=knn,
+        template_integrator=template_integrator,
         feature_selector=None,
     )
 
@@ -82,8 +84,9 @@ def test_basin_stability_multiple_classes():
     feature_extractor = FinalStateExtractor(time_steady=0)
 
     template_ics = [[-1.0], [1.0]]
-    knn: KNNClassifier = KNNClassifier(
-        classifier=KNeighborsClassifier(n_neighbors=1),
+    knn = KNeighborsClassifier(n_neighbors=1)
+
+    template_integrator = TemplateIntegrator(
         template_y0=template_ics,
         labels=["neg", "pos"],
         ode_params=params,
@@ -96,6 +99,7 @@ def test_basin_stability_multiple_classes():
         solver=solver,
         feature_extractor=feature_extractor,
         predictor=knn,
+        template_integrator=template_integrator,
         feature_selector=None,
     )
 

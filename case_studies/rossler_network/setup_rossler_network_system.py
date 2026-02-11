@@ -112,5 +112,5 @@ def setup_rossler_network_system() -> SetupProperties:
         "sampler": sampler,
         "solver": solver,
         "feature_extractor": feature_extractor,
-        "cluster_classifier": sync_classifier,
+        "estimator": sync_classifier,
     }

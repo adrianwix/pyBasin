@@ -13,9 +13,8 @@
 2. [Overview & Goals](#2-overview--goals)
 3. [Navigation Structure](#3-navigation-structure)
 4. [Page Specifications](#4-page-specifications)
-5. [Artifact Generation Requirements](#5-artifact-generation-requirements)
-6. [Appendix: Source File References](#6-appendix-source-file-references)
-7. [Notes for Implementers](#7-notes-for-implementers)
+5. [Appendix: Source File References](#5-appendix-source-file-references)
+6. [Notes for Implementers](#6-notes-for-implementers)
 
 ---
 
@@ -35,8 +34,8 @@
 | Task                    | Depends On   | Complexity | Status |
 | ----------------------- | ------------ | ---------- | ------ |
 | BSE Overview page       | -            | Medium     | ⬜     |
-| Adaptive Studies page   | BSE Overview | Medium     | ⬜     |
-| Samplers page           | -            | Low        | ⬜     |
+| Parameter Studies page  | BSE Overview | Medium     | ⬜     |
+| Samplers page           | -            | Low        | ✅     |
 | Solvers page            | -            | Medium     | ⬜     |
 | Feature Extractors page | -            | Medium     | ⬜     |
 | Feature Selectors page  | -            | Low        | ⬜     |
@@ -47,20 +46,21 @@
 
 | Task                       | Depends On       | Complexity | Status |
 | -------------------------- | ---------------- | ---------- | ------ |
-| Pendulum case study        | Artifact script  | Medium     | ⬜     |
-| Duffing case study         | Artifact script  | Medium     | ⬜     |
-| Lorenz case study          | Artifact script  | Medium     | ⬜     |
-| Friction case study        | Artifact script  | Medium     | ⬜     |
-| Rössler Network case study | Integration test | High       | ⬜     |
+| Pendulum case study        | Artifact script  | Medium     | ✅     |
+| Duffing case study         | Artifact script  | Medium     | ✅     |
+| Lorenz case study          | Artifact script  | Medium     | ✅     |
+| Friction case study        | Artifact script  | Medium     | ✅     |
+| Rössler Network case study | Integration test | High       | ✅     |
 
 ### 1.4 Phase 4: Benchmarks (Priority: Medium)
 
 | Task                    | Depends On           | Complexity | Status |
 | ----------------------- | -------------------- | ---------- | ------ |
-| Benchmarks overview     | -                    | Low        | ⬜     |
-| Solver comparison page  | Existing data        | Medium     | ⬜     |
+| Benchmarks overview     | -                    | Low        | ✅     |
+| Solver comparison page  | Existing data        | Medium     | ✅     |
 | Feature extraction page | Existing data        | Medium     | ⬜     |
-| End-to-end page         | E2E benchmark script | High       | ⬜     |
+| End-to-end page         | E2E benchmark script | High       | ✅     |
+| Basin stability page    | Existing data        | Medium     | ✅     |
 
 ### 1.5 Phase 5: API Reference (Priority: Medium) ✅ COMPLETED
 
@@ -80,12 +80,12 @@
 
 | Task                                    | Depends On | Complexity | Status |
 | --------------------------------------- | ---------- | ---------- | ------ |
-| Create `generate_docs_artifacts.py`     | -          | High       | ⬜     |
-| Create Rössler integration test         | -          | Medium     | ⬜     |
-| Create end-to-end benchmark script      | -          | High       | ⬜     |
-| Generate MatplotlibPlotter screenshots  | -          | Low        | ⬜     |
+| Create `generate_docs_artifacts.py`     | -          | High       | ✅     |
+| Create Rössler integration test         | -          | Medium     | ✅     |
+| Create end-to-end benchmark script      | -          | High       | ✅     |
+| Generate MatplotlibPlotter screenshots  | -          | Low        | ✅     |
 | Generate InteractivePlotter screenshots | -          | Medium     | ⬜     |
-| Run all benchmarks and save results     | Scripts    | Medium     | ⬜     |
+| Run all benchmarks and save results     | Scripts    | Medium     | ✅     |
 
 ### 1.7 Phase 7: Polish (Priority: Low)
 
@@ -109,7 +109,7 @@ Create comprehensive documentation for pyBasin that enables users to:
 - Get started quickly with minimal setup examples
 - Customize every component (samplers, solvers, feature extractors, predictors)
 - Reproduce case studies from published research
-- Understand performance characteristics vs MATLAB bSTAB-M
+- Understand performance characteristics and scaling behavior
 
 ### 2.2 Documentation Principles
 
@@ -155,7 +155,7 @@ Home
 ├── User Guide
 │   ├── Basin Stability Estimator
 │   │   ├── Overview & Flow
-│   │   └── Adaptive Parameter Studies
+│   │   └── Parameter Studies
 │   ├── Samplers
 │   ├── Solvers
 │   ├── Feature Extractors
@@ -197,7 +197,7 @@ nav:
   - User Guide:
       - Basin Stability Estimator:
           - Overview & Flow: user-guide/bse-overview.md
-          - Adaptive Parameter Studies: user-guide/adaptive-studies.md
+          - Parameter Studies: user-guide/parameter-studies.md
       - Samplers: user-guide/samplers.md
       - Solvers: user-guide/solvers.md
       - Feature Extractors: user-guide/feature-extractors.md
@@ -325,7 +325,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
      | `n`                 | `int`               | `10_000`                 | Number of samples           |
      | `solver`            | `SolverProtocol`    | Auto-detect              | ODE integrator              |
      | `feature_extractor` | `FeatureExtractor`  | `TorchFeatureExtractor`  | Feature computation         |
-     | `predictor`         | `LabelPredictor`    | `HDBSCANClusterer`       | Classification method       |
+     | `predictor`         | `BaseEstimator`     | `HDBSCANClusterer`       | Classification method       |
      | `feature_selector`  | `BaseEstimator`     | `DefaultFeatureSelector` | Feature filtering           |
      | `detect_unbounded`  | `bool`              | `True`                   | Stop diverging trajectories |
      | `save_to`           | `str`               | `None`                   | Output directory            |
@@ -362,7 +362,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 - `src/pybasin/basin_stability_estimator.py` (694 lines)
 - `src/pybasin/protocols.py` for type definitions
 
-#### 4.3.2 Adaptive Parameter Studies (`user-guide/adaptive-studies.md`)
+#### 4.3.2 Parameter Studies (`user-guide/parameter-studies.md`)
 
 **Purpose**: Explain `BasinStabilityStudy` for parameter sweeps
 
@@ -371,7 +371,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 1. **Use Case**: Study how basin stability changes with a system parameter
 
 2. **The `BasinStabilityStudy` Class**
-   - Runs BSE multiple times for different parameter values
+   - Runs BSE multiple times for different parameter configurations
    - Returns parameter values, BS values, and full results per run
 
 3. **Example: Pendulum Damping Study**
@@ -386,72 +386,25 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
        values=np.linspace(0.1, 0.5, 10),
    )
 
-   as_bse = BasinStabilityStudy(
+   study = BasinStabilityStudy(
        n=10_000,
        ode_system=pendulum_ode,
        sampler=sampler,
        solver=solver,
        feature_extractor=feature_extractor,
-       cluster_classifier=predictor,
+       estimator=predictor,
        study_params=study_params,
    )
-   labels, bs_vals, results = as_bse.estimate_as_bs()
+   labels, bs_vals, results = study.estimate_as_bs()
    ```
-
-4. **Visualization with `ASPlotter`**
-   - Parameter vs BS bifurcation diagrams
 
 **Source Files**:
 
 - `src/pybasin/basin_stability_study.py` (264 lines)
-- `src/pybasin/plotters/as_plotter.py`
 
 #### 4.3.3 Samplers (`user-guide/samplers.md`)
 
-**Purpose**: Document all sampling strategies for initial conditions
-
-**Content Outline**:
-
-1. **Base Class**: `Sampler` (abstract)
-   - Method: `sample(n: int) -> torch.Tensor`
-
-2. **Available Samplers**:
-
-   | Class                  | Description                 | Use Case                        |
-   | ---------------------- | --------------------------- | ------------------------------- |
-   | `UniformRandomSampler` | Uniform random in hypercube | General purpose, most common    |
-   | `GridSampler`          | Evenly spaced grid          | 2D visualization, deterministic |
-
-3. **UniformRandomSampler**
-
-   ```python
-   from pybasin.sampler import UniformRandomSampler
-
-   sampler = UniformRandomSampler(
-       min_limits=[-np.pi, -2.0],
-       max_limits=[np.pi, 2.0],
-       device="cuda",  # optional
-   )
-   ```
-
-4. **GridSampler**
-
-   ```python
-   from pybasin.sampler import GridSampler
-
-   sampler = GridSampler(
-       min_limits=[-np.pi, -2.0],
-       max_limits=[np.pi, 2.0],
-       fixed_dims={2: 0.0},  # Fix 3rd dimension to 0
-   )
-   ```
-
-5. **Creating Custom Samplers**
-   - Inherit from `Sampler`
-   - Implement `sample(n: int) -> torch.Tensor`
-   - Example: Latin Hypercube Sampler
-
-**Source File**: `src/pybasin/sampler.py`
+Implemented
 
 #### 4.3.4 Solvers (`user-guide/solvers.md`)
 
@@ -644,56 +597,68 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 **Content Outline**:
 
 1. **Predictor Types**:
-   - **Unsupervised** (`ClustererPredictor`): Discovers attractor classes automatically
-   - **Supervised** (`ClassifierPredictor`): Uses known template trajectories
+   - **Unsupervised** (sklearn clusterers with `fit_predict()`): Discovers attractor classes automatically
+   - **Supervised** (sklearn classifiers with `fit()` + `predict()`): Uses known template trajectories
 
 2. **Available Predictors**:
 
-   | Class                      | Type         | Description                                       |
-   | -------------------------- | ------------ | ------------------------------------------------- |
-   | `HDBSCANClusterer`         | Unsupervised | **Default**, density-based, auto-tunes parameters |
-   | `DBSCANClusterer`          | Unsupervised | Classic DBSCAN                                    |
-   | `DynamicalSystemClusterer` | Unsupervised | Physics-based two-stage clustering                |
-   | `KNNClassifier`            | Supervised   | K-nearest neighbors with templates                |
-   | `UnboundednessClusterer`   | Hybrid       | Detects unbounded trajectories                    |
+   | Class                        | Type         | Description                                           |
+   | ---------------------------- | ------------ | ----------------------------------------------------- |
+   | `HDBSCANClusterer`           | Unsupervised | **Default**, density-based, auto-tunes parameters     |
+   | `DBSCANClusterer`            | Unsupervised | DBSCAN with automatic epsilon tuning                  |
+   | `DynamicalSystemClusterer`   | Unsupervised | Physics-based two-stage clustering                    |
+   | `UnboundednessMetaEstimator` | Meta         | Wraps any estimator, separates unbounded trajectories |
+   | Any sklearn classifier       | Supervised   | e.g. `KNeighborsClassifier` with templates            |
 
 3. **HDBSCANClusterer (Default)**
 
    ```python
+   from sklearn.cluster import HDBSCAN
    from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
 
    predictor = HDBSCANClusterer(
+       hdbscan=HDBSCAN(min_cluster_size=50, min_samples=10, copy=True),
        auto_tune=True,      # Auto-select min_cluster_size
        assign_noise=True,   # Assign noise points to nearest cluster
-       min_cluster_size=50, # If auto_tune=False
    )
    ```
 
-4. **KNNClassifier (Supervised)**
+4. **DBSCANClusterer (with auto-tuning)**
 
    ```python
-   from pybasin.predictors.knn_classifier import KNNClassifier
+   from sklearn.cluster import DBSCAN
+   from pybasin.predictors.dbscan_clusterer import DBSCANClusterer
 
-   predictor = KNNClassifier(
-       template_y0=[[0.0, 0.0], [1.0, 0.0]],  # Template ICs
-       labels=["FP", "LC"],
-       k=5,
+   predictor = DBSCANClusterer(
+       dbscan=DBSCAN(eps=0.5, min_samples=10),
+       auto_tune=True,       # Automatic epsilon search via silhouette analysis
+       assign_noise=False,
    )
    ```
 
-5. **Creating Custom Predictors**
+5. **Supervised Classification (sklearn classifiers)**
 
-   Example from Rössler Network:
+   ```python
+   from sklearn.neighbors import KNeighborsClassifier
+
+   predictor = KNeighborsClassifier(n_neighbors=5)
+   # Requires template_integrator in BasinStabilityEstimator
+   ```
+
+6. **Creating Custom Predictors**
+
+   Any sklearn-compatible estimator works. Clusterers need `fit_predict()`,
+   classifiers need `fit()` + `predict()`:
 
    ```python
    # From case_studies/rossler_network/synchronization_classifier.py
 
-   class SynchronizationClassifier(LabelPredictor):
+   class SynchronizationClassifier(BaseEstimator, ClusterMixin):
        def __init__(self, epsilon: float = 0.1):
            self.epsilon = epsilon
 
-       def predict_labels(self, features: np.ndarray) -> np.ndarray:
-           max_deviation = features[:, 3]  # max_deviation_all
+       def fit_predict(self, X: np.ndarray, y=None) -> np.ndarray:
+           max_deviation = X[:, 3]  # max_deviation_all
            return np.where(
                max_deviation < self.epsilon,
                "synchronized",
@@ -703,10 +668,10 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 
 **Source Files**:
 
-- `src/pybasin/predictors/base.py`
-- `src/pybasin/predictors/hdbscan_clusterer.py` (143 lines)
-- `src/pybasin/predictors/knn_classifier.py`
-- `src/pybasin/predictors/dynamical_system_clusterer.py` (633 lines)
+- `src/pybasin/predictors/hdbscan_clusterer.py`
+- `src/pybasin/predictors/dbscan_clusterer.py`
+- `src/pybasin/predictors/dynamical_system_clusterer.py`
+- `src/pybasin/predictors/unboundedness_meta_estimator.py`
 - `case_studies/rossler_network/synchronization_classifier.py`
 
 #### 4.3.8 Plotters (`user-guide/plotters.md`)
@@ -721,7 +686,6 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
    | -------------------- | ------- | ------------------------------------- |
    | `MatplotlibPlotter`  | Static  | Publication figures, quick inspection |
    | `InteractivePlotter` | Web app | Exploration, presentations            |
-   | `ASPlotter`          | Static  | Parameter study bifurcation diagrams  |
 
 2. **MatplotlibPlotter**
 
@@ -769,266 +733,10 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
 
 - `src/pybasin/plotters/matplotlib_plotter.py` (240 lines)
 - `src/pybasin/plotters/interactive_plotter/plotter.py` (662 lines)
-- `src/pybasin/plotters/as_plotter.py`
 
 ---
 
-### 4.4 Case Studies
-
-Each case study page follows this template:
-
-1. **System Description**: Equations, parameters, physical interpretation
-2. **Attractors**: What basins exist (fixed points, limit cycles, chaos, unbounded)
-3. **Minimal Example**: Using `*_with_defaults.py` pattern
-4. **Full Example**: With custom configuration
-5. **Results**: BS values, comparison with bSTAB-M expected values
-6. **Figures**: State space, phase plots, template trajectories
-
-#### 4.4.1 Pendulum (`case-studies/pendulum.md`)
-
-**System**: Driven damped pendulum
-
-$$\ddot{\theta} + \gamma \dot{\theta} + \sin(\theta) = A \cos(\omega t)$$
-
-**Attractors**: Fixed Point (FP), Limit Cycle (LC)
-
-**Expected BS Values** (from `tests/integration/pendulum/main_pendulum_case1.json`):
-
-```json
-{ "FP": 0.518, "LC": 0.482 }
-```
-
-**Source Files**:
-
-- `case_studies/pendulum/main_pendulum_with_defaults.py`
-- `case_studies/pendulum/main_pendulum_case1.py`
-- `case_studies/pendulum/main_pendulum_case2.py`
-- `case_studies/pendulum/setup_pendulum_system.py`
-- `case_studies/pendulum/pendulum_jax_ode.py`
-
-**Figures to Generate**:
-
-- State space (θ vs ω) colored by attractor
-- Template trajectories (θ vs t)
-- BS bar chart
-
-#### 4.4.2 Duffing Oscillator (`case-studies/duffing.md`)
-
-**System**: Duffing oscillator with cubic nonlinearity
-
-$$\ddot{x} + \delta \dot{x} + \alpha x + \beta x^3 = \gamma \cos(\omega t)$$
-
-**Attractors**: Two stable limit cycles (LC1, LC2) - amplitude-based classification
-
-**Expected BS Values** (from `tests/integration/duffing/main_duffing_supervised.json`):
-
-```json
-{ "LC_pos": 0.513, "LC_neg": 0.487 }
-```
-
-**Source Files**:
-
-- `case_studies/duffing_oscillator/main_duffing_oscillator_with_defaults.py`
-- `case_studies/duffing_oscillator/main_duffing_oscillator_supervised.py`
-- `case_studies/duffing_oscillator/main_duffing_oscillator_unsupervised.py`
-- `case_studies/duffing_oscillator/setup_duffing_system.py`
-
-**Figures to Generate**:
-
-- State space (x vs ẋ)
-- Phase plot showing two limit cycles
-- BS bar chart
-
-#### 4.4.3 Lorenz System (`case-studies/lorenz.md`)
-
-**System**: Lorenz "broken butterfly" attractor
-
-$$\dot{x} = \sigma(y - x), \quad \dot{y} = rx - y - xz, \quad \dot{z} = xy - bz$$
-
-**Attractors**: Two butterfly wings (positive/negative x) + unbounded trajectories
-
-**Expected BS Values** (from `tests/integration/lorenz/main_lorenz.json`):
-
-```json
-{ "butterfly_pos": 0.33, "butterfly_neg": 0.33, "unbounded": 0.34 }
-```
-
-**Key Feature**: Demonstrates unboundedness detection with `event_fn`
-
-**Source Files**:
-
-- `case_studies/lorenz/main_lorenz_with_defaults.py`
-- `case_studies/lorenz/main_lorenz.py`
-- `case_studies/lorenz/main_lorenz_sigma.py` (parameter study)
-- `case_studies/lorenz/setup_lorenz_system.py`
-- `case_studies/lorenz/lorenz_jax_ode.py`
-
-**Figures to Generate**:
-
-- 3D phase space (x, y, z)
-- 2D projection (x vs z)
-- State space colored by attractor (including unbounded)
-
-#### 4.4.4 Friction Oscillator (`case-studies/friction.md`)
-
-**System**: Mass-spring-damper with friction
-
-$$m\ddot{x} + c\dot{x} + kx = F_{friction}(v_{belt} - \dot{x})$$
-
-**Attractors**: Stick-slip limit cycle, continuous sliding
-
-**Expected BS Values** (from `tests/integration/friction/main_friction_case1.json`):
-
-```json
-{ "stick_slip": 0.65, "sliding": 0.35 }
-```
-
-**Source Files**:
-
-- `case_studies/friction/main_friction_with_defaults.py`
-- `case_studies/friction/main_friction.py`
-- `case_studies/friction/main_friction_v_study.py` (belt velocity study)
-- `case_studies/friction/setup_friction_system.py`
-
-**Figures to Generate**:
-
-- State space (x vs ẋ)
-- Stick-slip vs sliding trajectories
-
-#### 4.4.5 Rössler Network (`case-studies/rossler-network.md`)
-
-**System**: Network of N coupled Rössler oscillators
-
-$$\dot{x}_i = -y_i - z_i + \sigma \sum_j A_{ij}(x_j - x_i)$$
-
-**Attractors**: Synchronized, Desynchronized
-
-**Key Feature**: Custom `SynchronizationFeatureExtractor` and `SynchronizationClassifier`
-
-**Source Files**:
-
-- `case_studies/rossler_network/main_rossler_network.py`
-- `case_studies/rossler_network/main_rossler_network_k_study.py`
-- `case_studies/rossler_network/setup_rossler_network.py`
-- `case_studies/rossler_network/synchronization_feature_extractor.py`
-- `case_studies/rossler_network/synchronization_classifier.py`
-
-**Figures to Generate**:
-
-- Network synchronization state space
-- Synchronization vs coupling strength (k study)
-
-**⚠️ TODO**: Create integration test with expected results (see Section 4.2)
-
----
-
-### 4.5 Benchmarks
-
-#### 4.5.1 Benchmarks Overview (`benchmarks/overview.md`)
-
-**Purpose**: Introduce benchmark methodology and key findings
-
-**Content Outline**:
-
-1. Why benchmarks matter (comparison with MATLAB bSTAB-M)
-2. Test hardware specifications
-3. Summary table of key results
-4. Links to detailed sections
-
-#### 4.5.2 End-to-End Performance (`benchmarks/end-to-end.md`)
-
-**Purpose**: Compare full basin stability estimation times
-
-**Content Outline**:
-
-1. **Methodology**
-   - Same ODE system (Pendulum)
-   - Same parameters (t_span, tolerances)
-   - Vary sample sizes: 10,000 / 50,000 / 100,000
-
-2. **Implementations Compared**
-   - MATLAB bSTAB-M (CPU)
-   - pyBasin + JaxSolver (CPU)
-   - pyBasin + JaxSolver (CUDA GPU)
-
-3. **Results Table**
-
-   | Samples | MATLAB CPU | pyBasin CPU | pyBasin GPU | GPU Speedup |
-   | ------- | ---------- | ----------- | ----------- | ----------- |
-   | 10,000  | ~11.3s     | ~9.3s       | ~11.7s      | 0.97x       |
-   | 100,000 | ~122s      | ~56s        | ~11.7s      | **10.4x**   |
-
-4. **Key Finding**: GPU time is nearly constant regardless of sample size due to parallelization
-
-5. **Scaling Chart**: Line plot of time vs samples for each implementation
-
-**Data Source**: `benchmarks/time_integrations/results/comparison_summary.csv`
-
-**⚠️ TODO**: Create end-to-end benchmark script (see Section 4.3)
-
-#### 4.5.3 Solver Comparison (`benchmarks/solvers.md`)
-
-**Purpose**: Compare ODE solver backends in isolation
-
-**Content Outline**:
-
-1. **Test Configuration**
-   - ODE: Driven damped pendulum
-   - t_span: (0, 1000)
-   - n_steps: 1000
-   - Tolerances: rtol=1e-8, atol=1e-6
-
-2. **Results Table** (from `comparison_summary.csv`):
-
-   | Solver             | Device | Time (s) | ms/integration | Speedup vs MATLAB | BS Valid |
-   | ------------------ | ------ | -------- | -------------- | ----------------- | -------- |
-   | torchdiffeq_rk4    | cpu    | 0.156    | 0.016          | 779x              | ❌       |
-   | torchdiffeq_dopri5 | cpu    | 8.10     | 0.81           | 15x               | ✅       |
-   | jax_diffrax_dopri5 | cpu    | 9.33     | 0.93           | 13x               | ✅       |
-   | matlab_ode45       | cpu    | 11.33    | 1.13           | baseline          | ✅       |
-   | jax_diffrax_dopri5 | cuda   | 11.57    | 1.16           | 10.5x             | ✅       |
-   | jax_diffrax_tsit5  | cpu    | 34.03    | 3.40           | 3.6x              | ✅       |
-
-3. **Key Findings**
-   - RK4 is fast but produces incorrect BS (insufficient accuracy)
-   - Dopri5 methods are ~10-15x faster than MATLAB ode45
-   - GPU benefit appears at larger sample sizes (see end-to-end)
-
-**Data Source**: `benchmarks/time_integrations/results/comparison_summary.csv`
-
-#### 4.5.4 Feature Extraction (`benchmarks/feature-extraction.md`)
-
-**Purpose**: Compare feature extraction performance
-
-**Content Outline**:
-
-1. **Implementations Compared**
-   - tsfresh (reference, CPU)
-   - TorchFeatureExtractor (CPU parallel)
-   - TorchFeatureExtractor (CUDA GPU)
-
-2. **Results** (from `batch_benchmark_results.csv`):
-
-   | Backend | Mode       | Device | 10k batches time |
-   | ------- | ---------- | ------ | ---------------- |
-   | tsfresh | parallel   | cpu    | 34,465 ms        |
-   | PyTorch | parallel   | cpu    | 1,734 ms         |
-   | PyTorch | sequential | cpu    | 3,464 ms         |
-   | PyTorch | gpu        | cuda   | 7,702 ms         |
-
-3. **Speedup**: PyTorch CPU parallel is **~20x faster** than tsfresh
-
-4. **Feature Accuracy**: All features validated against tsfresh reference values
-
-**Data Sources**:
-
-- `benchmarks/batch_benchmark_results.csv`
-- `benchmarks/benchmark_jax_tsfresh.md`
-- `benchmarks/feature_extraction/benchmark_torch_features_timing.py`
-
----
-
-### 4.6 API Reference
+### 4.4 API Reference
 
 All API reference pages use `mkdocstrings` for auto-generation from docstrings.
 
@@ -1057,98 +765,9 @@ members_order: source
 
 ---
 
-## 5. Artifact Generation Requirements
+## 5. Appendix: Source File References
 
-### 5.1 Documentation Artifacts Script
-
-**TODO**: Create `scripts/generate_docs_artifacts.py`
-
-**Purpose**: Automate generation of all figures and benchmark results for documentation
-
-**Functionality**:
-
-```python
-# scripts/generate_docs_artifacts.py
-
-def main():
-    # 1. Run case studies and generate plots
-    run_pendulum_case_study()      # -> docs/assets/pendulum_*.png
-    run_duffing_case_study()       # -> docs/assets/duffing_*.png
-    run_lorenz_case_study()        # -> docs/assets/lorenz_*.png
-    run_friction_case_study()      # -> docs/assets/friction_*.png
-    run_rossler_case_study()       # -> docs/assets/rossler_*.png
-
-    # 2. Generate plotter screenshots
-    generate_matplotlib_screenshots()
-    generate_interactive_screenshots()
-
-    # 3. Run benchmarks
-    run_solver_benchmarks()
-    run_feature_extraction_benchmarks()
-    run_end_to_end_benchmarks()  # NEW
-
-    # 4. Generate benchmark charts
-    generate_benchmark_charts()
-```
-
-**Output Directory**: `docs/assets/` for images, `docs/data/` for CSV/JSON
-
-### 5.2 Rössler Network Integration Test
-
-**TODO**: Create `tests/integration/rossler_network/`
-
-**Files to Create**:
-
-- `test_rossler_network.py`
-- `main_rossler_network.json` (expected BS values)
-- `main_rossler_network_k_study.json` (expected parameter study results)
-
-**Steps**:
-
-1. Run `case_studies/rossler_network/main_rossler_network.py`
-2. Record BS values as expected results
-3. Create test that compares computed vs expected
-
-### 5.3 End-to-End Benchmark Script
-
-**TODO**: Create `benchmarks/end_to_end/benchmark_bs_estimation.py`
-
-**Purpose**: Measure full BSE pipeline time (integrate + extract + classify)
-
-**Configuration**:
-
-- ODE: Pendulum (matches MATLAB benchmark)
-- Sample sizes: [10_000, 50_000, 100_000]
-- Solvers: MATLAB ode45 (reference), JaxSolver CPU, JaxSolver CUDA
-
-**Output**: `benchmarks/end_to_end/results/bs_timing_comparison.csv`
-
-**Comparison with MATLAB**: Use `bSTAB-M/bs_timing_log.csv` as reference
-
-### 5.4 Screenshot Generation
-
-**TODO**: Generate static screenshots for documentation
-
-**MatplotlibPlotter Screenshots**:
-
-1. `plot_bse_results()` 4-panel output → `docs/assets/matplotlib_bse_results.png`
-2. `plot_phase()` 2D output → `docs/assets/matplotlib_phase_2d.png`
-3. `plot_templates()` output → `docs/assets/matplotlib_templates.png`
-
-**InteractivePlotter Screenshots** (Option A - static images):
-
-1. State Space page → `docs/assets/interactive_state_space.png`
-2. Feature Space page → `docs/assets/interactive_feature_space.png`
-3. Basin Stability bar chart → `docs/assets/interactive_bs_barchart.png`
-4. Template Phase Plot → `docs/assets/interactive_template_phase.png`
-
-**Method**: Run plotter, manually capture screenshots, or use Selenium/Playwright for automation
-
----
-
-## 6. Appendix: Source File References
-
-### 6.1 Core Library (`src/pybasin/`)
+### 5.1 Core Library (`src/pybasin/`)
 
 | File                           | Lines | Key Classes                                                    |
 | ------------------------------ | ----- | -------------------------------------------------------------- |
@@ -1162,7 +781,7 @@ def main():
 | `solution.py`                  | ~150  | `Solution`                                                     |
 | `protocols.py`                 | ~50   | `ODESystemProtocol`, `SolverProtocol`                          |
 
-### 6.2 Feature Extractors (`src/pybasin/feature_extractors/`)
+### 5.2 Feature Extractors (`src/pybasin/feature_extractors/`)
 
 | File                           | Key Classes               |
 | ------------------------------ | ------------------------- |
@@ -1172,26 +791,23 @@ def main():
 | `default_feature_selector.py`  | `DefaultFeatureSelector`  |
 | `correlation_selector.py`      | `CorrelationSelector`     |
 
-### 6.3 Predictors (`src/pybasin/predictors/`)
+### 5.3 Predictors (`src/pybasin/predictors/`)
 
-| File                            | Key Classes                                                   |
-| ------------------------------- | ------------------------------------------------------------- |
-| `base.py`                       | `LabelPredictor`, `ClustererPredictor`, `ClassifierPredictor` |
-| `hdbscan_clusterer.py`          | `HDBSCANClusterer`                                            |
-| `dbscan_clusterer.py`           | `DBSCANClusterer`                                             |
-| `knn_classifier.py`             | `KNNClassifier`                                               |
-| `dynamical_system_clusterer.py` | `DynamicalSystemClusterer`                                    |
-| `unboundedness_clusterer.py`    | `UnboundednessClusterer`                                      |
+| File                              | Key Classes                                                |
+| --------------------------------- | ---------------------------------------------------------- |
+| `hdbscan_clusterer.py`            | `HDBSCANClusterer`                                         |
+| `dbscan_clusterer.py`             | `DBSCANClusterer`                                          |
+| `dynamical_system_clusterer.py`   | `DynamicalSystemClusterer`                                 |
+| `unboundedness_meta_estimator.py` | `UnboundednessMetaEstimator`, `default_unbounded_detector` |
 
-### 6.4 Plotters (`src/pybasin/plotters/`)
+### 5.4 Plotters (`src/pybasin/plotters/`)
 
 | File                             | Key Classes          |
 | -------------------------------- | -------------------- |
 | `matplotlib_plotter.py`          | `MatplotlibPlotter`  |
 | `interactive_plotter/plotter.py` | `InteractivePlotter` |
-| `as_plotter.py`                  | `ASPlotter`          |
 
-### 6.5 Case Studies (`case_studies/`)
+### 5.5 Case Studies (`case_studies/`)
 
 | System   | Directory             | Key Files                                                             |
 | -------- | --------------------- | --------------------------------------------------------------------- |
@@ -1201,7 +817,7 @@ def main():
 | Friction | `friction/`           | `main_friction_with_defaults.py`, `setup_friction_system.py`          |
 | Rössler  | `rossler_network/`    | `main_rossler_network.py`, `setup_rossler_network.py`                 |
 
-### 6.6 Integration Tests (`tests/integration/`)
+### 5.6 Integration Tests (`tests/integration/`)
 
 | System   | Directory   | Expected Results                                                 |
 | -------- | ----------- | ---------------------------------------------------------------- |
@@ -1211,7 +827,7 @@ def main():
 | Friction | `friction/` | `main_friction_case1.json`, `main_friction_v_study.json`         |
 | Rössler  | ❌ Missing  | ❌ TODO: Create                                                  |
 
-### 6.7 Benchmarks (`benchmarks/`)
+### 5.7 Benchmarks (`benchmarks/`)
 
 | Category           | Directory/File                                       | Status          |
 | ------------------ | ---------------------------------------------------- | --------------- |
@@ -1221,23 +837,23 @@ def main():
 
 ---
 
-## 7. Notes for Implementers
+## 6. Notes for Implementers
 
-### 7.1 Code Example Guidelines
+### 6.1 Code Example Guidelines
 
 - All code examples must be runnable
 - Use `# Output:` comments to show expected output
 - Keep examples under 30 lines when possible
 - Always show imports
 
-### 7.2 Figure Guidelines
+### 6.2 Figure Guidelines
 
 - Save all figures as PNG at 300 DPI
 - Use consistent color scheme across case studies
 - Include axis labels and legends
 - Maximum width: 800px for documentation
 
-### 7.3 Cross-References
+### 6.3 Cross-References
 
 Use MkDocs relative links:
 
@@ -1246,7 +862,7 @@ See [Solvers](../user-guide/solvers.md) for details.
 See the [JaxSolver API](../api/solvers.md#pybasin.solvers.jax_solver.JaxSolver).
 ```
 
-### 7.4 Admonitions
+### 6.4 Admonitions
 
 Use Material theme admonitions for tips, warnings, notes:
 
@@ -1255,7 +871,7 @@ Use Material theme admonitions for tips, warnings, notes:
 Use JaxSolver with CUDA for sample sizes > 50,000.
 
 !!! warning "Breaking Change"
-The `cluster_classifier` parameter was renamed to `predictor` in v2.0.
+The `estimator` parameter was renamed to `predictor` in v2.0.
 
 !!! note
 This feature requires `detect_unbounded=True` and a JaxSolver with `event_fn`.

@@ -1,66 +1,67 @@
 from typing import Any, cast
 
 import numpy as np
+from sklearn.base import BaseEstimator, ClusterMixin  # type: ignore[import-untyped]
 from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
 from sklearn.metrics import silhouette_score  # type: ignore[import-untyped]
 from sklearn.neighbors import NearestNeighbors
 
-from pybasin.predictors.base import ClustererPredictor
 
-
-class HDBSCANClusterer(ClustererPredictor):
+class HDBSCANClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
     """HDBSCAN clustering for basin stability analysis with optional auto-tuning and noise assignment (unsupervised learning)."""
 
     display_name: str = "HDBSCAN Clustering"
 
-    clusterer: Any
+    hdbscan: Any
     assign_noise: bool
-    k_neighbors: int
+    nearest_neighbors: Any
     auto_tune: bool
 
     def __init__(
         self,
-        clusterer: Any = None,
+        hdbscan: Any = None,
         assign_noise: bool = False,
-        k_neighbors: int = 5,
+        nearest_neighbors: NearestNeighbors | None = None,
         auto_tune: bool = False,
-        **kwargs: Any,
     ):
         """
         Initialize HDBSCAN clusterer.
 
-        :param clusterer: HDBSCAN instance, or None to create default.
-        :param assign_noise: Whether to assign noise points to nearest clusters using KNN.
-        :param k_neighbors: Number of neighbors for KNN noise assignment.
-        :param auto_tune: Whether to automatically tune min_cluster_size using silhouette score.
-        :param kwargs: Additional arguments for HDBSCAN if clusterer is None.
-                       Common: min_cluster_size=50, min_samples=10
+        :param hdbscan: A configured ``sklearn.cluster.HDBSCAN`` instance, or
+            ``None`` to create a default one (``min_cluster_size=50``,
+            ``min_samples=10``).
+        :param assign_noise: Whether to assign noise points to nearest
+            clusters using KNN.
+        :param nearest_neighbors: A configured ``sklearn.neighbors.NearestNeighbors``
+            instance for noise assignment, or ``None`` to create a default
+            one (``n_neighbors=5``). Only used when ``assign_noise=True``.
+        :param auto_tune: Whether to automatically tune ``min_cluster_size``
+            using silhouette score. The tuned value overrides the one on the
+            ``hdbscan`` instance.
         """
-        if clusterer is None:
-            if "min_cluster_size" not in kwargs:
-                kwargs["min_cluster_size"] = 50
-            if "min_samples" not in kwargs:
-                kwargs["min_samples"] = min(10, kwargs.get("min_cluster_size", 50) // 5)
-            clusterer = HDBSCAN(**kwargs)  # type: ignore[call-arg]
+        if hdbscan is None:
+            hdbscan = HDBSCAN(min_cluster_size=50, min_samples=10, copy=True)  # type: ignore[call-arg]
 
-        self.clusterer = clusterer
+        self.hdbscan = hdbscan
         self.assign_noise = assign_noise
-        self.k_neighbors = k_neighbors
+        self.nearest_neighbors = nearest_neighbors
         self.auto_tune = auto_tune
 
-    def predict_labels(self, features: np.ndarray) -> np.ndarray:
+    def fit_predict(self, X: np.ndarray, y: Any = None) -> np.ndarray:  # type: ignore[override]
         """
-        Predict labels using HDBSCAN clustering with optional noise assignment.
+        Fit and predict labels using HDBSCAN clustering with optional noise assignment.
 
-        :param features: Feature array to cluster.
+        :param X: Feature array to cluster.
+        :param y: Ignored (present for sklearn API compatibility).
         :return: Cluster labels.
         """
+        features = X
         if self.auto_tune:
             optimal_size = self._find_optimal_min_cluster_size(features)
-            self.clusterer.min_cluster_size = optimal_size
-            self.clusterer.min_samples = min(10, optimal_size // 5)
+            self.hdbscan.min_cluster_size = optimal_size
+            self.hdbscan.min_samples = min(10, optimal_size // 5)
 
-        labels = cast(np.ndarray, self.clusterer.fit_predict(features))
+        labels = cast(np.ndarray, self.hdbscan.fit_predict(features))
 
         if self.assign_noise:
             labels = self._assign_noise_to_clusters(features, labels)
@@ -88,9 +89,16 @@ class HDBSCANClusterer(ClustererPredictor):
             return labels_updated
 
         noise_features = features[noise_mask]
-        k_actual = min(self.k_neighbors, len(labeled_features))
-        nbrs = NearestNeighbors(n_neighbors=k_actual).fit(labeled_features)
-        _, indices = nbrs.kneighbors(noise_features)
+        nn: Any = (
+            self.nearest_neighbors
+            if self.nearest_neighbors is not None
+            else NearestNeighbors(n_neighbors=5)
+        )
+        n_neighbors: int = nn.get_params()["n_neighbors"]
+        k_actual: int = min(n_neighbors, len(labeled_features))
+        nn.set_params(n_neighbors=k_actual)
+        nn.fit(labeled_features)
+        _, indices = nn.kneighbors(noise_features)
 
         noise_indices = np.where(noise_mask)[0]
         for i, neighbor_indices in enumerate(indices):
@@ -122,11 +130,9 @@ class HDBSCANClusterer(ClustererPredictor):
         best_min_size = min_sizes[0]
 
         for min_size in min_sizes:
-            clusterer = HDBSCAN(  # type: ignore[call-arg]
-                min_cluster_size=min_size,
-                min_samples=min(10, min_size // 5),
-            )
-            labels = cast(np.ndarray, clusterer.fit_predict(features))  # type: ignore[attr-defined]
+            self.hdbscan.min_cluster_size = min_size
+            self.hdbscan.min_samples = min(10, min_size // 5)
+            labels = cast(np.ndarray, self.hdbscan.fit_predict(features))  # type: ignore[attr-defined]
 
             unique_labels = np.unique(labels[labels != -1])
             if len(unique_labels) >= 2:

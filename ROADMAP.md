@@ -22,3 +22,4 @@ plt.show()  # type: ignore[misc]
 ```
 
 - [ ] Look into https://github.com/lmcinnes/umap for feature space visualization
+- [ ] Rename as_parameter_manager to bs_study_parameter_manager and as_bse to study_bse

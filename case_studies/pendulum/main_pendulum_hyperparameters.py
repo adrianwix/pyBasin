@@ -25,10 +25,11 @@ def main():
 
     solver = props.get("solver")
     feature_extractor = props.get("feature_extractor")
-    cluster_classifier = props.get("cluster_classifier")
+    estimator = props.get("estimator")
+    template_integrator = props.get("template_integrator")
     assert solver is not None, "solver is required for BasinStabilityStudy"
     assert feature_extractor is not None, "feature_extractor is required for BasinStabilityStudy"
-    assert cluster_classifier is not None, "cluster_classifier is required for BasinStabilityStudy"
+    assert estimator is not None, "estimator is required for BasinStabilityStudy"
 
     bse = BasinStabilityStudy(
         n=props["n"],
@@ -36,8 +37,9 @@ def main():
         sampler=props["sampler"],
         solver=solver,
         feature_extractor=feature_extractor,
-        cluster_classifier=cluster_classifier,
+        estimator=estimator,
         study_params=study_params,
+        template_integrator=template_integrator,
         save_to="results_hyperparameters",
     )
 

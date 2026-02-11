@@ -84,7 +84,8 @@ class ASParameterManagerAIO:
                 "sampler": self.as_bse.sampler,
                 "solver": self.as_bse.solver,
                 "feature_extractor": self.as_bse.feature_extractor,
-                "cluster_classifier": self.as_bse.cluster_classifier,
+                "estimator": self.as_bse.estimator,
+                "template_integrator": self.as_bse.template_integrator,
             }
 
             eval(compile(assignment, "<string>", "exec"), context, context)
@@ -95,7 +96,8 @@ class ASParameterManagerAIO:
                 sampler=self.as_bse.sampler,
                 solver=self.as_bse.solver,
                 feature_extractor=self.as_bse.feature_extractor,
-                predictor=self.as_bse.cluster_classifier,
+                predictor=self.as_bse.estimator,
+                template_integrator=self.as_bse.template_integrator,
                 feature_selector=None,
             )
             bse.estimate_bs()

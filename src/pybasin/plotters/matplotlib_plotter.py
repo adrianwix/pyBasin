@@ -11,7 +11,6 @@ from matplotlib.figure import Figure
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter.utils import get_color
-from pybasin.predictors.base import ClassifierPredictor
 from pybasin.utils import generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
@@ -264,13 +263,12 @@ class MatplotlibPlotter:
         :param z_var: State variable index for z-axis (3D plot if provided).
         :param time_range: Time range (t_start, t_end) to plot.
         """
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             raise ValueError(
-                "plot_phase requires a ClassifierPredictor with template initial conditions."
+                "plot_phase requires a template_integrator with template initial conditions."
             )
 
-        # Use classifier's solver if available, otherwise use main solver
-        base_solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
+        base_solver = self.bse.template_integrator.solver or self.bse.solver  # type: ignore[misc]
 
         # Create CPU copy with 10x n_steps for smoother plots, no caching
         solver = base_solver.with_device("cpu")
@@ -279,7 +277,7 @@ class MatplotlibPlotter:
 
         # Convert template_y0 list to tensor on solver's device
         template_tensor = torch.tensor(
-            self.bse.predictor.template_y0,  # type: ignore[misc]
+            self.bse.template_integrator.template_y0,  # type: ignore[misc]
             dtype=torch.float32,
             device=solver.device,
         )
@@ -302,7 +300,11 @@ class MatplotlibPlotter:
         if z_var is None:
             ax: Axes = fig.add_subplot(111)  # type: ignore[assignment]
             for i, (label, traj) in enumerate(
-                zip(self.bse.predictor.labels, np.transpose(trajectories, (1, 0, 2)), strict=True)
+                zip(
+                    self.bse.template_integrator.labels,
+                    np.transpose(trajectories, (1, 0, 2)),
+                    strict=True,
+                )
             ):  # type: ignore[arg-type]
                 ax.plot(
                     traj[:, x_var],
@@ -317,7 +319,11 @@ class MatplotlibPlotter:
         else:
             ax = fig.add_subplot(111, projection="3d")  # type: ignore[assignment]
             for i, (label, traj) in enumerate(
-                zip(self.bse.predictor.labels, np.transpose(trajectories, (1, 0, 2)), strict=True)
+                zip(
+                    self.bse.template_integrator.labels,
+                    np.transpose(trajectories, (1, 0, 2)),
+                    strict=True,
+                )
             ):  # type: ignore[arg-type]
                 ax.plot(
                     traj[:, x_var],
@@ -357,12 +363,12 @@ class MatplotlibPlotter:
         :param y_limits: Y-axis limits. Tuple applies to all, dict maps label to (y_min, y_max).
         :param x_limits: X-axis limits. Tuple applies to all, dict maps label to (x_min, x_max).
         """
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             raise ValueError(
-                "plot_templates requires a ClassifierPredictor with template initial conditions."
+                "plot_templates requires a template_integrator with template initial conditions."
             )
 
-        base_solver = self.bse.predictor.solver or self.bse.solver  # type: ignore[misc]
+        base_solver = self.bse.template_integrator.solver or self.bse.solver  # type: ignore[misc]
 
         # Create CPU copy with 10x n_steps for smoother plots, no caching
         solver = base_solver.with_device("cpu")
@@ -370,7 +376,7 @@ class MatplotlibPlotter:
         solver.use_cache = False
 
         template_tensor = torch.tensor(
-            self.bse.predictor.template_y0,  # type: ignore[misc]
+            self.bse.template_integrator.template_y0,  # type: ignore[misc]
             dtype=torch.float32,
             device=solver.device,
         )
@@ -383,7 +389,7 @@ class MatplotlibPlotter:
         t = t.cpu().numpy()
         y = y.cpu().numpy()
 
-        labels = list(self.bse.predictor.labels)
+        labels = self.bse.template_integrator.labels
         trajectories = np.transpose(y, (1, 0, 2))  # (n_templates, n_time, n_states)
         n_templates = len(labels)
 

@@ -56,7 +56,8 @@ class TestRosslerNetwork:
             sampler=props["sampler"],
             solver=props.get("solver"),
             feature_extractor=props.get("feature_extractor"),
-            predictor=props.get("cluster_classifier"),
+            predictor=props.get("estimator"),
+            template_integrator=props.get("template_integrator"),
             feature_selector=None,
         )
 
@@ -167,10 +168,11 @@ class TestRosslerNetwork:
 
         solver = props.get("solver")
         feature_extractor = props.get("feature_extractor")
-        cluster_classifier = props.get("cluster_classifier")
+        estimator = props.get("estimator")
+        template_integrator = props.get("template_integrator")
         assert solver is not None
         assert feature_extractor is not None
-        assert cluster_classifier is not None
+        assert estimator is not None
 
         as_bse = BasinStabilityStudy(
             n=props["n"],
@@ -178,8 +180,9 @@ class TestRosslerNetwork:
             sampler=props["sampler"],
             solver=solver,
             feature_extractor=feature_extractor,
-            cluster_classifier=cluster_classifier,
+            estimator=estimator,
             study_params=study_params,
+            template_integrator=template_integrator,
         )
 
         as_bse.estimate_as_bs()

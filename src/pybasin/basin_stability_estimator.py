@@ -2,27 +2,31 @@ import json
 import logging
 import os
 import time
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, cast
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import torch
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, is_classifier, is_regressor  # type: ignore[import-untyped]
 
 from pybasin.feature_extractors import TorchFeatureExtractor
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.feature_selector.default_feature_selector import DefaultFeatureSelector
 from pybasin.jax_ode_system import JaxODESystem
-from pybasin.predictors.base import ClassifierPredictor, LabelPredictor
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
-from pybasin.predictors.unboundedness_clusterer import UnboundednessClusterer
-from pybasin.protocols import ODESystemProtocol, SolverProtocol
+from pybasin.protocols import (
+    FeatureNameAware,
+    ODESystemProtocol,
+    SklearnClassifier,
+    SklearnClusterer,
+    SolverProtocol,
+)
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
 from pybasin.solver import TorchDiffEqSolver
 from pybasin.solvers.jax_solver import JaxSolver
+from pybasin.template_integrator import TemplateIntegrator
 from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.types import ErrorInfo
 from pybasin.utils import (
@@ -58,7 +62,8 @@ class BasinStabilityEstimator:
         n: int = 10_000,
         solver: SolverProtocol | None = None,
         feature_extractor: FeatureExtractor | None = None,
-        predictor: LabelPredictor | None = None,
+        predictor: BaseEstimator | None = None,
+        template_integrator: TemplateIntegrator | None = None,
         feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
         detect_unbounded: bool = True,
         save_to: str | None = None,
@@ -75,8 +80,15 @@ class BasinStabilityEstimator:
                       and device from sampler.
         :param feature_extractor: The FeatureExtractor object to extract features from trajectories.
                                  If None, defaults to TorchFeatureExtractor with minimal+dynamical features.
-        :param predictor: The LabelPredictor object to assign labels. If None, defaults
-                                  to HDBSCANClusterer with auto_tune=True and assign_noise=True.
+        :param predictor: Any sklearn-compatible estimator (classifier or clusterer).
+                         Classifiers (``is_classifier(predictor)`` is True) require a
+                         ``template_integrator`` for supervised learning. Clusterers
+                         (``is_clusterer(predictor)`` is True) work unsupervised.
+                         Regressors are rejected. If None, defaults to
+                         ``HDBSCANClusterer(auto_tune=True, assign_noise=True)``.
+        :param template_integrator: Template integrator for supervised classifiers.
+                                   Required when ``predictor`` is a classifier. Holds template
+                                   initial conditions, labels, and ODE params for training.
         :param feature_selector: Feature filtering sklearn transformer with get_support() method.
                                 Defaults to DefaultFeatureSelector(). Pass None to disable filtering.
                                 Accepts any sklearn transformer (VarianceThreshold, SelectKBest, etc.) or Pipeline.
@@ -85,6 +97,8 @@ class BasinStabilityEstimator:
                                 When enabled, unbounded trajectories are separated and labeled as "unbounded"
                                 before feature extraction to prevent imputed Inf values from contaminating features.
         :param save_to: Optional file path to save results.
+        :raises TypeError: If ``predictor`` is a regressor.
+        :raises ValueError: If ``predictor`` is a classifier but no ``template_integrator`` is provided.
         """
         self.n = int(n)
         self.ode_system = ode_system
@@ -140,16 +154,22 @@ class BasinStabilityEstimator:
 
         self.feature_extractor = feature_extractor
 
-        if predictor is None:
-            warnings.warn(
-                "No cluster_classifier provided. Using default HDBSCANClusterer with auto_tune=True "
-                "and assign_noise=True. For better performance with known attractors, pass a custom "
-                "supervised classifier (e.g., KNNClassifier).",
-                UserWarning,
-                stacklevel=2,
+        if predictor is not None and is_regressor(predictor):
+            raise TypeError(
+                f"Regressors are not supported as predictors. "
+                f"Got {type(predictor).__name__}. Use a classifier or clusterer instead."
             )
-            predictor = UnboundednessClusterer(HDBSCANClusterer(auto_tune=True, assign_noise=True))
+
+        if predictor is None:
+            predictor = HDBSCANClusterer(auto_tune=True, assign_noise=True)
         self.predictor = predictor
+
+        if is_classifier(self.predictor) and template_integrator is None:
+            raise ValueError(
+                f"Classifier {type(self.predictor).__name__} requires a template_integrator "
+                "with template initial conditions and labels for supervised learning."
+            )
+        self.template_integrator = template_integrator
 
         self.bs_vals: dict[str, float] | None = None
         self.y0: torch.Tensor | None = None
@@ -236,8 +256,8 @@ class BasinStabilityEstimator:
             - self.solution
             - self.bs_vals
 
-        :param parallel_integration: If True and using ClassifierPredictor, run main integration
-                                     and template integration in parallel (default: True).
+        :param parallel_integration: If True and using a supervised classifier with template
+                                     integrator, run main and template integration in parallel.
         :return: A dictionary of basin stability values per class.
         """
         logger.info("Starting Basin Stability Estimation...")
@@ -256,37 +276,32 @@ class BasinStabilityEstimator:
         t2a_elapsed = 0.0  # Template integration time
         t2b_elapsed = 0.0  # Main integration time
 
-        if parallel_integration and isinstance(self.predictor, ClassifierPredictor):
+        if parallel_integration and self.template_integrator is not None:
             logger.info("  Mode: PARALLEL (integration only)")
             logger.info("  • Main integration (sampled ICs)")
             logger.info("  • Template integration (classifier ICs)")
 
-            # Run ONLY integrations in parallel (not feature extraction)
-            # This ensures the scaler is fitted on main data first for consistent normalization
             with ThreadPoolExecutor(max_workers=2) as executor:
                 main_future = executor.submit(self.solver.integrate, self.ode_system, self.y0)  # type: ignore[arg-type]
 
                 template_future = executor.submit(
-                    self.predictor.integrate_templates,  # type: ignore[arg-type,misc]
+                    self.template_integrator.integrate,
                     self.solver,
                     self.ode_system,
                 )
 
-                # Wait for both to complete
                 t, y = main_future.result()
-                template_future.result()  # Just wait for completion
+                template_future.result()
 
             t2_elapsed = time.perf_counter() - t2_start
-            # In parallel mode, we can't separate the times accurately
             logger.info("Both integrations complete in %.4fs", t2_elapsed)
             logger.info("Main trajectory shape: %s", y.shape)
         else:
-            # Sequential execution (original behavior)
-            if isinstance(self.predictor, ClassifierPredictor):
+            if self.template_integrator is not None:
                 logger.info("  Mode: SEQUENTIAL")
                 logger.info("  Step 2a: Integrating template initial conditions...")
                 t2a_start = time.perf_counter()
-                self.predictor.integrate_templates(  # type: ignore[misc]
+                self.template_integrator.integrate(
                     solver=self.solver,
                     ode_system=self.ode_system,
                 )
@@ -419,31 +434,36 @@ class BasinStabilityEstimator:
                     logger.debug("    %s: %.6f", name, value)
 
         # Step 5b: Fit classifier with template features (using already-fitted scaler)
-        if isinstance(self.predictor, ClassifierPredictor):  # type: ignore[type-arg]
+        if self.template_integrator is not None and is_classifier(self.predictor):
             logger.info("STEP 5b: Fitting Classifier")
             t5b = time.perf_counter()
-            self.predictor.fit_with_features(  # type: ignore[misc]
+            X_train, y_train = self.template_integrator.get_training_data(
                 self.feature_extractor,
                 feature_selector=self.feature_selector,
             )
+            cast(SklearnClassifier, self.predictor).fit(X_train, y_train)
             t5b_elapsed = time.perf_counter() - t5b
             logger.info("  Classifier fitted in %.4fs", t5b_elapsed)
 
         # Set feature names for predictors that require them
         final_feature_names = self._filtered_feature_names or feature_names
-        if self.predictor.needs_feature_names():
+        if hasattr(self.predictor, "set_feature_names"):
             logger.info(
-                "  Setting feature names for classifier (%d features)", len(final_feature_names)
+                "  Setting feature names for predictor (%d features)", len(final_feature_names)
             )
-            self.predictor.set_feature_names(final_feature_names)
+            cast(FeatureNameAware, self.predictor).set_feature_names(final_feature_names)
 
         # Step 6: Classification
         logger.info("STEP 6: Classification")
         t6 = time.perf_counter()
 
-        # Convert features to numpy for classifier
+        # Convert features to numpy for predictor
         features_np = features.detach().cpu().numpy()
-        bounded_labels = self.predictor.predict_labels(features_np)
+        bounded_labels: np.ndarray
+        if is_classifier(self.predictor):
+            bounded_labels = cast(SklearnClassifier, self.predictor).predict(features_np)
+        else:
+            bounded_labels = cast(SklearnClusterer, self.predictor).fit_predict(features_np)
         # Reconstruct full label array if unbounded trajectories were separated
         if self.detect_unbounded and unbounded_mask is not None and n_unbounded > 0:
             labels = np.empty(total_samples, dtype=object)
@@ -646,7 +666,7 @@ class BasinStabilityEstimator:
             "sampling_points": self.n,
             "sampling_method": self.sampler.__class__.__name__,
             "solver": self.solver.__class__.__name__,
-            "cluster_classifier": self.predictor.__class__.__name__,
+            "estimator": self.predictor.__class__.__name__,
             "feature_selection": feature_selection_info,
             "ode_system": format_ode_system(self.ode_system.get_str()),
         }

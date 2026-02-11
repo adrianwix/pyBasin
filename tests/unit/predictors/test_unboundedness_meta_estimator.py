@@ -6,8 +6,8 @@ from sklearn.utils.estimator_checks import (
     check_estimator,  # pyright: ignore[reportUnknownVariableType]
 )
 
-from pybasin.predictors.extras.unboundedness_predictor import (
-    UnboundednessPredictor,
+from pybasin.predictors.unboundedness_meta_estimator import (
+    UnboundednessMetaEstimator,
     default_unbounded_detector,
 )
 
@@ -52,19 +52,19 @@ class TestDefaultUnboundedDetector:
         np.testing.assert_array_equal(unbounded, expected)
 
 
-class TestUnboundednessPredictor:
-    """Test the UnboundednessPredictor meta-estimator."""
+class TestUnboundednessMetaEstimator:
+    """Test the UnboundednessMetaEstimator meta-estimator."""
 
     def test_initialization(self):
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
         assert clf.estimator is estimator
         assert clf.unbounded_detector is None
         assert clf.unbounded_label == "unbounded"
 
     def test_custom_unbounded_label(self):
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator, unbounded_label=-1)
+        clf = UnboundednessMetaEstimator(estimator, unbounded_label=-1)
         assert clf.unbounded_label == -1
 
     def test_custom_detector(self):
@@ -72,7 +72,7 @@ class TestUnboundednessPredictor:
             return X[:, 0] > 100
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator, unbounded_detector=custom_detector)
+        clf = UnboundednessMetaEstimator(estimator, unbounded_detector=custom_detector)
         assert clf.unbounded_detector is custom_detector
 
     def test_fit_with_bounded_data_only(self):
@@ -80,7 +80,7 @@ class TestUnboundednessPredictor:
             n_samples=100, n_features=5, centers=3, random_state=42
         )
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
 
@@ -101,7 +101,7 @@ class TestUnboundednessPredictor:
         X[2, 0] = 1e10
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
 
@@ -112,7 +112,7 @@ class TestUnboundednessPredictor:
     def test_fit_all_unbounded(self):
         X = np.array([[np.inf, 1.0], [1e10, 2.0], [-1e10, 3.0]])
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
 
@@ -125,7 +125,7 @@ class TestUnboundednessPredictor:
             n_samples=100, n_features=5, centers=3, random_state=42
         )
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
         labels = clf.predict(X)
@@ -141,7 +141,7 @@ class TestUnboundednessPredictor:
         X[1, :] = -1e10
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
         labels = clf.predict(X)
@@ -159,7 +159,7 @@ class TestUnboundednessPredictor:
         X_test[5, :] = np.inf
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X_train)
         labels = clf.predict(X_test)
@@ -173,28 +173,13 @@ class TestUnboundednessPredictor:
         X_test = np.array([[np.inf, 1.0, 2.0, 3.0, 4.0], [1e10, 2.0, 3.0, 4.0, 5.0]])
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X_train)
         labels = clf.predict(X_test)
 
         assert labels.shape == (2,)
         assert np.all(labels == "unbounded")
-
-    def test_predict_labels_method(self):
-        X, _ = make_blobs(  # pyright: ignore[reportAssignmentType]
-            n_samples=100, n_features=5, centers=3, random_state=42
-        )
-        X[0, :] = np.inf
-
-        estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
-
-        clf.fit(X)
-        labels1 = clf.predict(X)
-        labels2 = clf.predict_labels(X)
-
-        np.testing.assert_array_equal(labels1, labels2)
 
     def test_custom_detector_function(self):
         def custom_detector(X: np.ndarray) -> np.ndarray:
@@ -204,7 +189,7 @@ class TestUnboundednessPredictor:
         X[:5, 0] = 100
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator, unbounded_detector=custom_detector)
+        clf = UnboundednessMetaEstimator(estimator, unbounded_detector=custom_detector)
 
         clf.fit(X)
         labels = clf.predict(X)
@@ -218,7 +203,7 @@ class TestUnboundednessPredictor:
         X[0, :] = np.inf
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator, unbounded_label=-999)
+        clf = UnboundednessMetaEstimator(estimator, unbounded_label=-999)
 
         clf.fit(X)
         labels = clf.predict(X)
@@ -231,7 +216,7 @@ class TestUnboundednessPredictor:
         X_test = np.random.randn(10, 3)
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X_train)
 
@@ -240,7 +225,7 @@ class TestUnboundednessPredictor:
 
     def test_sklearn_compatibility(self):
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator, unbounded_label=-1)
+        clf = UnboundednessMetaEstimator(estimator, unbounded_label=-1)
 
         check_estimator(clf)
 
@@ -251,7 +236,7 @@ class TestUnboundednessPredictor:
         X[0, :] = np.inf
 
         estimator = KMeans(n_clusters=3, random_state=42, n_init=10)
-        clf = UnboundednessPredictor(estimator)
+        clf = UnboundednessMetaEstimator(estimator)
 
         clf.fit(X)
 
@@ -265,7 +250,7 @@ class TestUnboundednessPredictor:
         X[0, :] = 1e10
         X[1, :] = -1e10
 
-        clf = UnboundednessPredictor(KMeans(n_clusters=3, random_state=42, n_init=10))
+        clf = UnboundednessMetaEstimator(KMeans(n_clusters=3, random_state=42, n_init=10))
         clf.fit(X)
         labels = clf.predict(X)
 

@@ -26,14 +26,13 @@ from pybasin.plotters.interactive_plotter.ids_aio import aio_id
 from pybasin.plotters.interactive_plotter.trajectory_cache import TrajectoryCache
 from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.plotters.types import TemplatesTimeSeriesOptions, filter_by_include_exclude
-from pybasin.predictors.base import ClassifierPredictor
 
 
 class TemplateTimeSeriesAIO(BseBasePageAIO):
     """
     AIO component for template trajectory time series plots.
 
-    Displays time series for template trajectories from ClassifierPredictor.
+    Displays time series for template trajectories.
     """
 
     def __init__(
@@ -62,11 +61,11 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
 
     def render(self) -> html.Div:
         """Render complete page layout with controls and time series plot."""
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             return html.Div(
                 dmc.Paper(
                     dmc.Text(
-                        "Template time series requires ClassifierPredictor",
+                        "Template time series requires a template_integrator",
                         size="lg",
                         c="gray",
                     ),
@@ -76,7 +75,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             )
 
         state_options = self.get_state_options()
-        all_template_labels = list(self.bse.predictor.labels)
+        all_template_labels = self.bse.template_integrator.labels
         selected_templates = filter_by_include_exclude(
             all_template_labels,
             self.options.get("include_templates"),
@@ -164,10 +163,10 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
         selected_templates: list[str] | None = None,
     ) -> go.Figure:
         """Build stacked template time series plot with one subplot per trajectory."""
-        if not isinstance(self.bse.predictor, ClassifierPredictor):
+        if self.bse.template_integrator is None:
             fig = go.Figure()
             fig.add_annotation(  # pyright: ignore[reportUnknownMemberType]
-                text="Template plot requires ClassifierPredictor",
+                text="Template plot requires a template_integrator",
                 xref="paper",
                 yref="paper",
                 x=0.5,
@@ -184,7 +183,7 @@ class TemplateTimeSeriesAIO(BseBasePageAIO):
             t = t[mask]
             y = y[mask]
 
-        all_labels = list(self.bse.predictor.labels)
+        all_labels = self.bse.template_integrator.labels
         if selected_templates is None:
             selected_templates = all_labels
 

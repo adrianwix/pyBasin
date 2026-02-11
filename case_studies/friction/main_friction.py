@@ -16,7 +16,8 @@ def main():
         sampler=props["sampler"],
         solver=props.get("solver"),
         feature_extractor=props.get("feature_extractor"),
-        predictor=props.get("cluster_classifier"),
+        predictor=props.get("estimator"),
+        template_integrator=props.get("template_integrator"),
         save_to="results_friction",
         feature_selector=None,
     )

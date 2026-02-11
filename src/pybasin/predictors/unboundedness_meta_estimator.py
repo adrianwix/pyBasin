@@ -1,4 +1,5 @@
-# TODO: Delete if not needed
+# pyright: basic
+"""Meta-estimator for separately labeling unbounded trajectories."""
 
 from collections.abc import Callable
 from typing import Any, cast
@@ -35,7 +36,7 @@ def default_unbounded_detector(x: np.ndarray) -> np.ndarray:
     return has_nan | has_inf | has_extreme  # type: ignore[return-value]
 
 
-class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
+class UnboundednessMetaEstimator(MetaEstimatorMixin, BaseEstimator):
     """
     Meta-estimator for separately labeling unbounded trajectories.
 
@@ -52,7 +53,7 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
     may diverge to infinity (e.g., in the Lorenz system).
 
     ```python
-    from pybasin.predictors.extras import UnboundednessPredictor
+    from pybasin.predictors import UnboundednessMetaEstimator
     from sklearn.cluster import KMeans
     from sklearn.datasets import make_blobs
     import numpy as np
@@ -61,7 +62,7 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
     # Add some "unbounded" samples with extreme values
     X[0, :] = 1e10
     X[1, :] = -1e10
-    clf = UnboundednessPredictor(KMeans(n_clusters=3, random_state=42))
+    clf = UnboundednessMetaEstimator(KMeans(n_clusters=3, random_state=42))
     clf.fit(X)
     labels = clf.predict(X)
     print(f"Unbounded samples: {np.sum(labels == 'unbounded')}")
@@ -115,7 +116,7 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
                 f"estimator must be a classifier or clusterer, got {type(self.estimator).__name__}"
             )
 
-    def fit(self, X: np.ndarray, y: np.ndarray | None = None) -> "UnboundednessPredictor":
+    def fit(self, X: np.ndarray, y: np.ndarray | None = None) -> "UnboundednessMetaEstimator":
         """
         Fit the meta-estimator.
 
@@ -201,7 +202,7 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
 
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
-                f"X has {X.shape[1]} features, but UnboundednessPredictor "
+                f"X has {X.shape[1]} features, but UnboundednessMetaEstimator "
                 f"is expecting {self.n_features_in_} features as input."
             )
 
@@ -243,15 +244,6 @@ class UnboundednessPredictor(MetaEstimatorMixin, BaseEstimator):
             return self.labels_
         else:
             return self.predict(X)
-
-    def predict_labels(self, features: np.ndarray) -> np.ndarray:
-        """
-        Predict labels for the given features (compatibility with LabelPredictor interface).
-
-        :param features: Feature array to predict labels for.
-        :return: Array of predicted labels.
-        """
-        return self.predict(features)
 
     def __sklearn_tags__(self) -> Any:
         """

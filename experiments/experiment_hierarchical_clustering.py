@@ -68,6 +68,8 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
+
 from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
     setup_duffing_oscillator_system,
 )
@@ -476,9 +478,11 @@ def sub_classify_fixed_points(
 
     min_cluster_size = max(50, len(indices) // 10)
     clusterer = HDBSCANClusterer(
-        min_cluster_size=min_cluster_size, auto_tune=False, assign_noise=True
+        hdbscan=HDBSCAN(min_cluster_size=min_cluster_size),  # type: ignore[call-arg]
+        auto_tune=False,
+        assign_noise=True,
     )
-    labels = clusterer.predict_labels(steady_scaled)
+    labels = clusterer.fit_predict(steady_scaled)
 
     return labels
 
@@ -578,11 +582,11 @@ def _cluster_1d_or_2d(data: np.ndarray, n_samples: int) -> np.ndarray:
         min_cluster_size = max(15, n_samples // 20)
         use_auto_tune = n_samples >= 500
         clusterer = HDBSCANClusterer(
-            min_cluster_size=min_cluster_size,
+            hdbscan=HDBSCAN(min_cluster_size=min_cluster_size),  # type: ignore[call-arg]
             auto_tune=use_auto_tune,
             assign_noise=True,
         )
-        return clusterer.predict_labels(scaled)
+        return clusterer.fit_predict(scaled)
 
 
 def _cluster_1d_with_gaps(
@@ -671,7 +675,7 @@ def sub_classify_chaos(
             steady_scaled = scaler.fit_transform(steady_clean)
 
             clusterer = HDBSCANClusterer(auto_tune=True, assign_noise=True)
-            labels_clean = clusterer.predict_labels(steady_scaled)
+            labels_clean = clusterer.fit_predict(steady_scaled)
 
             labels = np.zeros(len(indices), dtype=int)
             labels[finite_mask] = labels_clean
@@ -696,7 +700,7 @@ def sub_classify_chaos(
     features_extracted = extractor.extract_features(solution).numpy()
 
     clusterer = HDBSCANClusterer(auto_tune=True, assign_noise=True)
-    labels = clusterer.predict_labels(features_extracted)
+    labels = clusterer.fit_predict(features_extracted)
 
     return labels
 

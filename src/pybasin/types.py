@@ -2,11 +2,12 @@ from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 import torch
+from sklearn.base import BaseEstimator  # type: ignore[import-untyped]
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.predictors.base import LabelPredictor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
+from pybasin.template_integrator import TemplateIntegrator
 
 
 class ErrorInfo(TypedDict):
@@ -61,4 +62,5 @@ class SetupProperties(TypedDict):
     sampler: Sampler
     solver: NotRequired[SolverProtocol]
     feature_extractor: NotRequired[FeatureExtractor]
-    cluster_classifier: NotRequired[LabelPredictor]
+    estimator: NotRequired[BaseEstimator]
+    template_integrator: NotRequired[TemplateIntegrator]

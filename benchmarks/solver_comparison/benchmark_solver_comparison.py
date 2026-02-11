@@ -325,7 +325,8 @@ def test_benchmark_torchdiffeq(benchmark: Any, n: int, device: str) -> None:
         warmup_rounds=0,
     )
 
-'''
+
+"""
 The first run for 100k after all the previous runs was slow. For sure there is an issue here:
 "data": [
     582.87340632,
@@ -334,7 +335,9 @@ The first run for 100k after all the previous runs was slow. For sure there is a
     310.13977866799996,
     309.4117136310001
 ],
-'''
+"""
+
+
 @pytest.mark.parametrize("n", N_VALUES_TORCHODE)
 def test_benchmark_torchode_cuda(benchmark: Any, n: int) -> None:
     if not torch.cuda.is_available():

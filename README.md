@@ -173,7 +173,7 @@ estimator = BasinStabilityEstimator(
     sampler=sampler,
     solver=solver,
     feature_extractor=feature_extractor,
-    cluster_classifier=classifier,
+    estimator=classifier,
     save_to="my_results"    # Optional: save results to folder
 )
 
