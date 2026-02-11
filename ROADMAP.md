@@ -24,3 +24,4 @@ plt.show()  # type: ignore[misc]
 - [ ] Look into https://github.com/lmcinnes/umap for feature space visualization
 - [ ] Rename as_parameter_manager to bs_study_parameter_manager and as_bse to study_bse
 - [ ] Fix Installation guideline, find out how to deploy to pip
+- [ ] Using JAX SaveAt and setting diffeqsolve.t0 = 0 we can make JAX return the transient time and save a lot of memory. Need to check if that behaviour applies to other solvers. This could help a lot for parameter sweeps with batch integration, saving 50 points intead of 1000 virtually saves 20x space
