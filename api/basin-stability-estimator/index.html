@@ -16,7 +16,7 @@
         <link rel="prev" href="../../benchmarks/feature-extraction/">
       
       
-        <link rel="next" href="../adaptive-sampling/">
+        <link rel="next" href="../template-integrator/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -1521,6 +1521,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../template-integrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TemplateIntegrator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../adaptive-sampling/" class="md-nav__link">
         
   
@@ -2011,11 +2034,12 @@ and provides methods to estimate basin stability and save results.</p>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">solver</span><span class="p">:</span> <span class="n">SolverProtocol</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">feature_extractor</span><span class="p">:</span> <span class="n">FeatureExtractor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">predictor</span><span class="p">:</span> <span class="n">LabelPredictor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">feature_selector</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">_USE_DEFAULT</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">predictor</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">template_integrator</span><span class="p">:</span> <span class="n">TemplateIntegrator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">feature_selector</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">_USE_DEFAULT</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2119,11 +2143,27 @@ and provides methods to estimate basin stability and save results.</p>
                 <code>predictor</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="pybasin.predictors.base.LabelPredictor" href="../predictors/#pybasin.predictors.base.LabelPredictor">LabelPredictor</a> | None</code>
+                  <code><span title="sklearn.base.BaseEstimator">BaseEstimator</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The LabelPredictor object to assign labels. If None, defaults to HDBSCANClusterer with auto_tune=True and assign_noise=True.</p>
+                <p>Any sklearn-compatible estimator (classifier or clusterer). Classifiers (<code>is_classifier(predictor)</code> is True) require a <code>template_integrator</code> for supervised learning. Clusterers (<code>is_clusterer(predictor)</code> is True) work unsupervised. Regressors are rejected. If None, defaults to <code>HDBSCANClusterer(auto_tune=True, assign_noise=True)</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>template_integrator</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="pybasin.template_integrator.TemplateIntegrator" href="../template-integrator/#pybasin.template_integrator.TemplateIntegrator">TemplateIntegrator</a> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Template integrator for supervised classifiers. Required when <code>predictor</code> is a classifier. Holds template initial conditions, labels, and ODE params for training.</p>
               </div>
             </td>
             <td>
@@ -2182,6 +2222,39 @@ and provides methods to estimate basin stability and save results.</p>
     </table>
 
 
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>TypeError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>predictor</code> is a regressor.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>predictor</code> is a classifier but no <code>template_integrator</code> is provided.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -2233,7 +2306,7 @@ and provides methods to estimate basin stability and save results.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If True and using ClassifierPredictor, run main integration and template integration in parallel (default: True).</p>
+                <p>If True and using a supervised classifier with template integrator, run main and template integration in parallel.</p>
               </div>
             </td>
             <td>
@@ -2466,7 +2539,11 @@ and provides methods to estimate basin stability and save results.</p>
 
     </div>
 
+</div><hr />
+<div class="admonition tip">
+<p class="admonition-title">Supervised Classification</p>
 </div>
+<p>For supervised classification workflows, see the <a href="../template-integrator/">TemplateIntegrator</a> API.</p>
 
 
 
