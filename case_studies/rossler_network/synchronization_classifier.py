@@ -25,8 +25,6 @@ class SynchronizationClassifier(BaseEstimator, ClusterMixin):
         Options: 0=max_deviation_x, 1=max_deviation_y, 2=max_deviation_z, 3=max_deviation_all
     """
 
-    display_name = "Synchronization Classifier"
-
     def __init__(
         self,
         epsilon: float = 0.1,

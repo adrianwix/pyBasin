@@ -9,10 +9,10 @@ from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
 from sklearn.preprocessing import StandardScaler
 
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
-from pybasin.utils import get_feature_indices_by_base_name, validate_feature_names
+from pybasin.utils import DisplayNameMixin, get_feature_indices_by_base_name, validate_feature_names
 
 
-class DynamicalSystemClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
+class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  # type: ignore[misc]
     """Two-stage hierarchical clustering for dynamical systems.
 
     This clusterer uses physics-based heuristics to classify trajectories into
@@ -77,8 +77,6 @@ class DynamicalSystemClusterer(BaseEstimator, ClusterMixin):  # type: ignore[mis
     before calling fit_predict(). The BasinStabilityEstimator handles this
     automatically during the estimation process.
     """
-
-    display_name: str = "Dynamical System Clustering"
 
     REQUIRED_FEATURES = [
         "variance",

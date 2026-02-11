@@ -6,11 +6,11 @@ from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
 from sklearn.metrics import silhouette_score  # type: ignore[import-untyped]
 from sklearn.neighbors import NearestNeighbors
 
+from pybasin.utils import DisplayNameMixin
 
-class HDBSCANClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
+
+class HDBSCANClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  # type: ignore[misc]
     """HDBSCAN clustering for basin stability analysis with optional auto-tuning and noise assignment (unsupervised learning)."""
-
-    display_name: str = "HDBSCAN Clustering"
 
     hdbscan: Any
     assign_noise: bool

@@ -86,7 +86,7 @@ class TestDynamicalSystemClustererInit:
 
     def test_display_name(self):
         clusterer = DynamicalSystemClusterer()
-        assert clusterer.display_name == "Dynamical System Clustering"
+        assert clusterer.display_name == "Dynamical System Clusterer"
 
 
 class TestSetFeatureNames:

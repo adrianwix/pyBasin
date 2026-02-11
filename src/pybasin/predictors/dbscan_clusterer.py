@@ -8,8 +8,10 @@ from sklearn.metrics import silhouette_samples  # type: ignore[import-untyped]
 from sklearn.metrics.pairwise import euclidean_distances  # type: ignore[import-untyped]
 from sklearn.neighbors import NearestNeighbors
 
+from pybasin.utils import DisplayNameMixin
 
-class DBSCANClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
+
+class DBSCANClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  # type: ignore[misc]
     """DBSCAN clustering for basin stability analysis with optional epsilon auto-tuning (unsupervised learning).
 
     When ``auto_tune=True``, replicates the epsilon search from the MATLAB
@@ -23,8 +25,6 @@ class DBSCANClusterer(BaseEstimator, ClusterMixin):  # type: ignore[misc]
        height threshold.
     5. Fall back to the global maximum if no peak is found.
     """
-
-    display_name: str = "DBSCAN Clustering"
 
     dbscan: Any
     auto_tune: bool

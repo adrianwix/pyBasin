@@ -115,6 +115,7 @@ nav:
       - Feature Extraction: benchmarks/feature-extraction.md
   - API Reference:
       - BasinStabilityEstimator: api/basin-stability-estimator.md
+      - TemplateIntegrator: api/template-integrator.md
       - BasinStabilityStudy: api/adaptive-sampling.md
       - Solution: api/solution.md
       - Samplers: api/samplers.md

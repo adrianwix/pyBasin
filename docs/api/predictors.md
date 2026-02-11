@@ -1,17 +1,5 @@
 # Predictors
 
-::: pybasin.predictors.base.LabelPredictor
-
----
-
-::: pybasin.predictors.base.ClustererPredictor
-
----
-
-::: pybasin.predictors.base.ClassifierPredictor
-
----
-
 ::: pybasin.predictors.hdbscan_clusterer.HDBSCANClusterer
 
 ---
@@ -24,8 +12,8 @@
 
 ---
 
-::: pybasin.predictors.unboundedness_clusterer.UnboundednessClusterer
+::: pybasin.predictors.unboundedness_meta_estimator.UnboundednessMetaEstimator
 
 ---
 
-::: pybasin.predictors.knn_classifier.KNNClassifier
+::: pybasin.predictors.unboundedness_meta_estimator.default_unbounded_detector

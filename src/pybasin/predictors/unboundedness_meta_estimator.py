@@ -17,6 +17,8 @@ from sklearn.utils.validation import (
     check_is_fitted,  # pyright: ignore[reportUnknownVariableType]
 )
 
+from pybasin.utils import DisplayNameMixin
+
 
 def default_unbounded_detector(x: np.ndarray) -> np.ndarray:
     """
@@ -36,7 +38,7 @@ def default_unbounded_detector(x: np.ndarray) -> np.ndarray:
     return has_nan | has_inf | has_extreme  # type: ignore[return-value]
 
 
-class UnboundednessMetaEstimator(MetaEstimatorMixin, BaseEstimator):
+class UnboundednessMetaEstimator(DisplayNameMixin, MetaEstimatorMixin, BaseEstimator):
     """
     Meta-estimator for separately labeling unbounded trajectories.
 
