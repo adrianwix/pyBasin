@@ -139,3 +139,6 @@ case-studies = [
     "notebook>=7.0.0",
     "networkx>=3.6.1",
 ]
+experiments = [
+    "pynamicalsys>=1.5.0",
+]
