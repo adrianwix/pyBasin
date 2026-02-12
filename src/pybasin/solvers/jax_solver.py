@@ -87,8 +87,8 @@ class JaxSolver(DisplayNameMixin):
         solver: Any | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        max_steps: int = DEFAULT_MAX_STEPS,
         use_cache: bool = True,
+        max_steps: int = DEFAULT_MAX_STEPS,
         event_fn: Callable[[Any, Array, Any], Array] | None = None,
     ):
         """
@@ -184,22 +184,18 @@ class JaxSolver(DisplayNameMixin):
         :param y0: Initial conditions as PyTorch tensor with shape (batch, n_dims).
         :return: Tuple (t_eval, y_values) as PyTorch tensors where y_values has shape (n_steps, batch, n_dims).
         """
-        # Validate y0 shape
         if y0.ndim != 2:
             raise ValueError(
                 f"y0 must be 2D with shape (batch, n_dims), got shape {y0.shape}. "
                 f"For single initial condition, use y0.unsqueeze(0) or y0.reshape(1, -1)."
             )
 
-        # Convert PyTorch tensor to JAX array
         y0_jax = torch_to_jax(y0, self.jax_device)
 
-        # Prepare time evaluation points
         t_start, t_end = self.time_span
         t_eval_jax = jnp.linspace(t_start, t_end, self.n_steps)
         t_eval_jax = jax.device_put(t_eval_jax, self.jax_device)
 
-        # Check cache if enabled
         cache_key = None
         if self.use_cache and self._cache_manager is not None:
             solver_config = self._get_cache_config()
@@ -211,7 +207,7 @@ class JaxSolver(DisplayNameMixin):
 
             cache_key = self._cache_manager.build_key(
                 self.__class__.__name__,
-                ode_system,  # type: ignore[arg-type]  # JaxODESystem has get_str method
+                ode_system,  # type: ignore[arg-type]
                 y0_cpu,
                 t_eval_torch_cpu,
                 solver_config,
@@ -225,23 +221,19 @@ class JaxSolver(DisplayNameMixin):
                 )
                 return cached_result
 
-        # Compute integration
         if self.use_cache:
             logger.debug("[%s] Cache miss - integrating...", self.__class__.__name__)
         else:
             logger.debug("[%s] Cache disabled - integrating...", self.__class__.__name__)
 
-        # Cast to concrete type for internal implementation
         ode_system_concrete = cast(JaxODESystem[Any], ode_system)
         t_result_jax, y_result_jax = self._integrate_jax(ode_system_concrete, y0_jax, t_eval_jax)
         logger.debug("[%s] Integration complete", self.__class__.__name__)
 
-        # Convert back to PyTorch
         torch_device = str(y0.device)
         t_result = jax_to_torch(t_result_jax, torch_device)
         y_result = jax_to_torch(y_result_jax, torch_device)
 
-        # Save to cache if enabled
         if self.use_cache and cache_key is not None and self._cache_manager is not None:
             self._cache_manager.save(cache_key, t_result.cpu(), y_result.cpu())
 
@@ -269,10 +261,8 @@ class JaxSolver(DisplayNameMixin):
         saveat = SaveAt(ts=t_eval)
         stepsize_controller = PIDController(rtol=self.rtol, atol=self.atol)
 
-        # Create event if event_fn is provided
         event = Event(cond_fn=self.event_fn) if self.event_fn is not None else None
 
-        # Define solve function for a single initial condition
         def solve_single(y0_single: Array) -> Array:
             sol = diffeqsolve(  # type: ignore[misc]
                 term,

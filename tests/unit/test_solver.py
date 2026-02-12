@@ -4,7 +4,7 @@ import pytest
 import torch
 
 from pybasin.ode_system import ODESystem
-from pybasin.solver import SklearnParallelSolver, TorchDiffEqSolver, TorchOdeSolver
+from pybasin.solvers import ScipyParallelSolver, TorchDiffEqSolver, TorchOdeSolver
 
 
 class ExponentialParams(TypedDict):
@@ -89,7 +89,7 @@ def test_solver_y0_shape_validation(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = SklearnParallelSolver(
+    solver = ScipyParallelSolver(
         time_span=(0, 1), n_steps=11, device="cpu", n_jobs=1, use_cache=False
     )
 
@@ -107,7 +107,7 @@ def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_sklearn_solver_batched(simple_ode: ExponentialDecayODE) -> None:
-    solver = SklearnParallelSolver(
+    solver = ScipyParallelSolver(
         time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
     )
 
@@ -125,7 +125,7 @@ def test_sklearn_solver_single_trajectory_with_parallel_enabled(
     simple_ode: ExponentialDecayODE,
 ) -> None:
     """Test single trajectory works correctly even when n_jobs > 1."""
-    solver = SklearnParallelSolver(
+    solver = ScipyParallelSolver(
         time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
     )
 

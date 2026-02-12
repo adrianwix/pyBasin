@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.sampler import GridSampler
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import TorchOdeSolver
 from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import SetupProperties
 

@@ -1,6 +1,6 @@
 # type: ignore
 """
-Quick benchmark to compare SklearnParallelSolver with parallel vs serial processing.
+Quick benchmark to compare ScipyParallelSolver with parallel vs serial processing.
 Tests solving only 2 IVPs (the template initial conditions from pendulum case).
 """
 
@@ -9,12 +9,12 @@ import time
 import torch
 
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
-from pybasin.solver import SklearnParallelSolver
+from pybasin.solvers import ScipyParallelSolver
 
 
 def benchmark_sklearn_solver():
     """
-    Benchmark SklearnParallelSolver for 2 template IVPs.
+    Benchmark ScipyParallelSolver for 2 template IVPs.
     Compare parallel (n_jobs=-1) vs serial (n_jobs=1) processing.
     """
     print("\n" + "=" * 80)
@@ -49,7 +49,7 @@ def benchmark_sklearn_solver():
     print("TEST 1: PARALLEL PROCESSING (n_jobs=-1)")
     print("-" * 80)
 
-    solver_parallel = SklearnParallelSolver(
+    solver_parallel = ScipyParallelSolver(
         time_span=time_span,
         n_steps=n_steps,
         n_jobs=-1,  # Use all available CPUs
@@ -72,7 +72,7 @@ def benchmark_sklearn_solver():
     print("TEST 2: SERIAL PROCESSING (n_jobs=1)")
     print("-" * 80)
 
-    solver_serial = SklearnParallelSolver(
+    solver_serial = ScipyParallelSolver(
         time_span=time_span,
         n_steps=n_steps,
         n_jobs=1,  # Force serial execution

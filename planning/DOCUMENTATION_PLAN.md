@@ -418,12 +418,12 @@ Implemented
 
 2. **Available Solvers**:
 
-   | Class                   | Backend       | GPU Support | Event Functions     | Recommended For             |
-   | ----------------------- | ------------- | ----------- | ------------------- | --------------------------- |
-   | `JaxSolver`             | JAX/Diffrax   | ✅ CUDA     | ✅ Yes              | **Default for performance** |
-   | `TorchDiffEqSolver`     | torchdiffeq   | ✅ CUDA     | ❌ Batch limitation | PyTorch ecosystems          |
-   | `TorchOdeSolver`        | torchode      | ✅ CUDA     | ❌ No               | Alternative PyTorch         |
-   | `SklearnParallelSolver` | scipy/sklearn | ❌ CPU only | ❌ No               | Debugging, reference        |
+   | Class                 | Backend       | GPU Support | Event Functions     | Recommended For             |
+   | --------------------- | ------------- | ----------- | ------------------- | --------------------------- |
+   | `JaxSolver`           | JAX/Diffrax   | ✅ CUDA     | ✅ Yes              | **Default for performance** |
+   | `TorchDiffEqSolver`   | torchdiffeq   | ✅ CUDA     | ❌ Batch limitation | PyTorch ecosystems          |
+   | `TorchOdeSolver`      | torchode      | ✅ CUDA     | ❌ No               | Alternative PyTorch         |
+   | `ScipyParallelSolver` | scipy/sklearn | ❌ CPU only | ❌ No               | Debugging, reference        |
 
 3. **JaxSolver (Recommended)**
 
@@ -454,7 +454,7 @@ Implemented
 5. **TorchDiffEqSolver**
 
    ```python
-   from pybasin.solver import TorchDiffEqSolver
+   from pybasin.solvers import TorchDiffEqSolver
 
    solver = TorchDiffEqSolver(
        device="cuda",
@@ -769,17 +769,17 @@ members_order: source
 
 ### 5.1 Core Library (`src/pybasin/`)
 
-| File                           | Lines | Key Classes                                                    |
-| ------------------------------ | ----- | -------------------------------------------------------------- |
-| `basin_stability_estimator.py` | 694   | `BasinStabilityEstimator`                                      |
-| `basin_stability_study.py`     | 264   | `BasinStabilityStudy`                                          |
-| `sampler.py`                   | ~150  | `Sampler`, `UniformRandomSampler`, `GridSampler`               |
-| `solver.py`                    | 597   | `TorchDiffEqSolver`, `TorchOdeSolver`, `SklearnParallelSolver` |
-| `solvers/jax_solver.py`        | 301   | `JaxSolver`                                                    |
-| `ode_system.py`                | ~100  | `ODESystem`                                                    |
-| `jax_ode_system.py`            | 144   | `JaxODESystem`                                                 |
-| `solution.py`                  | ~150  | `Solution`                                                     |
-| `protocols.py`                 | ~50   | `ODESystemProtocol`, `SolverProtocol`                          |
+| File                           | Lines | Key Classes                                                  |
+| ------------------------------ | ----- | ------------------------------------------------------------ |
+| `basin_stability_estimator.py` | 694   | `BasinStabilityEstimator`                                    |
+| `basin_stability_study.py`     | 264   | `BasinStabilityStudy`                                        |
+| `sampler.py`                   | ~150  | `Sampler`, `UniformRandomSampler`, `GridSampler`             |
+| `solver.py`                    | 597   | `TorchDiffEqSolver`, `TorchOdeSolver`, `ScipyParallelSolver` |
+| `solvers/jax_solver.py`        | 301   | `JaxSolver`                                                  |
+| `ode_system.py`                | ~100  | `ODESystem`                                                  |
+| `jax_ode_system.py`            | 144   | `JaxODESystem`                                               |
+| `solution.py`                  | ~150  | `Solution`                                                   |
+| `protocols.py`                 | ~50   | `ODESystemProtocol`, `SolverProtocol`                        |
 
 ### 5.2 Feature Extractors (`src/pybasin/feature_extractors/`)
 

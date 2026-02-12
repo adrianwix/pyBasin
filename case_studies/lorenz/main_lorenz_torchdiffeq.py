@@ -5,7 +5,7 @@ from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.plotters.types import InteractivePlotterOptions
 from pybasin.sampler import UniformRandomSampler
-from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers import TorchDiffEqSolver
 from pybasin.utils import time_execution
 
 

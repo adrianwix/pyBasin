@@ -22,7 +22,7 @@ from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.feature_extractors.tsfresh_feature_extractor import TsfreshFeatureExtractor
 from pybasin.sampler import GridSampler
 from pybasin.solution import Solution
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import TorchOdeSolver
 
 
 def test_per_state_configuration():

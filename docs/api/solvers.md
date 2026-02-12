@@ -4,12 +4,12 @@
 
 ---
 
-::: pybasin.solver.TorchDiffEqSolver
+::: pybasin.solvers.TorchDiffEqSolver
 
 ---
 
-::: pybasin.solver.TorchOdeSolver
+::: pybasin.solvers.TorchOdeSolver
 
 ---
 
-::: pybasin.solver.SklearnParallelSolver
+::: pybasin.solvers.ScipyParallelSolver

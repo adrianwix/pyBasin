@@ -8,7 +8,7 @@ from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.ode_system import ODESystem
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solution import Solution
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import TorchOdeSolver
 from pybasin.template_integrator import TemplateIntegrator
 
 

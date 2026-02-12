@@ -28,5 +28,8 @@ y0 = jnp.array([[1.0]])
 """
 
 from pybasin.solvers.jax_solver import JaxSolver
+from pybasin.solvers.scipy_solver import ScipyParallelSolver
+from pybasin.solvers.torchdiffeq_solver import TorchDiffEqSolver
+from pybasin.solvers.torchode_solver import TorchOdeSolver
 
-__all__ = ["JaxSolver"]
+__all__ = ["JaxSolver", "ScipyParallelSolver", "TorchDiffEqSolver", "TorchOdeSolver"]

@@ -16,12 +16,12 @@ All solvers implement:
 
 ## Available Solvers
 
-| Class                   | Backend       | GPU Support | Event Functions     | Recommended For             |
-| ----------------------- | ------------- | ----------- | ------------------- | --------------------------- |
-| `JaxSolver`             | JAX/Diffrax   | ✅ CUDA     | ✅ Yes              | **Default for performance** |
-| `TorchDiffEqSolver`     | torchdiffeq   | ✅ CUDA     | ❌ Batch limitation | PyTorch ecosystems          |
-| `TorchOdeSolver`        | torchode      | ✅ CUDA     | ❌ No               | Alternative PyTorch         |
-| `SklearnParallelSolver` | scipy/sklearn | ❌ CPU only | ❌ No               | Debugging, reference        |
+| Class                 | Backend       | GPU Support | Event Functions     | Recommended For             |
+| --------------------- | ------------- | ----------- | ------------------- | --------------------------- |
+| `JaxSolver`           | JAX/Diffrax   | ✅ CUDA     | ✅ Yes              | **Default for performance** |
+| `TorchDiffEqSolver`   | torchdiffeq   | ✅ CUDA     | ❌ Batch limitation | PyTorch ecosystems          |
+| `TorchOdeSolver`      | torchode      | ✅ CUDA     | ❌ No               | Alternative PyTorch         |
+| `ScipyParallelSolver` | scipy/sklearn | ❌ CPU only | ❌ No               | Debugging, reference        |
 
 ## JaxSolver (Recommended)
 
@@ -52,7 +52,7 @@ def stop_event(t, y, args):
 ## TorchDiffEqSolver
 
 ```python
-from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers import TorchDiffEqSolver
 
 solver = TorchDiffEqSolver(
     device="cuda",

@@ -4,14 +4,14 @@ from sklearn.neighbors import KNeighborsClassifier
 from case_studies.pendulum.pendulum_feature_extractor import PendulumFeatureExtractor
 from case_studies.pendulum.pendulum_ode import PendulumODE, PendulumParams
 from pybasin.sampler import GridSampler
-from pybasin.solver import SklearnParallelSolver
+from pybasin.solvers import ScipyParallelSolver
 from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import SetupProperties
 
 
 def setup_pendulum_system_sklearn() -> SetupProperties:
     """
-    Setup pendulum system using SklearnParallelSolver.
+    Setup pendulum system using ScipyParallelSolver.
 
     This configuration uses the new sklearn-based parallel solver that
     leverages Python 3.14's free-threading capabilities for efficient
@@ -23,9 +23,9 @@ def setup_pendulum_system_sklearn() -> SetupProperties:
     # Use same sample size as MATLAB for fair comparison
     n = 10000
 
-    # SklearnParallelSolver runs on CPU with parallel processing
+    # ScipyParallelSolver runs on CPU with parallel processing
     device = "cpu"
-    print(f"Setting up pendulum system with SklearnParallelSolver on device: {device}")
+    print(f"Setting up pendulum system with ScipyParallelSolver on device: {device}")
     print("Using multiprocessing backend with sklearn for parallel execution")
 
     # Define the parameters of the pendulum
@@ -45,7 +45,7 @@ def setup_pendulum_system_sklearn() -> SetupProperties:
     # Create the sklearn parallel solver with specified integration time
     # n_jobs=-1 uses all available CPU cores
     # Python 3.14's free-threading allows true parallel execution without GIL
-    solver = SklearnParallelSolver(
+    solver = ScipyParallelSolver(
         time_span=(0, 1000),
         n_steps=25001,
         device=device,

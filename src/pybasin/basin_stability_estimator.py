@@ -24,7 +24,7 @@ from pybasin.protocols import (
 )
 from pybasin.sampler import Sampler
 from pybasin.solution import Solution
-from pybasin.solver import TorchDiffEqSolver
+from pybasin.solvers import TorchDiffEqSolver
 from pybasin.solvers.jax_solver import JaxSolver
 from pybasin.template_integrator import TemplateIntegrator
 from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS

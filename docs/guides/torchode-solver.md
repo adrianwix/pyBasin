@@ -89,7 +89,7 @@ pip install -e ".[solvers]"
 ### Basic Usage
 
 ```python
-from pybasin.solver import TorchOdeSolver
+from pybasin.solvers import TorchOdeSolver
 
 # Create solver with default settings (dopri5)
 solver = TorchOdeSolver(
