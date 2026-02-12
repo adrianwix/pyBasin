@@ -58,7 +58,6 @@ class ODESystemProtocol(Protocol):
     This allows generic code to work with either implementation.
 
     :ivar params: Parameter dictionary for the ODE system.
-    :vartype params: Any
     """
 
     params: Any
@@ -89,26 +88,44 @@ class ODESystemProtocol(Protocol):
 class SolverProtocol(Protocol):
     """Protocol defining the common interface for ODE solvers.
 
-    Implementations: Solver (PyTorch-based), JaxSolver (JAX-based).
-
-    Both implementations satisfy this protocol via structural typing (no explicit inheritance needed).
-    This allows generic code to work with either implementation.
+    Two implementations exist: Solver (PyTorch-based) and JaxSolver (JAX-based).
+    Structural typing allows both to satisfy this protocol without explicit inheritance,
+    though classes may inherit from it to declare conformance explicitly.
 
     :ivar time_span: The integration time interval (t_start, t_end).
     :ivar n_steps: Number of evaluation points.
     :ivar device: Device for output tensors.
     :ivar use_cache: Whether caching is enabled.
-
-    :vartype time_span: tuple[float, float]
-    :vartype n_steps: int
-    :vartype device: torch.device
-    :vartype use_cache: bool
+    :ivar rtol: Relative tolerance for adaptive stepping.
+    :ivar atol: Absolute tolerance for adaptive stepping.
     """
 
     time_span: tuple[float, float]
     n_steps: int
     device: torch.device
     use_cache: bool
+    rtol: float
+    atol: float
+
+    def __init__(
+        self,
+        time_span: tuple[float, float],
+        n_steps: int,
+        device: str | None = None,
+        rtol: float = 1e-8,
+        atol: float = 1e-6,
+        use_cache: bool = True,
+    ) -> None:
+        """Initialize the solver with integration parameters.
+
+        :param time_span: Tuple (t_start, t_end) defining the integration interval.
+        :param n_steps: Number of evaluation points.
+        :param device: Device to use ('cuda', 'cpu', 'gpu', or None for auto-detect).
+        :param rtol: Relative tolerance for adaptive stepping (default: 1e-8).
+        :param atol: Absolute tolerance for adaptive stepping (default: 1e-6).
+        :param use_cache: Whether to use caching for integration results (default: True).
+        """
+        ...
 
     def integrate(
         self, ode_system: ODESystemProtocol, y0: torch.Tensor

@@ -28,7 +28,7 @@ from jax import Array
 from pybasin.cache_manager import CacheManager
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
-from pybasin.protocols import ODESystemProtocol
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.utils import DisplayNameMixin, resolve_folder
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MAX_STEPS: int = 16**5
 
 
-class JaxSolver(DisplayNameMixin):
+class JaxSolver(SolverProtocol, DisplayNameMixin):
     """
     High-performance ODE solver using JAX and Diffrax for native JAX ODE systems.
 

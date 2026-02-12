@@ -1,5 +1,13 @@
 # Solvers
 
+## Solver Protocol
+
+::: pybasin.protocols.SolverProtocol
+
+---
+
+## Solver Implementations
+
 ::: pybasin.solvers.jax_solver.JaxSolver
 
 ---

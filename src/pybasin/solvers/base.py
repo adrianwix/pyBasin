@@ -6,13 +6,13 @@ import torch
 
 from pybasin.cache_manager import CacheManager
 from pybasin.ode_system import ODESystem
-from pybasin.protocols import ODESystemProtocol
+from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.utils import DisplayNameMixin, resolve_folder
 
 logger = logging.getLogger(__name__)
 
 
-class Solver(DisplayNameMixin, ABC):
+class Solver(SolverProtocol, DisplayNameMixin, ABC):
     """Abstract base class for ODE solvers with persistent caching.
 
     The cache is stored both in-memory and on disk.

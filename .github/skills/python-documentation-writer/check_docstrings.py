@@ -342,8 +342,27 @@ def get_typed_init_attributes(class_node: ast.ClassDef) -> set[str]:
     return typed_attrs
 
 
+def get_class_level_annotations(class_node: ast.ClassDef) -> set[str]:
+    """Extract attribute names that have class-level type annotations.
+
+    Looks for patterns like: attr: Type (typically in Protocol classes or dataclasses)
+
+    :param class_node: The AST node for the class.
+    :return: Set of attribute names with class-level type annotations.
+    """
+    typed_attrs: set[str] = set()
+
+    for node in class_node.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            typed_attrs.add(node.target.id)
+
+    return typed_attrs
+
+
 def check_redundant_vartype(class_node: ast.ClassDef, file: str) -> list[DocstringIssue]:
-    """Detect redundant :vartype: tags when type hints are present in __init__.
+    """Detect redundant :vartype: tags when type hints are present.
+
+    Checks both __init__ annotations (self.attr: Type) and class-level annotations (attr: Type).
 
     :param class_node: The AST node for the class.
     :param file: The file path for error reporting.
@@ -355,8 +374,12 @@ def check_redundant_vartype(class_node: ast.ClassDef, file: str) -> list[Docstri
     if not docstring:
         return issues
 
+    # Check both __init__ attributes and class-level annotations (e.g., Protocol classes)
     typed_attrs = get_typed_init_attributes(class_node)
-    if not typed_attrs:
+    class_level_attrs = get_class_level_annotations(class_node)
+    all_typed_attrs = typed_attrs | class_level_attrs
+
+    if not all_typed_attrs:
         return issues
 
     vartype_pattern = re.compile(r":vartype\s+(\w+):")
@@ -367,14 +390,19 @@ def check_redundant_vartype(class_node: ast.ClassDef, file: str) -> list[Docstri
         match = vartype_pattern.search(line)
         if match:
             attr_name = match.group(1)
-            if attr_name in typed_attrs:
+            if attr_name in all_typed_attrs:
+                if attr_name in class_level_attrs:
+                    suggestion = f"Remove ':vartype {attr_name}: ...' line; type is already declared as class attribute '{attr_name}: Type'"
+                else:
+                    suggestion = f"Remove ':vartype {attr_name}: ...' line; type is inferred from 'self.{attr_name}: Type = ...' in __init__"
+
                 issues.append(
                     DocstringIssue(
                         file=file,
                         line=base_line + i,
                         issue_type="redundant-vartype",
-                        message=f"Redundant ':vartype {attr_name}:' - type hint already in __init__",
-                        suggestion=f"Remove ':vartype {attr_name}: ...' line; type is inferred from 'self.{attr_name}: Type = ...' in __init__",
+                        message=f"Redundant ':vartype {attr_name}:' - type hint already present",
+                        suggestion=suggestion,
                     )
                 )
 
