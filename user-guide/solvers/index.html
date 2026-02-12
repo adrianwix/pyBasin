@@ -1962,7 +1962,7 @@
 <td>Alternative PyTorch</td>
 </tr>
 <tr>
-<td><code>SklearnParallelSolver</code></td>
+<td><code>ScipyParallelSolver</code></td>
 <td>scipy/sklearn</td>
 <td>❌ CPU only</td>
 <td>❌ No</td>
@@ -1991,7 +1991,7 @@
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="k">return</span> <span class="mf">200.0</span> <span class="o">-</span> <span class="n">jnp</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
 </code></pre></div>
 <h2 id="torchdiffeqsolver">TorchDiffEqSolver</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDiffEqSolver</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDiffEqSolver</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">TorchDiffEqSolver</span><span class="p">(</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
