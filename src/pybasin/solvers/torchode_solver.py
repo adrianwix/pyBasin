@@ -67,18 +67,23 @@ class TorchOdeSolver(Solver):
         config["method"] = self.method
         return config
 
-    def with_device(self, device: str) -> "TorchOdeSolver":
-        """Create a copy of this solver configured for a different device."""
+    def clone(
+        self,
+        *,
+        device: str | None = None,
+        n_steps_factor: int = 1,
+        use_cache: bool | None = None,
+    ) -> "TorchOdeSolver":
+        """Create a copy of this solver, optionally overriding device, resolution, or caching."""
         new_solver = TorchOdeSolver(
             time_span=self.time_span,
-            n_steps=self.n_steps,
-            device=device,
+            n_steps=self.n_steps * n_steps_factor,
+            device=device or self._device_str,
             method=self.method,
             rtol=self.rtol,
             atol=self.atol,
-            use_cache=self.use_cache,
+            use_cache=use_cache if use_cache is not None else self.use_cache,
         )
-        # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
             new_solver._cache_dir = self._cache_dir
             new_solver._cache_manager = CacheManager(self._cache_dir)

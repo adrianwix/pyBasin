@@ -92,20 +92,10 @@ class SolverProtocol(Protocol):
     Structural typing allows both to satisfy this protocol without explicit inheritance,
     though classes may inherit from it to declare conformance explicitly.
 
-    :ivar time_span: The integration time interval (t_start, t_end).
-    :ivar n_steps: Number of evaluation points.
     :ivar device: Device for output tensors.
-    :ivar use_cache: Whether caching is enabled.
-    :ivar rtol: Relative tolerance for adaptive stepping.
-    :ivar atol: Absolute tolerance for adaptive stepping.
     """
 
-    time_span: tuple[float, float]
-    n_steps: int
     device: torch.device
-    use_cache: bool
-    rtol: float
-    atol: float
 
     def __init__(
         self,
@@ -139,11 +129,20 @@ class SolverProtocol(Protocol):
         """
         ...
 
-    def with_device(self, device: str) -> "SolverProtocol":
+    def clone(
+        self,
+        *,
+        device: str | None = None,
+        n_steps_factor: int = 1,
+        use_cache: bool | None = None,
+    ) -> "SolverProtocol":
         """
-        Create a copy of this solver configured for a different device.
+        Create a copy of this solver, optionally overriding device, resolution, or caching.
 
-        :param device: Target device ('cpu', 'cuda', 'gpu').
-        :return: New solver instance with the same configuration but different device.
+        :param device: Target device ('cpu', 'cuda', 'gpu'). If None, keeps the current device.
+        :param n_steps_factor: Multiply the number of evaluation points by this factor
+            (e.g. 10 for smoother plotting). Defaults to 1 (no change).
+        :param use_cache: Override caching. If None, keeps the current setting.
+        :return: New solver instance.
         """
         ...

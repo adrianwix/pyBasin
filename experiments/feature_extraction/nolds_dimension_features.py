@@ -255,7 +255,6 @@ def cluster_and_report(
 
 def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Namespace) -> None:
     props = setup_fn()
-    classifier = props.get("estimator")
     template_integrator = props.get("template_integrator")
     if not isinstance(template_integrator, TemplateIntegrator):
         print(f"  Skipping {system_name}: no template_integrator available")
@@ -267,24 +266,25 @@ def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Name
         raise RuntimeError("feature_extractor is required")
     # Ensure the solver runs on CPU to avoid device mismatches when computing
     # nolds features (these operate on numpy arrays / CPU). Use the solver's
-    # `with_device()` helper to create a CPU-bound copy if available.
+    # `clone()` helper to create a CPU-bound copy if available.
     if solver is None:
         print("  Error: setup did not provide a solver")
         sys.exit(1)
 
-    if hasattr(solver, "with_device") and callable(solver.with_device):
-        solver_cpu = solver.with_device("cpu")
+    if hasattr(solver, "clone") and callable(solver.clone):
+        solver_cpu = solver.clone(device="cpu")
     else:
-        print("  Error: solver has no with_device() method - cannot ensure CPU execution. Exiting.")
+        print("  Error: solver has no clone() method - cannot ensure CPU execution. Exiting.")
         sys.exit(1)
-    classifier.integrate_templates(solver_cpu, ode_system)
-    solution = classifier.solution
+    template_integrator.integrate(solver_cpu, ode_system)
+    solution = template_integrator.solution
     if solution is None:
         raise RuntimeError("Classifier failed to integrate templates")
+    assert feature_extractor.time_steady is not None, "time_steady is not defined"
     tail = get_tail_segment(solution, feature_extractor.time_steady)
     records: list[dict[str, float]] = []
     valid_labels: list[str] = []
-    for sample_idx in range(len(classifier.labels)):
+    for sample_idx in range(len(template_integrator.labels)):
         sample = tail[:, sample_idx, :]
         # Use first state variable with time-delay embedding to reconstruct attractor
         # (Takens' theorem: embedding reconstructs full dynamics from single observable)
@@ -293,12 +293,12 @@ def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Name
         # Skip unbounded trajectories (contain inf/nan values)
         if np.isnan(signal).any() or np.isinf(signal).any():
             print(
-                f"Template {sample_idx} ({classifier.labels[sample_idx]}): SKIPPED (unbounded/divergent)"
+                f"Template {sample_idx} ({template_integrator.labels[sample_idx]}): SKIPPED (unbounded/divergent)"
             )
             continue
 
         print(
-            f"Template {sample_idx} ({classifier.labels[sample_idx]}): signal range = [{signal.min():.3f}, {signal.max():.3f}], mean = {signal.mean():.3f}, std = {signal.std():.3f}"
+            f"Template {sample_idx} ({template_integrator.labels[sample_idx]}): signal range = [{signal.min():.3f}, {signal.max():.3f}], mean = {signal.mean():.3f}, std = {signal.std():.3f}"
         )
         record = {
             "corr_dim": safe_corr_dim(signal, emb_dim=args.emb_dim),
@@ -306,7 +306,7 @@ def inspect_system(system_name: str, setup_fn: SetupFactory, args: argparse.Name
             "lyap_e": safe_lyap_e(signal, emb_dim=args.emb_dim),
         }
         records.append(record)
-        valid_labels.append(classifier.labels[sample_idx])
+        valid_labels.append(template_integrator.labels[sample_idx])
 
     if not records:
         print(f"  No valid templates for {system_name}")

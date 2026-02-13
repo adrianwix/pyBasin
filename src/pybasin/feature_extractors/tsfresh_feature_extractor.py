@@ -63,9 +63,8 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         - Either set normalize=False (recommended for KNN with few templates)
         - Or call fit_scaler() explicitly with representative data before extraction
 
-    :param time_steady: Time threshold for filtering transients. Only data after this
-        time will be used for feature extraction. Default of 0.0 uses the entire
-        time series.
+    :param time_steady: Time threshold for filtering transients. If ``None`` (default),
+        uses 85% of the integration time span. Set to ``0.0`` to use the entire series.
     :param default_fc_parameters: Default feature extraction parameters for all states.
         Can be one of:
         - MinimalFCParameters() - Fast extraction with ~20 features
@@ -85,7 +84,7 @@ class TsfreshFeatureExtractor(FeatureExtractor):
 
     def __init__(
         self,
-        time_steady: float = 0.0,
+        time_steady: float | None = None,
         default_fc_parameters: dict[str, Any] | Any | None = None,
         kind_to_fc_parameters: dict[int, dict[str, Any] | Any] | None = None,
         n_jobs: int = 1,

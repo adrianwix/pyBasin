@@ -460,3 +460,10 @@
 2026-02-11 13:28:14 - main_duffing_oscillator_unsupervised.py: 8.077105045318604 seconds
 2026-02-11 13:43:27 - main_duffing_oscillator_unsupervised.py: 10.717177867889404 seconds
 2026-02-11 14:10:55 - main_duffing_oscillator_unsupervised.py: 8.041083097457886 seconds
+2026-02-13 14:25:38 - main_pendulum_case1_jax_solver_args.py: 13.914908409118652 seconds
+2026-02-13 14:26:10 - main_pendulum_case1_jax_solver_args.py: 2.5858867168426514 seconds
+2026-02-13 14:26:56 - main_pendulum_case1_jax_solver_args.py: 0.704833984375 seconds
+2026-02-13 14:27:27 - main_pendulum_case1.py: 0.6843116283416748 seconds
+2026-02-13 14:27:51 - main_pendulum_case1.py: 0.6458837985992432 seconds
+2026-02-13 14:27:55 - main_pendulum_case1.py: 1.3039038181304932 seconds
+2026-02-13 14:28:24 - main_pendulum_case1.py: 17.088338136672974 seconds

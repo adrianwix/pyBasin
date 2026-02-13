@@ -23,12 +23,14 @@ class FeatureExtractor(ABC):
     ```
 
     :param time_steady: Time threshold for filtering transients. Only data after this
-        time will be used for feature extraction. Default of 0.0 uses the entire
-        time series. A common choice is the last 10% of the integration time to
-        avoid transient behavior.
+        time will be used for feature extraction. If ``None`` (default), uses 85%
+        of the integration time span (derived from ``solution.time`` at extraction
+        time). Set to ``0.0`` to explicitly use the entire time series.
     """
 
-    def __init__(self, time_steady: float = 0.0):
+    DEFAULT_STEADY_FRACTION: float = 0.85
+
+    def __init__(self, time_steady: float | None = None):
         self.time_steady = time_steady
         self._feature_names: list[str] | None = None
         self._num_features: int | None = None
@@ -87,15 +89,34 @@ class FeatureExtractor(ABC):
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
+    def _resolve_time_steady(self, solution: Solution) -> float:
+        """Resolve the effective time_steady value.
+
+        If ``time_steady`` was explicitly set, returns that value. Otherwise
+        computes a default as 85% of the integration time span from the
+        solution's time array.
+
+        :param solution: ODE solution with time tensor of shape (N,).
+        :return: The resolved time_steady threshold.
+        """
+        if self.time_steady is not None:
+            return self.time_steady
+        t = solution.time
+        t0 = float(t[0])
+        t1 = float(t[-1])
+        return t0 + self.DEFAULT_STEADY_FRACTION * (t1 - t0)
+
     def filter_time(self, solution: Solution) -> torch.Tensor:
         """Filter out transient behavior by removing early time steps.
 
-        Removes time steps before `time_steady` to exclude transient dynamics
+        Removes time steps before ``time_steady`` to exclude transient dynamics
         from feature extraction. This ensures features are computed only from
         steady-state or long-term behavior.
 
+        If ``time_steady`` is ``None``, defaults to 85% of the integration
+        time span (i.e. keeps the last 15% of time points).
+
         ```python
-        # Extract features only from the last 10% of integration time
         extractor = FeatureExtractor(time_steady=9.0)  # if time_span=(0, 10)
         filtered = extractor.filter_time(solution)
         # Only time points t > 9.0 are included
@@ -108,11 +129,9 @@ class FeatureExtractor(ABC):
             steps after time_steady. If time_steady is 0 or less than all time
             points, returns the original solution.y unchanged.
         """
+        effective_steady = self._resolve_time_steady(solution)
         time_arr = solution.time
-        # Find indices where time exceeds the steady-state threshold
-        idx_steady = torch.where(time_arr > self.time_steady)[0]
-        # Use first qualifying index, or 0 if none found (include all)
+        idx_steady = torch.where(time_arr > effective_steady)[0]
         start_idx = idx_steady[0] if len(idx_steady) > 0 else 0
-        # Slice along time dimension (first dimension)
         y_filtered = solution.y[start_idx:, ...]
         return y_filtered

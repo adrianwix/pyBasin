@@ -56,8 +56,6 @@ def benchmark_template_solving():
     print(f"Number of templates: {len(template_integrator.template_y0)}")
     print(f"Template initial conditions:\n{template_integrator.template_y0}")
     print(f"Template labels: {template_integrator.labels}")
-    print(f"Integration time span: {solver.time_span}")
-    print(f"Number of time steps: {solver.n_steps}")
 
     print("\n" + "-" * 80)
     print("BENCHMARKING TEMPLATE INTEGRATION (Cache Disabled)")

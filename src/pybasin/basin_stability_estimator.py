@@ -141,13 +141,8 @@ class BasinStabilityEstimator:
         )
 
         if feature_extractor is None:
-            time_steady = self.solver.time_span[0] + 0.85 * (
-                self.solver.time_span[1] - self.solver.time_span[0]
-            )
-            # Get device string, with fallback to 'cpu'
             device_str = str(getattr(self.solver, "_device_str", "cpu"))
             feature_extractor = TorchFeatureExtractor(
-                time_steady=time_steady,
                 features=DEFAULT_TORCH_FC_PARAMETERS,
                 device=device_str,  # type: ignore[arg-type]
             )

@@ -70,25 +70,30 @@ class ScipyParallelSolver(Solver):
         config["max_step"] = self.max_step
         return config
 
-    def with_device(self, device: str) -> "ScipyParallelSolver":
-        """Create a copy of this solver configured for a different device.
+    def clone(
+        self,
+        *,
+        device: str | None = None,
+        n_steps_factor: int = 1,
+        use_cache: bool | None = None,
+    ) -> "ScipyParallelSolver":
+        """Create a copy of this solver, optionally overriding device, resolution, or caching.
 
-        Note: ScipyParallelSolver only supports CPU, so this always returns a CPU solver.
+        Note: ScipyParallelSolver only supports CPU, so the device is always CPU.
         """
         if device and "cuda" in device:
             logger.warning("  Warning: ScipyParallelSolver does not support CUDA - using CPU")
         new_solver = ScipyParallelSolver(
             time_span=self.time_span,
-            n_steps=self.n_steps,
+            n_steps=self.n_steps * n_steps_factor,
             device="cpu",
             n_jobs=self.n_jobs,
             method=self.method,
             rtol=self.rtol,
             atol=self.atol,
             max_step=self.max_step,
-            use_cache=self.use_cache,
+            use_cache=use_cache if use_cache is not None else self.use_cache,
         )
-        # Reuse the same cache directory to ensure consistency
         if self._cache_dir is not None:
             new_solver._cache_dir = self._cache_dir
             new_solver._cache_manager = CacheManager(self._cache_dir)

@@ -77,8 +77,8 @@ class TemplateIntegrator:
         if self.solver is not None:
             effective_solver = self.solver
         elif solver is not None:
-            if hasattr(solver, "with_device") and str(solver.device) != "cpu":
-                effective_solver = solver.with_device("cpu")
+            if hasattr(solver, "clone") and str(solver.device) != "cpu":
+                effective_solver = solver.clone(device="cpu")
                 logger.info(
                     "[TemplateIntegrator] Auto-created CPU solver (faster for small batch sizes)"
                 )

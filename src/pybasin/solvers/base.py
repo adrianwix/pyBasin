@@ -66,7 +66,7 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
 
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         """
-        # Store original device string for with_device()
+        # Store original device string for clone()
         self._device_str = device
 
         # Auto-detect device if not specified and normalize cuda to cuda:0
@@ -85,12 +85,20 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
                 self.device = dev
 
     @abstractmethod
-    def with_device(self, device: str) -> "Solver":
+    def clone(
+        self,
+        *,
+        device: str | None = None,
+        n_steps_factor: int = 1,
+        use_cache: bool | None = None,
+    ) -> "Solver":
         """
-        Create a copy of this solver configured for a different device.
+        Create a copy of this solver, optionally overriding device, resolution, or caching.
 
-        :param device: Target device ('cpu', 'cuda').
-        :return: New solver instance with the same configuration but different device.
+        :param device: Target device ('cpu', 'cuda'). If None, keeps the current device.
+        :param n_steps_factor: Multiply the number of evaluation points by this factor.
+        :param use_cache: Override caching. If None, keeps the current setting.
+        :return: New solver instance.
         """
         pass
 

@@ -61,7 +61,7 @@ class JaxFeatureExtractor(FeatureExtractor):
     )
     ```
 
-    :param time_steady: Time threshold for filtering transients. Default 0.0.
+    :param time_steady: Time threshold for filtering transients. If ``None`` (default),\n        uses 85% of the integration time span. Set to ``0.0`` to use the entire series.
     :param features: Default FCParameters configuration to apply to all states.
         Defaults to JAX_MINIMAL_FC_PARAMETERS. Set to None to skip states
         not explicitly configured in features_per_state.
@@ -82,7 +82,7 @@ class JaxFeatureExtractor(FeatureExtractor):
 
     def __init__(
         self,
-        time_steady: float = 0.0,
+        time_steady: float | None = None,
         features: FCParameters | None = JAX_MINIMAL_FC_PARAMETERS,
         features_per_state: dict[int, FCParameters | None] | None = None,
         normalize: bool = True,
@@ -228,8 +228,9 @@ class JaxFeatureExtractor(FeatureExtractor):
         y = solution.y
         time_np = solution.time.cpu().numpy()
 
-        if self.time_steady > 0:
-            idx_steady = int(np.searchsorted(time_np, self.time_steady, side="right"))
+        effective_steady = self._resolve_time_steady(solution)
+        if effective_steady > 0:
+            idx_steady = int(np.searchsorted(time_np, effective_steady, side="right"))
             y = y[idx_steady:]
 
         # Configure per-state features on first call

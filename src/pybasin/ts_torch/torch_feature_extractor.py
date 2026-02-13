@@ -63,7 +63,8 @@ class TorchFeatureExtractor(FeatureExtractor):
     )
     ```
 
-    :param time_steady: Time threshold for filtering transients. Default 0.0.
+    :param time_steady: Time threshold for filtering transients. If ``None`` (default),
+        uses 85% of the integration time span. Set to ``0.0`` to use the entire series.
     :param features: Default feature configuration to apply to all states. Can be:
 
         - 'comprehensive': Use TORCH_COMPREHENSIVE_FC_PARAMETERS (default)
@@ -88,7 +89,7 @@ class TorchFeatureExtractor(FeatureExtractor):
 
     def __init__(
         self,
-        time_steady: float = 0.0,
+        time_steady: float | None = None,
         features: Literal["comprehensive", "minimal"] | FCParameters | None = "comprehensive",
         features_per_state: dict[int, FCParameters | None] | None = None,
         normalize: bool = True,

@@ -7,7 +7,6 @@ enabling JIT compilation and efficient GPU execution without PyTorch callbacks.
 
 import ast
 import inspect
-from abc import ABC, abstractmethod
 from textwrap import dedent
 from typing import Any, TypeVar, cast
 
@@ -17,13 +16,15 @@ from jax import Array
 P = TypeVar("P")
 
 
-class JaxODESystem[P](ABC):
+class JaxODESystem[P]:
     """
-    Abstract base class for defining an ODE system using pure JAX.
+    Base class for defining an ODE system using pure JAX.
 
     This class is designed for ODE systems that need maximum performance with JAX/Diffrax.
     Unlike the PyTorch-based ODESystem, this uses pure JAX operations that can be
     JIT-compiled for optimal GPU performance.
+
+    For standard ODEs, subclass and override ``ode()``:
 
     ```python
     from typing import TypedDict
@@ -45,6 +46,19 @@ class JaxODESystem[P](ABC):
             return jnp.zeros_like(y)
     ```
 
+    For SDEs or CDEs where you provide custom Diffrax ``terms`` via ``solver_args``,
+    overriding ``ode()`` is not required. The subclass only needs ``params`` and
+    ``get_str()`` for caching and display:
+
+    ```python
+    class MySDESystem(JaxODESystem[MyParams]):
+        def __init__(self, params: MyParams):
+            super().__init__(params)
+
+        def get_str(self) -> str:
+            return f"MySDE(alpha={self.params['alpha']})"
+    ```
+
     :param P: Type parameter - the parameter dictionary type for this ODE system.
         Should be a TypedDict subclass for best type checking.
     """
@@ -57,10 +71,13 @@ class JaxODESystem[P](ABC):
         """
         self.params = params
 
-    @abstractmethod
     def ode(self, t: Array, y: Array) -> Array:
         """
         Right-hand side (RHS) for the ODE using pure JAX operations.
+
+        Override this method for standard ODE systems. For SDEs or CDEs where
+        custom Diffrax terms are provided via ``JaxSolver(solver_args=...)``,
+        overriding this method is not required.
 
         This method must use only JAX operations (jnp, not np or torch)
         to enable JIT compilation and efficient execution.
@@ -74,8 +91,13 @@ class JaxODESystem[P](ABC):
         :param t: The current time (scalar JAX array).
         :param y: The current state with shape (n_dims,) for single trajectory.
         :return: The time derivatives with the same shape as y.
+        :raises NotImplementedError: If not overridden and called directly.
         """
-        pass
+        raise NotImplementedError(
+            f"{self.__class__.__name__}.ode() is not implemented. "
+            "Override ode() for standard ODEs, or provide custom Diffrax terms "
+            "via JaxSolver(solver_args={'terms': ...})."
+        )
 
     def get_str(self) -> str:
         """
