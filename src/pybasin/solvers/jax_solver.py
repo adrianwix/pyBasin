@@ -162,14 +162,14 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
 
         The two interfaces are mutually exclusive at the type level.
 
-        :param time_span: Tuple (t_start, t_end) defining the integration interval. Defaults to (0, 1000).
-        :param n_steps: Number of evaluation points. Defaults to 1000.
+        :param time_span: Tuple (t_start, t_end) defining the integration interval.
+        :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
-        :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5().
-        :param rtol: Relative tolerance for adaptive stepping. Defaults to 1e-8.
-        :param atol: Absolute tolerance for adaptive stepping. Defaults to 1e-6.
-        :param max_steps: Maximum number of steps for the integrator. Defaults to 16^5 (Diffrax default).
-        :param use_cache: Whether to use caching for integration results. Defaults to True.
+        :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5() if None.
+        :param rtol: Relative tolerance for adaptive stepping.
+        :param atol: Absolute tolerance for adaptive stepping.
+        :param max_steps: Maximum number of integrator steps.
+        :param use_cache: Whether to use caching for integration results.
         :param event_fn: Optional event function for early termination. Should return positive
                          when integration should continue, negative/zero to stop.
                          Signature: (t, y, args) -> scalar Array.

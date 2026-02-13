@@ -99,8 +99,8 @@ class SolverProtocol(Protocol):
 
     def __init__(
         self,
-        time_span: tuple[float, float],
-        n_steps: int,
+        time_span: tuple[float, float] = (0, 1000),
+        n_steps: int = 1000,
         device: str | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
@@ -111,9 +111,9 @@ class SolverProtocol(Protocol):
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'cpu', 'gpu', or None for auto-detect).
-        :param rtol: Relative tolerance for adaptive stepping (default: 1e-8).
-        :param atol: Absolute tolerance for adaptive stepping (default: 1e-6).
-        :param use_cache: Whether to use caching for integration results (default: True).
+        :param rtol: Relative tolerance for adaptive stepping.
+        :param atol: Absolute tolerance for adaptive stepping.
+        :param use_cache: Whether to use caching for integration results.
         """
         ...
 

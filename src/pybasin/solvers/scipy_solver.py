@@ -26,8 +26,8 @@ class ScipyParallelSolver(Solver):
 
     def __init__(
         self,
-        time_span: tuple[float, float],
-        n_steps: int | None = None,
+        time_span: tuple[float, float] = (0, 1000),
+        n_steps: int = 1000,
         device: str | None = None,
         n_jobs: int = -1,
         method: str = "RK45",
@@ -40,7 +40,7 @@ class ScipyParallelSolver(Solver):
         Initialize ScipyParallelSolver.
 
         :param time_span: Integration interval (t_start, t_end).
-        :param n_steps: Number of evaluation points. If None, defaults to 1000.
+        :param n_steps: Number of evaluation points.
         :param device: Device to use (only 'cpu' supported).
         :param n_jobs: Number of parallel jobs (-1 for all CPUs).
         :param method: Integration method ('RK45', 'RK23', 'DOP853', 'Radau', 'BDF', 'LSODA', etc).

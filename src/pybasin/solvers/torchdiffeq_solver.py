@@ -34,8 +34,8 @@ class TorchDiffEqSolver(Solver):
 
     def __init__(
         self,
-        time_span: tuple[float, float],
-        n_steps: int | None = None,
+        time_span: tuple[float, float] = (0, 1000),
+        n_steps: int = 1000,
         device: str | None = None,
         method: str = "dopri5",
         rtol: float = 1e-8,
@@ -46,7 +46,7 @@ class TorchDiffEqSolver(Solver):
         Initialize TorchDiffEqSolver.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
-        :param n_steps: Number of evaluation points. If None, defaults to 1000.
+        :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param method: Integration method from tordiffeq.odeint.
         :param rtol: Relative tolerance for adaptive stepping.
