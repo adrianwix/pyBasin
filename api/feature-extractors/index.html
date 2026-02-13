@@ -2529,15 +2529,15 @@ utilities for filtering solutions by time (to remove transients).</p>
                 <code>time_steady</code>
             </td>
             <td>
-                  <code><span title="float">float</span></code>
+                  <code><span title="float">float</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time threshold for filtering transients. Only data after this time will be used for feature extraction. Default of 0.0 uses the entire time series. A common choice is the last 10% of the integration time to avoid transient behavior.</p>
+                <p>Time threshold for filtering transients. Only data after this time will be used for feature extraction. If <code>None</code> (default), uses 85% of the integration time span (derived from <code>solution.time</code> at extraction time). Set to <code>0.0</code> to explicitly use the entire time series.</p>
               </div>
             </td>
             <td>
-                  <code>0.0</code>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -2711,10 +2711,11 @@ are computed from solution trajectories.</p>
 <p>Removes time steps before <code>time_steady</code> to exclude transient dynamics
 from feature extraction. This ensures features are computed only from
 steady-state or long-term behavior.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Extract features only from the last 10% of integration time</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">FeatureExtractor</span><span class="p">(</span><span class="n">time_steady</span><span class="o">=</span><span class="mf">9.0</span><span class="p">)</span>  <span class="c1"># if time_span=(0, 10)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">filtered</span> <span class="o">=</span> <span class="n">extractor</span><span class="o">.</span><span class="n">filter_time</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Only time points t &gt; 9.0 are included</span>
+<p>If <code>time_steady</code> is <code>None</code>, defaults to 85% of the integration
+time span (i.e. keeps the last 15% of time points).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">FeatureExtractor</span><span class="p">(</span><span class="n">time_steady</span><span class="o">=</span><span class="mf">9.0</span><span class="p">)</span>  <span class="c1"># if time_span=(0, 10)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">filtered</span> <span class="o">=</span> <span class="n">extractor</span><span class="o">.</span><span class="n">filter_time</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Only time points t &gt; 9.0 are included</span>
 </code></pre></div>
 
 
@@ -2848,15 +2849,15 @@ For GPU extraction, uses batched CUDA operations for optimal performance.</p>
                 <code>time_steady</code>
             </td>
             <td>
-                  <code><span title="float">float</span></code>
+                  <code><span title="float">float</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time threshold for filtering transients. Default 0.0.</p>
+                <p>Time threshold for filtering transients. If <code>None</code> (default), uses 85% of the integration time span. Set to <code>0.0</code> to use the entire series.</p>
               </div>
             </td>
             <td>
-                  <code>0.0</code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3191,15 +3192,15 @@ dictionaries, allowing different feature sets for different state variables.</p>
                 <code>time_steady</code>
             </td>
             <td>
-                  <code><span title="float">float</span></code>
+                  <code><span title="float">float</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time threshold for filtering transients. Default 0.0.</p>
+                <p>Time threshold for filtering transients. If <code>None</code> (default), uses 85% of the integration time span. Set to <code>0.0</code> to use the entire series.</p>
               </div>
             </td>
             <td>
-                  <code>0.0</code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3469,15 +3470,15 @@ based on domain knowledge.</p>
                 <code>time_steady</code>
             </td>
             <td>
-                  <code><span title="float">float</span></code>
+                  <code><span title="float">float</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time threshold for filtering transients. Only data after this time will be used for feature extraction. Default of 0.0 uses the entire time series.</p>
+                <p>Time threshold for filtering transients. If <code>None</code> (default), uses 85% of the integration time span. Set to <code>0.0</code> to use the entire series.</p>
               </div>
             </td>
             <td>
-                  <code>0.0</code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">

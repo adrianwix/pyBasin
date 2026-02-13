@@ -1593,9 +1593,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.protocols.SolverProtocol.with_device" class="md-nav__link">
+  <a href="#pybasin.protocols.SolverProtocol.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -1650,9 +1650,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.jax_solver.JaxSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.jax_solver.JaxSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -1707,9 +1707,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.TorchDiffEqSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.TorchDiffEqSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -1755,9 +1755,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.TorchOdeSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.TorchOdeSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -1803,9 +1803,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.ScipyParallelSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.ScipyParallelSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2078,9 +2078,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.protocols.SolverProtocol.with_device" class="md-nav__link">
+  <a href="#pybasin.protocols.SolverProtocol.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2135,9 +2135,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.jax_solver.JaxSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.jax_solver.JaxSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2192,9 +2192,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.TorchDiffEqSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.TorchDiffEqSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2240,9 +2240,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.TorchOdeSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.TorchOdeSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2288,9 +2288,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.solvers.ScipyParallelSolver.with_device" class="md-nav__link">
+  <a href="#pybasin.solvers.ScipyParallelSolver.clone" class="md-nav__link">
     <span class="md-ellipsis">
-      with_device
+      clone
     </span>
   </a>
   
@@ -2370,28 +2370,6 @@ though classes may inherit from it to declare conformance explicitly.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="pybasin.protocols.SolverProtocol.time_span">time_span</span></code></td>
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="float">float</span>, <span title="float">float</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The integration time interval (t_start, t_end).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pybasin.protocols.SolverProtocol.n_steps">n_steps</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Number of evaluation points.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code><span title="pybasin.protocols.SolverProtocol.device">device</span></code></td>
             <td>
                   <code><span title="torch.device">device</span></code>
@@ -2399,39 +2377,6 @@ though classes may inherit from it to declare conformance explicitly.</p>
             <td>
               <div class="doc-md-description">
                 <p>Device for output tensors.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pybasin.protocols.SolverProtocol.use_cache">use_cache</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether caching is enabled.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pybasin.protocols.SolverProtocol.rtol">rtol</span></code></td>
-            <td>
-                  <code><span title="float">float</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Relative tolerance for adaptive stepping.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pybasin.protocols.SolverProtocol.atol">atol</span></code></td>
-            <td>
-                  <code><span title="float">float</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Absolute tolerance for adaptive stepping.</p>
               </div>
             </td>
           </tr>
@@ -2468,8 +2413,8 @@ though classes may inherit from it to declare conformance explicitly.</p>
 
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
@@ -2506,7 +2451,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>(0, 1000)</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -2522,7 +2467,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>1000</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -2550,7 +2495,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Relative tolerance for adaptive stepping (default: 1e-8).</p>
+                <p>Relative tolerance for adaptive stepping.</p>
               </div>
             </td>
             <td>
@@ -2566,7 +2511,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Absolute tolerance for adaptive stepping (default: 1e-6).</p>
+                <p>Absolute tolerance for adaptive stepping.</p>
               </div>
             </td>
             <td>
@@ -2582,7 +2527,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Whether to use caching for integration results (default: True).</p>
+                <p>Whether to use caching for integration results.</p>
               </div>
             </td>
             <td>
@@ -2692,17 +2637,22 @@ though classes may inherit from it to declare conformance explicitly.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.protocols.SolverProtocol.with_device" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">with_device</span>
+<h4 id="pybasin.protocols.SolverProtocol.clone" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clone</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolverProtocol</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clone</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n_steps_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolverProtocol</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a copy of this solver configured for a different device.</p>
+        <p>Create a copy of this solver, optionally overriding device, resolution, or caching.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2721,15 +2671,47 @@ though classes may inherit from it to declare conformance explicitly.</p>
                 <code>device</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="str">str</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Target device ('cpu', 'cuda', 'gpu').</p>
+                <p>Target device ('cpu', 'cuda', 'gpu'). If None, keeps the current device.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_steps_factor</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Multiply the number of evaluation points by this factor (e.g. 10 for smoother plotting). Defaults to 1 (no change).</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_cache</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Override caching. If None, keeps the current setting.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -2751,7 +2733,7 @@ though classes may inherit from it to declare conformance explicitly.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>New solver instance with the same configuration but different device.</p>
+                <p>New solver instance.</p>
               </div>
             </td>
           </tr>
@@ -2805,6 +2787,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
 </code></pre></div>
 <p>Example usage:</p>
+<p><strong>Overload 1 — generic API for standard ODEs:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.jax_ode_system</span><span class="w"> </span><span class="kn">import</span> <span class="n">JaxODESystem</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">JaxSolver</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -2818,6 +2801,29 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span><span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">y0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]])</span>  <span class="c1"># batch=1, dims=2</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">MyODE</span><span class="p">({}),</span> <span class="n">y0</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Overload 2 — direct Diffrax control via <code>solver_args</code>:</strong></p>
+<p>Pass native Diffrax arguments directly to <code>diffeqsolve</code>. This is useful
+for SDEs, CDEs, or any advanced Diffrax configuration.</p>
+<p>.. note::</p>
+<p>When using <code>solver_args</code>, the integration time points are baked into
+   <code>saveat.ts</code> at construction time. The <code>n_steps_factor</code> parameter of
+   :meth:<code>clone</code> has no effect in this mode — the actual integration still
+   uses the original <code>saveat</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">diffrax</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dopri5</span><span class="p">,</span> <span class="n">ODETerm</span><span class="p">,</span> <span class="n">PIDController</span><span class="p">,</span> <span class="n">SaveAt</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">solver_args</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="s2">&quot;terms&quot;</span><span class="p">:</span> <span class="n">ODETerm</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="o">-</span><span class="n">y</span><span class="p">),</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="n">Dopri5</span><span class="p">(),</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="s2">&quot;t1&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="s2">&quot;dt0&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        <span class="s2">&quot;saveat&quot;</span><span class="p">:</span> <span class="n">SaveAt</span><span class="p">(</span><span class="n">ts</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="s2">&quot;stepsize_controller&quot;</span><span class="p">:</span> <span class="n">PIDController</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="p">},</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">)</span>
 </code></pre></div>
 
 
@@ -2849,6 +2855,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
 
 
 </h4>
+          <div class="doc-overloads">
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
@@ -2860,12 +2867,41 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MAX_STEPS</span><span class="p">,</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">event_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Array</span><span class="p">]</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div><div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span> <span class="n">solver_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>          </div>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">solver</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MAX_STEPS</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">event_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Array</span><span class="p">]</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">solver_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Initialize JaxSolver.</p>
+<p>Can be called in two ways:</p>
+<ol>
+<li><strong>Generic API</strong> with named parameters for standard ODE integration:</li>
+</ol>
+<p><code>JaxSolver(time_span=(0, 10), n_steps=100, rtol=1e-8, ...)</code></p>
+<ol>
+<li><strong>Direct Diffrax control</strong> via <code>solver_args</code> for full access to
+   <code>diffeqsolve</code> kwargs (SDEs, CDEs, custom step-size controllers, etc.):</li>
+</ol>
+<p><code>JaxSolver(solver_args={"terms": ..., "solver": ..., "t0": ..., ...})</code></p>
+<p>The two interfaces are mutually exclusive at the type level.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2888,7 +2924,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Tuple (t_start, t_end) defining the integration interval. Defaults to (0, 1000).</p>
+                <p>Tuple (t_start, t_end) defining the integration interval.</p>
               </div>
             </td>
             <td>
@@ -2904,7 +2940,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of evaluation points. Defaults to 1000.</p>
+                <p>Number of evaluation points.</p>
               </div>
             </td>
             <td>
@@ -2936,7 +2972,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5().</p>
+                <p>Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5() if None.</p>
               </div>
             </td>
             <td>
@@ -2952,7 +2988,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Relative tolerance for adaptive stepping. Defaults to 1e-8.</p>
+                <p>Relative tolerance for adaptive stepping.</p>
               </div>
             </td>
             <td>
@@ -2968,7 +3004,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Absolute tolerance for adaptive stepping. Defaults to 1e-6.</p>
+                <p>Absolute tolerance for adaptive stepping.</p>
               </div>
             </td>
             <td>
@@ -2984,7 +3020,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Maximum number of steps for the integrator. Defaults to 16^5 (Diffrax default).</p>
+                <p>Maximum number of integrator steps.</p>
               </div>
             </td>
             <td>
@@ -3000,7 +3036,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Whether to use caching for integration results. Defaults to True.</p>
+                <p>Whether to use caching for integration results.</p>
               </div>
             </td>
             <td>
@@ -3023,6 +3059,22 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
                   <code>None</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>solver_args</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict of kwargs passed directly to <code>diffrax.diffeqsolve()</code>. When provided, all other Diffrax-specific parameters are ignored. Must NOT include <code>y0</code> (provided per-trajectory via <code>integrate()</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3034,17 +3086,22 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.solvers.jax_solver.JaxSolver.with_device" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">with_device</span>
+<h4 id="pybasin.solvers.jax_solver.JaxSolver.clone" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clone</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaxSolver</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clone</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n_steps_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaxSolver</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a copy of this solver configured for a different device.</p>
+        <p>Create a copy of this solver, optionally overriding device, resolution, or caching.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3063,15 +3120,47 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
                 <code>device</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="str">str</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Target device ('cpu', 'cuda', 'gpu').</p>
+                <p>Target device ('cpu', 'cuda', 'gpu'). If None, keeps the current device.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_steps_factor</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Multiply the number of evaluation points by this factor. Ignored for <code>solver_args</code> mode (saveat is baked in at construction time).</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_cache</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Override caching. If None, keeps the current setting.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -3093,7 +3182,7 @@ and returns PyTorch tensors, but internally uses JAX for maximum performance.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>New JaxSolver instance with the same configuration but different device.</p>
+                <p>New JaxSolver instance.</p>
               </div>
             </td>
           </tr>
@@ -3265,8 +3354,8 @@ Supports adaptive-step (dopri5, dopri8, bosh3) and fixed-step (euler, rk4) metho
 
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dopri5&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
@@ -3304,7 +3393,7 @@ Supports adaptive-step (dopri5, dopri8, bosh3) and fixed-step (euler, rk4) metho
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>(0, 1000)</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3312,15 +3401,15 @@ Supports adaptive-step (dopri5, dopri8, bosh3) and fixed-step (euler, rk4) metho
                 <code>n_steps</code>
             </td>
             <td>
-                  <code><span title="int">int</span> | None</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of evaluation points. If None, defaults to 1000.</p>
+                <p>Number of evaluation points.</p>
               </div>
             </td>
             <td>
-                  <code>None</code>
+                  <code>1000</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3414,17 +3503,22 @@ Supports adaptive-step (dopri5, dopri8, bosh3) and fixed-step (euler, rk4) metho
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.solvers.TorchDiffEqSolver.with_device" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">with_device</span>
+<h4 id="pybasin.solvers.TorchDiffEqSolver.clone" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clone</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDiffEqSolver</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clone</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n_steps_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDiffEqSolver</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a copy of this solver configured for a different device.</p>
+        <p>Create a copy of this solver, optionally overriding device, resolution, or caching.</p>
 
 
     </div>
@@ -3501,8 +3595,8 @@ performance traps for problems of varying stiffness.</p>
 
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dopri5&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
@@ -3540,7 +3634,7 @@ performance traps for problems of varying stiffness.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>(0, 1000)</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3548,15 +3642,15 @@ performance traps for problems of varying stiffness.</p>
                 <code>n_steps</code>
             </td>
             <td>
-                  <code><span title="int">int</span> | None</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of evaluation points. If None, defaults to 1000.</p>
+                <p>Number of evaluation points.</p>
               </div>
             </td>
             <td>
-                  <code>None</code>
+                  <code>1000</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3650,17 +3744,22 @@ performance traps for problems of varying stiffness.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.solvers.TorchOdeSolver.with_device" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">with_device</span>
+<h4 id="pybasin.solvers.TorchOdeSolver.clone" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clone</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchOdeSolver</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clone</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n_steps_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchOdeSolver</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a copy of this solver configured for a different device.</p>
+        <p>Create a copy of this solver, optionally overriding device, resolution, or caching.</p>
 
 
     </div>
@@ -3727,8 +3826,8 @@ Each worker solves one trajectory at a time using scipy's solve_ivp.</p>
 
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">time_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RK45&quot;</span><span class="p">,</span>
@@ -3768,7 +3867,7 @@ Each worker solves one trajectory at a time using scipy's solve_ivp.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>(0, 1000)</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3776,15 +3875,15 @@ Each worker solves one trajectory at a time using scipy's solve_ivp.</p>
                 <code>n_steps</code>
             </td>
             <td>
-                  <code><span title="int">int</span> | None</code>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of evaluation points. If None, defaults to 1000.</p>
+                <p>Number of evaluation points.</p>
               </div>
             </td>
             <td>
-                  <code>None</code>
+                  <code>1000</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3910,18 +4009,23 @@ Each worker solves one trajectory at a time using scipy's solve_ivp.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.solvers.ScipyParallelSolver.with_device" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">with_device</span>
+<h4 id="pybasin.solvers.ScipyParallelSolver.clone" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">clone</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScipyParallelSolver</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">clone</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">n_steps_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">use_cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScipyParallelSolver</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a copy of this solver configured for a different device.</p>
-<p>Note: ScipyParallelSolver only supports CPU, so this always returns a CPU solver.</p>
+        <p>Create a copy of this solver, optionally overriding device, resolution, or caching.</p>
+<p>Note: ScipyParallelSolver only supports CPU, so the device is always CPU.</p>
 
 
     </div>
