@@ -8,16 +8,14 @@ from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParam
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.predictors import DynamicalSystemClusterer
-from pybasin.sampler import GridSampler
+from pybasin.sampler import CsvSampler, GridSampler
 from pybasin.solvers import JaxSolver
 from pybasin.ts_torch.settings import DYNAMICAL_SYSTEM_FC_PARAMETERS
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.utils import time_execution
 
 
-def main():
-    n = 10000
-
+def main(csv_path: Path | None = None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up pendulum system on device: {device}")
 
@@ -25,11 +23,18 @@ def main():
 
     ode_system = PendulumJaxODE(params)
 
-    sampler = GridSampler(
-        min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
-        max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
-        device=device,
-    )
+    if csv_path is not None:
+        sampler = CsvSampler(
+            csv_path, coordinate_columns=["x1", "x2"], label_column="label", device=device
+        )
+        n = sampler.n_samples
+    else:
+        n = 10000
+        sampler = GridSampler(
+            min_limits=[-np.pi + np.arcsin(params["T"] / params["K"]), -10.0],
+            max_limits=[np.pi + np.arcsin(params["T"] / params["K"]), 10.0],
+            device=device,
+        )
 
     solver = JaxSolver(
         time_span=(0, 1000),

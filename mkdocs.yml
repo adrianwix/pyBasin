@@ -100,6 +100,7 @@ nav:
           - TorchODE Solver: guides/torchode-solver.md
           - Type Safety and Generics: guides/type-safety-generics.md
           - Custom Feature Extractor: guides/custom-feature-extractor.md
+          - Dynamics-Based Clustering: guides/dynamics-based-clustering.md
   - Case Studies:
       - Overview: case-studies/overview.md
       - Pendulum: case-studies/pendulum.md
@@ -120,7 +121,9 @@ nav:
       - Solution: api/solution.md
       - Samplers: api/samplers.md
       - Solvers: api/solvers.md
-      - Feature Extraction: api/feature-extractors.md
+      - Feature Extraction:
+          - Feature Extractors: api/feature-extractors.md
+          - Torch Feature Calculators: api/torch-feature-calculators.md
       - Feature Selection: api/feature-selector.md
       - Predictors: api/predictors.md
       - Plotters: api/plotters.md

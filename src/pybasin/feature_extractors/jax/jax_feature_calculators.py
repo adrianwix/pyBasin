@@ -1622,12 +1622,10 @@ def get_feature_names_from_config(
 # SIMPLE API (for JaxFeatureExtractor)
 # =============================================================================
 
-# Minimal feature names (tsfresh MinimalFCParameters + delta/log_delta = 12 features)
+# Minimal feature names (matching Torch minimal = 10 features)
 MINIMAL_FEATURE_NAMES: list[str] = [
-    "sum_values",
     "median",
     "mean",
-    "length",
     "standard_deviation",
     "variance",
     "root_mean_square",
@@ -1640,10 +1638,8 @@ MINIMAL_FEATURE_NAMES: list[str] = [
 
 # JAX Minimal Feature Configuration (FCParameters format)
 JAX_MINIMAL_FC_PARAMETERS: FCParameters = {
-    "sum_values": None,
     "median": None,
     "mean": None,
-    "length": None,
     "standard_deviation": None,
     "variance": None,
     "root_mean_square": None,

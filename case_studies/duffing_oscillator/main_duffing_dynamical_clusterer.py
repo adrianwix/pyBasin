@@ -7,16 +7,14 @@ from case_studies.duffing_oscillator.duffing_jax_ode import DuffingJaxODE, Duffi
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.predictors import DynamicalSystemClusterer
-from pybasin.sampler import UniformRandomSampler
+from pybasin.sampler import CsvSampler, UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.ts_torch.settings import DYNAMICAL_SYSTEM_FC_PARAMETERS
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.utils import time_execution
 
 
-def main():
-    n = 2000
-
+def main(csv_path: Path | None = None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Duffing oscillator system on device: {device}")
 
@@ -24,11 +22,18 @@ def main():
 
     ode_system = DuffingJaxODE(params)
 
-    sampler = UniformRandomSampler(
-        min_limits=[-1, -0.5],
-        max_limits=[1, 1],
-        device=device,
-    )
+    if csv_path is not None:
+        sampler = CsvSampler(
+            csv_path, coordinate_columns=["x1", "x2"], label_column="label", device=device
+        )
+        n = sampler.n_samples
+    else:
+        n = 2000
+        sampler = UniformRandomSampler(
+            min_limits=[-1, -0.5],
+            max_limits=[1, 1],
+            device=device,
+        )
 
     solver = JaxSolver(
         time_span=(0, 1000),

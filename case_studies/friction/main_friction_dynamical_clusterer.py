@@ -7,16 +7,14 @@ from case_studies.friction.friction_jax_ode import FrictionJaxODE, FrictionParam
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.predictors import DynamicalSystemClusterer
-from pybasin.sampler import UniformRandomSampler
+from pybasin.sampler import CsvSampler, UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.ts_torch.settings import DYNAMICAL_SYSTEM_FC_PARAMETERS
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
 from pybasin.utils import time_execution
 
 
-def main():
-    n = 5000
-
+def main(csv_path: Path | None = None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up friction system on device: {device}")
 
@@ -31,11 +29,18 @@ def main():
 
     ode_system = FrictionJaxODE(params)
 
-    sampler = UniformRandomSampler(
-        min_limits=[-2.0, 0.0],
-        max_limits=[2.0, 2.0],
-        device=device,
-    )
+    if csv_path is not None:
+        sampler = CsvSampler(
+            csv_path, coordinate_columns=["x1", "x2"], label_column="label", device=device
+        )
+        n = sampler.n_samples
+    else:
+        n = 5000
+        sampler = UniformRandomSampler(
+            min_limits=[-2.0, 0.0],
+            max_limits=[2.0, 2.0],
+            device=device,
+        )
 
     solver = JaxSolver(
         time_span=(0, 500),

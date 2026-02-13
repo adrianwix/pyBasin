@@ -13,14 +13,14 @@ If no predictor is specified, the default is `HDBSCANClusterer(auto_tune=True, a
 
 ## Available Predictors
 
-| Class                        | Type         | Description                                                   |
-| ---------------------------- | ------------ | ------------------------------------------------------------- |
-| `HDBSCANClusterer`           | Unsupervised | **Default**. Density-based, auto-tunes parameters             |
-| `DBSCANClusterer`            | Unsupervised | Classic DBSCAN with epsilon auto-tuning                       |
-| `DynamicalSystemClusterer`   | Unsupervised | Physics-based two-stage hierarchical clustering               |
-| `UnboundednessMetaEstimator` | Meta         | Wraps any estimator to handle unbounded cases                 |
-| Any sklearn clusterer        | Unsupervised | `KMeans`, `GaussianMixture`, `AgglomerativeClustering`, etc.  |
-| Any sklearn classifier       | Supervised   | `KNeighborsClassifier`, `SVC`, `RandomForestClassifier`, etc. |
+| Class                        | Type         | Description                                                                                |
+| ---------------------------- | ------------ | ------------------------------------------------------------------------------------------ |
+| `HDBSCANClusterer`           | Unsupervised | **Default**. Density-based, auto-tunes parameters                                          |
+| `DBSCANClusterer`            | Unsupervised | Classic DBSCAN with epsilon auto-tuning                                                    |
+| `DynamicalSystemClusterer`   | Unsupervised | Physics-based two-stage hierarchical. See [guide](../guides/dynamics-based-clustering.md). |
+| `UnboundednessMetaEstimator` | Meta         | Wraps any estimator to handle unbounded cases                                              |
+| Any sklearn clusterer        | Unsupervised | `KMeans`, `GaussianMixture`, `AgglomerativeClustering`, etc.                               |
+| Any sklearn classifier       | Supervised   | `KNeighborsClassifier`, `SVC`, `RandomForestClassifier`, etc.                              |
 
 The built-in predictors (`HDBSCANClusterer`, `DBSCANClusterer`) include **auto-tuning** to improve the probability of finding meaningful attractor clusters when analyzing unknown systems. Rather than requiring manual parameter selection, they search for optimal clustering parameters using silhouette analysis.
 
@@ -161,52 +161,6 @@ When the dataset exceeds `tune_sample_size`, a random subsample is used for the 
 
 ---
 
-## DynamicalSystemClusterer
-
-A two-stage hierarchical clusterer designed for dynamical systems. Stage 1 classifies trajectories into attractor types (fixed point, limit cycle, chaos) using physics-based heuristics. Stage 2 sub-classifies within each type.
-
-```python
-from pybasin.predictors.dynamical_system_clusterer import DynamicalSystemClusterer
-
-predictor = DynamicalSystemClusterer(
-    fp_variance_threshold=1e-6,    # Variance below this -> fixed point
-    lc_periodicity_threshold=0.5,  # Periodicity above this -> limit cycle
-)
-```
-
-### Stage 1: Attractor Type Classification
-
-The clusterer uses feature-based heuristics:
-
-- **Fixed Point (FP)**: Trajectories with variance below `fp_variance_threshold`
-- **Limit Cycle (LC)**: Strong periodicity (autocorrelation strength > `lc_periodicity_threshold`) with bounded variance, or monotonic drift (rotating solutions)
-- **Chaos**: Trajectories not meeting FP or LC criteria
-
-### Stage 2: Sub-classification
-
-Within each attractor type, HDBSCAN clusters trajectories by their distinguishing features:
-
-- FP: Clustered by steady-state mean values
-- LC: Hierarchically clustered by period number, then amplitude
-- Chaos: Clustered by spatial mean location
-
-### Required Features
-
-This clusterer requires specific feature names following the pattern `state_X__feature_name`:
-
-- `variance` -- Steady-state variance
-- `amplitude` -- Peak-to-peak amplitude
-- `mean` -- Steady-state mean
-- `linear_trend__attr_slope` -- Linear drift rate
-- `autocorrelation_periodicity__output_strength` -- Periodicity measure [0-1]
-- `autocorrelation_periodicity__output_period` -- Detected period
-- `spectral_frequency_ratio` -- Period-n detection ratio
-
-!!! warning "Feature requirement"
-The `BasinStabilityEstimator` automatically passes feature names to predictors that implement `set_feature_names()`. If calling the clusterer directly, you must call `clusterer.set_feature_names(names)` before `fit_predict()`.
-
----
-
 ## Supervised Classification with TemplateIntegrator
 
 When the attractor types are known beforehand (e.g., from bifurcation analysis), supervised classification produces more reliable results than unsupervised clustering. The workflow requires two components:
@@ -217,26 +171,6 @@ When the attractor types are known beforehand (e.g., from bifurcation analysis),
 ### How It Works
 
 The `TemplateIntegrator` integrates template initial conditions (one per known attractor) and extracts features from the resulting trajectories. These features, paired with their labels, form the training set for the classifier.
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     Supervised Classification Flow                       │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   ┌─────────────────┐      ┌─────────────────┐      ┌───────────────┐  │
-│   │ Template ICs    │ ───► │ ODE Integration │ ───► │ Feature       │  │
-│   │ + Labels        │      │                 │      │ Extraction    │  │
-│   └─────────────────┘      └─────────────────┘      └───────┬───────┘  │
-│                                                              │          │
-│                                                              ▼          │
-│                                                      ┌───────────────┐  │
-│   ┌─────────────────┐      ┌─────────────────┐      │ Classifier    │  │
-│   │ Main Samples    │ ───► │ Feature         │ ───► │ .predict()    │  │
-│   │                 │      │ Extraction      │      │               │  │
-│   └─────────────────┘      └─────────────────┘      └───────────────┘  │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
 
 ### Example: Duffing Oscillator with KNN Classifier
 
@@ -443,7 +377,7 @@ When using a classifier (`is_classifier(predictor)` returns `True`), you must pr
 
 ## Feature Name Awareness
 
-Some predictors (like `DynamicalSystemClusterer`) need feature names to select specific columns. If your custom predictor needs this capability, implement the `FeatureNameAware` protocol:
+Some predictors need feature names to select specific columns (for example, `DynamicalSystemClusterer` -- see the [Dynamics-Based Clustering](../guides/dynamics-based-clustering.md) guide). If your custom predictor needs this capability, implement the `FeatureNameAware` protocol:
 
 ```python
 from pybasin.protocols import FeatureNameAware
@@ -463,10 +397,10 @@ The `BasinStabilityEstimator` automatically calls `set_feature_names()` on predi
 
 ## Summary
 
-| Use Case                        | Recommended Predictor                         |
-| ------------------------------- | --------------------------------------------- |
-| Unknown attractors, exploratory | `HDBSCANClusterer(auto_tune=True)`            |
-| Known attractors, labeled data  | `KNeighborsClassifier` + `TemplateIntegrator` |
-| Physics-aware classification    | `DynamicalSystemClusterer`                    |
-| Simple threshold-based logic    | Custom `ClusterMixin` class                   |
-| Need MATLAB bSTAB compatibility | `DBSCANClusterer(auto_tune=True)`             |
+| Use Case                        | Recommended Predictor                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| Unknown attractors, exploratory | `HDBSCANClusterer(auto_tune=True)`                                           |
+| Known attractors, labeled data  | `KNeighborsClassifier` + `TemplateIntegrator`                                |
+| Physics-aware classification    | `DynamicalSystemClusterer` ([guide](../guides/dynamics-based-clustering.md)) |
+| Simple threshold-based logic    | Custom `ClusterMixin` class                                                  |
+| Need MATLAB bSTAB compatibility | `DBSCANClusterer(auto_tune=True)`                                            |

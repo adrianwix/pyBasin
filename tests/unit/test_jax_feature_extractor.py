@@ -51,8 +51,8 @@ def test_jax_feature_extractor_feature_names():
     feature_names = extractor.feature_names
     n_minimal = len(MINIMAL_FEATURE_NAMES)
     assert len(feature_names) == n_minimal * n_states
-    assert feature_names[0] == "state_0__sum_values"
-    assert feature_names[n_minimal] == "state_1__sum_values"
+    assert feature_names[0] == "state_0__median"
+    assert feature_names[n_minimal] == "state_1__median"
     assert all("state_0__" in name or "state_1__" in name for name in feature_names)
 
 

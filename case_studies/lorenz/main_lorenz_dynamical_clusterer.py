@@ -10,7 +10,7 @@ from case_studies.lorenz.lorenz_jax_ode import LorenzJaxODE, LorenzParams
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.predictors import DynamicalSystemClusterer
-from pybasin.sampler import GridSampler
+from pybasin.sampler import CsvSampler, GridSampler
 from pybasin.solvers import JaxSolver
 from pybasin.ts_torch.settings import DYNAMICAL_SYSTEM_FC_PARAMETERS
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
@@ -23,9 +23,7 @@ def lorenz_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Array:
     return max_val - max_abs_y
 
 
-def main():
-    n = 20000
-
+def main(csv_path: Path | None = None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Setting up Lorenz system on device: {device}")
 
@@ -33,11 +31,18 @@ def main():
 
     ode_system = LorenzJaxODE(params)
 
-    sampler = GridSampler(
-        min_limits=[-10.0, -20.0, 0.0],
-        max_limits=[10.0, 20.0, 0.0],
-        device=device,
-    )
+    if csv_path is not None:
+        sampler = CsvSampler(
+            csv_path, coordinate_columns=["x1", "x2", "x3"], label_column="label", device=device
+        )
+        n = sampler.n_samples
+    else:
+        n = 20000
+        sampler = GridSampler(
+            min_limits=[-10.0, -20.0, 0.0],
+            max_limits=[10.0, 20.0, 0.0],
+            device=device,
+        )
 
     solver = JaxSolver(
         time_span=(0, 1000),

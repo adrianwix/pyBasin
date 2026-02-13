@@ -92,6 +92,7 @@ class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  
         self,
         # General settings
         drift_threshold: float = 0.1,
+        drift_fraction: float = 0.3,
         tiers: list[str] | None = None,
         # Fixed Point (FP) settings
         fp_variance_threshold: float = 1e-6,
@@ -110,6 +111,9 @@ class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  
             excluded from variance/mean calculations for FP and chaos
             sub-classification to avoid spurious splits. Also used to detect
             rotating limit cycles. Units: [state_units / time_units]. Default: 0.1.
+        :param drift_fraction: Minimum fraction of trajectories with
+            |slope| > drift_threshold for a dimension to be flagged as drifting.
+            Default: 0.3 (i.e., 30% of trajectories must show drift).
         :param tiers: List of attractor types to detect, in priority order.
             First matching tier wins. Options: "FP", "LC", "chaos".
             Default: ["FP", "LC", "chaos"].
@@ -140,6 +144,7 @@ class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  
 
         # General settings
         self.drift_threshold = drift_threshold
+        self.drift_fraction = drift_fraction
         self.tiers = tiers or ["FP", "LC", "chaos"]
 
         # FP settings
@@ -220,7 +225,7 @@ class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  
         for dim_idx, slope_idx in enumerate(slope_indices):
             slopes = features[:, slope_idx]
             high_slope_fraction = np.mean(np.abs(slopes) > self.drift_threshold)
-            if high_slope_fraction > 0.3:
+            if high_slope_fraction > self.drift_fraction:
                 self._drifting_dims.append(dim_idx)
 
         self._non_drifting_dims = [d for d in range(n_dims) if d not in self._drifting_dims]
