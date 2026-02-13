@@ -60,7 +60,7 @@ from tsfresh.feature_extraction import feature_calculators as fc
 
 # Import pendulum ODE system
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
-from pybasin.feature_extractors.jax_feature_calculators import (
+from pybasin.feature_extractors.jax.jax_feature_calculators import (
     ALL_FEATURE_FUNCTIONS,
     JAX_COMPREHENSIVE_FC_PARAMETERS,
 )

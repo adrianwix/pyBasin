@@ -8,7 +8,7 @@
 
 ---
 
-::: pybasin.feature_extractors.jax_feature_extractor.JaxFeatureExtractor
+::: pybasin.feature_extractors.jax.jax_feature_extractor.JaxFeatureExtractor
 
 ---
 

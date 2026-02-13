@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 #     MinimalFCParameters,
 # )
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE, PendulumParams
-from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
+from pybasin.feature_extractors.jax.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
 from pybasin.template_integrator import TemplateIntegrator

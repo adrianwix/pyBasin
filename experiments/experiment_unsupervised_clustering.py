@@ -21,7 +21,6 @@ import time
 from pathlib import Path
 from typing import Literal
 
-import jax.numpy as jnp
 import numpy as np
 from sklearn.cluster import HDBSCAN, KMeans  # pyright: ignore[reportAttributeAccessIssue]
 from sklearn.feature_selection import VarianceThreshold
@@ -37,9 +36,6 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 from case_studies.friction.setup_friction_system import setup_friction_system
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
-from pybasin.feature_extractors.jax_corr_dim import corr_dim_batch_with_impute
-from pybasin.feature_extractors.jax_lyapunov_e import lyap_e_batch_with_impute
-from pybasin.feature_extractors.jax_lyapunov_r import lyap_r_batch_with_impute
 from pybasin.feature_selector.correlation_selector import CorrelationSelector
 from pybasin.solution import Solution
 from pybasin.ts_torch.torch_feature_extractor import TorchFeatureExtractor
@@ -373,66 +369,11 @@ def run_system_experiment(
     print("-" * 40)
 
     if n_bounded > 0 and features_np is not None and feature_extractor is not None:
-        t_jax_start = time.perf_counter()
-
-        # Use only steady-state data (last 100 time points if we have 1000 total)
-        n_time_points = y_arr_bounded.shape[0]
-        n_steady_points = 100
-        steady_start_idx = n_time_points - n_steady_points
-        y_steady = y_arr_bounded[steady_start_idx:]
-        print(f"   Using last {n_steady_points} time points for steady-state analysis")
-
-        # Convert to JAX array format (N, B, S) - let JAX handle it on GPU
-        y_arr_jax = jnp.array(
-            y_steady.cpu().numpy() if hasattr(y_steady, "cpu") else np.array(y_steady)
-        )
-
-        # Compute all features in one go on GPU
-        print("   Computing Lyapunov exponents (Rosenstein)...")
-        lyap_r_features = lyap_r_batch_with_impute(y_arr_jax)
-        lyap_r_features_np = np.array(lyap_r_features).reshape(n_bounded, -1)
-
-        print("   Computing correlation dimension...")
-        corr_dim_features = corr_dim_batch_with_impute(y_arr_jax)
-        corr_dim_features_np = np.array(corr_dim_features).reshape(n_bounded, -1)
-
-        print("   Computing multiple Lyapunov exponents (Eckmann)...")
-        lyap_e_features = lyap_e_batch_with_impute(y_arr_jax, matrix_dim=4)
-        lyap_e_features_np = np.array(lyap_e_features).reshape(n_bounded, -1)
-
-        t_jax = time.perf_counter() - t_jax_start
-        n_jax_features = (
-            lyap_r_features_np.shape[1]
-            + corr_dim_features_np.shape[1]
-            + lyap_e_features_np.shape[1]
-        )
-        print(
-            f"   Added {n_jax_features} JAX features ({lyap_r_features_np.shape[1]} lyap_r + {corr_dim_features_np.shape[1]} corr_dim + {lyap_e_features_np.shape[1]} lyap_e)"
-        )
-        print(f"   JAX computation time: {t_jax:.3f}s")
-
-        # Combine tsfresh + JAX features
-        all_features = np.hstack(
-            [
-                features_np,
-                lyap_r_features_np,
-                corr_dim_features_np,
-                lyap_e_features_np,
-            ]
-        )
-
-        # Create feature names for JAX features
-        jax_feature_names = (
-            [f"lyap_r_state_{i}" for i in range(lyap_r_features_np.shape[1])]
-            + [f"corr_dim_state_{i}" for i in range(corr_dim_features_np.shape[1])]
-            + [f"lyap_e_{i}" for i in range(lyap_e_features_np.shape[1])]
-        )
-        all_feature_names = feature_extractor.feature_names + jax_feature_names
+        all_features = features_np
+        all_feature_names = feature_extractor.feature_names
     else:
         all_features = None
         all_feature_names = []
-        jax_feature_names = []
-        t_jax = 0.0
 
     # Feature selection (only bounded)
     print("\n6. Feature Selection (on tsfresh+JAX features, bounded only)")
@@ -553,7 +494,6 @@ def run_system_experiment(
     print(f"Integration time: {t_integrate:.3f}s")
     print(f"Feature extraction time: {t_extract:.3f}s")
     print(f"Feature selection time: {t_selection:.3f}s")
-    print(f"JAX features time: {t_jax:.3f}s")
     print(f"HDBSCAN time: {t_hdbscan:.4f}s")
     print(f"KMeans time: {t_kmeans:.4f}s")
 
@@ -563,14 +503,13 @@ def run_system_experiment(
         "n_unbounded": n_unbounded,
         "n_bounded": n_bounded,
         "n_features_original": len(feature_extractor.feature_names) if feature_extractor else 0,
-        "n_jax_features": len(jax_feature_names) if n_bounded > 0 else 0,
+        "n_jax_features": 0,
         "n_features_selected": features_final.shape[1] if features_final is not None else 0,
         "hdbscan_bs": bs_h_assigned,
         "kmeans_bs": bs_k,
         "times": {
             "integration": t_integrate,
             "extraction": t_extract,
-            "jax": t_jax,
             "selection": t_selection,
             "hdbscan": t_hdbscan,
             "kmeans": t_kmeans,

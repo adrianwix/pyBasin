@@ -68,7 +68,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.classifiers.knncluster import KNNCluster
-from pybasin.feature_extractors.jax_feature_extractor import JaxFeatureExtractor
+from pybasin.feature_extractors.jax.jax_feature_extractor import JaxFeatureExtractor
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.sampler import GridSampler
 from pybasin.solvers import JaxSolver

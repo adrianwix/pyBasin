@@ -1557,7 +1557,7 @@ def extract_features(
 
     ```python
     import jax.numpy as jnp
-    from pybasin.feature_extractors.jax_feature_calculators import (
+    from pybasin.feature_extractors.jax.jax_feature_calculators import (
         extract_features,
         JAX_MINIMAL_FC_PARAMETERS,
     )
