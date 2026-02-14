@@ -1,37 +1,170 @@
 # Feature Selectors
 
-!!! note "Documentation in Progress"
-This page is under construction.
+Feature selectors remove redundant or uninformative features from the extracted feature matrix before it reaches the predictor. After feature extraction, the matrix can contain hundreds of columns -- many with near-zero variance or high mutual correlation. Filtering these out reduces noise, speeds up clustering, and often improves classification accuracy.
 
-## Overview
+By default, `BasinStabilityEstimator` applies a `DefaultFeatureSelector` that chains variance thresholding with pairwise correlation filtering. Any sklearn-compatible transformer can be used instead, and passing `None` disables selection entirely.
 
-Feature selectors filter features before classification to remove constant, low-variance, or correlated features.
+## Available Selectors
 
-## Default Behavior
+| Class                    | Strategy                                | Best for                                                  |
+| ------------------------ | --------------------------------------- | --------------------------------------------------------- |
+| `DefaultFeatureSelector` | Variance threshold + correlation filter | **Default.** General-purpose two-stage pipeline.          |
+| `CorrelationSelector`    | Pairwise absolute correlation filter    | Targeted removal of redundant correlated features.        |
+| Any sklearn transformer  | Custom (e.g., `SelectKBest`, k-best)    | Domain-specific selection when defaults are insufficient. |
 
-`DefaultFeatureSelector` removes features with zero variance.
+## Default Behavior in BasinStabilityEstimator
 
-## Using sklearn Transformers
+When no `feature_selector` argument is provided, the estimator creates a `DefaultFeatureSelector()` with these defaults:
+
+- **Variance threshold**: 0.01 -- features with variance below this are dropped
+- **Correlation threshold**: 0.95 -- among features with |correlation| above this, only one is kept
+- **Minimum features**: 2 -- at least two features are always retained
+
+The selector's `feature_selector` parameter uses a sentinel pattern to distinguish "not specified" (use default) from `None` (disable). Passing `None` explicitly turns off all feature filtering.
 
 ```python
-from sklearn.feature_selection import VarianceThreshold
+from pybasin import BasinStabilityEstimator
 
-bse = BasinStabilityEstimator(
-    ...,
-    feature_selector=VarianceThreshold(threshold=0.01),
+# Default: uses DefaultFeatureSelector()
+bse = BasinStabilityEstimator(ode_system=..., sampler=..., n=5000)
+
+# Disabled: no feature filtering at all
+bse = BasinStabilityEstimator(ode_system=..., sampler=..., n=5000, feature_selector=None)
+```
+
+!!! tip "When to disable"
+For pipelines with `features="minimal"` (10 features per state), feature selection may remove potentially useful columns. Consider disabling it or lowering the thresholds when working with small feature sets.
+
+---
+
+## DefaultFeatureSelector
+
+A two-step sklearn `Pipeline` that first removes low-variance features, then filters out highly correlated ones. Because it subclasses `Pipeline`, it exposes the full sklearn transformer API: `fit()`, `transform()`, `fit_transform()`, `get_params()`, and `set_params()`.
+
+```python
+from pybasin.feature_selector import DefaultFeatureSelector
+
+# Default thresholds
+selector = DefaultFeatureSelector()
+
+# Custom thresholds
+selector = DefaultFeatureSelector(
+    variance_threshold=0.05,
+    correlation_threshold=0.90,
+    min_features=3,
 )
 ```
 
+The pipeline steps run in order:
+
+1. `VarianceThreshold(threshold=variance_threshold)` -- drops constant or near-constant columns
+2. `CorrelationSelector(threshold=correlation_threshold, min_features=min_features)` -- among the surviving features, drops those with high pairwise |correlation|
+
+### Constructor Parameters
+
+| Parameter               | Type    | Default | Description                                                                 |
+| ----------------------- | ------- | ------- | --------------------------------------------------------------------------- |
+| `variance_threshold`    | `float` | `0.01`  | Minimum variance required to keep a feature.                                |
+| `correlation_threshold` | `float` | `0.95`  | Maximum absolute pairwise correlation allowed between features.             |
+| `min_features`          | `int`   | `2`     | Floor on the number of features retained by the correlation filtering step. |
+
+### Retrieving the Selection Mask
+
+Call `get_support()` after fitting to see which original features survived both stages:
+
+```python
+import numpy as np
+
+selector = DefaultFeatureSelector()
+X_filtered = selector.fit_transform(X)
+
+mask = selector.get_support()          # boolean array, length = original feature count
+indices = selector.get_support(indices=True)  # integer indices of kept features
+```
+
+The method composes the variance mask and the correlation mask internally, returning a single combined result against the original feature indices.
+
+---
+
 ## CorrelationSelector
 
-```python
-from pybasin.feature_selector.correlation_selector import CorrelationSelector
-
-selector = CorrelationSelector(threshold=0.95)
-```
-
-## Disabling Feature Selection
+An sklearn transformer that removes features with high pairwise absolute correlation. It iterates over the upper triangle of the correlation matrix and drops the later column in each correlated pair, subject to a minimum feature count.
 
 ```python
-bse = BasinStabilityEstimator(..., feature_selector=None)
+from pybasin.feature_selector import CorrelationSelector
+
+selector = CorrelationSelector(threshold=0.95, min_features=2)
+X_filtered = selector.fit_transform(X)
 ```
+
+### Constructor Parameters
+
+| Parameter      | Type    | Default | Description                                                                          |
+| -------------- | ------- | ------- | ------------------------------------------------------------------------------------ |
+| `threshold`    | `float` | `0.95`  | Correlation ceiling. Pairs with \|corr\| above this trigger removal.                 |
+| `min_features` | `int`   | `2`     | Minimum features to retain. Prevents aggressive filtering from removing all columns. |
+
+!!! note "Greedy column-order removal"
+The selector iterates column pairs in order and always drops the higher-indexed column. This greedy strategy is fast but not globally optimal -- the retained set depends on column ordering.
+
+### Retrieving the Selection Mask
+
+```python
+mask = selector.get_support()          # boolean mask
+indices = selector.get_support(indices=True)  # integer indices
+```
+
+---
+
+## Using Custom sklearn Transformers
+
+Any sklearn-compatible transformer that implements `fit_transform()` can serve as a feature selector. If the transformer also provides `get_support()`, filtered feature names will appear in `Solution.filtered_feature_names`.
+
+```python
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+
+# Simple variance filter
+bse = BasinStabilityEstimator(
+    ode_system=...,
+    sampler=...,
+    feature_selector=VarianceThreshold(threshold=0.1),
+)
+
+# k-best features (supervised -- requires labels via TemplateIntegrator)
+bse = BasinStabilityEstimator(
+    ode_system=...,
+    sampler=...,
+    feature_selector=SelectKBest(f_classif, k=20),
+    predictor=some_classifier,
+    template_integrator=some_template,
+)
+```
+
+!!! warning "Feature name tracking"
+Only selectors with a `get_support()` method enable automatic feature name filtering. Without it, `Solution.filtered_feature_names` falls back to the full unfiltered list.
+
+---
+
+## Standalone Usage
+
+Feature selectors work independently outside `BasinStabilityEstimator`. This is useful for inspecting which features survive filtering before running a full pipeline.
+
+```python
+import numpy as np
+from pybasin.feature_selector import DefaultFeatureSelector
+
+# Simulated feature matrix: 100 samples, 50 features
+rng = np.random.default_rng(42)
+X = rng.standard_normal((100, 50))
+
+selector = DefaultFeatureSelector(variance_threshold=0.01, correlation_threshold=0.90)
+X_filtered = selector.fit_transform(X)
+
+print(f"Before: {X.shape[1]} features")
+print(f"After:  {X_filtered.shape[1]} features")
+print(f"Kept indices: {selector.get_support(indices=True)}")
+```
+
+---
+
+For full class signatures and attribute documentation, see the [Feature Selection API reference](../api/feature-selector.md).
