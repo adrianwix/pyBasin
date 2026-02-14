@@ -804,9 +804,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#clone-device-n_steps_factor-use_cache" class="md-nav__link">
+  <a href="#clone-device-n_steps_factor-cache_dir" class="md-nav__link">
     <span class="md-ellipsis">
-      clone(*, device, n_steps_factor, use_cache)
+      clone(*, device, n_steps_factor, cache_dir)
     </span>
   </a>
   
@@ -874,6 +874,39 @@
       Caching
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Path Resolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Format
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1291,6 +1324,29 @@
   
   <span class="md-ellipsis">
     Custom Feature Extractor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/dynamics-based-clustering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dynamics-Based Clustering
     
   </span>
   
@@ -1862,9 +1918,27 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../api/feature-extractors/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
         
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -1873,7 +1947,65 @@
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            Feature Extraction
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/feature-extractors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Feature Extractors
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/torch-feature-calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Torch Feature Calculators
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2094,9 +2226,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#clone-device-n_steps_factor-use_cache" class="md-nav__link">
+  <a href="#clone-device-n_steps_factor-cache_dir" class="md-nav__link">
     <span class="md-ellipsis">
-      clone(*, device, n_steps_factor, use_cache)
+      clone(*, device, n_steps_factor, cache_dir)
     </span>
   </a>
   
@@ -2164,6 +2296,39 @@
       Caching
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Path Resolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Format
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2473,10 +2638,10 @@
 <td>Absolute tolerance for adaptive stepping</td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Enable persistent disk + memory caching</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td><code>".pybasin_cache"</code></td>
+<td>Cache directory path. <code>None</code> disables caching</td>
 </tr>
 </tbody>
 </table>
@@ -2494,8 +2659,8 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># t_eval.shape   -&gt; (n_steps,)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># y_values.shape -&gt; (n_steps, batch, n_dims)</span>
 </code></pre></div>
-<h3 id="clone-device-n_steps_factor-use_cache"><code>clone(*, device, n_steps_factor, use_cache)</code></h3>
-<p>Creates a copy of the solver with optionally overridden settings. This is useful for creating a high-resolution variant for plotting while keeping the original solver for computation:</p>
+<h3 id="clone-device-n_steps_factor-cache_dir"><code>clone(*, device, n_steps_factor, cache_dir)</code></h3>
+<p>Creates a copy of the solver with optionally overridden settings. Useful for creating a high-resolution variant for plotting while keeping the original solver for computation:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">plot_solver</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">n_steps_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 </code></pre></div>
 <table>
@@ -2521,10 +2686,10 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td>Multiply <code>n_steps</code> by this factor</td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code> or <code>None</code></td>
-<td><code>None</code></td>
-<td>Override caching. <code>None</code> keeps current setting</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code>, <code>None</code>, or <code>UNSET</code></td>
+<td><code>UNSET</code></td>
+<td>Override cache directory. <code>None</code> disables caching. <code>UNSET</code> keeps current setting</td>
 </tr>
 </tbody>
 </table>
@@ -2539,12 +2704,22 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <h3 id="ode-system-device-transfer">ODE System Device Transfer</h3>
 <p>PyTorch-based solvers (<code>TorchDiffEqSolver</code>, <code>TorchOdeSolver</code>, <code>ScipyParallelSolver</code>) call <code>ode_system.to(self.device)</code> before integration. This moves the ODE system's parameters to the solver's device automatically. <code>JaxSolver</code> does not perform this transfer because JAX ODE systems are stateless and device placement is handled through <code>jax.device_put</code>.</p>
 <h2 id="caching">Caching</h2>
-<p>All solvers support persistent disk caching to avoid redundant integrations. When <code>use_cache=True</code> (the default), integration results are stored as pickled files in the cache directory returned by <code>resolve_folder("cache")</code>.</p>
-<p>The cache key is an MD5 hash built from five components: the solver class name, the ODE system's source representation (via <code>get_str()</code>), the ODE system parameters, the serialized <code>y0</code> and <code>t_eval</code> tensors, and solver-specific configuration (tolerances, method, etc.). Changing any of these invalidates the cache entry.</p>
-<p>On cache load, tensors are moved to the solver's current device. Corrupted cache files (e.g. truncated pickles) are detected and deleted automatically rather than raising exceptions. The cache manager also logs a warning when disk space drops below 1 GB.</p>
-<p>To disable caching entirely, pass <code>use_cache=False</code> at construction time:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span><span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<p>Every solver caches integration results to disk so that repeated runs with identical inputs skip the numerical integration entirely. Caching is controlled through the <code>cache_dir</code> constructor parameter, which defaults to <code>".pybasin_cache"</code>. Pass <code>None</code> to disable it.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Default -- cache under .pybasin_cache/ at the project root</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span><span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Explicit subfolder for a specific system</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span><span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;.pybasin_cache/pendulum&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># No caching</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span><span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
+<h3 id="path-resolution">Path Resolution</h3>
+<p>Relative paths (like <code>".pybasin_cache"</code> or <code>".pybasin_cache/pendulum"</code>) are resolved from the project root, which is located by walking up the directory tree until a <code>pyproject.toml</code> or <code>.git</code> marker is found. Absolute paths are used as-is. The directory is created automatically if it does not exist.</p>
+<h3 id="cache-keys">Cache Keys</h3>
+<p>The cache key is an MD5 hash built from six components: the solver class name, the ODE system's source representation (via <code>get_str()</code>), the ODE system parameters, the serialized <code>y0</code> and <code>t_eval</code> tensors, and solver-specific configuration (tolerances, method, etc.). Changing any of these produces a different key, so stale results are never returned.</p>
+<h3 id="storage-format">Storage Format</h3>
+<p>Cached tensors are stored using <a href="https://huggingface.co/docs/safetensors/">safetensors</a>, which provides fast, zero-copy loading without the security concerns of pickle. On cache load, tensors are moved to the solver's current device. Corrupted files are detected and deleted automatically rather than raising exceptions.</p>
 <hr />
 <h2 id="jaxsolver">JaxSolver</h2>
 <p>The recommended solver for most workloads. It uses <a href="https://docs.kidger.site/diffrax/">Diffrax</a> (Kidger, 2021) for numerical integration, with <code>jax.vmap</code> for batch processing and JIT compilation for performance. On GPU, <code>JaxSolver</code> achieves near-constant integration time regardless of sample count -- roughly 11.5 seconds for N ranging from 5,000 to 100,000 in <a href="../../benchmarks/solvers/">benchmark tests</a>. It is also the only solver that supports per-trajectory event-based early termination, which is critical for systems with unbounded trajectories.</p>
@@ -2561,13 +2736,12 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">Dopri5</span><span class="p">(),</span>       <span class="c1"># Diffrax solver instance</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">method</span><span class="o">=</span><span class="n">Dopri5</span><span class="p">(),</span>       <span class="c1"># Diffrax solver instance</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">max_steps</span><span class="o">=</span><span class="mi">16</span><span class="o">**</span><span class="mi">5</span><span class="p">,</span>       <span class="c1"># Maximum integrator steps</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="n">event_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>         <span class="c1"># Optional early termination</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">)</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="p">)</span>
 </code></pre></div>
 <h4 id="constructor-parameters">Constructor Parameters</h4>
 <table>
@@ -2599,7 +2773,7 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td><code>"cuda"</code>, <code>"gpu"</code>, <code>"cpu"</code>, or <code>None</code> for auto-detect</td>
 </tr>
 <tr>
-<td><code>solver</code></td>
+<td><code>method</code></td>
 <td>Diffrax solver or <code>None</code></td>
 <td><code>None</code></td>
 <td>Diffrax solver instance. Defaults to <code>Dopri5()</code> if <code>None</code></td>
@@ -2629,10 +2803,10 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td>Event function for per-trajectory early termination</td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Enable persistent disk caching</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td><code>".pybasin_cache"</code></td>
+<td>Cache directory path. <code>None</code> disables caching</td>
 </tr>
 </tbody>
 </table>
@@ -2657,8 +2831,7 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="s2">&quot;saveat&quot;</span><span class="p">:</span> <span class="n">SaveAt</span><span class="p">(</span><span class="n">ts</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="s2">&quot;stepsize_controller&quot;</span><span class="p">:</span> <span class="n">PIDController</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
 <a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="p">},</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="p">)</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">)</span>
 </code></pre></div>
 <p>When <code>solver_args</code> is provided, all other Diffrax-specific parameters (<code>time_span</code>, <code>n_steps</code>, <code>solver</code>, <code>rtol</code>, <code>atol</code>, <code>max_steps</code>, <code>event_fn</code>) are ignored entirely. The solver wraps each call with <code>jax.vmap</code> and injects <code>y0</code> per trajectory -- do <strong>not</strong> include <code>y0</code> in the dictionary.</p>
 <div class="admonition warning">
@@ -2758,10 +2931,10 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td>Absolute tolerance for adaptive stepping</td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Enable persistent disk caching</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td><code>".pybasin_cache"</code></td>
+<td>Cache directory path. <code>None</code> disables caching</td>
 </tr>
 </tbody>
 </table>
@@ -2869,10 +3042,10 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td>Absolute tolerance for adaptive stepping</td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Enable persistent disk caching</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td><code>".pybasin_cache"</code></td>
+<td>Cache directory path. <code>None</code> disables caching</td>
 </tr>
 </tbody>
 </table>
@@ -2992,10 +3165,10 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <td>Maximum step size. Defaults to <code>(t_end - t_start) / 100</code></td>
 </tr>
 <tr>
-<td><code>use_cache</code></td>
-<td><code>bool</code></td>
-<td><code>True</code></td>
-<td>Enable persistent disk caching</td>
+<td><code>cache_dir</code></td>
+<td><code>str</code> or <code>None</code></td>
+<td><code>".pybasin_cache"</code></td>
+<td>Cache directory path. <code>None</code> disables caching</td>
 </tr>
 </tbody>
 </table>
