@@ -175,7 +175,7 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         device=device,
         rtol=1e-3,
         atol=1e-6,
-        use_cache=True,
+        cache_dir=".pybasin_cache/rossler_network",
         event_fn=rossler_stop_event,
     )
 

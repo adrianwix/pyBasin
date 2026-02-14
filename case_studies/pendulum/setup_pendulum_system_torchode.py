@@ -48,6 +48,7 @@ def setup_pendulum_system_torchode() -> SetupProperties:
         method="dopri5",
         rtol=1e-8,
         atol=1e-6,
+        cache_dir=".pybasin_cache/pendulum",
     )
 
     # Instantiate the feature extractor with a steady state time.

@@ -4,7 +4,7 @@ from typing import Any
 import torch
 from torchdiffeq import odeint  # type: ignore[import-untyped]
 
-from pybasin.cache_manager import CacheManager
+from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
 from pybasin.ode_system import ODESystem
 from pybasin.solvers.base import Solver
 
@@ -40,7 +40,7 @@ class TorchDiffEqSolver(Solver):
         method: str = "dopri5",
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
     ):
         """
         Initialize TorchDiffEqSolver.
@@ -49,12 +49,12 @@ class TorchDiffEqSolver(Solver):
         :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
         :param method: Integration method from tordiffeq.odeint.
-        :param rtol: Relative tolerance for adaptive stepping.
-        :param atol: Absolute tolerance for adaptive stepping.
-        :param use_cache: Whether to use caching for integration results.
+        :param rtol: Relative tolerance (used by adaptive-step methods only).
+        :param atol: Absolute tolerance (used by adaptive-step methods only).
+        :param cache_dir: Directory for caching integration results. ``None`` disables caching.
         """
         super().__init__(
-            time_span, n_steps=n_steps, device=device, rtol=rtol, atol=atol, use_cache=use_cache
+            time_span, n_steps=n_steps, device=device, rtol=rtol, atol=atol, cache_dir=cache_dir
         )
         self.method = method
 
@@ -69,22 +69,19 @@ class TorchDiffEqSolver(Solver):
         *,
         device: str | None = None,
         n_steps_factor: int = 1,
-        use_cache: bool | None = None,
+        cache_dir: str | None | object = UNSET,
     ) -> "TorchDiffEqSolver":
         """Create a copy of this solver, optionally overriding device, resolution, or caching."""
-        new_solver = TorchDiffEqSolver(
+        effective_cache_dir = self._cache_dir if cache_dir is UNSET else cache_dir
+        return TorchDiffEqSolver(
             time_span=self.time_span,
             n_steps=self.n_steps * n_steps_factor,
             device=device or self._device_str,
             method=self.method,
             rtol=self.rtol,
             atol=self.atol,
-            use_cache=use_cache if use_cache is not None else self.use_cache,
+            cache_dir=effective_cache_dir,  # type: ignore[arg-type]
         )
-        if self._cache_dir is not None:
-            new_solver._cache_dir = self._cache_dir
-            new_solver._cache_manager = CacheManager(self._cache_dir)
-        return new_solver
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor

@@ -43,6 +43,7 @@ dependencies = [
     "dash-mantine-components>=0.14.0",
     "hdbscan>=0.8.40",
     "jaxtyping>=0.3.3",
+    "safetensors>=0.7.0",
 ]
 
 [build-system]

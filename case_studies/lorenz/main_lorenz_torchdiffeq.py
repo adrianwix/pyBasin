@@ -32,6 +32,7 @@ def main():
         time_span=(0, 1000),
         n_steps=1000,
         device=device,
+        cache_dir=".pybasin_cache/lorenz",
     )
 
     bse = BasinStabilityEstimator(

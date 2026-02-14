@@ -16,6 +16,7 @@ from pybasin.feature_selector.default_feature_selector import DefaultFeatureSele
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
 from pybasin.protocols import (
+    UNSET,
     FeatureNameAware,
     ODESystemProtocol,
     SklearnClassifier,
@@ -36,9 +37,6 @@ from pybasin.utils import (
     get_filtered_feature_names,
     resolve_folder,
 )
-
-# Sentinel value to distinguish "not specified" from "None"
-_USE_DEFAULT = object()
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +62,7 @@ class BasinStabilityEstimator:
         feature_extractor: FeatureExtractor | None = None,
         predictor: BaseEstimator | None = None,
         template_integrator: TemplateIntegrator | None = None,
-        feature_selector: BaseEstimator | None = _USE_DEFAULT,  # type: ignore[assignment]
+        feature_selector: BaseEstimator | None = UNSET,  # type: ignore[assignment]
         detect_unbounded: bool = True,
         save_to: str | None = None,
     ):
@@ -112,19 +110,16 @@ class BasinStabilityEstimator:
                 time_span=(0, 1000),
                 n_steps=1000,
                 device=str(sampler.device),
-                use_cache=True,
             )
         else:
             self.solver = TorchDiffEqSolver(
                 time_span=(0, 1000),
                 n_steps=1000,
                 device=str(sampler.device),
-                use_cache=True,
             )
 
         # Initialize feature selector
-        # Note: _USE_DEFAULT sentinel distinguishes "not specified" from "None" (disabled)
-        if feature_selector is _USE_DEFAULT:
+        if feature_selector is UNSET:
             # Default: use feature filtering with default thresholds
             self.feature_selector: BaseEstimator | None = DefaultFeatureSelector()
         else:

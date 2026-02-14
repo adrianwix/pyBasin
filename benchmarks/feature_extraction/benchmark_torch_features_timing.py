@@ -119,7 +119,7 @@ def generate_sample(
         device="cpu",
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,
+        cache_dir=None,
     )
 
     # Integrate ODE system

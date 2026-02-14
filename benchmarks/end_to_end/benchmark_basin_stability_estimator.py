@@ -58,7 +58,7 @@ def create_bse(n: int, device: str) -> BasinStabilityEstimator:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,
+        cache_dir=None,
     )
 
     feature_extractor = PendulumFeatureExtractor(

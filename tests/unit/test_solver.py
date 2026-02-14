@@ -26,7 +26,7 @@ def simple_ode() -> ExponentialDecayODE:
 
 
 def test_torchdiffeq_solver_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = TorchDiffEqSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = TorchDiffEqSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_ode, y0)
@@ -42,7 +42,7 @@ def test_torchdiffeq_solver_integration(simple_ode: ExponentialDecayODE) -> None
 
 
 def test_torchode_solver_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_ode, y0)
@@ -56,7 +56,7 @@ def test_torchode_solver_integration(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_solver_batched_integration(simple_ode: ExponentialDecayODE) -> None:
-    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0], [2.0]])
     t, y = solver.integrate(simple_ode, y0)
@@ -70,7 +70,7 @@ def test_solver_batched_integration(simple_ode: ExponentialDecayODE) -> None:
 
 
 def test_solver_y0_shape_validation(simple_ode: ExponentialDecayODE) -> None:
-    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = TorchOdeSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     # 1D tensor should be rejected
     y0_1d = torch.tensor([1.0])
@@ -90,7 +90,7 @@ def test_solver_y0_shape_validation(simple_ode: ExponentialDecayODE) -> None:
 
 def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
     solver = ScipyParallelSolver(
-        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=1, use_cache=False
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=1, cache_dir=None
     )
 
     y0 = torch.tensor([[1.0]])
@@ -108,7 +108,7 @@ def test_sklearn_solver_integration(simple_ode: ExponentialDecayODE) -> None:
 
 def test_sklearn_solver_batched(simple_ode: ExponentialDecayODE) -> None:
     solver = ScipyParallelSolver(
-        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, cache_dir=None
     )
 
     y0 = torch.tensor([[1.0], [2.0]])
@@ -126,7 +126,7 @@ def test_sklearn_solver_single_trajectory_with_parallel_enabled(
 ) -> None:
     """Test single trajectory works correctly even when n_jobs > 1."""
     solver = ScipyParallelSolver(
-        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, use_cache=False
+        time_span=(0, 1), n_steps=11, device="cpu", n_jobs=2, cache_dir=None
     )
 
     y0 = torch.tensor([[1.0]])

@@ -5,9 +5,10 @@ from typing import Any, cast
 import torch
 
 from pybasin.cache_manager import CacheManager
+from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
 from pybasin.ode_system import ODESystem
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
-from pybasin.utils import DisplayNameMixin, resolve_folder
+from pybasin.utils import DisplayNameMixin, resolve_cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
       - The ODE system's string representation via ode_system.get_str(),
       - The serialized initial conditions (y0),
       - The serialized evaluation time points (t_eval).
-    The persistent cache is stored in the folder given by resolve_folder("cache").
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
         device: str | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
     ):
         """
         Initialize the solver with integration parameters.
@@ -40,24 +40,22 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'cpu', or None for auto-detect).
-        :param rtol: Relative tolerance for adaptive stepping.
-        :param atol: Absolute tolerance for adaptive stepping.
-        :param use_cache: Whether to use caching for integration results.
+        :param rtol: Relative tolerance (used by adaptive-step methods only).
+        :param atol: Absolute tolerance (used by adaptive-step methods only).
+        :param cache_dir: Directory for caching integration results. Relative paths are
+            resolved from the project root. ``None`` disables caching.
         """
         self.time_span = time_span
-        self.use_cache = use_cache
         self.rtol = rtol
         self.atol = atol
 
         self.n_steps = n_steps
         self._set_device(device)
 
-        # Only create cache manager if caching is enabled
-        # This avoids resolve_folder issues when called from threads
         self._cache_manager: CacheManager | None = None
         self._cache_dir: str | None = None
-        if use_cache:
-            self._cache_dir = resolve_folder("cache")
+        if cache_dir is not None:
+            self._cache_dir = resolve_cache_dir(cache_dir)
             self._cache_manager = CacheManager(self._cache_dir)
 
     def _set_device(self, device: str | None) -> None:
@@ -90,14 +88,15 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
         *,
         device: str | None = None,
         n_steps_factor: int = 1,
-        use_cache: bool | None = None,
+        cache_dir: str | None | object = UNSET,
     ) -> "Solver":
         """
         Create a copy of this solver, optionally overriding device, resolution, or caching.
 
         :param device: Target device ('cpu', 'cuda'). If None, keeps the current device.
         :param n_steps_factor: Multiply the number of evaluation points by this factor.
-        :param use_cache: Override caching. If None, keeps the current setting.
+        :param cache_dir: Override cache directory. Pass ``None`` to disable caching.
+            If not provided, keeps the current setting.
         :return: New solver instance.
         """
         pass
@@ -132,52 +131,37 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
                    of initial conditions and n_dims is the number of state variables.
         :return: Tuple (t_eval, y_values) where y_values has shape (n_steps, batch, n_dims).
         """
-        # Validate y0 shape
         if y0.ndim != 2:
             raise ValueError(
                 f"y0 must be 2D with shape (batch, n_dims), got shape {y0.shape}. "
                 f"For single initial condition, use y0.unsqueeze(0) or y0.reshape(1, -1)."
             )
 
-        # Prepare tensors with correct device and dtype
         t_eval, y0 = self._prepare_tensors(y0)
-
-        # Move ODE system to the correct device
         ode_system = ode_system.to(self.device)
 
-        # Check cache if enabled
-        cache_key = None
+        def compute() -> tuple[torch.Tensor, torch.Tensor]:
+            ode_system_concrete = cast(ODESystem[Any], ode_system)
+            logger.debug("[%s] Integrating on %s...", self.__class__.__name__, self.device)
+            t_result, y_result = self._integrate(ode_system_concrete, y0, t_eval)
+            logger.debug("[%s] Integration complete", self.__class__.__name__)
+            return t_result, y_result
 
-        if self.use_cache and self._cache_manager is not None:
-            solver_config = self._get_cache_config()
-            cache_key = self._cache_manager.build_key(
-                self.__class__.__name__, ode_system, y0, t_eval, solver_config
+        if self._cache_manager is not None:
+            return self._cache_manager.cached_call(
+                solver_name=self.__class__.__name__,
+                ode_system=ode_system,
+                y0=y0,
+                t_eval=t_eval,
+                solver_config=self._get_cache_config(),
+                device=self.device,
+                compute_fn=compute,
             )
-            cached_result = self._cache_manager.load(cache_key, self.device)
 
-            if cached_result is not None:
-                logger.debug("[%s] Loaded result from cache", self.__class__.__name__)
-                return cached_result
-
-        # Compute integration if not cached or cache disabled
-        if self.use_cache:
-            logger.debug(
-                "[%s] Cache miss - integrating on %s...", self.__class__.__name__, self.device
-            )
-        else:
-            logger.debug(
-                "[%s] Cache disabled - integrating on %s...", self.__class__.__name__, self.device
-            )
-        # Cast to concrete type for internal implementation
-        ode_system_concrete = cast(ODESystem[Any], ode_system)
-        t_result, y_result = self._integrate(ode_system_concrete, y0, t_eval)
-        logger.debug("[%s] Integration complete", self.__class__.__name__)
-
-        # Save to cache if enabled
-        if self.use_cache and cache_key is not None and self._cache_manager is not None:
-            self._cache_manager.save(cache_key, t_result, y_result)
-
-        return t_result, y_result
+        logger.debug(
+            "[%s] Cache disabled - integrating on %s...", self.__class__.__name__, self.device
+        )
+        return compute()
 
     def _get_cache_config(self) -> dict[str, Any]:
         """

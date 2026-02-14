@@ -20,6 +20,7 @@ def main():
     # The default solver does not work here because it needs the event_fn to stop
     solver = JaxSolver(
         device=device,
+        cache_dir=".pybasin_cache/lorenz",
         event_fn=lorenz_stop_event,
     )
 

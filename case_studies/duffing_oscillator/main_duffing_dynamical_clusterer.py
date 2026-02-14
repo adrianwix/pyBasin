@@ -41,7 +41,7 @@ def main(csv_path: Path | None = None):
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=True,
+        cache_dir=".pybasin_cache/duffing",
     )
 
     feature_extractor = TorchFeatureExtractor(

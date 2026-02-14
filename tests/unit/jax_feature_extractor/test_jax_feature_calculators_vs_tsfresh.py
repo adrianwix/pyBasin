@@ -134,12 +134,12 @@ class TestSimpleStatistics:
         assert np.isclose(result, expected, rtol=RTOL, atol=ATOL)
 
     def test_kurtosis(self, sample_data, sample_data_jax):
-        expected = fc.kurtosis(sample_data)
+        expected = np.asarray(fc.kurtosis(sample_data))
         result = float(jax_fc.kurtosis(sample_data_jax)[0, 0])
         assert np.isclose(result, expected, rtol=0.1, atol=0.5)
 
     def test_skewness(self, sample_data, sample_data_jax):
-        expected = fc.skewness(sample_data)
+        expected = np.asarray(fc.skewness(sample_data))
         result = float(jax_fc.skewness(sample_data_jax)[0, 0])
         assert np.isclose(result, expected, rtol=0.1, atol=0.1)
 

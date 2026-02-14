@@ -46,7 +46,7 @@ def setup_lorenz_system() -> SetupProperties:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=True,
+        cache_dir=".pybasin_cache/lorenz",
         event_fn=lorenz_stop_event,
     )
 

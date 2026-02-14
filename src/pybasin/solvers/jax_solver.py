@@ -26,10 +26,11 @@ from diffrax import (  # type: ignore[import-untyped]
 from jax import Array
 
 from pybasin.cache_manager import CacheManager
+from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
 from pybasin.jax_ode_system import JaxODESystem
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
-from pybasin.utils import DisplayNameMixin, resolve_folder
+from pybasin.utils import DisplayNameMixin, resolve_cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -116,10 +117,10 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         time_span: tuple[float, float] = (0, 1000),
         n_steps: int = 1000,
         device: str | None = None,
-        solver: Any | None = None,
+        method: Any | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
         max_steps: int = DEFAULT_MAX_STEPS,
         event_fn: Callable[[Any, Array, Any], Array] | None = None,
     ) -> None: ...
@@ -129,7 +130,7 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         self,
         *,
         solver_args: dict[str, Any],
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
     ) -> None: ...
 
     def __init__(
@@ -137,10 +138,10 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         time_span: tuple[float, float] = (0, 1000),
         n_steps: int = 1000,
         device: str | None = None,
-        solver: Any | None = None,
+        method: Any | None = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
         max_steps: int = DEFAULT_MAX_STEPS,
         event_fn: Callable[[Any, Array, Any], Array] | None = None,
         *,
@@ -165,11 +166,12 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'gpu', 'cpu', or None for auto-detect).
-        :param solver: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5() if None.
-        :param rtol: Relative tolerance for adaptive stepping.
-        :param atol: Absolute tolerance for adaptive stepping.
+        :param method: Diffrax solver instance (e.g., Dopri5(), Tsit5()). Defaults to Dopri5() if None.
+        :param rtol: Relative tolerance (used by adaptive-step methods only).
+        :param atol: Absolute tolerance (used by adaptive-step methods only).
         :param max_steps: Maximum number of integrator steps.
-        :param use_cache: Whether to use caching for integration results.
+        :param cache_dir: Directory for caching integration results. Relative paths are
+            resolved from the project root. ``None`` disables caching.
         :param event_fn: Optional event function for early termination. Should return positive
                          when integration should continue, negative/zero to stop.
                          Signature: (t, y, args) -> scalar Array.
@@ -178,11 +180,10 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
                             Must NOT include ``y0`` (provided per-trajectory via ``integrate()``).
         """
         self.solver_args: dict[str, Any] | None = solver_args
-        self.use_cache = use_cache
         self.time_span = time_span
         self.n_steps = n_steps
         self.event_fn = event_fn
-        self.diffrax_solver = solver if solver is not None else Dopri5()
+        self.method = method if method is not None else Dopri5()
         self.rtol = rtol
         self.atol = atol
         self.max_steps: int = max_steps
@@ -190,8 +191,8 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
 
         self._cache_manager: CacheManager | None = None
         self._cache_dir: str | None = None
-        if use_cache:
-            self._cache_dir = resolve_folder("cache")
+        if cache_dir is not None:
+            self._cache_dir = resolve_cache_dir(cache_dir)
             self._cache_manager = CacheManager(self._cache_dir)
 
     def _set_device(self, device: str | None) -> None:
@@ -213,7 +214,7 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         *,
         device: str | None = None,
         n_steps_factor: int = 1,
-        use_cache: bool | None = None,
+        cache_dir: str | None | object = UNSET,
     ) -> "JaxSolver":
         """
         Create a copy of this solver, optionally overriding device, resolution, or caching.
@@ -221,10 +222,11 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         :param device: Target device ('cpu', 'cuda', 'gpu'). If None, keeps the current device.
         :param n_steps_factor: Multiply the number of evaluation points by this factor.
             Ignored for ``solver_args`` mode (saveat is baked in at construction time).
-        :param use_cache: Override caching. If None, keeps the current setting.
+        :param cache_dir: Override cache directory. Pass ``None`` to disable caching.
+            If not provided, keeps the current setting.
         :return: New JaxSolver instance.
         """
-        effective_use_cache = use_cache if use_cache is not None else self.use_cache
+        effective_cache_dir = self._cache_dir if cache_dir is UNSET else cache_dir
         effective_device = device or self._device_str
 
         if self.solver_args is not None:
@@ -234,23 +236,23 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
                     "(saveat is baked in at construction time)",
                     n_steps_factor,
                 )
-            new_solver = JaxSolver(solver_args=self.solver_args, use_cache=effective_use_cache)
+            new_solver = JaxSolver(
+                solver_args=self.solver_args,
+                cache_dir=effective_cache_dir,  # type: ignore[arg-type]
+            )
         else:
             new_solver = JaxSolver(
                 time_span=self.time_span,
                 n_steps=self.n_steps * n_steps_factor,
                 device=effective_device,
-                solver=self.diffrax_solver,
+                method=self.method,
                 rtol=self.rtol,
                 atol=self.atol,
                 max_steps=self.max_steps,
-                use_cache=effective_use_cache,
+                cache_dir=effective_cache_dir,  # type: ignore[arg-type]
                 event_fn=self.event_fn,
             )
         new_solver._set_device(effective_device)
-        if self._cache_dir is not None:
-            new_solver._cache_dir = self._cache_dir
-            new_solver._cache_manager = CacheManager(self._cache_dir)
         return new_solver
 
     def _get_cache_config(self) -> dict[str, Any]:
@@ -258,7 +260,7 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         if self.solver_args is not None:
             return {"solver_args": {k: repr(v) for k, v in self.solver_args.items()}}
         return {
-            "solver": self.diffrax_solver.__class__.__name__,
+            "method": self.method.__class__.__name__,
             "rtol": self.rtol,
             "atol": self.atol,
             "max_steps": self.max_steps,
@@ -289,48 +291,36 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
             t_eval_jax = jnp.linspace(t_start, t_end, self.n_steps)
             t_eval_jax = jax.device_put(t_eval_jax, self.jax_device)
 
-        cache_key = None
-        if self.use_cache and self._cache_manager is not None:
-            solver_config = self._get_cache_config()
+        def compute() -> tuple[torch.Tensor, torch.Tensor]:
+            logger.debug("[%s] Integrating...", self.__class__.__name__)
+            ode_system_concrete = cast(JaxODESystem[Any], ode_system)
+            t_result_jax, y_result_jax = self._integrate_jax(
+                ode_system_concrete, y0_jax, t_eval_jax
+            )
+            logger.debug("[%s] Integration complete", self.__class__.__name__)
+            torch_device = str(y0.device)
+            return jax_to_torch(t_result_jax, torch_device), jax_to_torch(
+                y_result_jax, torch_device
+            )
+
+        if self._cache_manager is not None:
             y0_cpu = y0.detach().cpu()
             t_start_c, t_end_c = self.time_span
             t_eval_torch_cpu = torch.linspace(
                 float(t_start_c), float(t_end_c), self.n_steps, device="cpu"
             )
-
-            cache_key = self._cache_manager.build_key(
-                self.__class__.__name__,
-                ode_system,  # type: ignore[arg-type]
-                y0_cpu,
-                t_eval_torch_cpu,
-                solver_config,
+            return self._cache_manager.cached_call(
+                solver_name=self.__class__.__name__,
+                ode_system=ode_system,  # type: ignore[arg-type]
+                y0=y0_cpu,
+                t_eval=t_eval_torch_cpu,
+                solver_config=self._get_cache_config(),
+                device=self.device,
+                compute_fn=compute,
             )
-            cached_result = self._cache_manager.load(cache_key, self.device)
 
-            if cached_result is not None:
-                cache_path = f"{self._cache_manager.cache_dir}/{cache_key}.pkl"
-                logger.debug(
-                    "[%s] Loaded result from cache: %s", self.__class__.__name__, cache_path
-                )
-                return cached_result
-
-        if self.use_cache:
-            logger.debug("[%s] Cache miss - integrating...", self.__class__.__name__)
-        else:
-            logger.debug("[%s] Cache disabled - integrating...", self.__class__.__name__)
-
-        ode_system_concrete = cast(JaxODESystem[Any], ode_system)
-        t_result_jax, y_result_jax = self._integrate_jax(ode_system_concrete, y0_jax, t_eval_jax)
-        logger.debug("[%s] Integration complete", self.__class__.__name__)
-
-        torch_device = str(y0.device)
-        t_result = jax_to_torch(t_result_jax, torch_device)
-        y_result = jax_to_torch(y_result_jax, torch_device)
-
-        if self.use_cache and cache_key is not None and self._cache_manager is not None:
-            self._cache_manager.save(cache_key, t_result.cpu(), y_result.cpu())
-
-        return t_result, y_result
+        logger.debug("[%s] Cache disabled - integrating...", self.__class__.__name__)
+        return compute()
 
     def _integrate_jax(
         self, ode_system: JaxODESystem[Any], y0: Array, t_eval: Array | None
@@ -374,7 +364,7 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         def solve_single(y0_single: Array) -> Array:
             sol = diffeqsolve(  # type: ignore[misc]
                 term,
-                self.diffrax_solver,
+                self.method,
                 t0=t0,
                 t1=t1,
                 dt0=None,

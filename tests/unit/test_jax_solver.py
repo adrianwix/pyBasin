@@ -29,7 +29,7 @@ def simple_jax_ode() -> ExponentialDecayJaxODE:
 
 
 def test_jax_solver_integration(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0]])
     t, y = solver.integrate(simple_jax_ode, y0)
@@ -41,7 +41,7 @@ def test_jax_solver_integration(simple_jax_ode: ExponentialDecayJaxODE) -> None:
 
 
 def test_jax_solver_batched(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0], [2.0]])
     t, y = solver.integrate(simple_jax_ode, y0)
@@ -52,7 +52,7 @@ def test_jax_solver_batched(simple_jax_ode: ExponentialDecayJaxODE) -> None:
 
 
 def test_jax_solver_y0_shape_validation(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
 
     y0_1d = torch.tensor([1.0])
     with pytest.raises(ValueError, match="y0 must be 2D with shape"):
@@ -70,7 +70,7 @@ def test_jax_solver_y0_shape_validation(simple_jax_ode: ExponentialDecayJaxODE) 
 def test_jax_solver_custom_solver(simple_jax_ode: ExponentialDecayJaxODE) -> None:
     custom_solver = Tsit5()
     solver = JaxSolver(
-        time_span=(0, 1), n_steps=10, device="cpu", solver=custom_solver, use_cache=False
+        time_span=(0, 1), n_steps=10, device="cpu", method=custom_solver, cache_dir=None
     )
 
     y0 = torch.tensor([[1.0]])
@@ -83,7 +83,7 @@ def test_jax_solver_custom_solver(simple_jax_ode: ExponentialDecayJaxODE) -> Non
 
 
 def test_jax_solver_clone(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 1), n_steps=10, device="cpu", cache_dir=None)
     new_solver = solver.clone(device="cpu")
 
     assert new_solver is not solver
@@ -96,7 +96,7 @@ def test_jax_solver_clone(simple_jax_ode: ExponentialDecayJaxODE) -> None:
 
 
 def test_jax_solver_default_n_steps(simple_jax_ode: ExponentialDecayJaxODE) -> None:
-    solver = JaxSolver(time_span=(0, 1), device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 1), device="cpu", cache_dir=None)
 
     steps = 1000
     assert solver.n_steps == steps
@@ -120,7 +120,7 @@ def test_jax_solver_2d_system() -> None:
             return "harmonic_oscillator"
 
     ode = LorenzLikeODE({})
-    solver = JaxSolver(time_span=(0, 2 * 3.14159), n_steps=100, device="cpu", use_cache=False)
+    solver = JaxSolver(time_span=(0, 2 * 3.14159), n_steps=100, device="cpu", cache_dir=None)
 
     y0 = torch.tensor([[1.0, 0.0]])
     t, y = solver.integrate(ode, y0)
@@ -162,7 +162,7 @@ def test_solver_args_basic_integration(simple_jax_ode: ExponentialDecayJaxODE) -
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=1e-8, atol=1e-6),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     y0 = torch.tensor([[1.0]])
@@ -191,7 +191,7 @@ def test_solver_args_with_custom_terms() -> None:
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=1e-8, atol=1e-6),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     system = DecaySystemNoODE({})
@@ -221,7 +221,7 @@ def test_solver_args_constant_step_size(simple_jax_ode: ExponentialDecayJaxODE) 
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": ConstantStepSize(),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     y0 = torch.tensor([[1.0]])
@@ -244,7 +244,7 @@ def test_solver_args_basic_attributes() -> None:
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=1e-5, atol=1e-5),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     assert solver.solver_args is not None
@@ -262,14 +262,14 @@ def test_solver_args_clone_propagates() -> None:
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=1e-8, atol=1e-6),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     new_solver = solver.clone(device="cpu")
     assert new_solver is not solver
     assert new_solver.solver_args is not None
     assert new_solver.solver_args == solver.solver_args
-    assert new_solver.use_cache == solver.use_cache
+    assert new_solver._cache_dir == solver._cache_dir  # type: ignore[reportPrivateUsage]
 
 
 def test_solver_args_batched(simple_jax_ode: ExponentialDecayJaxODE) -> None:
@@ -289,7 +289,7 @@ def test_solver_args_batched(simple_jax_ode: ExponentialDecayJaxODE) -> None:
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=1e-8, atol=1e-6),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     y0 = torch.tensor([[1.0], [2.0]])
@@ -320,10 +320,10 @@ def test_generic_and_solver_args_produce_same_results(
         time_span=time_span,
         n_steps=n_steps,
         device="cpu",
-        solver=Dopri5(),
+        method=Dopri5(),
         rtol=rtol,
         atol=atol,
-        use_cache=False,
+        cache_dir=None,
     )
 
     t_eval = jnp.linspace(time_span[0], time_span[1], n_steps)  # type: ignore[reportUnknownMemberType]
@@ -341,7 +341,7 @@ def test_generic_and_solver_args_produce_same_results(
             "saveat": SaveAt(ts=t_eval),
             "stepsize_controller": PIDController(rtol=rtol, atol=atol),
         },
-        use_cache=False,
+        cache_dir=None,
     )
 
     y0 = torch.tensor([[1.0], [2.0], [0.5]])

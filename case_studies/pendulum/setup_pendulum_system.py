@@ -37,7 +37,7 @@ def setup_pendulum_system() -> SetupProperties:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=True,
+        cache_dir=".pybasin_cache/pendulum",
     )
 
     feature_extractor = JaxFeatureExtractor(

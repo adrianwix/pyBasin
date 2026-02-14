@@ -123,7 +123,50 @@ def generate_filename(name: str, file_extension: str):
     return f"{date}_{name}.{file_extension}"
 
 
-def _get_caller_dir():
+_PROJECT_ROOT_MARKERS: tuple[str, ...] = ("pyproject.toml", ".git")
+
+
+def find_project_root(start: str | None = None) -> str:
+    """
+    Walk up from *start* (default: cwd) until a marker file is found.
+
+    Markers checked: ``pyproject.toml``, ``.git``.
+
+    :param start: Directory to start searching from. Defaults to ``os.getcwd()``.
+    :return: Absolute path to the project root directory.
+    :raises FileNotFoundError: If no marker is found before reaching the filesystem root.
+    """
+    current = os.path.abspath(start or os.getcwd())
+    while True:
+        if any(os.path.exists(os.path.join(current, m)) for m in _PROJECT_ROOT_MARKERS):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise FileNotFoundError(
+                f"Could not find project root (looked for {_PROJECT_ROOT_MARKERS})"
+            )
+        current = parent
+
+
+def resolve_cache_dir(cache_dir: str) -> str:
+    """
+    Resolve a cache directory path and ensure it exists.
+
+    Relative paths are resolved from the project root (found via marker-file detection).
+    Absolute paths are used as-is.
+
+    :param cache_dir: Relative or absolute path to the cache directory.
+    :return: Absolute path to the cache directory (created if needed).
+    """
+    if os.path.isabs(cache_dir):
+        full_path = cache_dir
+    else:
+        full_path = os.path.join(find_project_root(), cache_dir)
+    os.makedirs(full_path, exist_ok=True)
+    return full_path
+
+
+def _get_caller_dir() -> str:
     """
     Inspects the call stack to determine the directory of the calling script
     that is outside the pybasin module. This implementation iterates over the
@@ -144,21 +187,17 @@ def _get_caller_dir():
         caller_file = frame.frame.f_globals.get("__file__")
         if caller_file:
             abs_caller_file = os.path.abspath(caller_file)
-            # Check if the caller file is outside of the pybasin module directory
-            # and not in the standard library
             if not abs_caller_file.startswith(library_dir):
-                # Skip standard library paths
                 is_stdlib = any(
                     abs_caller_file.startswith(stdlib_path) for stdlib_path in stdlib_paths
                 )
                 if not is_stdlib:
                     return os.path.dirname(abs_caller_file)
 
-    # Fallback if __file__ is not found (e.g. interactive shell)
     return os.getcwd()
 
 
-def resolve_folder(save_to: str):
+def resolve_folder(save_to: str) -> str:
     """
     Resolves the folder path relative to the caller's directory and ensures it exists.
     """

@@ -222,7 +222,7 @@ def main():
         time_span=(0, 1000),
         n_steps=1000,
         device="cpu",
-        use_cache=False,
+        cache_dir=None,
     )
 
     print("\n1. Integrating template initial conditions...")

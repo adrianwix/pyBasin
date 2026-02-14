@@ -7,7 +7,7 @@ import torch
 from scipy.integrate import solve_ivp
 from sklearn.utils.parallel import Parallel, delayed  # type: ignore[import-untyped]
 
-from pybasin.cache_manager import CacheManager
+from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
 from pybasin.ode_system import ODESystem
 from pybasin.solvers.base import Solver
 
@@ -34,7 +34,7 @@ class ScipyParallelSolver(Solver):
         rtol: float = 1e-6,
         atol: float = 1e-8,
         max_step: float | None = None,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,
     ):
         """
         Initialize ScipyParallelSolver.
@@ -44,10 +44,10 @@ class ScipyParallelSolver(Solver):
         :param device: Device to use (only 'cpu' supported).
         :param n_jobs: Number of parallel jobs (-1 for all CPUs).
         :param method: Integration method ('RK45', 'RK23', 'DOP853', 'Radau', 'BDF', 'LSODA', etc).
-        :param rtol: Relative tolerance for the solver.
-        :param atol: Absolute tolerance for the solver.
+        :param rtol: Relative tolerance (used by adaptive-step methods only).
+        :param atol: Absolute tolerance (used by adaptive-step methods only).
         :param max_step: Maximum step size for the solver.
-        :param use_cache: Whether to use caching for integration results.
+        :param cache_dir: Directory for caching integration results. ``None`` disables caching.
         """
         if device and "cuda" in device:
             logger.warning(
@@ -56,7 +56,7 @@ class ScipyParallelSolver(Solver):
             device = "cpu"
 
         super().__init__(
-            time_span, n_steps=n_steps, device="cpu", rtol=rtol, atol=atol, use_cache=use_cache
+            time_span, n_steps=n_steps, device="cpu", rtol=rtol, atol=atol, cache_dir=cache_dir
         )
 
         self.n_jobs = n_jobs
@@ -75,7 +75,7 @@ class ScipyParallelSolver(Solver):
         *,
         device: str | None = None,
         n_steps_factor: int = 1,
-        use_cache: bool | None = None,
+        cache_dir: str | None | object = UNSET,
     ) -> "ScipyParallelSolver":
         """Create a copy of this solver, optionally overriding device, resolution, or caching.
 
@@ -83,7 +83,8 @@ class ScipyParallelSolver(Solver):
         """
         if device and "cuda" in device:
             logger.warning("  Warning: ScipyParallelSolver does not support CUDA - using CPU")
-        new_solver = ScipyParallelSolver(
+        effective_cache_dir = self._cache_dir if cache_dir is UNSET else cache_dir
+        return ScipyParallelSolver(
             time_span=self.time_span,
             n_steps=self.n_steps * n_steps_factor,
             device="cpu",
@@ -92,12 +93,8 @@ class ScipyParallelSolver(Solver):
             rtol=self.rtol,
             atol=self.atol,
             max_step=self.max_step,
-            use_cache=use_cache if use_cache is not None else self.use_cache,
+            cache_dir=effective_cache_dir,  # type: ignore[arg-type]
         )
-        if self._cache_dir is not None:
-            new_solver._cache_dir = self._cache_dir
-            new_solver._cache_manager = CacheManager(self._cache_dir)
-        return new_solver
 
     def _integrate(
         self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor

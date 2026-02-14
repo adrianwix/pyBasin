@@ -38,7 +38,7 @@ def setup_friction_system() -> SetupProperties:
         device=device,
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,
+        cache_dir=".pybasin_cache/friction",
     )
 
     feature_extractor = FrictionFeatureExtractor(time_steady=400)

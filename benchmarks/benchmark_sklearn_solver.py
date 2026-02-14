@@ -56,7 +56,7 @@ def benchmark_sklearn_solver():
         method="RK45",
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,  # Disable cache for accurate benchmark
+        cache_dir=None,  # Disable cache for accurate benchmark
     )
 
     start_time = time.perf_counter()
@@ -79,7 +79,7 @@ def benchmark_sklearn_solver():
         method="RK45",
         rtol=1e-8,
         atol=1e-6,
-        use_cache=False,  # Disable cache for accurate benchmark
+        cache_dir=None,  # Disable cache for accurate benchmark
     )
 
     start_time = time.perf_counter()

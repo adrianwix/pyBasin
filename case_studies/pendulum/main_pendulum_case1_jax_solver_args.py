@@ -45,7 +45,7 @@ def main():
             "stepsize_controller": PIDController(rtol=1e-8, atol=1e-6),
             "max_steps": 16**5,
         },
-        use_cache=True,
+        cache_dir=".pybasin_cache/pendulum",
     )
 
     bse = BasinStabilityEstimator(

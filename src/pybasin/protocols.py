@@ -13,6 +13,8 @@ from typing import Any, Protocol, runtime_checkable
 import numpy as np
 import torch
 
+from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
+
 
 @runtime_checkable
 class SklearnClassifier(Protocol):
@@ -102,18 +104,21 @@ class SolverProtocol(Protocol):
         time_span: tuple[float, float] = (0, 1000),
         n_steps: int = 1000,
         device: str | None = None,
+        method: Any = None,
         rtol: float = 1e-8,
         atol: float = 1e-6,
-        use_cache: bool = True,
+        cache_dir: str | None = DEFAULT_CACHE_DIR,  # type: ignore[assignment]
     ) -> None:
         """Initialize the solver with integration parameters.
 
         :param time_span: Tuple (t_start, t_end) defining the integration interval.
         :param n_steps: Number of evaluation points.
         :param device: Device to use ('cuda', 'cpu', 'gpu', or None for auto-detect).
-        :param rtol: Relative tolerance for adaptive stepping.
-        :param atol: Absolute tolerance for adaptive stepping.
-        :param use_cache: Whether to use caching for integration results.
+        :param method: Integration method (solver-specific).
+        :param rtol: Relative tolerance (used by adaptive-step methods only).
+        :param atol: Absolute tolerance (used by adaptive-step methods only).
+        :param cache_dir: Directory for caching integration results. Relative paths are
+            resolved from the project root. ``None`` disables caching.
         """
         ...
 
@@ -134,7 +139,7 @@ class SolverProtocol(Protocol):
         *,
         device: str | None = None,
         n_steps_factor: int = 1,
-        use_cache: bool | None = None,
+        cache_dir: str | None | object = UNSET,
     ) -> "SolverProtocol":
         """
         Create a copy of this solver, optionally overriding device, resolution, or caching.
@@ -142,7 +147,8 @@ class SolverProtocol(Protocol):
         :param device: Target device ('cpu', 'cuda', 'gpu'). If None, keeps the current device.
         :param n_steps_factor: Multiply the number of evaluation points by this factor
             (e.g. 10 for smoother plotting). Defaults to 1 (no change).
-        :param use_cache: Override caching. If None, keeps the current setting.
+        :param cache_dir: Override cache directory. Pass ``None`` to disable caching.
+            If not provided, keeps the current setting.
         :return: New solver instance.
         """
         ...

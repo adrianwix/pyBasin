@@ -34,7 +34,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
-.cache
+.pybasin_cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -79,6 +79,7 @@ venv.bak/
 # Project specific
 results_*/
 **/cache/
+!experiments/cache/
 **/results/
 **/results_*/
 execution_time.txt

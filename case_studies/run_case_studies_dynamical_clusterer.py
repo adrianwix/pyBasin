@@ -43,7 +43,7 @@ def _build_label_mapping(y_pred: np.ndarray, y_true: np.ndarray) -> dict[str, st
     for pred_label in np.unique(y_pred):
         mask = y_pred == pred_label
         gt_in_cluster = y_true[mask]
-        most_common = str(Counter(gt_in_cluster.tolist()).most_common(1)[0][0])
+        most_common = str(Counter(gt_in_cluster.tolist()).most_common(1)[0][0])  # pyright: ignore[reportUnknownArgumentType]
         mapping[str(pred_label)] = most_common
     return mapping
 
