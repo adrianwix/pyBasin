@@ -103,6 +103,9 @@ dmypy.json
 # Ruff
 .ruff_cache/
 
+# Zig
+.zig-cache
+
 # Keep important files
 !artifacts/.gitkeep
 !benchmarks/end_to_end/results/
