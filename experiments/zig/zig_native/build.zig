@@ -4,23 +4,20 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "pendulum_solver",
+    // ============================================================
+    // Shared Library (for Python integration)
+    // ============================================================
+    const lib = b.addLibrary(.{
+        .linkage = .dynamic,
+        .name = "zig_ode_solver",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
+            .root_source_file = b.path("src/c_api.zig"),
             .target = target,
             .optimize = optimize,
         }),
     });
 
-    b.installArtifact(exe);
+    lib.linkLibC();
 
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the pendulum solver");
-    run_step.dependOn(&run_cmd.step);
+    b.installArtifact(lib);
 }

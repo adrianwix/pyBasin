@@ -104,7 +104,11 @@ dmypy.json
 .ruff_cache/
 
 # Zig
-.zig-cache
+.zig-cache/
+zig-out/
+experiments/zig/zig_native/_wrapper_*.zig
+experiments/zig/zig_native/.solver_hash
+experiments/zig/zig_native/.source_hash
 
 # Keep important files
 !artifacts/.gitkeep
