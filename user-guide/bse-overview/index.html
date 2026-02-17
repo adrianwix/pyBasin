@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#basin-stability-estimator-overview" class="md-skip">
+        <a href="#basin-stability-estimator" class="md-skip">
           Skip to content
         </a>
       
@@ -690,42 +690,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-basin-stability" class="md-nav__link">
+  <a href="#minimal-example" class="md-nav__link">
     <span class="md-ellipsis">
-      What is Basin Stability?
+      Minimal Example
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-basinstabilityestimator-class" class="md-nav__link">
+  <a href="#pipeline-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      The BasinStabilityEstimator Class
+      Pipeline Steps
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="The BasinStabilityEstimator Class">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#constructor-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Constructor Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#default-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Default Flow
     </span>
   </a>
   
@@ -735,6 +720,42 @@
   <a href="#automatic-solver-selection" class="md-nav__link">
     <span class="md-ellipsis">
       Automatic Solver Selection
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupervised-clustering-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unsupervised Clustering (Default)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supervised-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supervised Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#customizing-feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Customizing Feature Extraction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Selection
     </span>
   </a>
   
@@ -753,6 +774,75 @@
   <a href="#output-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       Output Attributes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Estimation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Saving Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Saving Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excel-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      Excel Export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Visualization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-configured-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Full Configured Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
     </span>
   </a>
   
@@ -793,6 +883,29 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../solution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Solution
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -961,10 +1074,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_9" >
         
           
-          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="">
             
   
   
@@ -977,8 +1090,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_8">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
             <span class="md-nav__icon md-icon"></span>
             How To
           </label>
@@ -1931,42 +2044,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-basin-stability" class="md-nav__link">
+  <a href="#minimal-example" class="md-nav__link">
     <span class="md-ellipsis">
-      What is Basin Stability?
+      Minimal Example
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-basinstabilityestimator-class" class="md-nav__link">
+  <a href="#pipeline-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      The BasinStabilityEstimator Class
+      Pipeline Steps
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="The BasinStabilityEstimator Class">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#constructor-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Constructor Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#default-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Default Flow
     </span>
   </a>
   
@@ -1976,6 +2074,42 @@
   <a href="#automatic-solver-selection" class="md-nav__link">
     <span class="md-ellipsis">
       Automatic Solver Selection
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupervised-clustering-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unsupervised Clustering (Default)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supervised-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supervised Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#customizing-feature-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Customizing Feature Extraction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Selection
     </span>
   </a>
   
@@ -1994,6 +2128,75 @@
   <a href="#output-attributes" class="md-nav__link">
     <span class="md-ellipsis">
       Output Attributes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Estimation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Saving Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Saving Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excel-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      Excel Export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Visualization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-configured-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Full Configured Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
     </span>
   </a>
   
@@ -2026,16 +2229,95 @@
   
 
 
-<h1 id="basin-stability-estimator-overview">Basin Stability Estimator Overview</h1>
-<div class="admonition note">
-<p class="admonition-title">Documentation in Progress</p>
-</div>
-<p>This page is under construction.</p>
-<h2 id="what-is-basin-stability">What is Basin Stability?</h2>
-<p>Basin stability is a nonlinear measure of stability that quantifies the probability that a system returns to a given attractor when perturbed with random initial conditions.</p>
-<h2 id="the-basinstabilityestimator-class">The <code>BasinStabilityEstimator</code> Class</h2>
-<p>The <code>BasinStabilityEstimator</code> is the core class for computing basin stability values.</p>
-<h3 id="constructor-parameters">Constructor Parameters</h3>
+<h1 id="basin-stability-estimator">Basin Stability Estimator</h1>
+<p><code>BasinStabilityEstimator</code> is the core class for computing basin stability values. It orchestrates the full pipeline: sampling initial conditions, integrating the ODE, extracting features from trajectories, classifying them into attractor basins, and computing the stability fractions. Only two arguments are required -- an ODE system and a sampler -- while every other component has sensible defaults.</p>
+<h2 id="minimal-example">Minimal Example</h2>
+<p>At its simplest, basin stability estimation requires an ODE definition and a sampler. Everything else is auto-configured:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.basin_stability_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityEstimator</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.sampler</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniformRandomSampler</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">case_studies.duffing_oscillator.duffing_jax_ode</span><span class="w"> </span><span class="kn">import</span> <span class="n">DuffingJaxODE</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">ode</span> <span class="o">=</span> <span class="n">DuffingJaxODE</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;delta&quot;</span><span class="p">:</span> <span class="mf">0.08</span><span class="p">,</span> <span class="s2">&quot;k3&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">sampler</span> <span class="o">=</span> <span class="n">UniformRandomSampler</span><span class="p">(</span><span class="n">min_limits</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">],</span> <span class="n">max_limits</span><span class="o">=</span><span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span><span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">bs_vals</span><span class="p">)</span>  <span class="c1"># e.g. {&#39;0&#39;: 0.42, &#39;1&#39;: 0.58}</span>
+</code></pre></div>
+<p>With these defaults, the estimator generates 10,000 initial conditions, integrates them using <code>JaxSolver</code> (since the ODE inherits from <code>JaxODESystem</code>), extracts 10 statistical features per state variable, filters redundant features, clusters the results with HDBSCAN, and returns basin stability fractions.</p>
+<h2 id="pipeline-steps">Pipeline Steps</h2>
+<p>The <code>estimate_bs()</code> method runs seven sequential steps. Each step maps to a configurable component:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What Happens</th>
+<th>Component</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Sample N initial conditions</td>
+<td><code>sampler</code></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Integrate the ODE for each IC</td>
+<td><code>solver</code></td>
+<td><code>JaxSolver</code> or <code>TorchDiffEqSolver</code> (auto)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Create <a href="../solution/">Solution</a> object</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>3b</td>
+<td>Detect unbounded trajectories (optional)</td>
+<td><code>detect_unbounded</code></td>
+<td><code>True</code> (active only with <code>JaxSolver</code> + event)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Extract features from steady-state</td>
+<td><code>feature_extractor</code></td>
+<td><code>TorchFeatureExtractor</code> (minimal, 10/state)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Filter redundant features</td>
+<td><code>feature_selector</code></td>
+<td><code>DefaultFeatureSelector</code></td>
+</tr>
+<tr>
+<td>5b</td>
+<td>Fit classifier on templates (supervised)</td>
+<td><code>template_integrator</code></td>
+<td><code>None</code> (unsupervised by default)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Cluster or classify features</td>
+<td><code>predictor</code></td>
+<td><code>HDBSCANClusterer(auto_tune=True)</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Compute basin stability fractions</td>
+<td>--</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Sample ICs --&gt; Integrate ODEs --&gt; Detect Unbounded --&gt; Extract Features
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>--&gt; Filter Features --&gt; Cluster/Classify --&gt; Compute BS Values
+</code></pre></div>
+<h2 id="constructor-parameters">Constructor Parameters</h2>
 <table>
 <thead>
 <tr>
@@ -2050,75 +2332,387 @@
 <td><code>ode_system</code></td>
 <td><code>ODESystemProtocol</code></td>
 <td>Required</td>
-<td>The dynamical system</td>
+<td>The dynamical system to analyze. Use <code>JaxODESystem</code> or <code>ODESystem</code>.</td>
 </tr>
 <tr>
 <td><code>sampler</code></td>
 <td><code>Sampler</code></td>
 <td>Required</td>
-<td>Initial condition generator</td>
+<td>Generates initial conditions from the region of interest.</td>
 </tr>
 <tr>
 <td><code>n</code></td>
 <td><code>int</code></td>
 <td><code>10_000</code></td>
-<td>Number of samples</td>
+<td>Number of initial conditions to sample.</td>
 </tr>
 <tr>
 <td><code>solver</code></td>
-<td><code>SolverProtocol</code></td>
+<td><code>SolverProtocol</code> or <code>None</code></td>
 <td>Auto-detect</td>
-<td>ODE integrator</td>
+<td>ODE integrator. Auto-selects based on ODE type if <code>None</code>.</td>
 </tr>
 <tr>
 <td><code>feature_extractor</code></td>
-<td><code>FeatureExtractor</code></td>
+<td><code>FeatureExtractor</code> or <code>None</code></td>
 <td><code>TorchFeatureExtractor</code></td>
-<td>Feature computation</td>
+<td>Computes feature vectors from trajectories.</td>
 </tr>
 <tr>
 <td><code>predictor</code></td>
-<td><code>LabelPredictor</code></td>
+<td><code>BaseEstimator</code> or <code>None</code></td>
 <td><code>HDBSCANClusterer</code></td>
-<td>Classification method</td>
+<td>Sklearn-compatible classifier or clusterer.</td>
+</tr>
+<tr>
+<td><code>template_integrator</code></td>
+<td><code>TemplateIntegrator</code> or <code>None</code></td>
+<td><code>None</code></td>
+<td>Required for supervised classifiers. Holds template ICs and labels.</td>
 </tr>
 <tr>
 <td><code>feature_selector</code></td>
-<td><code>BaseEstimator</code></td>
+<td><code>BaseEstimator</code> or <code>None</code></td>
 <td><code>DefaultFeatureSelector</code></td>
-<td>Feature filtering</td>
+<td>Filters redundant features. <code>None</code> disables filtering.</td>
 </tr>
 <tr>
 <td><code>detect_unbounded</code></td>
 <td><code>bool</code></td>
 <td><code>True</code></td>
-<td>Stop diverging trajectories</td>
+<td>Separate diverging trajectories before feature extraction.</td>
 </tr>
 <tr>
 <td><code>save_to</code></td>
-<td><code>str</code></td>
+<td><code>str</code> or <code>None</code></td>
 <td><code>None</code></td>
-<td>Output directory</td>
+<td>Directory path for saving results to JSON or Excel.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="default-flow">Default Flow</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Sample ICs → Integrate ODEs → Detect Unbounded → Extract Features
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>→ Filter Features → Cluster/Classify → Compute BS Values
-</code></pre></div>
+<p>For full method signatures and docstrings, see the <a href="../../api/basin-stability-estimator/">API reference</a>.</p>
 <h2 id="automatic-solver-selection">Automatic Solver Selection</h2>
+<p>When no <code>solver</code> is passed, the estimator picks one based on the ODE class:</p>
 <ul>
-<li>If <code>ode_system</code> is <code>JaxODESystem</code> → uses <code>JaxSolver</code></li>
-<li>If <code>ode_system</code> is <code>ODESystem</code> → uses <code>TorchDiffEqSolver</code></li>
+<li><code>JaxODESystem</code> --&gt; <code>JaxSolver(time_span=(0, 1000), n_steps=1000)</code></li>
+<li><code>ODESystem</code> --&gt; <code>TorchDiffEqSolver(time_span=(0, 1000), n_steps=1000)</code></li>
 </ul>
+<p>Both auto-selected solvers inherit the <code>device</code> from the sampler. For most workloads, <code>JaxSolver</code> delivers the best GPU performance. Override the solver when you need custom time spans, tolerances, or caching:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">JaxSolver</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;.pybasin_cache/duffing&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="n">solver</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">)</span>
+</code></pre></div>
+<p>See the <a href="../solvers/">Solvers guide</a> for a detailed comparison of available solvers.</p>
+<hr />
+<h2 id="unsupervised-clustering-default">Unsupervised Clustering (Default)</h2>
+<p>By default, the estimator uses <code>HDBSCANClusterer</code> to discover attractor basins without any prior knowledge. This is the simplest workflow -- no templates, no labels:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">)</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+</code></pre></div>
+<p>HDBSCAN auto-tunes its <code>min_cluster_size</code> parameter and reassigns noise points so that every trajectory receives a basin label. To swap in a different clusterer, pass any sklearn-compatible estimator:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMeans</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">predictor</span><span class="o">=</span><span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
+</code></pre></div>
+<p>See the <a href="../predictors/">Predictors guide</a> for all available clusterers and their tuning options.</p>
+<hr />
+<h2 id="supervised-classification">Supervised Classification</h2>
+<p>When the attractor structure of the system is known, supervised classification produces more reliable basin labels. This requires a <code>TemplateIntegrator</code> that provides labeled initial conditions -- one per known attractor -- along with a sklearn classifier.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.template_integrator</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemplateIntegrator</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Template ICs: one per known attractor</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">template_y0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="p">[</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>   <span class="c1"># IC converging to attractor &quot;fp&quot;</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>   <span class="c1"># IC converging to attractor &quot;lc&quot;</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">])</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="n">template_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fp&quot;</span><span class="p">,</span> <span class="s2">&quot;lc&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">template_integrator</span> <span class="o">=</span> <span class="n">TemplateIntegrator</span><span class="p">(</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">template_y0</span><span class="o">=</span><span class="n">template_y0</span><span class="p">,</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="n">labels</span><span class="o">=</span><span class="n">template_labels</span><span class="p">,</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">)</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    <span class="n">predictor</span><span class="o">=</span><span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">template_integrator</span><span class="p">,</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="p">)</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="c1"># e.g. {&#39;fp&#39;: 0.35, &#39;lc&#39;: 0.65}</span>
+</code></pre></div>
+<p>The estimator integrates template trajectories alongside the main batch, extracts features from both, fits the classifier on the template features, and then predicts basin labels for all N sampled ICs. By default, template and main integrations run in parallel.</p>
+<div class="admonition warning">
+<p class="admonition-title">Classifier requires templates</p>
+</div>
+<p>Passing a classifier without a <code>template_integrator</code> raises <code>ValueError</code>. Regressors are rejected outright with <code>TypeError</code>.</p>
+<p>See the <a href="../predictors/">Predictors guide</a> for more on supervised vs. unsupervised workflows.</p>
+<hr />
+<h2 id="customizing-feature-extraction">Customizing Feature Extraction</h2>
+<p>The default feature extractor computes 10 statistical features per state variable (mean, variance, min, max, etc.) from the steady-state portion of each trajectory. Override it for richer or more targeted feature sets:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.feature_extractors</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchFeatureExtractor</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">TorchFeatureExtractor</span><span class="p">(</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">features</span><span class="o">=</span><span class="s2">&quot;comprehensive&quot;</span><span class="p">,</span>  <span class="c1"># ~800 features per state</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">time_steady</span><span class="o">=</span><span class="mf">800.0</span><span class="p">,</span>         <span class="c1"># discard transient before t=800</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">extractor</span><span class="p">,</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="p">)</span>
+</code></pre></div>
+<p>Per-state configuration is also supported -- useful when different state variables carry different physical meaning:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">TorchFeatureExtractor</span><span class="p">(</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">features</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">features_per_state</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>        <span class="mi">0</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>  <span class="c1"># position: just extrema</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="mi">1</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>                                  <span class="c1"># velocity: skip entirely</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="p">},</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">)</span>
+</code></pre></div>
+<p>See the <a href="../feature-extractors/">Feature Extractors guide</a> for the full feature catalog and configuration options.</p>
+<hr />
+<h2 id="feature-selection">Feature Selection</h2>
+<p>After extraction, a feature selector removes uninformative columns (near-zero variance) and redundant ones (high pairwise correlation). The default <code>DefaultFeatureSelector</code> handles this automatically:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Default: variance + correlation filtering</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span><span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">)</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Disable filtering entirely</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span> <span class="n">feature_selector</span><span class="o">=</span><span class="kc">None</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">)</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># Custom sklearn selector</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">VarianceThreshold</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">VarianceThreshold</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="p">)</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Minimal features + filtering</p>
+</div>
+<p>When using <code>features="minimal"</code> (10 features per state), the default selector may drop useful columns. Consider disabling it or lowering thresholds for small feature sets.</p>
+<p>See the <a href="../feature-selectors/">Feature Selectors guide</a> for threshold configuration and custom selectors.</p>
+<hr />
 <h2 id="unboundedness-detection">Unboundedness Detection</h2>
-<p>Only active when <code>detect_unbounded=True</code> AND solver is <code>JaxSolver</code> with <code>event_fn</code>.</p>
-<p>See <a href="../../guides/unbounded-trajectories/">Handling Unbounded Trajectories</a> for details.</p>
+<p>Some dynamical systems produce trajectories that diverge to infinity. When <code>detect_unbounded=True</code> (the default), the estimator separates these trajectories before feature extraction to prevent extreme values from contaminating the clustering. Unbounded ICs receive the label <code>"unbounded"</code> in the final results.</p>
+<p>This detection only activates when the solver is a <code>JaxSolver</code> configured with an <code>event_fn</code> for early termination. Without an event function, trajectories are not stopped early and no Inf values appear.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">JaxSolver</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">event_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># stop at |y| &gt; 1e6</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">)</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>    <span class="n">detect_unbounded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># default</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="p">)</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1"># e.g. {&#39;0&#39;: 0.45, &#39;1&#39;: 0.40, &#39;unbounded&#39;: 0.15}</span>
+</code></pre></div>
+<p>See the <a href="../../guides/unbounded-trajectories/">Handling Unbounded Trajectories</a> guide for a deeper look at event functions and unboundedness strategies.</p>
+<hr />
 <h2 id="output-attributes">Output Attributes</h2>
+<p>After <code>estimate_bs()</code> completes, three attributes hold the results:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bse.bs_vals</code></td>
+<td><code>dict[str, float]</code></td>
+<td>Basin stability fractions per class (e.g., <code>{'0': 0.6, '1': 0.4}</code>)</td>
+</tr>
+<tr>
+<td><code>bse.y0</code></td>
+<td><code>torch.Tensor</code></td>
+<td>Sampled initial conditions, shape <code>(N, n_states)</code></td>
+</tr>
+<tr>
+<td><code>bse.solution</code></td>
+<td><a href="../solution/"><code>Solution</code></a></td>
+<td>Full results: trajectories, features, labels, metadata</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>Solution</code> object carries everything downstream components need -- trajectories for plotting, features for analysis, labels for visualization. See the <a href="../solution/">Solution guide</a> for details on its properties.</p>
+<h2 id="error-estimation">Error Estimation</h2>
+<p>Basin stability values are Monte Carlo estimates, so they carry statistical uncertainty. Call <code>get_errors()</code> to compute the absolute and relative standard errors based on Bernoulli experiment statistics:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">errors</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">get_errors</span><span class="p">()</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">err</span> <span class="ow">in</span> <span class="n">errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Basin </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: S_B = </span><span class="si">{</span><span class="n">bs_vals</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">err</span><span class="p">[</span><span class="s1">&#39;e_abs&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The absolute error for each basin is:</p>
+<div class="arithmatex">\[e_{\text{abs}} = \sqrt{\frac{S_B(A) \cdot (1 - S_B(A))}{N}}\]</div>
+<p>Increasing <code>n</code> reduces the error proportionally to <span class="arithmatex">\(1/\sqrt{N}\)</span>.</p>
+<hr />
+<h2 id="saving-results">Saving Results</h2>
+<p>Two export methods are available after running <code>estimate_bs()</code>. Both require <code>save_to</code> to be set in the constructor.</p>
+<h3 id="json-export">JSON Export</h3>
+<p><code>save()</code> writes basin stability values, ODE system definition, sampler settings, and feature selection metadata:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">)</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">bse</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># writes results/pendulum/basin_stability_results_&lt;timestamp&gt;.json</span>
+</code></pre></div>
+<h3 id="excel-export">Excel Export</h3>
+<p><code>save_to_excel()</code> writes initial conditions, labels, and bifurcation amplitudes in tabular form:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">bse</span><span class="o">.</span><span class="n">save_to_excel</span><span class="p">()</span>  <span class="c1"># writes results/pendulum/basin_stability_results_&lt;timestamp&gt;.xlsx</span>
+</code></pre></div>
+<hr />
+<h2 id="visualization">Visualization</h2>
+<p>Pass the estimator to a plotter for visual inspection of the results. <code>MatplotlibPlotter</code> produces static figures suitable for publications, while <code>InteractivePlotter</code> launches a Dash web app for exploration.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.matplotlib_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibPlotter</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibPlotter</span><span class="p">(</span><span class="n">bse</span><span class="p">)</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bse_results</span><span class="p">()</span>              <span class="c1"># 4-panel diagnostic</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_bars</span><span class="p">()</span>     <span class="c1"># bar chart of BS values</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_state_space</span><span class="p">()</span>              <span class="c1"># labeled phase portrait</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_feature_space</span><span class="p">()</span>            <span class="c1"># feature space clusters</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.interactive_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlotter</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">InteractivePlotter</span><span class="p">(</span><span class="n">bse</span><span class="p">,</span> <span class="n">state_labels</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">})</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">plotter</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">8050</span><span class="p">)</span>
+</code></pre></div>
+<p>See the <a href="../plotters/">Plotters guide</a> for the full set of visualization methods.</p>
+<hr />
+<h2 id="full-configured-example">Full Configured Example</h2>
+<p>Below is a complete example showing every configurable component:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.basin_stability_estimator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityEstimator</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.sampler</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniformRandomSampler</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">JaxSolver</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.feature_extractors</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchFeatureExtractor</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.feature_selector</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultFeatureSelector</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.template_integrator</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemplateIntegrator</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.matplotlib_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibPlotter</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1"># 1. ODE system (defined elsewhere)</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="kn">from</span><span class="w"> </span><span class="nn">case_studies.pendulum.pendulum_jax_ode</span><span class="w"> </span><span class="kn">import</span> <span class="n">PendulumJaxODE</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="n">ode</span> <span class="o">=</span> <span class="n">PendulumJaxODE</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="c1"># 2. Sampler</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="n">sampler</span> <span class="o">=</span> <span class="n">UniformRandomSampler</span><span class="p">(</span>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>    <span class="n">min_limits</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">3.14</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span>
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>    <span class="n">max_limits</span><span class="o">=</span><span class="p">[</span><span class="mf">3.14</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="p">)</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="c1"># 3. Solver</span>
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">JaxSolver</span><span class="p">(</span>
+<a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>    <span class="n">time_span</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+<a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>    <span class="n">n_steps</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+<a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;.pybasin_cache/pendulum&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a><span class="p">)</span>
+<a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>
+<a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a><span class="c1"># 4. Feature extractor</span>
+<a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">TorchFeatureExtractor</span><span class="p">(</span>
+<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>    <span class="n">features</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a>    <span class="n">time_steady</span><span class="o">=</span><span class="mf">850.0</span><span class="p">,</span>
+<a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a><span class="p">)</span>
+<a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a>
+<a id="__codelineno-15-38" name="__codelineno-15-38" href="#__codelineno-15-38"></a><span class="c1"># 5. Feature selector</span>
+<a id="__codelineno-15-39" name="__codelineno-15-39" href="#__codelineno-15-39"></a><span class="n">selector</span> <span class="o">=</span> <span class="n">DefaultFeatureSelector</span><span class="p">(</span>
+<a id="__codelineno-15-40" name="__codelineno-15-40" href="#__codelineno-15-40"></a>    <span class="n">variance_threshold</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+<a id="__codelineno-15-41" name="__codelineno-15-41" href="#__codelineno-15-41"></a>    <span class="n">correlation_threshold</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>
+<a id="__codelineno-15-42" name="__codelineno-15-42" href="#__codelineno-15-42"></a><span class="p">)</span>
+<a id="__codelineno-15-43" name="__codelineno-15-43" href="#__codelineno-15-43"></a>
+<a id="__codelineno-15-44" name="__codelineno-15-44" href="#__codelineno-15-44"></a><span class="c1"># 6. Templates for supervised classification</span>
+<a id="__codelineno-15-45" name="__codelineno-15-45" href="#__codelineno-15-45"></a><span class="n">template_y0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<a id="__codelineno-15-46" name="__codelineno-15-46" href="#__codelineno-15-46"></a><span class="n">template_integrator</span> <span class="o">=</span> <span class="n">TemplateIntegrator</span><span class="p">(</span>
+<a id="__codelineno-15-47" name="__codelineno-15-47" href="#__codelineno-15-47"></a>    <span class="n">template_y0</span><span class="o">=</span><span class="n">template_y0</span><span class="p">,</span>
+<a id="__codelineno-15-48" name="__codelineno-15-48" href="#__codelineno-15-48"></a>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fixed_point&quot;</span><span class="p">,</span> <span class="s2">&quot;limit_cycle&quot;</span><span class="p">],</span>
+<a id="__codelineno-15-49" name="__codelineno-15-49" href="#__codelineno-15-49"></a><span class="p">)</span>
+<a id="__codelineno-15-50" name="__codelineno-15-50" href="#__codelineno-15-50"></a>
+<a id="__codelineno-15-51" name="__codelineno-15-51" href="#__codelineno-15-51"></a><span class="c1"># 7. Classifier</span>
+<a id="__codelineno-15-52" name="__codelineno-15-52" href="#__codelineno-15-52"></a><span class="n">predictor</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-15-53" name="__codelineno-15-53" href="#__codelineno-15-53"></a>
+<a id="__codelineno-15-54" name="__codelineno-15-54" href="#__codelineno-15-54"></a><span class="c1"># 8. Assemble and run</span>
+<a id="__codelineno-15-55" name="__codelineno-15-55" href="#__codelineno-15-55"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-15-56" name="__codelineno-15-56" href="#__codelineno-15-56"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
+<a id="__codelineno-15-57" name="__codelineno-15-57" href="#__codelineno-15-57"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+<a id="__codelineno-15-58" name="__codelineno-15-58" href="#__codelineno-15-58"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">20_000</span><span class="p">,</span>
+<a id="__codelineno-15-59" name="__codelineno-15-59" href="#__codelineno-15-59"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+<a id="__codelineno-15-60" name="__codelineno-15-60" href="#__codelineno-15-60"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">extractor</span><span class="p">,</span>
+<a id="__codelineno-15-61" name="__codelineno-15-61" href="#__codelineno-15-61"></a>    <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+<a id="__codelineno-15-62" name="__codelineno-15-62" href="#__codelineno-15-62"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">template_integrator</span><span class="p">,</span>
+<a id="__codelineno-15-63" name="__codelineno-15-63" href="#__codelineno-15-63"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
+<a id="__codelineno-15-64" name="__codelineno-15-64" href="#__codelineno-15-64"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-65" name="__codelineno-15-65" href="#__codelineno-15-65"></a><span class="p">)</span>
+<a id="__codelineno-15-66" name="__codelineno-15-66" href="#__codelineno-15-66"></a>
+<a id="__codelineno-15-67" name="__codelineno-15-67" href="#__codelineno-15-67"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
+<a id="__codelineno-15-68" name="__codelineno-15-68" href="#__codelineno-15-68"></a>
+<a id="__codelineno-15-69" name="__codelineno-15-69" href="#__codelineno-15-69"></a><span class="c1"># 9. Inspect results</span>
+<a id="__codelineno-15-70" name="__codelineno-15-70" href="#__codelineno-15-70"></a><span class="nb">print</span><span class="p">(</span><span class="n">bs_vals</span><span class="p">)</span>
+<a id="__codelineno-15-71" name="__codelineno-15-71" href="#__codelineno-15-71"></a><span class="n">errors</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">get_errors</span><span class="p">()</span>
+<a id="__codelineno-15-72" name="__codelineno-15-72" href="#__codelineno-15-72"></a><span class="nb">print</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+<a id="__codelineno-15-73" name="__codelineno-15-73" href="#__codelineno-15-73"></a>
+<a id="__codelineno-15-74" name="__codelineno-15-74" href="#__codelineno-15-74"></a><span class="c1"># 10. Visualize</span>
+<a id="__codelineno-15-75" name="__codelineno-15-75" href="#__codelineno-15-75"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibPlotter</span><span class="p">(</span><span class="n">bse</span><span class="p">)</span>
+<a id="__codelineno-15-76" name="__codelineno-15-76" href="#__codelineno-15-76"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bse_results</span><span class="p">()</span>
+<a id="__codelineno-15-77" name="__codelineno-15-77" href="#__codelineno-15-77"></a>
+<a id="__codelineno-15-78" name="__codelineno-15-78" href="#__codelineno-15-78"></a><span class="c1"># 11. Save</span>
+<a id="__codelineno-15-79" name="__codelineno-15-79" href="#__codelineno-15-79"></a><span class="n">bse</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<a id="__codelineno-15-80" name="__codelineno-15-80" href="#__codelineno-15-80"></a><span class="n">bse</span><span class="o">.</span><span class="n">save_to_excel</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="related-documentation">Related Documentation</h2>
 <ul>
-<li><code>bse.bs_vals</code>: Dict of basin stability values per class</li>
-<li><code>bse.y0</code>: Initial conditions tensor</li>
-<li><code>bse.solution</code>: Solution object with trajectories, features, labels</li>
+<li><a href="../solution/">Solution</a> -- what <code>bse.solution</code> contains and how to inspect it</li>
+<li><a href="../samplers/">Samplers</a> -- uniform, grid, Gaussian, and CSV sampling strategies</li>
+<li><a href="../solvers/">Solvers</a> -- solver comparison, caching, and GPU acceleration</li>
+<li><a href="../feature-extractors/">Feature Extractors</a> -- feature catalogs and per-state configuration</li>
+<li><a href="../feature-selectors/">Feature Selectors</a> -- variance and correlation filtering</li>
+<li><a href="../predictors/">Predictors</a> -- HDBSCAN, DBSCAN, supervised classifiers, and custom predictors</li>
+<li><a href="../plotters/">Plotters</a> -- static and interactive visualization options</li>
+<li><a href="../adaptive-studies/">Adaptive Parameter Studies</a> -- sweeping ODE parameters with <code>BasinStabilityStudy</code></li>
+<li><a href="../../guides/unbounded-trajectories/">Handling Unbounded Trajectories</a> -- event functions and unboundedness detection</li>
+<li><a href="../../case-studies/overview/">Case Studies</a> -- worked examples with Pendulum, Duffing, Lorenz, and more</li>
 </ul>
 
 

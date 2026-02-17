@@ -686,6 +686,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user-guide/solution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Solution
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user-guide/samplers/" class="md-nav__link">
         
   
@@ -839,10 +862,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_9" >
         
           
-          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
             
   
   
@@ -855,8 +878,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_8">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
             <span class="md-nav__icon md-icon"></span>
             How To
           </label>
@@ -2817,7 +2840,7 @@ steady-state or long-term behavior.</p>
 time span (i.e. keeps the last 15% of time points).</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">FeatureExtractor</span><span class="p">(</span><span class="n">time_steady</span><span class="o">=</span><span class="mf">9.0</span><span class="p">)</span>  <span class="c1"># if time_span=(0, 10)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">filtered</span> <span class="o">=</span> <span class="n">extractor</span><span class="o">.</span><span class="n">filter_time</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Only time points t &gt; 9.0 are included</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Only time points t &gt;= 9.0 are included</span>
 </code></pre></div>
 
 
@@ -3521,6 +3544,10 @@ pandas DataFrames for tsfresh processing, then converts the results back to tens
 <p>Supports per-state variable feature configuration using tsfresh's kind_to_fc_parameters
 mechanism, allowing you to apply different feature sets to different state variables
 based on domain knowledge.</p>
+<p>Internally, the solution tensor is converted to tsfresh's wide/flat DataFrame
+format where each state variable becomes a column (<code>state_0</code>, <code>state_1</code>, etc.).
+The <code>kind_to_fc_parameters</code> accepts integer state indices and maps them to these
+column names automatically.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Same minimal features for all states</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">TsfreshFeatureExtractor</span><span class="p">(</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">time_steady</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span> <span class="n">default_fc_parameters</span><span class="o">=</span><span class="n">MinimalFCParameters</span><span class="p">(),</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>
@@ -3539,8 +3566,8 @@ based on domain knowledge.</p>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">extractor</span> <span class="o">=</span> <span class="n">TsfreshFeatureExtractor</span><span class="p">(</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">time_steady</span><span class="o">=</span><span class="mf">950.0</span><span class="p">,</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">kind_to_fc_parameters</span><span class="o">=</span><span class="p">{</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        <span class="mi">0</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>  <span class="c1"># Position: basic stats</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        <span class="mi">1</span><span class="p">:</span> <span class="n">ComprehensiveFCParameters</span><span class="p">(),</span>  <span class="c1"># Velocity: full spectral analysis</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        <span class="mi">0</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        <span class="mi">1</span><span class="p">:</span> <span class="n">ComprehensiveFCParameters</span><span class="p">(),</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="p">},</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Use n_jobs=1 for deterministic results</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="p">)</span>
@@ -3608,7 +3635,7 @@ based on domain knowledge.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Optional dict mapping state indices to FCParameters. Allows different feature sets per state variable. If provided, overrides default_fc_parameters for those states.</p>
+                <p>Optional dict mapping state indices (e.g. <code>0</code>, <code>1</code>) to FCParameters. Indices correspond to the state dimension of the solution tensor. If provided, overrides <code>default_fc_parameters</code> for those states.</p>
               </div>
             </td>
             <td>
