@@ -23,7 +23,7 @@ class Solution:
     :ivar features: Filtered features used for classification.
     :ivar extracted_features: Original extracted features before filtering.
     :ivar extracted_feature_names: Names of extracted features.
-    :ivar filtered_feature_names: Names of filtered features.
+    :ivar feature_names: Names of filtered features.
     :ivar labels: Labels assigned to each solution in the batch.
     :ivar model_params: Parameters of the ODE model.
     :ivar bifurcation_amplitudes: Maximum absolute values along time dimension.
@@ -68,7 +68,7 @@ class Solution:
         self.features: torch.Tensor | None = features if features is not None else None
         self.extracted_features: torch.Tensor | None = None
         self.extracted_feature_names: list[str] | None = None
-        self.filtered_feature_names: list[str] | None = None
+        self.feature_names: list[str] | None = None
         self.labels: np.ndarray | None = labels
         self.model_params: dict[str, Any] | None = model_params
         self.bifurcation_amplitudes: torch.Tensor | None = None
@@ -104,7 +104,7 @@ class Solution:
         """
         self.features = features
         if names is not None:
-            self.filtered_feature_names = names
+            self.feature_names = names
 
     def get_summary(self) -> dict[str, Any]:
         """

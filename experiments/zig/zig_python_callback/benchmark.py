@@ -248,9 +248,9 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("Performance comparison (estimated for 10,000 ICs)")
     print("=" * 60)
-    print(f"  Zig native (24 threads):     ~494  ms")
+    print("  Zig native (24 threads):     ~494  ms")
     print(f"  Zig + Python ODE callback:   ~{est_full_s * 1000:.0f} ms")
-    print(f"  Diffrax/JAX (JIT, CPU):    ~15238  ms")
+    print("  Diffrax/JAX (JIT, CPU):    ~15238  ms")
     print(f"  Overhead from Python callback: ~{est_full_s / 0.494:.0f}x vs native Zig")
     print("=" * 60)
 

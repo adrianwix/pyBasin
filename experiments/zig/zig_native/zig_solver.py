@@ -450,10 +450,7 @@ class ZigODESolver:
         params_ptr = None
         if ode_name in ODE_PARAM_TYPES:
             param_type = ODE_PARAM_TYPES[ode_name]
-            if params is None:
-                params_struct = param_type()
-            else:
-                params_struct = param_type(**params)
+            params_struct = param_type() if params is None else param_type(**params)
             params_ptr = ctypes.cast(ctypes.pointer(params_struct), ctypes.c_void_p)
 
         # Allocate output buffer
@@ -533,10 +530,7 @@ class ZigODESolver:
         params_ptr = None
         if ode_name in ODE_PARAM_TYPES:
             param_type = ODE_PARAM_TYPES[ode_name]
-            if params is None:
-                params_struct = param_type()
-            else:
-                params_struct = param_type(**params)
+            params_struct = param_type() if params is None else param_type(**params)
             params_ptr = ctypes.cast(ctypes.pointer(params_struct), ctypes.c_void_p)
 
         # Allocate output buffer (n_ics * n_save * dim)

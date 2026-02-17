@@ -118,7 +118,7 @@ indices = selector.get_support(indices=True)  # integer indices
 
 ## Using Custom sklearn Transformers
 
-Any sklearn-compatible transformer that implements `fit_transform()` can serve as a feature selector. If the transformer also provides `get_support()`, filtered feature names will appear in `Solution.filtered_feature_names`.
+Any sklearn-compatible transformer that implements `fit_transform()` can serve as a feature selector. If the transformer also provides `get_support()`, filtered feature names will appear in `Solution.feature_names`.
 
 ```python
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
@@ -141,7 +141,7 @@ bse = BasinStabilityEstimator(
 ```
 
 !!! warning "Feature name tracking"
-Only selectors with a `get_support()` method enable automatic feature name filtering. Without it, `Solution.filtered_feature_names` falls back to the full unfiltered list.
+Only selectors with a `get_support()` method enable automatic feature name filtering. Without it, `Solution.feature_names` falls back to the full unfiltered list.
 
 ---
 

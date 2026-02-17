@@ -3,7 +3,10 @@ import torch
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.solution import Solution
 
-PendulumOHE = {"FP": [1, 0], "LC": [0, 1]}
+PendulumOHE = {
+    "FP": torch.tensor([1, 0], dtype=torch.float64),
+    "LC": torch.tensor([0, 1], dtype=torch.float64),
+}
 
 
 class PendulumFeatureExtractor(FeatureExtractor):
@@ -15,15 +18,12 @@ class PendulumFeatureExtractor(FeatureExtractor):
         y_filtered = self.filter_time(solution)  # shape: (N_after, B, S)
 
         # shape: (N_after, B)
-        angular_velocity = y_filtered[..., 1]
-        delta = (angular_velocity.max(dim=0).values - angular_velocity.mean(dim=0)).abs()
+        y_1 = y_filtered[..., 1]  # angular velocity
+        delta = (y_1.max(dim=0).values - y_1.mean(dim=0)).abs()
         mask = delta < 0.01
 
-        fp_tensor = torch.tensor(PendulumOHE["FP"], dtype=torch.float64)  # [1, 0]
-        lc_tensor = torch.tensor(PendulumOHE["LC"], dtype=torch.float64)  # [0, 1]
-
         # shape: (B, 2)
-        out = torch.empty((angular_velocity.shape[1], 2), dtype=torch.float64)
-        out[mask] = fp_tensor
-        out[~mask] = lc_tensor
+        out = torch.empty((y_1.shape[1], 2), dtype=torch.float64)
+        out[mask] = PendulumOHE["FP"]  # [1, 0]
+        out[~mask] = PendulumOHE["LC"]  # [0, 1]
         return out

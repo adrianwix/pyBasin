@@ -109,3 +109,7 @@ Do not make partial changes that leave the codebase in an inconsistent state.
       :raises ValueError: If y0 has incorrect shape.
       """
   ```
+
+## CI
+
+To check for code correctness use `bash scripts/ci.sh` and fix all the reported errors

@@ -1,3 +1,4 @@
+# pyright: basic
 """Benchmark: Zig Dopri5 solver with Cython-compiled ODE.
 
 Architecture:
@@ -89,7 +90,7 @@ def load_cython_ode() -> int:
     """
     sys.path.insert(0, str(ODE_DIR))
     try:
-        import pendulum_ode  # type: ignore[import-not-found]
+        import pendulum_ode  # type: ignore[import-not-found]  # noqa: PLC0415
     except ImportError as exc:
         msg = (
             f"Cython ODE module not found in {ODE_DIR}\n"
@@ -237,10 +238,10 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("Performance comparison (10,000 ICs, 10k save points)")
     print("=" * 60)
-    print(f"  Zig native (ODE in Zig):       ~494    ms")
+    print("  Zig native (ODE in Zig):       ~494    ms")
     print(f"  Zig + Cython ODE:              {elapsed_ms:>8.1f}  ms  ← this run")
-    print(f"  Diffrax/JAX (JIT, CPU):        ~15238  ms")
-    print(f"  Zig + Python ODE callback:     ~102539 ms")
+    print("  Diffrax/JAX (JIT, CPU):        ~15238  ms")
+    print("  Zig + Python ODE callback:     ~102539 ms")
     print("=" * 60)
 
 

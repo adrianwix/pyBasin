@@ -73,7 +73,7 @@ def test_feature_extractor_time_filtering(test_solution: Solution) -> None:
     extractor: MeanFeatureExtractor = MeanFeatureExtractor(time_steady=time_steady)
     y_filtered: torch.Tensor = extractor.filter_time(test_solution)
 
-    expected_steps: int = int((test_solution.time > time_steady).sum().item())
+    expected_steps: int = int((test_solution.time >= time_steady).sum().item())
 
     assert y_filtered.shape[0] == expected_steps
     assert y_filtered.shape[1:] == (5, 2)

@@ -8,9 +8,8 @@ Or simply:
     uv run mypyc pendulum_ode.py
 """
 
-from setuptools import setup
-
 from mypyc.build import mypycify
+from setuptools import setup
 
 setup(
     ext_modules=mypycify(["pendulum_ode.py"]),

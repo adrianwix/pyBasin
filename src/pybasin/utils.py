@@ -226,7 +226,7 @@ class NumpyEncoder(JSONEncoder):
         return super().default(o)
 
 
-def get_filtered_feature_names(selector: Any, original_names: list[str]) -> list[str]:
+def get_feature_names(selector: Any, original_names: list[str]) -> list[str]:
     """Get feature names after applying a sklearn selector/transformer.
 
     :param selector: Fitted sklearn transformer with get_support() method.

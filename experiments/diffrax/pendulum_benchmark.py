@@ -1,3 +1,4 @@
+# pyright: basic
 """Direct diffrax benchmark for pendulum basin stability computation."""
 
 import time
@@ -6,7 +7,6 @@ import diffrax
 import jax
 import jax.numpy as jnp
 from jaxtyping import Array, Float, Int
-
 
 N_SAMPLES = 10000
 T0 = 0.0

@@ -66,7 +66,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
         # Determine which feature names to use
         feature_names: list[str] | None = None
         if use_filtered:
-            feature_names = self.bse.solution.filtered_feature_names
+            feature_names = self.bse.solution.feature_names
         else:
             feature_names = self.bse.solution.extracted_feature_names
 
@@ -74,7 +74,7 @@ class FeatureSpaceAIO(BseBasePageAIO):
             logger.warning(
                 "No %s feature names available. Filtered names: %s, Extracted names: %s",
                 "filtered" if use_filtered else "extracted",
-                self.bse.solution.filtered_feature_names is not None,
+                self.bse.solution.feature_names is not None,
                 self.bse.solution.extracted_feature_names is not None,
             )
             return [{"value": "0", "label": "Feature 0"}]

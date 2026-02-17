@@ -34,7 +34,7 @@ from pybasin.utils import (
     NumpyEncoder,
     extract_amplitudes,
     generate_filename,
-    get_filtered_feature_names,
+    get_feature_names,
     resolve_folder,
 )
 
@@ -126,7 +126,7 @@ class BasinStabilityEstimator:
             # User explicitly set it (could be None to disable, or a custom selector)
             self.feature_selector = feature_selector
 
-        self._filtered_feature_names: list[str] | None = None
+        self._feature_names: list[str] | None = None
 
         # Unboundedness detection: enabled only if detect_unbounded=True AND solver is JaxSolver with event_fn
         self.detect_unbounded = (
@@ -212,7 +212,7 @@ class BasinStabilityEstimator:
             )
 
         # Get filtered feature names using utility function
-        filtered_names = get_filtered_feature_names(self.feature_selector, feature_names)
+        filtered_names = get_feature_names(self.feature_selector, feature_names)
 
         # Convert back to tensor
         features_filtered = torch.from_numpy(features_filtered_np).to(  # type: ignore[arg-type]
@@ -392,7 +392,7 @@ class BasinStabilityEstimator:
                 features, feature_names
             )
             self.solution.set_features(features_filtered, filtered_names)
-            self._filtered_feature_names = filtered_names
+            self._feature_names = filtered_names
             features = features_filtered
         else:
             self.solution.set_features(features, feature_names)
@@ -401,10 +401,10 @@ class BasinStabilityEstimator:
         logger.info("  Feature filtering complete in %.4fs", t5_elapsed)
 
         # Show top 10 features that remained
-        if self._filtered_feature_names and len(self._filtered_feature_names) > 0:
-            n_features_to_show = min(10, len(self._filtered_feature_names))
+        if self._feature_names and len(self._feature_names) > 0:
+            n_features_to_show = min(10, len(self._feature_names))
             logger.info("  Top %d features:", n_features_to_show)
-            for i, feature_name in enumerate(self._filtered_feature_names[:n_features_to_show]):
+            for i, feature_name in enumerate(self._feature_names[:n_features_to_show]):
                 logger.info("    %d. %s", i + 1, feature_name)
 
         # Show sample of filtered features (first IC, up to 10 features)
@@ -413,8 +413,8 @@ class BasinStabilityEstimator:
             if n_features_to_show > 0:
                 logger.debug("Sample of first %d filtered features (first IC):", n_features_to_show)
                 feature_names_filtered = (
-                    self.solution.filtered_feature_names[:n_features_to_show]
-                    if self.solution.filtered_feature_names
+                    self.solution.feature_names[:n_features_to_show]
+                    if self.solution.feature_names
                     else []
                 )
                 feature_values: list[float] = (
@@ -436,7 +436,7 @@ class BasinStabilityEstimator:
             logger.info("  Classifier fitted in %.4fs", t5b_elapsed)
 
         # Set feature names for predictors that require them
-        final_feature_names = self._filtered_feature_names or feature_names
+        final_feature_names = self._feature_names or feature_names
         if hasattr(self.predictor, "set_feature_names"):
             logger.info(
                 "  Setting feature names for predictor (%d features)", len(final_feature_names)
@@ -468,7 +468,7 @@ class BasinStabilityEstimator:
                 bounded_extracted_features = self.solution.extracted_features
                 bounded_extracted_feature_names = self.solution.extracted_feature_names
                 bounded_features = self.solution.features
-                bounded_filtered_feature_names = self.solution.filtered_feature_names
+                bounded_feature_names = self.solution.feature_names
 
                 # Restore original solution
                 self.solution = original_solution
@@ -479,7 +479,7 @@ class BasinStabilityEstimator:
                     self.solution.extracted_feature_names = bounded_extracted_feature_names
                 if bounded_features is not None:
                     self.solution.features = bounded_features
-                    self.solution.filtered_feature_names = bounded_filtered_feature_names
+                    self.solution.feature_names = bounded_feature_names
         else:
             labels = bounded_labels
 
@@ -645,8 +645,8 @@ class BasinStabilityEstimator:
                     (1 - n_filtered / n_extracted) if n_extracted > 0 else 0.0
                 )
 
-                if self._filtered_feature_names:
-                    feature_selection_info["filtered_feature_names"] = self._filtered_feature_names
+                if self._feature_names:
+                    feature_selection_info["feature_names"] = self._feature_names
         else:
             feature_selection_info["selector_type"] = "disabled"
 

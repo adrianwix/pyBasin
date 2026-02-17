@@ -8,9 +8,8 @@ Or simply:
     cythonize -i pendulum_ode.pyx
 """
 
-from setuptools import Extension, setup
-
 from Cython.Build import cythonize
+from setuptools import Extension, setup
 
 extensions = [
     Extension(

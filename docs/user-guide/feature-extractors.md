@@ -146,7 +146,7 @@ state_0__quantile__q_0.1
 state_1__autocorrelation__lag_5
 ```
 
-These names appear in `Solution.filtered_feature_names` after extraction and are used by feature selectors and plotting utilities.
+These names appear in `Solution.feature_names` after extraction and are used by feature selectors and plotting utilities.
 
 !!! note "Names available only after extraction"
 The `feature_names` property raises `RuntimeError` if accessed before calling `extract_features()`, because the number of states (and therefore the number of features) is only known at extraction time.

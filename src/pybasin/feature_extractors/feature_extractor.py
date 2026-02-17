@@ -119,7 +119,7 @@ class FeatureExtractor(ABC):
         ```python
         extractor = FeatureExtractor(time_steady=9.0)  # if time_span=(0, 10)
         filtered = extractor.filter_time(solution)
-        # Only time points t > 9.0 are included
+        # Only time points t >= 9.0 are included
         ```
 
         :param solution: ODE solution with time tensor of shape (N,) and y tensor
@@ -131,7 +131,7 @@ class FeatureExtractor(ABC):
         """
         effective_steady = self._resolve_time_steady(solution)
         time_arr = solution.time
-        idx_steady = torch.where(time_arr > effective_steady)[0]
+        idx_steady = torch.where(time_arr >= effective_steady)[0]
         start_idx = idx_steady[0] if len(idx_steady) > 0 else 0
         y_filtered = solution.y[start_idx:, ...]
         return y_filtered

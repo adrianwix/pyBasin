@@ -1,3 +1,4 @@
+# pyright: basic
 """Benchmark: Zig Dopri5 solver with mypyc-compiled ODE callback via ctypes.
 
 Architecture:
@@ -84,7 +85,7 @@ def load_mypyc_ode() -> ctypes._CFuncPtr:  # type: ignore[type-arg]
     """
     sys.path.insert(0, str(ODE_DIR))
     try:
-        from pendulum_ode import compute  # type: ignore[import-not-found]
+        from pendulum_ode import compute  # type: ignore[import-not-found]  # noqa: PLC0415
     except ImportError as exc:
         msg = (
             f"mypyc ODE module not found in {ODE_DIR}\n"
@@ -213,11 +214,11 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("Performance comparison (estimated for 10,000 ICs)")
     print("=" * 60)
-    print(f"  Zig native (24 threads):       ~494    ms")
-    print(f"  Zig + Cython ODE (24 threads): ~591    ms")
+    print("  Zig native (24 threads):       ~494    ms")
+    print("  Zig + Cython ODE (24 threads): ~591    ms")
     print(f"  Zig + mypyc ODE callback:      ~{est_full_s * 1000:.0f} ms  <- this run")
-    print(f"  Zig + Python ODE callback:     ~105000 ms")
-    print(f"  Diffrax/JAX (JIT, CPU):        ~15238  ms")
+    print("  Zig + Python ODE callback:     ~105000 ms")
+    print("  Diffrax/JAX (JIT, CPU):        ~15238  ms")
     print("=" * 60)
 
 

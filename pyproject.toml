@@ -83,6 +83,13 @@ ignore = ["E501", "N803", "N806"] # Line length handled by formatter, allow lowe
 "benchmarks/*.py" = [
     "E402",
 ] # Allow module level imports after code for environment setup
+"experiments/**/*.py" = [
+    "F722",
+] # Ruff doesn't support JaxTyping annotations
+"experiments/diffrax/*.py" = [
+    "F722",
+    "F821",
+] # Ruff doesn't support JaxTyping annotations (F821 for dimension names like 'batch')
 "src/pybasin/feature_extractors/correlation_selector.py" = [
     "N803",
 ] # X is standard for sklearn-compatible transformers

@@ -4,6 +4,7 @@ import multiprocessing
 import threading
 from typing import Any, cast
 
+import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import torch
 from sklearn.preprocessing import StandardScaler
@@ -26,6 +27,11 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     mechanism, allowing you to apply different feature sets to different state variables
     based on domain knowledge.
 
+    Internally, the solution tensor is converted to tsfresh's wide/flat DataFrame
+    format where each state variable becomes a column (``state_0``, ``state_1``, etc.).
+    The ``kind_to_fc_parameters`` accepts integer state indices and maps them to these
+    column names automatically.
+
     ```python
     # Same minimal features for all states
     extractor = TsfreshFeatureExtractor(
@@ -45,8 +51,8 @@ class TsfreshFeatureExtractor(FeatureExtractor):
     extractor = TsfreshFeatureExtractor(
         time_steady=950.0,
         kind_to_fc_parameters={
-            0: {"mean": None, "maximum": None, "minimum": None},  # Position: basic stats
-            1: ComprehensiveFCParameters(),  # Velocity: full spectral analysis
+            0: {"mean": None, "maximum": None, "minimum": None},
+            1: ComprehensiveFCParameters(),
         },
         n_jobs=1,  # Use n_jobs=1 for deterministic results
     )
@@ -72,9 +78,9 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         - Custom dict like {"mean": None, "maximum": None} for specific features
         - None - must provide kind_to_fc_parameters
         Default is MinimalFCParameters().
-    :param kind_to_fc_parameters: Optional dict mapping state indices to FCParameters.
-        Allows different feature sets per state variable. If provided, overrides
-        default_fc_parameters for those states.
+    :param kind_to_fc_parameters: Optional dict mapping state indices (e.g. ``0``, ``1``)
+        to FCParameters. Indices correspond to the state dimension of the solution
+        tensor. If provided, overrides ``default_fc_parameters`` for those states.
     :param n_jobs: Number of parallel jobs for feature extraction. Default is 1.
         Set to -1 to use all available cores.
     :param normalize: Whether to apply StandardScaler normalization to features.
@@ -144,64 +150,37 @@ class TsfreshFeatureExtractor(FeatureExtractor):
         # Convert to numpy for pandas compatibility
         y_np = y_filtered.cpu().numpy()
 
-        # Prepare data in tsfresh wide format
-        # Each row represents one time point for one trajectory (batch)
-        # Columns: [id, time, state_0, state_1, ..., state_S]
-        data_list: list[dict[str, Any]] = []
+        # Build tsfresh wide-format DataFrame: [id, time, state_0, ..., state_S]
+        # Transpose (N, B, S) -> (B, N, S) then flatten to (B*N, S)
+        y_flat = y_np.transpose(1, 0, 2).reshape(-1, n_states)
 
-        for batch_idx in range(n_batch):
-            for time_idx in range(n_timesteps):
-                row: dict[str, Any] = {
-                    "id": batch_idx,
-                    "time": time_idx,
-                }
-                for state_idx in range(n_states):
-                    row[f"state_{state_idx}"] = y_np[time_idx, batch_idx, state_idx]
-                data_list.append(row)
+        df_data: dict[str, Any] = {
+            "id": np.repeat(np.arange(n_batch), n_timesteps),
+            "time": np.tile(np.arange(n_timesteps), n_batch),
+        }
+        for state_idx in range(n_states):
+            df_data[f"state_{state_idx}"] = y_flat[:, state_idx]
 
-        df_pivot = pd.DataFrame(data_list)
+        df_wide = pd.DataFrame(df_data)
 
-        # Build kind_to_fc_parameters if per-state config is provided
+        kind_to_fc_params_mapped: dict[str, dict[str, Any] | Any] | None = None
         if self.kind_to_fc_parameters is not None:
-            # Map state column names to their feature parameters
             kind_to_fc_params_mapped = {
-                f"state_{state_idx}": fc_params
-                for state_idx, fc_params in self.kind_to_fc_parameters.items()
+                f"state_{idx}": fc_params for idx, fc_params in self.kind_to_fc_parameters.items()
             }
-            # Add a column_kind to the dataframe to enable kind-based extraction
-            # First, melt to long format with a "kind" column
-            id_vars: list[str] = ["id", "time"]
-            df_long: pd.DataFrame = df_pivot.melt(  # type: ignore[reportUnknownMemberType]
-                id_vars=id_vars, var_name="kind", value_name="value"
-            )
 
-            # Extract features using tsfresh with kind_to_fc_parameters
-            features_df: pd.DataFrame = cast(
-                pd.DataFrame,
-                extract_features(
-                    df_long,
-                    column_id="id",
-                    column_sort="time",
-                    column_kind="kind",
-                    column_value="value",
-                    kind_to_fc_parameters=kind_to_fc_params_mapped,
-                    n_jobs=self.n_jobs,
-                    disable_progressbar=True,
-                ),
-            )
-        else:
-            # Extract features using tsfresh with default parameters for all states
-            features_df: pd.DataFrame = cast(
-                pd.DataFrame,
-                extract_features(
-                    df_pivot,
-                    column_id="id",
-                    column_sort="time",
-                    default_fc_parameters=self.default_fc_parameters,
-                    n_jobs=self.n_jobs,
-                    disable_progressbar=True,
-                ),
-            )
+        features_df: pd.DataFrame = cast(
+            pd.DataFrame,
+            extract_features(
+                df_wide,
+                column_id="id",
+                column_sort="time",
+                default_fc_parameters=self.default_fc_parameters,
+                kind_to_fc_parameters=kind_to_fc_params_mapped,
+                n_jobs=self.n_jobs,
+                disable_progressbar=True,
+            ),
+        )
 
         # Handle NaN and inf values using tsfresh's impute function
         # This replaces NaN with 0 and inf with large finite values
@@ -221,9 +200,6 @@ class TsfreshFeatureExtractor(FeatureExtractor):
                     features_array = self.scaler.fit_transform(features_array)  # type: ignore[reportUnknownMemberType]
                     self._is_fitted = True
                 else:
-                    # Transform only on subsequent calls
-                    features_array = self.scaler.transform(features_array)
-                    # Transform only on subsequent calls (e.g., test data)
                     features_array = self.scaler.transform(features_array)
 
         # Convert back to tensor
