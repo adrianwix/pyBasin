@@ -11,6 +11,7 @@ from typing import Any, ParamSpec, TypeVar
 import numpy as np
 import torch
 
+from pybasin.protocols import FeatureSelectorProtocol
 from pybasin.solution import Solution
 
 P = ParamSpec("P")
@@ -226,20 +227,13 @@ class NumpyEncoder(JSONEncoder):
         return super().default(o)
 
 
-def get_feature_names(selector: Any, original_names: list[str]) -> list[str]:
+def get_feature_names(selector: FeatureSelectorProtocol, original_names: list[str]) -> list[str]:
     """Get feature names after applying a sklearn selector/transformer.
 
-    :param selector: Fitted sklearn transformer with get_support() method.
+    :param selector: Fitted feature selector satisfying :class:`FeatureSelectorProtocol`.
     :param original_names: List of original feature names before filtering.
     :return: List of feature names that passed the selector's filter.
-    :raises AttributeError: If selector doesn't have get_support() method.
     """
-    if not hasattr(selector, "get_support"):
-        raise AttributeError(
-            f"Selector {type(selector).__name__} does not have get_support() method. "
-            "Cannot track feature names through this transformer."
-        )
-
     mask = selector.get_support(indices=False)
     return [name for name, keep in zip(original_names, mask, strict=True) if keep]
 

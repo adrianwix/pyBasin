@@ -40,6 +40,23 @@ class SklearnClusterer(Protocol):
 
 
 @runtime_checkable
+class FeatureSelectorProtocol(Protocol):
+    """Protocol for sklearn-compatible feature selectors.
+
+    Defines the structural interface required by ``BasinStabilityEstimator``
+    for feature filtering. Satisfied by:
+
+    - ``SelectorMixin`` subclasses (``VarianceThreshold``, ``SelectKBest``, etc.)
+    - ``Pipeline`` subclasses with a custom ``get_support()`` (e.g., ``DefaultFeatureSelector``)
+    - Any class implementing ``fit_transform``, ``transform``, and ``get_support``
+    """
+
+    def fit_transform(self, X: np.ndarray, y: Any = None) -> np.ndarray: ...
+    def transform(self, X: np.ndarray) -> np.ndarray: ...
+    def get_support(self, indices: bool = False) -> np.ndarray: ...
+
+
+@runtime_checkable
 class FeatureNameAware(Protocol):
     """Protocol for predictors that accept feature names.
 

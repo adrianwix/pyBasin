@@ -18,6 +18,7 @@ from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
 from pybasin.protocols import (
     UNSET,
     FeatureNameAware,
+    FeatureSelectorProtocol,
     ODESystemProtocol,
     SklearnClassifier,
     SklearnClusterer,
@@ -62,7 +63,7 @@ class BasinStabilityEstimator:
         feature_extractor: FeatureExtractor | None = None,
         predictor: BaseEstimator | None = None,
         template_integrator: TemplateIntegrator | None = None,
-        feature_selector: BaseEstimator | None = UNSET,  # type: ignore[assignment]
+        feature_selector: FeatureSelectorProtocol | None = UNSET,  # type: ignore[assignment]
         detect_unbounded: bool = True,
         save_to: str | None = None,
     ):
@@ -121,7 +122,7 @@ class BasinStabilityEstimator:
         # Initialize feature selector
         if feature_selector is UNSET:
             # Default: use feature filtering with default thresholds
-            self.feature_selector: BaseEstimator | None = DefaultFeatureSelector()
+            self.feature_selector: FeatureSelectorProtocol | None = DefaultFeatureSelector()
         else:
             # User explicitly set it (could be None to disable, or a custom selector)
             self.feature_selector = feature_selector

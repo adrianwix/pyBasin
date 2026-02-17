@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
-from pybasin.protocols import ODESystemProtocol, SolverProtocol
+from pybasin.protocols import FeatureSelectorProtocol, ODESystemProtocol, SolverProtocol
 from pybasin.solution import Solution
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class TemplateIntegrator:
     def get_training_data(
         self,
         feature_extractor: FeatureExtractor,
-        feature_selector: Any | None = None,
+        feature_selector: FeatureSelectorProtocol | None = None,
     ) -> tuple[np.ndarray, list[str]]:
         """Extract features from integrated templates and return training data.
 
