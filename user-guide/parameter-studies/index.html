@@ -2333,8 +2333,8 @@
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Combinatorial Explosion</p>
-<p>Grid studies grow exponentially. Three parameters with 10 values each produce 1,000 runs. Start with coarse grids and refine regions of interest.</p>
 </div>
+<p>Grid studies grow exponentially. Three parameters with 10 values each produce 1,000 runs. Start with coarse grids and refine regions of interest.</p>
 <table>
 <thead>
 <tr>
@@ -2493,8 +2493,8 @@
 </table>
 <div class="admonition note">
 <p class="admonition-title">Required Components</p>
-<p>Unlike <code>BasinStabilityEstimator</code>, which auto-creates defaults, <code>BasinStabilityStudy</code> requires explicit components for <code>solver</code>, <code>feature_extractor</code>, and <code>estimator</code>. This ensures consistent configuration across all parameter combinations.</p>
 </div>
+<p>Unlike <code>BasinStabilityEstimator</code>, which auto-creates defaults, <code>BasinStabilityStudy</code> requires explicit components for <code>solver</code>, <code>feature_extractor</code>, and <code>estimator</code>. This ensures consistent configuration across all parameter combinations.</p>
 <h3 id="running-the-study">Running the Study</h3>
 <p>Call <code>run()</code> to execute basin stability estimation for each parameter combination:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.basin_stability_study</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityStudy</span>
@@ -2530,111 +2530,105 @@
 <td>Full results including labels and amplitudes</td>
 </tr>
 <tr>
-<td><code>study_labels</code></td>
-<td><code>list[dict[str, Any]]</code></td>
-<td>Parameter values for each run</td>
-</tr>
-<tr>
-<td><code>basin_stabilities</code></td>
-<td><code>list[dict[str, float]]</code></td>
-<td>Basin stability fractions per run</td>
-</tr>
-<tr>
 <td><code>studied_parameter_names</code></td>
 <td><code>list[str]</code></td>
 <td>Names of the varied parameters</td>
 </tr>
 </tbody>
 </table>
-<p>Each <code>StudyResult</code> dict contains:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="s2">&quot;study_label&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>  <span class="c1"># Parameter values</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="s2">&quot;basin_stability&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="mf">0.42</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">0.58</span><span class="p">},</span> <span class="c1"># BS fractions</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span>          <span class="c1"># Error estimates</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>                           <span class="c1"># Cluster assignments</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="s2">&quot;bifurcation_amplitudes&quot;</span><span class="p">:</span> <span class="n">tensor</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>     <span class="c1"># Steady-state amplitudes</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
+<p>The <code>results</code> list is the primary access point. Extract basin stabilities and study labels directly from it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">study_labels</span>      <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;study_label&quot;</span><span class="p">]</span>      <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">bs_study</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">basin_stabilities</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;basin_stability&quot;</span><span class="p">]</span>  <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">bs_study</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
+</code></pre></div>
+<p>Each <a href="https://adrianwix.github.io/pyBasin/api/parameter-studies/#pybasin.types.StudyResult"><code>StudyResult</code></a> dict contains:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="s2">&quot;study_label&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>  <span class="c1"># Parameter values</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="s2">&quot;basin_stability&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="mf">0.42</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">0.58</span><span class="p">},</span> <span class="c1"># BS fractions</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span>          <span class="c1"># Error estimates</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>                           <span class="c1"># Cluster assignments</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="s2">&quot;bifurcation_amplitudes&quot;</span><span class="p">:</span> <span class="n">tensor</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>     <span class="c1"># Steady-state amplitudes</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h2 id="visualization">Visualization</h2>
 <p>Two plotters work with <code>BasinStabilityStudy</code> results.</p>
 <h3 id="matplotlibstudyplotter">MatplotlibStudyPlotter</h3>
 <p>Creates static matplotlib figures for basin stability variation and bifurcation diagrams.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.matplotlib_study_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibStudyPlotter</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1"># Basin stability vs parameter value</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># Bifurcation diagram showing attractor amplitudes</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1"># Save all figures to bs_study.save_to</span>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># or use plt.show() directly</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.matplotlib_study_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibStudyPlotter</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># Basin stability vs parameter value</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Bifurcation diagram showing attractor amplitudes</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1"># Save all figures to bs_study.save_to</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># or use plt.show() directly</span>
 </code></pre></div>
 <p>For multi-parameter studies, specify which parameter to plot on the x-axis:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
 </code></pre></div>
 <p>Results are grouped by the other parameters, with each group rendered as a separate curve.</p>
 <h3 id="interactiveplotter">InteractivePlotter</h3>
 <p>Launches a Dash web app for exploring results interactively:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.interactive_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlotter</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">InteractivePlotter</span><span class="p">(</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">bs_study</span><span class="p">,</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">state_labels</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;theta&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;omega&quot;</span><span class="p">},</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">)</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">plotter</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">8050</span><span class="p">)</span>  <span class="c1"># Opens browser at localhost:8050</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.interactive_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlotter</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">InteractivePlotter</span><span class="p">(</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">bs_study</span><span class="p">,</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">state_labels</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;theta&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;omega&quot;</span><span class="p">},</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">)</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">plotter</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">8050</span><span class="p">)</span>  <span class="c1"># Opens browser at localhost:8050</span>
 </code></pre></div>
 <p>See the <a href="../plotters/">Plotters guide</a> for detailed plotter documentation.</p>
 <hr />
 <h2 id="saving-results">Saving Results</h2>
 <p>Call <code>save()</code> to write results to a JSON file in the <code>save_to</code> folder:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>The JSON includes studied parameters, basin stability values for each configuration, region of interest, and ODE system equations.</p>
 <hr />
 <h2 id="complete-example">Complete Example</h2>
 <p>A typical parameter study workflow:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.basin_stability_study</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityStudy</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.matplotlib_study_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibStudyPlotter</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.study_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">SweepStudyParams</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="c1"># Assume setup_system() returns configured components</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">props</span> <span class="o">=</span> <span class="n">setup_system</span><span class="p">()</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="n">study_params</span> <span class="o">=</span> <span class="n">SweepStudyParams</span><span class="p">(</span>
-<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ode_system.params[&quot;sigma&quot;]&#39;</span><span class="p">,</span>
-<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">values</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)),</span>
-<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="p">)</span>
-<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>
-<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="n">bs_study</span> <span class="o">=</span> <span class="n">BasinStabilityStudy</span><span class="p">(</span>
-<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
-<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;solver&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;estimator&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>    <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
-<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_integrator&quot;</span><span class="p">),</span>
-<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_sigma&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a><span class="p">)</span>
-<a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>
-<a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-<a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>
-<a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="c1"># Visualize</span>
-<a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
-<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
-<a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># or plotter.show() for interactive display</span>
-<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a>
-<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a><span class="c1"># Save</span>
-<a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.basin_stability_study</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityStudy</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.matplotlib_study_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibStudyPlotter</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.study_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">SweepStudyParams</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="c1"># Assume setup_system() returns configured components</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">props</span> <span class="o">=</span> <span class="n">setup_system</span><span class="p">()</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="n">study_params</span> <span class="o">=</span> <span class="n">SweepStudyParams</span><span class="p">(</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ode_system.params[&quot;sigma&quot;]&#39;</span><span class="p">,</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>    <span class="n">values</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)),</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="p">)</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="n">bs_study</span> <span class="o">=</span> <span class="n">BasinStabilityStudy</span><span class="p">(</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;ode_system&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;sampler&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="n">solver</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;solver&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;estimator&quot;</span><span class="p">],</span>
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>    <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_integrator&quot;</span><span class="p">),</span>
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_sigma&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="p">)</span>
+<a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>
+<a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a>
+<a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a><span class="c1"># Visualize</span>
+<a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
+<a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
+<a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># or plotter.show() for interactive display</span>
+<a id="__codelineno-13-33" name="__codelineno-13-33" href="#__codelineno-13-33"></a>
+<a id="__codelineno-13-34" name="__codelineno-13-34" href="#__codelineno-13-34"></a><span class="c1"># Save</span>
+<a id="__codelineno-13-35" name="__codelineno-13-35" href="#__codelineno-13-35"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>For full API details, see the <a href="../../api/parameter-studies/">BasinStabilityStudy API reference</a>.</p>
 

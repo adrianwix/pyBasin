@@ -1543,24 +1543,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pybasin.basin_stability_study.BasinStabilityStudy.study_labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      study_labels
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pybasin.basin_stability_study.BasinStabilityStudy.basin_stabilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      basin_stabilities
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#pybasin.basin_stability_study.BasinStabilityStudy.studied_parameter_names" class="md-nav__link">
     <span class="md-ellipsis">
       studied_parameter_names
@@ -2356,24 +2338,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pybasin.basin_stability_study.BasinStabilityStudy.study_labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      study_labels
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pybasin.basin_stability_study.BasinStabilityStudy.basin_stabilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      basin_stabilities
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#pybasin.basin_stability_study.BasinStabilityStudy.studied_parameter_names" class="md-nav__link">
     <span class="md-ellipsis">
       studied_parameter_names
@@ -2854,100 +2818,6 @@
 
 
 <h3 id="pybasin.basin_stability_study.BasinStabilityStudy-attributes">Attributes</h3>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-<h4 id="pybasin.basin_stability_study.BasinStabilityStudy.study_labels" class="doc doc-heading">
-            <span class="doc doc-object-name doc-attribute-name">study_labels</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-</h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">study_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Study labels for each run, derived from results.</p>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>List of study label dicts, one per run.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-<h4 id="pybasin.basin_stability_study.BasinStabilityStudy.basin_stabilities" class="doc doc-heading">
-            <span class="doc doc-object-name doc-attribute-name">basin_stabilities</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-</h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">basin_stabilities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Basin stability dicts for each run, derived from results.</p>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="float">float</span>]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>List of basin stability dicts, one per run.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
 
 <div class="doc doc-object doc-attribute">
 
@@ -3458,7 +3328,7 @@ heading_level: 3</p>
               Bases: <code><a class="autorefs autorefs-internal" title="pybasin.study_params.StudyParams" href="#pybasin.study_params.StudyParams">StudyParams</a></code></p>
 
 
-        <p>Single parameter sweep (current behavior).</p>
+        <p>Single parameter sweep.</p>
 <p>Iterates over a single parameter's values, yielding one RunConfig per value.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">study_params</span> <span class="o">=</span> <span class="n">SweepStudyParams</span><span class="p">(</span>
