@@ -663,12 +663,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../adaptive-studies/" class="md-nav__link">
+      <a href="../parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1625,7 +1625,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/adaptive-sampling/" class="md-nav__link">
+      <a href="../../api/parameter-studies/" class="md-nav__link">
         
   
   
@@ -2135,7 +2135,7 @@
 </tr>
 <tr>
 <td><code>CorrelationSelector</code></td>
-<td>Pairwise absolute correlation filter</td>
+<td>Mean absolute correlation ranking</td>
 <td>Targeted removal of redundant correlated features.</td>
 </tr>
 <tr>
@@ -2149,7 +2149,7 @@
 <p>When no <code>feature_selector</code> argument is provided, the estimator creates a <code>DefaultFeatureSelector()</code> with these defaults:</p>
 <ul>
 <li><strong>Variance threshold</strong>: 0.01 -- features with variance below this are dropped</li>
-<li><strong>Correlation threshold</strong>: 0.95 -- among features with |correlation| above this, only one is kept</li>
+<li><strong>Correlation threshold</strong>: 0.95 -- among features with |correlation| above this, the more globally redundant one is dropped</li>
 <li><strong>Minimum features</strong>: 2 -- at least two features are always retained</li>
 </ul>
 <p>The selector's <code>feature_selector</code> parameter uses a sentinel pattern to distinguish "not specified" (use default) from <code>None</code> (disable). Passing <code>None</code> explicitly turns off all feature filtering.</p>
@@ -2229,10 +2229,11 @@
 <p>The method composes the variance mask and the correlation mask internally, returning a single combined result against the original feature indices.</p>
 <hr />
 <h2 id="correlationselector">CorrelationSelector</h2>
-<p>An sklearn transformer that removes features with high pairwise absolute correlation. It iterates over the upper triangle of the correlation matrix and drops the later column in each correlated pair, subject to a minimum feature count.</p>
+<p>An sklearn transformer that removes features whose pairwise absolute correlation exceeds a threshold. Rather than dropping columns in index order, it applies the ranking algorithm from Kuhn &amp; Johnson (2013), <em>Applied Predictive Modeling</em>, Chapter 3 -- the same logic behind R's <code>caret::findCorrelation()</code>.</p>
+<p>At each step, the selector finds the most correlated pair among the remaining features and computes each member's mean absolute correlation against all other remaining features. The feature with the higher mean -- the more globally redundant one -- is dropped. Because the correlation statistics are recomputed after every removal, later decisions reflect the reduced feature set.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.feature_selector</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorrelationSelector</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">selector</span> <span class="o">=</span> <span class="n">CorrelationSelector</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">min_features</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">selector</span> <span class="o">=</span> <span class="n">CorrelationSelector</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">min_features</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">X_filtered</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="constructor-parameters_1">Constructor Parameters</h3>
@@ -2249,21 +2250,21 @@
 <tr>
 <td><code>threshold</code></td>
 <td><code>float</code></td>
-<td><code>0.95</code></td>
+<td><code>0.9</code></td>
 <td>Correlation ceiling. Pairs with |corr| above this trigger removal.</td>
 </tr>
 <tr>
 <td><code>min_features</code></td>
 <td><code>int</code></td>
-<td><code>2</code></td>
+<td><code>3</code></td>
 <td>Minimum features to retain. Prevents aggressive filtering from removing all columns.</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition note">
-<p class="admonition-title">Greedy column-order removal</p>
+<p class="admonition-title">Column-order independence</p>
 </div>
-<p>The selector iterates column pairs in order and always drops the higher-indexed column. This greedy strategy is fast but not globally optimal -- the retained set depends on column ordering.</p>
+<p>Because removal is driven by mean absolute correlation rather than column position, reordering the input features does not change which features survive. Two datasets containing the same features in different column order produce the same retained set.</p>
 <h3 id="retrieving-the-selection-mask_1">Retrieving the Selection Mask</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">mask</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">get_support</span><span class="p">()</span>          <span class="c1"># boolean mask</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">indices</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># integer indices</span>
@@ -2271,24 +2272,15 @@
 <hr />
 <h2 id="using-custom-sklearn-transformers">Using Custom sklearn Transformers</h2>
 <p>Any sklearn-compatible transformer that implements <code>fit_transform()</code> can serve as a feature selector. If the transformer also provides <code>get_support()</code>, filtered feature names will appear in <code>Solution.feature_names</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">VarianceThreshold</span><span class="p">,</span> <span class="n">SelectKBest</span><span class="p">,</span> <span class="n">f_classif</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">VarianceThreshold</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Simple variance filter</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">ode_system</span><span class="o">=...</span><span class="p">,</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">sampler</span><span class="o">=...</span><span class="p">,</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">VarianceThreshold</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># k-best features (supervised -- requires labels via TemplateIntegrator)</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">ode_system</span><span class="o">=...</span><span class="p">,</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">sampler</span><span class="o">=...</span><span class="p">,</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">SelectKBest</span><span class="p">(</span><span class="n">f_classif</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="n">predictor</span><span class="o">=</span><span class="n">some_classifier</span><span class="p">,</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">some_template</span><span class="p">,</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">ode_system</span><span class="o">=...</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">sampler</span><span class="o">=...</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">VarianceThreshold</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">)</span>
 </code></pre></div>
+<p>The transformer must be unsupervised -- its <code>fit()</code> receives only the feature matrix <code>X</code>, with no labels. Supervised selectors like <code>SelectKBest(f_classif)</code> will fail because the pipeline never passes <code>y</code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Feature name tracking</p>
 </div>

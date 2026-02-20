@@ -655,12 +655,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/adaptive-studies/" class="md-nav__link">
+      <a href="../../user-guide/parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1749,7 +1749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/adaptive-sampling/" class="md-nav__link">
+      <a href="../../api/parameter-studies/" class="md-nav__link">
         
   
   
@@ -2585,11 +2585,11 @@
 </code></pre></div>
 <h3 id="k-parameter-sweep">K Parameter Sweep</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">BasinStabilityStudy</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run adaptive parameter study for Rössler network coupling strength.</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run parameter study for Rössler network coupling strength.</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    Sweeps through K values from paper to analyze basin stability variation.</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    :return: Adaptive basin stability estimator with results.</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    :return: Basin stability study with results.</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">props</span> <span class="o">=</span> <span class="n">setup_rossler_network_system</span><span class="p">()</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
@@ -2618,7 +2618,7 @@
 <a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_k_study&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    <span class="p">)</span>
 <a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">estimate_as_bs</span><span class="p">()</span>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>
 <a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    <span class="k">return</span> <span class="n">bse</span>
 </code></pre></div>

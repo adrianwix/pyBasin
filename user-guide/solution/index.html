@@ -13,7 +13,7 @@
       
       
       
-        <link rel="prev" href="../adaptive-studies/">
+        <link rel="prev" href="../parameter-studies/">
       
       
         <link rel="next" href="../samplers/">
@@ -663,12 +663,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../adaptive-studies/" class="md-nav__link">
+      <a href="../parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1634,7 +1634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/adaptive-sampling/" class="md-nav__link">
+      <a href="../../api/parameter-studies/" class="md-nav__link">
         
   
   
@@ -2134,8 +2134,8 @@
 
 
 <h1 id="solution">Solution</h1>
-<p>The <code>Solution</code> class stores all results from a basin stability estimation run. After integration, feature extraction, and classification complete, the solution object holds trajectories, extracted features, cluster labels, and metadata. You can inspect it directly or pass it to plotters for visualization.</p>
-<p><code>BasinStabilityEstimator</code> creates a <code>Solution</code> automatically during the integration step and mutates it through the pipeline. Access it via <code>bse.solution</code> after calling <code>estimate_bs()</code>.</p>
+<p>Every basin stability run produces a <code>Solution</code> object that accumulates results as the pipeline progresses -- trajectories from integration, feature vectors from extraction, and basin labels from classification. You can inspect it directly for analysis or hand it to a plotter for visualization.</p>
+<p>During <code>estimate_bs()</code>, the <code>BasinStabilityEstimator</code> creates the <code>Solution</code> and mutates it at each pipeline step. Access the finished object via <code>bse.solution</code>.</p>
 <h2 id="whats-stored">What's Stored</h2>
 <table>
 <thead>
@@ -2201,6 +2201,12 @@
 <td>ODE parameters used during integration</td>
 <td>Integration</td>
 </tr>
+<tr>
+<td><code>bifurcation_amplitudes</code></td>
+<td><code>torch.Tensor</code> or <code>None</code></td>
+<td>Max absolute values per state (shape: <code>(N, n_states)</code>)</td>
+<td>Integration</td>
+</tr>
 </tbody>
 </table>
 <h2 id="accessing-the-solution">Accessing the Solution</h2>
@@ -2223,16 +2229,15 @@
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">labels</span>  <span class="c1"># (N,)</span>
 </code></pre></div>
 <h2 id="features-and-feature-names">Features and Feature Names</h2>
-<p>Raw features extracted from trajectories are stored separately from filtered features. Feature selectors reduce the raw set down to a smaller collection based on variance thresholds or other criteria.</p>
+<p>Extracted features and filtered features are stored separately. After feature extraction, <code>extracted_features</code> holds the full raw matrix. When a feature selector is active, <code>features</code> contains the reduced subset; otherwise the BSE copies the unfiltered values into <code>features</code> as well. Both are always populated after <code>estimate_bs()</code> completes.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Raw features before filtering</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">raw_features</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">extracted_features</span>  <span class="c1"># (N, F)</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">raw_names</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">extracted_feature_names</span>  <span class="c1"># list[str] with F names</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Filtered features after selection</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Filtered features after selection (or unfiltered copy if no selector)</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">filtered_features</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">features</span>  <span class="c1"># (N, F&#39;) where F&#39; &lt;= F</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">filtered_names</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">feature_names</span>  <span class="c1"># list[str] with F&#39; names</span>
 </code></pre></div>
-<p>If no feature selector is used, <code>features</code> and <code>feature_names</code> will be <code>None</code>. The raw features remain accessible via <code>extracted_features</code> and <code>extracted_feature_names</code>.</p>
 <h2 id="summary-output">Summary Output</h2>
 <p>Call <code>get_summary()</code> to produce a JSON-serializable dictionary with key information. This is useful for logging or saving results to disk.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">summary</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">get_summary</span><span class="p">()</span>
@@ -2304,8 +2309,8 @@
 </code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Pipeline Usage</p>
-</div>
 <p>In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.</p>
+</div>
 <h2 id="related-documentation">Related Documentation</h2>
 <ul>
 <li><a href="../../api/solution/">API Reference</a> -- Full method signatures and docstrings.</li>

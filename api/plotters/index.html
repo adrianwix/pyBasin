@@ -655,12 +655,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/adaptive-studies/" class="md-nav__link">
+      <a href="../../user-guide/parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1473,7 +1473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adaptive-sampling/" class="md-nav__link">
+      <a href="../parameter-studies/" class="md-nav__link">
         
   
   
@@ -1792,6 +1792,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      save
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.show" class="md-nav__link">
+    <span class="md-ellipsis">
+      show
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.plot_basin_stability_bars" class="md-nav__link">
     <span class="md-ellipsis">
       plot_basin_stability_bars
@@ -1927,6 +1945,24 @@
   <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      save
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.show" class="md-nav__link">
+    <span class="md-ellipsis">
+      show
     </span>
   </a>
   
@@ -2107,6 +2143,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      save
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.show" class="md-nav__link">
+    <span class="md-ellipsis">
+      show
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.plot_basin_stability_bars" class="md-nav__link">
     <span class="md-ellipsis">
       plot_basin_stability_bars
@@ -2242,6 +2296,24 @@
   <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      save
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.show" class="md-nav__link">
+    <span class="md-ellipsis">
+      show
     </span>
   </a>
   
@@ -2394,12 +2466,111 @@
 <div class="doc doc-object doc-function">
 
 
+<h4 id="pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.save" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">save</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">save</span><span class="p">(</span><span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Save all pending figures to the save_to directory.</p>
+<p>Figures are tracked when plot methods create new figures (i.e., when
+no <code>ax</code> parameter is passed). Call this after plotting to save
+all figures at once.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>dpi</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Resolution for saved images.</p>
+              </div>
+            </td>
+            <td>
+                  <code>300</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>bse.save_to</code> is not set or no figures pending.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.show" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">show</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">show</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Display all matplotlib figures.</p>
+<p>Convenience wrapper around <code>plt.show()</code> so users don't need to
+import matplotlib separately.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="pybasin.plotters.matplotlib_plotter.MatplotlibPlotter.plot_basin_stability_bars" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">plot_basin_stability_bars</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_basin_stability_bars</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_basin_stability_bars</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Axes</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2438,6 +2609,29 @@
     </table>
 
 
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="matplotlib.axes.Axes">Axes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Axes object with the plot.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -2450,7 +2644,7 @@
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_state_space</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_state_space</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Axes</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2489,6 +2683,29 @@
     </table>
 
 
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="matplotlib.axes.Axes">Axes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Axes object with the plot.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -2501,7 +2718,7 @@
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_feature_space</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_feature_space</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Axes</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2540,6 +2757,29 @@
     </table>
 
 
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="matplotlib.axes.Axes">Axes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Axes object with the plot.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -2552,7 +2792,7 @@
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_bse_results</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_bse_results</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Figure</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2565,6 +2805,29 @@
 <p>This method combines the individual plotting functions into a 2x2 grid.
 For individual plots, use plot_basin_stability_bars(), plot_state_space(),
 or plot_feature_space() directly.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="matplotlib.figure.Figure">Figure</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Figure object with the 2x2 grid of plots.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -2904,7 +3167,7 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
                 <code>bse</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="pybasin.basin_stability_estimator.BasinStabilityEstimator" href="../basin-stability-estimator/#pybasin.basin_stability_estimator.BasinStabilityEstimator">BasinStabilityEstimator</a> | <a class="autorefs autorefs-internal" title="pybasin.basin_stability_study.BasinStabilityStudy" href="../adaptive-sampling/#pybasin.basin_stability_study.BasinStabilityStudy">BasinStabilityStudy</a></code>
+                  <code><a class="autorefs autorefs-internal" title="pybasin.basin_stability_estimator.BasinStabilityEstimator" href="../basin-stability-estimator/#pybasin.basin_stability_estimator.BasinStabilityEstimator">BasinStabilityEstimator</a> | <a class="autorefs autorefs-internal" title="pybasin.basin_stability_study.BasinStabilityStudy" href="../parameter-studies/#pybasin.basin_stability_study.BasinStabilityStudy">BasinStabilityStudy</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3045,7 +3308,11 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
     <div class="doc doc-contents first">
 
 
-        <p>Matplotlib-based plotter for adaptive study basin stability results.</p>
+        <p>Matplotlib-based plotter for parameter study basin stability results.</p>
+<p>Supports multi-parameter studies by grouping results along one chosen parameter
+(x-axis) while producing separate curves for each combination of the remaining
+parameters. When <code>parameters</code> is not passed, one figure is produced per
+studied parameter.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -3059,7 +3326,7 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.as_bse">as_bse</span></code></td>
+            <td><code><span title="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.bs_study">bs_study</span></code></td>
             <td>
             </td>
             <td>
@@ -3100,12 +3367,12 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span><span class="n">as_bse</span><span class="p">:</span> <span class="n">BasinStabilityStudy</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__init__</span><span class="p">(</span><span class="n">bs_study</span><span class="p">:</span> <span class="n">BasinStabilityStudy</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Initialize the plotter with an BasinStabilityStudy instance.</p>
+        <p>Initialize the plotter with a BasinStabilityStudy instance.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3121,10 +3388,10 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>as_bse</code>
+                <code>bs_study</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="pybasin.basin_stability_study.BasinStabilityStudy" href="../adaptive-sampling/#pybasin.basin_stability_study.BasinStabilityStudy">BasinStabilityStudy</a></code>
+                  <code><a class="autorefs autorefs-internal" title="pybasin.basin_stability_study.BasinStabilityStudy" href="../parameter-studies/#pybasin.basin_stability_study.BasinStabilityStudy">BasinStabilityStudy</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3146,6 +3413,104 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
 <div class="doc doc-object doc-function">
 
 
+<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.save" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">save</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">save</span><span class="p">(</span><span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Save all pending figures to the save_to directory.</p>
+<p>Figures are tracked when plot methods create new figures. Call this
+after plotting to save all figures at once.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>dpi</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Resolution for saved images.</p>
+              </div>
+            </td>
+            <td>
+                  <code>300</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>bs_study.save_to</code> is not set or no figures pending.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.show" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">show</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">show</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Display all matplotlib figures.</p>
+<p>Convenience wrapper around <code>plt.show()</code> so users don't need to
+import matplotlib separately.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_basin_stability_variation" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">plot_basin_stability_variation</span>
 
@@ -3153,13 +3518,16 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_basin_stability_variation</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Plot all basin stability values against parameter variation in a single plot.</p>
+        <p>Plot basin stability values against parameter variation.</p>
+<p>Produces one figure per parameter. For multi-parameter studies,
+results are grouped by the other parameters and each group becomes
+a separate set of lines in the figure.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3182,7 +3550,7 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Indicates whether the x-axis should use a linear or logarithmic scale. Options:  - 'linear': Default linear scale. - 'log': Logarithmic scale, e.g., when using <code>2 * np.logspace(...)</code>.</p>
+                <p>x-axis scale — <code>'linear'</code> or <code>'log'</code>.</p>
               </div>
             </td>
             <td>
@@ -3191,18 +3559,18 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>show</code>
+                <code>parameters</code>
             </td>
             <td>
-                  <code><span title="bool">bool</span></code>
+                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Whether to display the plot. If False, returns the figure without showing.</p>
+                <p>Which studied parameters to plot. <code>None</code> plots all.</p>
               </div>
             </td>
             <td>
-                  <code>True</code>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -3220,10 +3588,11 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="list">list</span>[<span title="matplotlib.figure.Figure">Figure</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The matplotlib Figure object.</p>
+                <p>List of matplotlib Figure objects (one per parameter).</p>
               </div>
             </td>
           </tr>
@@ -3243,18 +3612,17 @@ interactive visualizations. Each page owns its controls, plot, and callbacks.</p
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_bifurcation_diagram</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">dof</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Plot bifurcation diagram showing attractor locations over parameter variation.</p>
-<p>For each parameter value, the method extracts the bifurcation amplitudes
-(i.e. solution.bifurcation_amplitudes), selects the desired DOFs, applies
-k-means clustering and then plots the cluster centers as a function of
-the parameter.</p>
-<p>Unbounded trajectories are automatically filtered out before clustering,
-as bifurcation amplitudes are only computed for bounded trajectories.</p>
+        <p>Plot bifurcation diagrams showing attractor locations over parameter variation.</p>
+<p>Produces one figure per parameter. For multi-parameter studies,
+results are grouped by the other parameters and each group becomes
+a separate set of curves.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3286,18 +3654,18 @@ as bifurcation amplitudes are only computed for bounded trajectories.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>show</code>
+                <code>parameters</code>
             </td>
             <td>
-                  <code><span title="bool">bool</span></code>
+                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Whether to display the plot. If False, returns the figure without showing.</p>
+                <p>Which studied parameters to plot. <code>None</code> plots all.</p>
               </div>
             </td>
             <td>
-                  <code>True</code>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -3315,10 +3683,11 @@ as bifurcation amplitudes are only computed for bounded trajectories.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="list">list</span>[<span title="matplotlib.figure.Figure">Figure</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The matplotlib Figure object.</p>
+                <p>List of matplotlib Figure objects (one per parameter).</p>
               </div>
             </td>
           </tr>

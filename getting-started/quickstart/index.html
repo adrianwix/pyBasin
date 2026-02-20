@@ -574,9 +574,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-adaptive-sampling" class="md-nav__link">
+  <a href="#using-parameter-studies" class="md-nav__link">
     <span class="md-ellipsis">
-      Using Adaptive Sampling
+      Using Parameter Studies
     </span>
   </a>
   
@@ -754,12 +754,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/adaptive-studies/" class="md-nav__link">
+      <a href="../../user-guide/parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1569,7 +1569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/adaptive-sampling/" class="md-nav__link">
+      <a href="../../api/parameter-studies/" class="md-nav__link">
         
   
   
@@ -1940,9 +1940,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-adaptive-sampling" class="md-nav__link">
+  <a href="#using-parameter-studies" class="md-nav__link">
     <span class="md-ellipsis">
-      Using Adaptive Sampling
+      Using Parameter Studies
     </span>
   </a>
   
@@ -2063,23 +2063,23 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="c1"># Step 6: Visualize</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="n">results</span><span class="o">.</span><span class="n">plot_basin_2d</span><span class="p">()</span>
 </code></pre></div>
-<h2 id="using-adaptive-sampling">Using Adaptive Sampling</h2>
-<p>For more efficient sampling, use the adaptive sampling estimator:</p>
+<h2 id="using-parameter-studies">Using Parameter Studies</h2>
+<p>For studying how basin stability changes with a parameter, use the parameter study:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasinStabilityStudy</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Create adaptive sampling estimator</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">as_estimator</span> <span class="o">=</span> <span class="n">BasinStabilityStudy</span><span class="p">(</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Create parameter study</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">bs_study</span> <span class="o">=</span> <span class="n">BasinStabilityStudy</span><span class="p">(</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">initial_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">max_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">uncertainty_threshold</span><span class="o">=</span><span class="mf">0.1</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Estimate with adaptive sampling</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">as_results</span> <span class="o">=</span> <span class="n">as_estimator</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Run parameter study</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">results</span> <span class="o">=</span> <span class="n">bs_study</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Samples used: </span><span class="si">{</span><span class="n">as_results</span><span class="o">.</span><span class="n">n_samples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence achieved: </span><span class="si">{</span><span class="n">as_results</span><span class="o">.</span><span class="n">converged</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Samples used: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">n_samples</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence achieved: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">converged</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="custom-feature-extraction">Custom Feature Extraction</h2>
 <p>You can define custom features for better classification:</p>

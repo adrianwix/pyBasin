@@ -655,12 +655,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/adaptive-studies/" class="md-nav__link">
+      <a href="../../user-guide/parameter-studies/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Adaptive Parameter Studies
+    Parameter Studies
     
   </span>
   
@@ -1590,7 +1590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adaptive-sampling/" class="md-nav__link">
+      <a href="../parameter-studies/" class="md-nav__link">
         
   
   
@@ -2161,10 +2161,11 @@ and provides methods to estimate basin stability and save results.</p>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">feature_extractor</span><span class="p">:</span> <span class="n">FeatureExtractor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">predictor</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">template_integrator</span><span class="p">:</span> <span class="n">TemplateIntegrator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">feature_selector</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">UNSET</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">feature_selector</span><span class="p">:</span> <span class="n">FeatureSelectorProtocol</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">UNSET</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2300,7 +2301,7 @@ and provides methods to estimate basin stability and save results.</p>
                 <code>feature_selector</code>
             </td>
             <td>
-                  <code><span title="sklearn.base.BaseEstimator">BaseEstimator</span> | None</code>
+                  <code><span title="pybasin.protocols.FeatureSelectorProtocol">FeatureSelectorProtocol</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2501,7 +2502,7 @@ and provides methods to estimate basin stability and save results.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="pybasin.types.ErrorInfo" href="../adaptive-sampling/#pybasin.types.ErrorInfo">ErrorInfo</a>]</code>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="pybasin.types.ErrorInfo" href="../parameter-studies/#pybasin.types.ErrorInfo">ErrorInfo</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
