@@ -97,12 +97,15 @@ class ParamBifurcationAIO:
         other_params = [p for p in self.get_parameter_names() if p != param_name]
 
         groups: dict[tuple[tuple[str, Any], ...], list[int]] = defaultdict(list)
-        for i, sl in enumerate(self.bs_study.study_labels):
+        for i, r in enumerate(self.bs_study.results):
+            sl = r["study_label"]
             group_key = tuple((p, sl[p]) for p in other_params) if other_params else ()
             groups[group_key].append(i)
 
         for group_key in groups:
-            groups[group_key].sort(key=lambda i: self.bs_study.study_labels[i][param_name])
+            groups[group_key].sort(
+                key=lambda i: self.bs_study.results[i]["study_label"][param_name]
+            )
 
         return dict(groups)
 
@@ -221,7 +224,7 @@ class ParamBifurcationAIO:
 
         # Colors: use group color if multiple groups, else cluster color
         for g_idx, (group_key, indices) in enumerate(groups.items()):
-            x_values = [self.bs_study.study_labels[i][x_param] for i in indices]
+            x_values = [self.bs_study.results[i]["study_label"][x_param] for i in indices]
             n_par_var = len(indices)
 
             amplitudes = np.zeros((n_clusters, n_dofs, n_par_var))

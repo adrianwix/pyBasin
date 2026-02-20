@@ -66,8 +66,8 @@ class ParamOverviewAIO:
     def _get_all_labels(self) -> list[str]:
         """Get all unique labels across all parameter values."""
         all_labels: set[str] = set()
-        for bs_dict in self.bs_study.basin_stabilities:
-            all_labels.update(bs_dict.keys())
+        for r in self.bs_study.results:
+            all_labels.update(r["basin_stability"].keys())
         return sorted(all_labels)
 
     def _group_by_parameter(self, param_name: str) -> dict[tuple[tuple[str, Any], ...], list[int]]:
@@ -82,12 +82,15 @@ class ParamOverviewAIO:
         other_params = [p for p in self.get_parameter_names() if p != param_name]
 
         groups: dict[tuple[tuple[str, Any], ...], list[int]] = defaultdict(list)
-        for i, sl in enumerate(self.bs_study.study_labels):
+        for i, r in enumerate(self.bs_study.results):
+            sl = r["study_label"]
             group_key = tuple((p, sl[p]) for p in other_params) if other_params else ()
             groups[group_key].append(i)
 
         for group_key in groups:
-            groups[group_key].sort(key=lambda i: self.bs_study.study_labels[i][param_name])
+            groups[group_key].sort(
+                key=lambda i: self.bs_study.results[i]["study_label"][param_name]
+            )
 
         return dict(groups)
 
@@ -185,7 +188,7 @@ class ParamOverviewAIO:
         fig = go.Figure()
 
         for g_idx, (group_key, indices) in enumerate(groups.items()):
-            x_values = [self.bs_study.study_labels[i][x_param] for i in indices]
+            x_values = [self.bs_study.results[i]["study_label"][x_param] for i in indices]
 
             group_suffix = ""
             if group_key:
@@ -195,7 +198,9 @@ class ParamOverviewAIO:
                 if label not in labels_to_show:
                     continue
 
-                y_values = [self.bs_study.basin_stabilities[i].get(label, 0) for i in indices]
+                y_values = [
+                    self.bs_study.results[i]["basin_stability"].get(label, 0) for i in indices
+                ]
 
                 # Use group color, attractor marker/linestyle
                 fig.add_trace(  # pyright: ignore[reportUnknownMemberType]

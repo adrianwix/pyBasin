@@ -18,12 +18,12 @@ For single-point basin stability (one parameter configuration), use `BasinStabil
 
 Four classes define how parameters vary across runs:
 
-| Class               | Pattern            | Use Case                                                 |
-| ------------------- | ------------------ | -------------------------------------------------------- |
-| `SweepStudyParams`  | 1D sweep           | Single parameter varied across N values                  |
-| `GridStudyParams`   | Cartesian product  | All combinations of multiple parameters (grid study)     |
-| `ZipStudyParams`    | Parallel iteration | Parameters that must vary together (same-length arrays)  |
-| `CustomStudyParams` | User-defined       | Full control over arbitrary parameter combinations       |
+| Class               | Pattern            | Use Case                                                |
+| ------------------- | ------------------ | ------------------------------------------------------- |
+| `SweepStudyParams`  | 1D sweep           | Single parameter varied across N values                 |
+| `GridStudyParams`   | Cartesian product  | All combinations of multiple parameters (grid study)    |
+| `ZipStudyParams`    | Parallel iteration | Parameters that must vary together (same-length arrays) |
+| `CustomStudyParams` | User-defined       | Full control over arbitrary parameter combinations      |
 
 ## Parameter Paths
 
@@ -89,10 +89,10 @@ study_params = GridStudyParams(
 ```
 
 !!! warning "Combinatorial Explosion"
-    Grid studies grow exponentially. Three parameters with 10 values each produce 1,000 runs. Start with coarse grids and refine regions of interest.
+Grid studies grow exponentially. Three parameters with 10 values each produce 1,000 runs. Start with coarse grids and refine regions of interest.
 
-| Parameter  | Type            | Description                                 |
-| ---------- | --------------- | ------------------------------------------- |
+| Parameter  | Type                   | Description                                |
+| ---------- | ---------------------- | ------------------------------------------ |
 | `**params` | `dict[str, list[Any]]` | Mapping of parameter paths to value arrays |
 
 ---
@@ -118,8 +118,8 @@ study_params = ZipStudyParams(
 # Runs: (T=0.01, sampler_0), (T=0.06, sampler_1), ...
 ```
 
-| Parameter  | Type            | Description                                          |
-| ---------- | --------------- | ---------------------------------------------------- |
+| Parameter  | Type                   | Description                                       |
+| ---------- | ---------------------- | ------------------------------------------------- |
 | `**params` | `dict[str, list[Any]]` | Mapping of parameter paths to equal-length arrays |
 
 ---
@@ -168,21 +168,21 @@ The main class that orchestrates parameter sweeps.
 
 ### Constructor Parameters
 
-| Parameter             | Type                           | Default     | Description                                                        |
-| --------------------- | ------------------------------ | ----------- | ------------------------------------------------------------------ |
-| `n`                   | `int`                          | Required    | Number of samples per parameter combination                        |
-| `ode_system`          | `ODESystemProtocol`            | Required    | The dynamical system (modified via parameter assignments)          |
-| `sampler`             | `Sampler`                      | Required    | Initial condition generator                                        |
-| `solver`              | `SolverProtocol`               | Required    | ODE integrator                                                     |
-| `feature_extractor`   | `FeatureExtractor`             | Required    | Extracts features from trajectories                                |
-| `estimator`           | `BaseEstimator`                | Required    | Sklearn-compatible clusterer or classifier                         |
-| `study_params`        | `StudyParams`                  | Required    | Parameter variation specification                                  |
-| `template_integrator` | `TemplateIntegrator` or `None` | `None`      | Template ICs for supervised classifiers                            |
-| `save_to`             | `str` or `None`                | `"results"` | Output folder path, or `None` to disable saving                    |
-| `verbose`             | `bool`                         | `False`     | Show detailed logs from each BSE run                               |
+| Parameter             | Type                           | Default     | Description                                               |
+| --------------------- | ------------------------------ | ----------- | --------------------------------------------------------- |
+| `n`                   | `int`                          | Required    | Number of samples per parameter combination               |
+| `ode_system`          | `ODESystemProtocol`            | Required    | The dynamical system (modified via parameter assignments) |
+| `sampler`             | `Sampler`                      | Required    | Initial condition generator                               |
+| `solver`              | `SolverProtocol`               | Required    | ODE integrator                                            |
+| `feature_extractor`   | `FeatureExtractor`             | Required    | Extracts features from trajectories                       |
+| `estimator`           | `BaseEstimator`                | Required    | Sklearn-compatible clusterer or classifier                |
+| `study_params`        | `StudyParams`                  | Required    | Parameter variation specification                         |
+| `template_integrator` | `TemplateIntegrator` or `None` | `None`      | Template ICs for supervised classifiers                   |
+| `save_to`             | `str` or `None`                | `"results"` | Output folder path, or `None` to disable saving           |
+| `verbose`             | `bool`                         | `False`     | Show detailed logs from each BSE run                      |
 
 !!! note "Required Components"
-    Unlike `BasinStabilityEstimator`, which auto-creates defaults, `BasinStabilityStudy` requires explicit components for `solver`, `feature_extractor`, and `estimator`. This ensures consistent configuration across all parameter combinations.
+Unlike `BasinStabilityEstimator`, which auto-creates defaults, `BasinStabilityStudy` requires explicit components for `solver`, `feature_extractor`, and `estimator`. This ensures consistent configuration across all parameter combinations.
 
 ### Running the Study
 
@@ -211,14 +211,19 @@ The method logs progress with parameter values and basin stability results for e
 
 After `run()` completes, results are available through properties:
 
-| Property                   | Type                    | Description                                       |
-| -------------------------- | ----------------------- | ------------------------------------------------- |
-| `results`                  | `list[StudyResult]`     | Full results including labels and amplitudes      |
-| `study_labels`             | `list[dict[str, Any]]`  | Parameter values for each run                     |
-| `basin_stabilities`        | `list[dict[str, float]]`| Basin stability fractions per run                 |
-| `studied_parameter_names`  | `list[str]`             | Names of the varied parameters                    |
+| Property                  | Type                | Description                                  |
+| ------------------------- | ------------------- | -------------------------------------------- |
+| `results`                 | `list[StudyResult]` | Full results including labels and amplitudes |
+| `studied_parameter_names` | `list[str]`         | Names of the varied parameters               |
 
-Each `StudyResult` dict contains:
+The `results` list is the primary access point. Extract basin stabilities and study labels directly from it:
+
+```python
+study_labels      = [r["study_label"]      for r in bs_study.results]
+basin_stabilities = [r["basin_stability"]  for r in bs_study.results]
+```
+
+Each [`StudyResult`](https://adrianwix.github.io/pyBasin/api/parameter-studies/#pybasin.types.StudyResult) dict contains:
 
 ```python
 {

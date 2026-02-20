@@ -101,8 +101,6 @@ class InteractivePlotter:
         """Validate that parameter study has required data for plotting."""
         if len(self.bs_study.results) == 0:
             raise ValueError("No results available. Run run() first.")
-        if len(self.bs_study.basin_stabilities) != len(self.bs_study.results):
-            raise ValueError("Basin stabilities length doesn't match results length.")
 
     def _get_n_states(self) -> int:
         """Get number of state variables."""
@@ -329,7 +327,7 @@ class InteractivePlotter:
 
     def _build_study_nav_items(self) -> list:
         """Build navigation items for parameter study mode."""
-        study_labels = self.bs_study.study_labels
+        study_labels = [r["study_label"] for r in self.bs_study.results]
         param_names = self.bs_study.studied_parameter_names
         param_options = [
             {

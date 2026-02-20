@@ -87,12 +87,15 @@ class MatplotlibStudyPlotter:
         ]
 
         groups: dict[tuple[tuple[str, Any], ...], list[int]] = defaultdict(list)
-        for i, sl in enumerate(self.bs_study.study_labels):
+        for i, r in enumerate(self.bs_study.results):
+            sl = r["study_label"]
             group_key = tuple((p, sl[p]) for p in other_params) if other_params else ()
             groups[group_key].append(i)
 
         for group_key in groups:
-            groups[group_key].sort(key=lambda i: self.bs_study.study_labels[i][param_name])
+            groups[group_key].sort(
+                key=lambda i: self.bs_study.results[i]["study_label"][param_name]
+            )
 
         return dict(groups)
 
@@ -114,8 +117,8 @@ class MatplotlibStudyPlotter:
     def _get_attractor_labels(self) -> list[str]:
         """Collect all unique attractor labels across every run, sorted."""
         labels_set: set[str] = set()
-        for bs_dict in self.bs_study.basin_stabilities:
-            labels_set.update(bs_dict.keys())
+        for r in self.bs_study.results:
+            labels_set.update(r["basin_stability"].keys())
         return sorted(labels_set)
 
     @staticmethod
@@ -153,7 +156,7 @@ class MatplotlibStudyPlotter:
         :param parameters: Which studied parameters to plot. ``None`` plots all.
         :return: List of matplotlib Figure objects (one per parameter).
         """
-        if not self.bs_study.study_labels or not self.bs_study.basin_stabilities:
+        if not self.bs_study.results:
             raise ValueError("No results available. Run study first.")
 
         params_to_plot = self._resolve_parameters(parameters)
@@ -175,11 +178,12 @@ class MatplotlibStudyPlotter:
                 plt.xscale("log")  # type: ignore[misc]
 
             for g_idx, (_group_key, indices) in enumerate(groups.items()):
-                x_values = [self.bs_study.study_labels[i][param_name] for i in indices]
+                x_values = [self.bs_study.results[i]["study_label"][param_name] for i in indices]
 
                 for a_idx, attractor in enumerate(attractor_labels):
                     y_values = [
-                        self.bs_study.basin_stabilities[i].get(attractor, 0) for i in indices
+                        self.bs_study.results[i]["basin_stability"].get(attractor, 0)
+                        for i in indices
                     ]
                     plt.plot(  # type: ignore[misc]
                         x_values,
@@ -304,7 +308,7 @@ class MatplotlibStudyPlotter:
         :param parameters: Which studied parameters to plot. ``None`` plots all.
         :return: List of matplotlib Figure objects (one per parameter).
         """
-        if not self.bs_study.study_labels or not self.bs_study.results:
+        if not self.bs_study.results:
             raise ValueError("No results available. Run study first.")
 
         params_to_plot = self._resolve_parameters(parameters)
@@ -322,7 +326,7 @@ class MatplotlibStudyPlotter:
                 axes = [axes]
 
             for group_key, indices in groups.items():
-                x_values = [self.bs_study.study_labels[i][param_name] for i in indices]
+                x_values = [self.bs_study.results[i]["study_label"][param_name] for i in indices]
 
                 n_par_var = len(indices)
                 amplitudes = np.zeros((n_clusters, n_dofs, n_par_var))
@@ -332,7 +336,7 @@ class MatplotlibStudyPlotter:
                     result = self.bs_study.results[result_idx]
                     bifurcation_amplitudes = result["bifurcation_amplitudes"]
                     if bifurcation_amplitudes is None:
-                        study_label = self.bs_study.study_labels[result_idx]
+                        study_label = self.bs_study.results[result_idx]["study_label"]
                         raise ValueError(
                             f"No bifurcation amplitudes found for parameter combination {study_label}"
                         )

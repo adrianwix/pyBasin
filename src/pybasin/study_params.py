@@ -83,7 +83,7 @@ def _extract_short_name(name: str) -> str:
 
 
 class SweepStudyParams(StudyParams):
-    """Single parameter sweep (current behavior).
+    """Single parameter sweep.
 
     Iterates over a single parameter's values, yielding one RunConfig per value.
 

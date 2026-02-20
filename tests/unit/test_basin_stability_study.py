@@ -140,10 +140,10 @@ class TestBasinStabilityStudyWithSweep:
             assert captured_full_params[0]["K"] == 0.1
             assert captured_full_params[1]["K"] == 0.1
 
-    def test_returns_correct_study_labels(
+    def test_results_contain_correct_study_labels(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
     ) -> None:
-        """Should return study_labels matching parameter values."""
+        """Each result dict should contain study_label matching the parameter value."""
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
@@ -158,8 +158,7 @@ class TestBasinStabilityStudyWithSweep:
             )
             results = bs_study.run()
 
-            assert bs_study.study_labels == [{"T": 0.1}, {"T": 0.2}]
-            assert len(bs_study.basin_stabilities) == 2
+            assert [r["study_label"] for r in results] == [{"T": 0.1}, {"T": 0.2}]
             assert len(results) == 2
 
 

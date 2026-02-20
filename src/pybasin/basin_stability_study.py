@@ -71,22 +71,6 @@ class BasinStabilityStudy:
         self.results: list[StudyResult] = []
 
     @property
-    def study_labels(self) -> list[dict[str, Any]]:
-        """Study labels for each run, derived from results.
-
-        :return: List of study label dicts, one per run.
-        """
-        return [r["study_label"] for r in self.results]
-
-    @property
-    def basin_stabilities(self) -> list[dict[str, float]]:
-        """Basin stability dicts for each run, derived from results.
-
-        :return: List of basin stability dicts, one per run.
-        """
-        return [r["basin_stability"] for r in self.results]
-
-    @property
     def studied_parameter_names(self) -> list[str]:
         """Names of the parameters varied in this study.
 

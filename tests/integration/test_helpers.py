@@ -561,7 +561,7 @@ def run_parameter_study_test(
     # Compare results at each parameter value
     for i, expected in enumerate(expected_results):
         param_value = expected["parameter"]
-        actual_bs = bs_study.basin_stabilities[i]
+        actual_bs = bs_study.results[i]["basin_stability"]
 
         # Get errors for this parameter point
         errors = bs_study.results[i]["errors"]
