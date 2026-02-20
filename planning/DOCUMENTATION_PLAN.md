@@ -218,7 +218,7 @@ nav:
       - Feature Extraction: benchmarks/feature-extraction.md
   - API Reference:
       - BasinStabilityEstimator: api/basin-stability-estimator.md
-      - BasinStabilityStudy: api/adaptive-sampling.md
+      - BasinStabilityStudy: api/parameter-studies.md
       - Samplers: api/samplers.md
       - Solvers: api/solvers.md
       - Feature Extractors: api/feature-extractors.md
@@ -395,7 +395,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
        estimator=predictor,
        study_params=study_params,
    )
-   labels, bs_vals, results = study.estimate_as_bs()
+   labels, bs_vals, results = study.run()
    ```
 
 **Source Files**:
@@ -756,7 +756,7 @@ members_order: source
 | Page                               | Module Path                                                 |
 | ---------------------------------- | ----------------------------------------------------------- |
 | `api/basin-stability-estimator.md` | `pybasin.basin_stability_estimator.BasinStabilityEstimator` |
-| `api/adaptive-sampling.md`         | `pybasin.basin_stability_study.BasinStabilityStudy`         |
+| `api/parameter-studies.md`         | `pybasin.basin_stability_study.BasinStabilityStudy`         |
 | `api/samplers.md`                  | `pybasin.sampler` (all classes)                             |
 | `api/solvers.md`                   | `pybasin.solver`, `pybasin.solvers.jax_solver`              |
 | `api/feature-extractors.md`        | `pybasin.feature_extractors`                                |

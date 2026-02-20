@@ -56,26 +56,26 @@ print(f"Attractor distribution: {results.attractor_counts}")
 results.plot_basin_2d()
 ```
 
-## Using Adaptive Sampling
+## Using Parameter Studies
 
-For more efficient sampling, use the adaptive sampling estimator:
+For studying how basin stability changes with a parameter, use the parameter study:
 
 ```python
 from pybasin import BasinStabilityStudy
 
-# Create adaptive sampling estimator
-as_estimator = BasinStabilityStudy(
+# Create parameter study
+bs_study = BasinStabilityStudy(
     system=system,
     initial_samples=100,
     max_samples=1000,
     uncertainty_threshold=0.1
 )
 
-# Estimate with adaptive sampling
-as_results = as_estimator.estimate(bounds)
+# Run parameter study
+results = bs_study.run(bounds)
 
-print(f"Samples used: {as_results.n_samples}")
-print(f"Convergence achieved: {as_results.converged}")
+print(f"Samples used: {results.n_samples}")
+print(f"Convergence achieved: {results.converged}")
 ```
 
 ## Custom Feature Extraction

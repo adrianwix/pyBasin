@@ -6,16 +6,18 @@ from case_studies.duffing_oscillator.setup_duffing_oscillator_system import (
 )
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.sampler import Sampler
 from pybasin.utils import time_execution
 
 
-def main():
+def main(sampler_override: Sampler | None = None) -> BasinStabilityEstimator:
     setup = setup_duffing_oscillator_system()
+    sampler = sampler_override if sampler_override is not None else setup["sampler"]
 
     bse = BasinStabilityEstimator(
         n=setup["n"],
         ode_system=setup["ode_system"],
-        sampler=setup["sampler"],
+        sampler=sampler,
     )
 
     basin_stability = bse.estimate_bs()

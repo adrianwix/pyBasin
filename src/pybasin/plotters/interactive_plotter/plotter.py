@@ -5,7 +5,7 @@ import logging
 from typing import Literal
 
 import dash_mantine_components as dmc  # pyright: ignore[reportMissingTypeStubs]
-from dash import ALL, Dash, Input, NoUpdate, Output, State, ctx, dcc, html, no_update
+from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
 from dash.development.base_component import Component
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
@@ -15,13 +15,13 @@ from pybasin.plotters.types import (
     merge_options,
 )
 
-from .as_parameter_manager_aio import ASParameterManagerAIO
 from .basin_stability_aio import BasinStabilityAIO
 from .feature_space_aio import FeatureSpaceAIO
 from .ids import IDs
 from .param_bifurcation_aio import ParamBifurcationAIO
 from .param_overview_aio import ParamOverviewAIO
 from .state_space_aio import StateSpaceAIO
+from .study_parameter_manager_aio import StudyParameterManagerAIO
 from .template_phase_plot_aio import TemplatePhasePlotAIO
 from .template_time_series_aio import TemplateTimeSeriesAIO
 from .trajectory_modal_aio import TrajectoryModalAIO
@@ -63,25 +63,25 @@ class InteractivePlotter:
                             e.g., {0: "θ", 1: "ω"} for a pendulum system.
         :param options: Optional configuration for default control values.
         """
-        self.is_adaptive_study = isinstance(bse, BasinStabilityStudy)
+        self.is_parameter_study = isinstance(bse, BasinStabilityStudy)
 
         if isinstance(bse, BasinStabilityStudy):
-            self.as_bse: BasinStabilityStudy = bse
+            self.bs_study: BasinStabilityStudy = bse
         else:
             self.bse: BasinStabilityEstimator = bse
 
         self.state_labels = state_labels or {}
         self.options = merge_options(options)
 
-        # Override initial view for AS mode if not explicitly set
-        if self.is_adaptive_study and options is None:
+        # Override initial view for parameter study mode if not explicitly set
+        if self.is_parameter_study and options is None:
             self.options["initial_view"] = IDs.PARAM_OVERVIEW
 
         self.app: Dash | None = None
 
-        if self.is_adaptive_study:
-            self._validate_as_bse()
-            self._init_as_pages()
+        if self.is_parameter_study:
+            self._validate_bs_study()
+            self._init_study_pages()
         else:
             self._validate_bse()
             self._init_bse_pages()
@@ -97,19 +97,17 @@ class InteractivePlotter:
         if self.bse.bs_vals is None:
             raise ValueError("No basin stability values available. Run estimate_bs() first.")
 
-    def _validate_as_bse(self) -> None:
-        """Validate that AS-BSE has required data for plotting."""
-        if len(self.as_bse.parameter_values) == 0:
-            raise ValueError("No parameter values available. Run estimate_as_bs() first.")
-        if len(self.as_bse.basin_stabilities) != len(self.as_bse.parameter_values):
-            raise ValueError("Basin stabilities length doesn't match parameter values length.")
-        if len(self.as_bse.results) != len(self.as_bse.parameter_values):
-            raise ValueError("Results length doesn't match parameter values length.")
+    def _validate_bs_study(self) -> None:
+        """Validate that parameter study has required data for plotting."""
+        if len(self.bs_study.results) == 0:
+            raise ValueError("No results available. Run run() first.")
+        if len(self.bs_study.basin_stabilities) != len(self.bs_study.results):
+            raise ValueError("Basin stabilities length doesn't match results length.")
 
     def _get_n_states(self) -> int:
         """Get number of state variables."""
-        if self.is_adaptive_study:
-            return self.as_bse.sampler.state_dim
+        if self.is_parameter_study:
+            return self.bs_study.sampler.state_dim
         if self.bse.y0 is None:
             return 0
         return self.bse.y0.shape[1]
@@ -122,54 +120,61 @@ class InteractivePlotter:
         :raises ValueError: If computation fails.
         """
         try:
-            param_value = self.as_bse.parameter_values[param_idx]
-            param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
+            # Get the RunConfig for this parameter index from study_params
+            run_configs = list(self.bs_study.study_params)
+            if param_idx >= len(run_configs):
+                raise ValueError(f"Parameter index {param_idx} out of range")
+            run_config = run_configs[param_idx]
 
-            logger.info(f"Computing BSE for {param_name}={param_value} (index {param_idx})")
+            label_str = ", ".join(f"{k}={v}" for k, v in run_config.study_label.items())
+            logger.info(f"Computing BSE for {label_str} (index {param_idx})")
 
-            # Update parameter via eval (same as AS-BSE does)
-            assignment = f"{param_name} = {param_value}"
+            # Build context with all study components
             context: dict[str, object] = {
-                "n": self.as_bse.n,
-                "ode_system": self.as_bse.ode_system,
-                "sampler": self.as_bse.sampler,
-                "solver": self.as_bse.solver,
-                "feature_extractor": self.as_bse.feature_extractor,
-                "estimator": self.as_bse.estimator,
-                "template_integrator": self.as_bse.template_integrator,
+                "n": self.bs_study.n,
+                "ode_system": self.bs_study.ode_system,
+                "sampler": self.bs_study.sampler,
+                "solver": self.bs_study.solver,
+                "feature_extractor": self.bs_study.feature_extractor,
+                "estimator": self.bs_study.estimator,
+                "template_integrator": self.bs_study.template_integrator,
             }
 
-            eval(compile(assignment, "<string>", "exec"), context, context)
+            # Apply all parameter assignments (uses full paths like ode_system.ode_params['T'])
+            for assignment in run_config.assignments:
+                context["_param_value"] = assignment.value
+                exec_code = f"{assignment.name} = _param_value"
+                exec(compile(exec_code, "<string>", "exec"), context, context)
 
-            # Create and run BSE
+            # Create and run BSE with updated context
             bse = BasinStabilityEstimator(
-                n=self.as_bse.n,
-                ode_system=self.as_bse.ode_system,
-                sampler=self.as_bse.sampler,
-                solver=self.as_bse.solver,
-                feature_extractor=self.as_bse.feature_extractor,
-                predictor=self.as_bse.estimator,
-                template_integrator=self.as_bse.template_integrator,
+                n=self.bs_study.n,
+                ode_system=context["ode_system"],  # type: ignore[arg-type]
+                sampler=context["sampler"],  # type: ignore[arg-type]
+                solver=context["solver"],  # type: ignore[arg-type]
+                feature_extractor=context["feature_extractor"],  # type: ignore[arg-type]
+                predictor=context["estimator"],  # type: ignore[arg-type]
+                template_integrator=context["template_integrator"],  # type: ignore[arg-type]
                 feature_selector=None,
             )
 
             bse.estimate_bs()
-            logger.info(f"BSE computation complete for {param_name}={param_value}")
+            logger.info(f"BSE computation complete for {label_str}")
 
             return bse
 
         except Exception as e:
             logger.error(f"Failed to compute BSE for parameter index {param_idx}: {e}")
-            raise ValueError(f"BSE computation failed for parameter {param_value}: {e}") from e
+            raise ValueError(f"BSE computation failed: {e}") from e
 
-    def _init_as_pages(self) -> None:
-        """Initialize AS mode pages with AIO components."""
-        self.param_manager = ASParameterManagerAIO(
-            self.as_bse, self.state_labels, self._compute_param_bse
+    def _init_study_pages(self) -> None:
+        """Initialize parameter study mode pages with AIO components."""
+        self.param_manager = StudyParameterManagerAIO(
+            self.bs_study, self.state_labels, self._compute_param_bse
         )
-        self.param_overview = ParamOverviewAIO(self.as_bse, "as-overview", self.state_labels)
+        self.param_overview = ParamOverviewAIO(self.bs_study, "as-overview", self.state_labels)
         self.param_bifurcation = ParamBifurcationAIO(
-            self.as_bse, "as-bifurcation", self.state_labels
+            self.bs_study, "as-bifurcation", self.state_labels
         )
 
     def _init_bse_pages(self) -> None:
@@ -197,9 +202,10 @@ class InteractivePlotter:
         n_states = self._get_n_states()
         initial_view = self.options.get("initial_view", "basin_stability")
 
-        if self.is_adaptive_study:
-            nav_items = self._build_as_nav_items(initial_view)
-            initial_page_content = self.param_overview.render()
+        if self.is_parameter_study:
+            nav_items = self._build_study_nav_items()
+            # Page content is determined by URL callback - start empty
+            initial_page_content = html.Div()
             trajectory_modal_content = html.Div(id="as-modals-container")
         else:
             nav_items = self._build_bse_nav_items(n_states, initial_view)
@@ -220,6 +226,27 @@ class InteractivePlotter:
             forceColorScheme="dark",
             children=[
                 dcc.Location(id=self.URL, refresh=False),
+                # Full-screen loading overlay that blocks all interaction
+                html.Div(
+                    id="page-loading-overlay",
+                    style={
+                        "display": "none",
+                        "position": "fixed",
+                        "top": 0,
+                        "left": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "backgroundColor": "rgba(0, 0, 0, 0.5)",
+                        "zIndex": 9999,
+                        "cursor": "wait",
+                    },
+                    children=[
+                        dmc.Center(
+                            style={"height": "100vh"},
+                            children=[dmc.Loader(size="xl", color="blue")],
+                        )
+                    ],
+                ),
                 dmc.AppShell(
                     [
                         dmc.AppShellHeader(
@@ -237,28 +264,16 @@ class InteractivePlotter:
                         ),
                         dmc.AppShellMain(
                             [
-                                dmc.Box(
-                                    pos="relative",
-                                    style={"minHeight": "calc(100vh - 60px)"},
-                                    children=[
-                                        dmc.LoadingOverlay(
-                                            id="page-loading-overlay",
-                                            visible=False,
-                                            overlayProps={"radius": "sm", "blur": 2},
-                                            zIndex=1000,
+                                dmc.Container(
+                                    [
+                                        html.Div(
+                                            id=self.PAGE_CONTAINER,
+                                            children=initial_page_content,
                                         ),
-                                        dmc.Container(
-                                            [
-                                                html.Div(
-                                                    id=self.PAGE_CONTAINER,
-                                                    children=initial_page_content,
-                                                ),
-                                                trajectory_modal_content,
-                                            ],
-                                            fluid=True,
-                                            p=0,
-                                        ),
+                                        trajectory_modal_content,
                                     ],
+                                    fluid=True,
+                                    p=0,
                                 ),
                             ],
                         ),
@@ -312,13 +327,16 @@ class InteractivePlotter:
             ),
         ]
 
-    def _build_as_nav_items(self, initial_view: str) -> list:
-        """Build navigation items for Adaptive Study mode."""
-        param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
-        param_values = self.as_bse.parameter_values
+    def _build_study_nav_items(self) -> list:
+        """Build navigation items for parameter study mode."""
+        study_labels = self.bs_study.study_labels
+        param_names = self.bs_study.studied_parameter_names
         param_options = [
-            {"value": str(i), "label": f"{param_name}={val:.4f}"}
-            for i, val in enumerate(param_values)
+            {
+                "value": str(i),
+                "label": ", ".join(f"{p}={study_labels[i][p]:.4g}" for p in param_names),
+            }
+            for i in range(len(study_labels))
         ]
 
         return [
@@ -326,16 +344,14 @@ class InteractivePlotter:
             dmc.NavLink(
                 label="Parameter Variation",
                 leftSection=html.Span("📊"),
-                id="nav-param-overview",
-                active=self._nav_active_state(initial_view == IDs.PARAM_OVERVIEW),
-                n_clicks=0,
+                href="/overview",
+                active="exact",
             ),
             dmc.NavLink(
                 label="Bifurcation",
                 leftSection=html.Span("🌀"),
-                id="nav-param-bifurcation",
-                active=self._nav_active_state(initial_view == IDs.PARAM_BIFURCATION),
-                n_clicks=0,
+                href="/bifurcation",
+                active="exact",
             ),
             dmc.Divider(label="Parameter Value", my="sm"),
             dmc.Select(
@@ -380,20 +396,8 @@ class InteractivePlotter:
         if self.app is None:
             return
 
-        # Clientside callback to show loading overlay immediately on navigation
-        self.app.clientside_callback(
-            """
-            function(pathname) {
-                return true;
-            }
-            """,
-            Output("page-loading-overlay", "visible", allow_duplicate=True),
-            Input(self.URL, "pathname"),
-            prevent_initial_call=True,
-        )
-
-        if self.is_adaptive_study:
-            self._register_as_nav_callbacks()
+        if self.is_parameter_study:
+            self._register_study_nav_callbacks()
         else:
             self._register_bse_nav_callbacks()
 
@@ -454,7 +458,6 @@ class InteractivePlotter:
                 Output("nav-feature-space", "active"),
                 Output("nav-templates-phase-space", "active"),
                 Output("nav-templates-time-series", "active"),
-                Output("page-loading-overlay", "visible"),
             ],
             Input(self.URL, "pathname"),
         )
@@ -468,7 +471,6 @@ class InteractivePlotter:
             NavActiveState,
             NavActiveState,
             NavActiveState,
-            bool,
         ]:
             if pathname is None:
                 pathname = "/"
@@ -501,169 +503,178 @@ class InteractivePlotter:
                 self._nav_active_state(active_nav == "nav-feature-space"),
                 self._nav_active_state(active_nav == "nav-templates-phase-space"),
                 self._nav_active_state(active_nav == "nav-templates-time-series"),
-                False,
             )
 
-    def _register_as_nav_callbacks(self) -> None:
-        """Register navigation callbacks for Adaptive Study mode."""
+    def _register_study_nav_callbacks(self) -> None:
+        """Register navigation callbacks for parameter study mode.
+
+        Uses URL-based routing with pattern: /{page}/{param_idx}
+        Examples: /overview, /state-space/1, /bifurcation
+        Study-level pages (overview, bifurcation) don't need param_idx.
+        BSE pages require param_idx: /state-space/2, /basin-stability/0
+        """
         if self.app is None:
             return
 
-        path_to_view = {
-            "/": IDs.PARAM_OVERVIEW,
-            "/param-overview": IDs.PARAM_OVERVIEW,
-            "/param-bifurcation": IDs.PARAM_BIFURCATION,
-        }
-        view_to_path = {
-            IDs.PARAM_OVERVIEW: "/param-overview",
-            IDs.PARAM_BIFURCATION: "/param-bifurcation",
+        # Valid page names for URL routing
+        study_pages = {"overview", "bifurcation"}
+        bse_pages = {
+            "state-space",
+            "feature-space",
+            "basin-stability",
+            "templates-phase-space",
+            "templates-time-series",
         }
 
+        def parse_url(pathname: str | None) -> tuple[int, str]:
+            """Parse URL into (param_idx, page). Returns (0, 'overview') as default."""
+            if not pathname or pathname == "/":
+                return 0, "overview"
+            parts = pathname.strip("/").split("/")
+            if len(parts) >= 1:
+                page = parts[0]
+                if page in study_pages:
+                    return 0, page
+                if page in bse_pages:
+                    param_idx = int(parts[1]) if len(parts) >= 2 else 0
+                    return param_idx, page
+            return 0, "overview"
+
+        def build_url(page: str, param_idx: int | None = None) -> str:
+            """Build URL from page and optional param_idx."""
+            if page in study_pages or param_idx is None:
+                return f"/{page}"
+            return f"/{page}/{param_idx}"
+
+        # Callback: Selector change -> URL update (triggers loading for BSE pages)
         @self.app.callback(
             Output(self.URL, "pathname"),
-            [
-                Input("nav-param-overview", "n_clicks"),
-                Input("nav-param-bifurcation", "n_clicks"),
+            Input("param-value-selector", "value"),
+            State(self.URL, "pathname"),
+            running=[
+                (
+                    Output("page-loading-overlay", "style"),
+                    {
+                        "display": "block",
+                        "position": "fixed",
+                        "top": 0,
+                        "left": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "backgroundColor": "rgba(0, 0, 0, 0.5)",
+                        "zIndex": 9999,
+                        "cursor": "wait",
+                    },
+                    {"display": "none"},
+                ),
             ],
             prevent_initial_call=True,
         )
-        def update_url(*_args: int) -> str:
-            triggered = ctx.triggered_id
-            views = {
-                "nav-param-overview": IDs.PARAM_OVERVIEW,
-                "nav-param-bifurcation": IDs.PARAM_BIFURCATION,
-            }
-            view = (
-                views.get(triggered, IDs.PARAM_OVERVIEW)
-                if isinstance(triggered, str)
-                else IDs.PARAM_OVERVIEW
-            )
-            return view_to_path.get(view, "/param-overview")
+        def update_url_from_selector(
+            param_idx_str: str | None,
+            current_path: str | None,
+        ) -> str:
+            current_param_idx, current_page = parse_url(current_path)
+            param_idx = int(param_idx_str) if param_idx_str else current_param_idx
 
+            # Only update if param actually changed
+            if param_idx == current_param_idx:
+                return no_update  # type: ignore[return-value]
+
+            # Study pages don't need param in URL
+            if current_page in study_pages:
+                return no_update  # type: ignore[return-value]
+
+            return build_url(current_page, param_idx)
+
+        # Callback: URL change -> Update page content and selector
         @self.app.callback(
             [
                 Output(self.CURRENT_VIEW, "data"),
                 Output(self.PAGE_CONTAINER, "children"),
-                Output("nav-param-overview", "active"),
-                Output("nav-param-bifurcation", "active"),
-                Output("page-loading-overlay", "visible"),
+                Output("param-bse-nav-items", "children"),
+                Output("param-value-selector", "value"),
             ],
             Input(self.URL, "pathname"),
+            running=[
+                (
+                    Output("page-loading-overlay", "style"),
+                    {
+                        "display": "block",
+                        "position": "fixed",
+                        "top": 0,
+                        "left": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "backgroundColor": "rgba(0, 0, 0, 0.5)",
+                        "zIndex": 9999,
+                        "cursor": "wait",
+                    },
+                    {"display": "none"},
+                ),
+            ],
         )
         def update_page_from_url(
             pathname: str | None,
-        ) -> tuple[str, html.Div, bool, bool, bool]:
-            if pathname is None:
-                pathname = "/"
-            view = path_to_view.get(pathname, IDs.PARAM_OVERVIEW)
+        ) -> tuple[str, Component, list[Component], str]:
+            param_idx, page = parse_url(pathname)
 
-            page_components = {
-                IDs.PARAM_OVERVIEW: self.param_overview,
-                IDs.PARAM_BIFURCATION: self.param_bifurcation,
-            }
-            component = page_components.get(view, self.param_overview)
-            page_layout = component.render()
-
-            return (
-                view,
-                page_layout,
-                view == IDs.PARAM_OVERVIEW,
-                view == IDs.PARAM_BIFURCATION,
-                False,
-            )
-
-        @self.app.callback(
-            Output("param-bse-nav-items", "children"),
-            Input("param-value-selector", "value"),
-        )
-        def update_param_bse_nav_items(param_idx_str: str | None) -> list:
-            """Create BSE navigation items for selected parameter."""
-            if param_idx_str is None:
-                return []
-
-            param_idx = int(param_idx_str)
-            pages, _ = self.param_manager.get_or_create_pages(param_idx)
-
-            return [
+            # Build BSE nav items with href for automatic active state
+            bse_nav_items: list[Component] = [
                 dmc.Divider(label="Basin Stability Plots", my="sm"),
                 dmc.NavLink(
                     label="Basin Stability",
                     leftSection=html.Span("📊"),
-                    id={"type": "nav-param-page", "page": "basin-stability"},
-                    n_clicks=0,
+                    href=f"/basin-stability/{param_idx}",
+                    active="exact",
                 ),
                 dmc.NavLink(
                     label="State Space",
                     leftSection=html.Span("🎯"),
-                    id={"type": "nav-param-page", "page": "state-space"},
-                    n_clicks=0,
+                    href=f"/state-space/{param_idx}",
+                    active="exact",
                 ),
                 dmc.NavLink(
                     label="Feature Space",
                     leftSection=html.Span("📈"),
-                    id={"type": "nav-param-page", "page": "feature-space"},
-                    n_clicks=0,
+                    href=f"/feature-space/{param_idx}",
+                    active="exact",
                 ),
                 dmc.Divider(label="Template Trajectories", my="sm"),
                 dmc.NavLink(
                     label="Phase Space",
                     leftSection=html.Span("〰️"),
-                    id={"type": "nav-param-page", "page": "templates-phase-space"},
-                    n_clicks=0,
+                    href=f"/templates-phase-space/{param_idx}",
+                    active="exact",
                 ),
                 dmc.NavLink(
                     label="Time Series",
                     leftSection=html.Span("📉"),
-                    id={"type": "nav-param-page", "page": "templates-time-series"},
-                    n_clicks=0,
+                    href=f"/templates-time-series/{param_idx}",
+                    active="exact",
                 ),
             ]
 
-        # Clientside callback to show loading when clicking param-page nav items
-        self.app.clientside_callback(
-            """
-            function(n_clicks) {
-                if (n_clicks && n_clicks.some(x => x > 0)) {
-                    return true;
-                }
-                return window.dash_clientside.no_update;
-            }
-            """,
-            Output("page-loading-overlay", "visible", allow_duplicate=True),
-            Input({"type": "nav-param-page", "page": ALL}, "n_clicks"),
-            prevent_initial_call=True,
-        )
+            # Render the appropriate page
+            if page == "overview":
+                content = self.param_overview.render()
+            elif page == "bifurcation":
+                content = self.param_bifurcation.render()
+            elif page in bse_pages:
+                pages, _ = self.param_manager.get_or_create_pages(param_idx)
+                page_component = pages.get(page)
+                content = (
+                    page_component.render() if page_component else self.param_overview.render()
+                )
+            else:
+                content = self.param_overview.render()
 
-        @self.app.callback(
-            [
-                Output(self.PAGE_CONTAINER, "children", allow_duplicate=True),
-                Output("page-loading-overlay", "visible", allow_duplicate=True),
-            ],
-            [
-                Input({"type": "nav-param-page", "page": ALL}, "n_clicks"),
-                State("param-value-selector", "value"),
-            ],
-            prevent_initial_call=True,
-        )
-        def navigate_to_param_page(
-            _n_clicks_list: list[int], param_idx_str: str | None
-        ) -> tuple[Component | NoUpdate, bool | NoUpdate]:
-            """Navigate to BSE page for selected parameter."""
-            if param_idx_str is None or not ctx.triggered:
-                return no_update, no_update
-
-            triggered_id = ctx.triggered_id
-            if isinstance(triggered_id, dict):
-                page_id = triggered_id.get("page")
-                if page_id is not None and isinstance(page_id, str):
-                    param_idx = int(param_idx_str)
-                    pages, _ = self.param_manager.get_or_create_pages(param_idx)
-
-                    page_component = pages.get(page_id)
-                    if page_component is not None:
-                        return page_component.render(), False
-
-            return no_update, no_update
+            return (
+                f"{page}/{param_idx}",
+                content,
+                bse_nav_items,
+                str(param_idx),  # Sync selector from URL
+            )
 
     def _nav_active_state(self, is_active: bool) -> NavActiveState:
         return "exact" if is_active else None

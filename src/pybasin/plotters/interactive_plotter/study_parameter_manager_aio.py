@@ -1,4 +1,4 @@
-"""AIO Parameter Manager with LRU cache for AS mode page management."""
+"""AIO Parameter Manager with LRU cache for parameter study mode page management."""
 
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -14,7 +14,7 @@ from pybasin.plotters.interactive_plotter.template_phase_plot_aio import Templat
 from pybasin.plotters.interactive_plotter.template_time_series_aio import TemplateTimeSeriesAIO
 
 
-class ASParameterManagerAIO:
+class StudyParameterManagerAIO:
     """
     AIO component managing parameter-specific page sets with LRU cache.
 
@@ -27,18 +27,18 @@ class ASParameterManagerAIO:
 
     def __init__(
         self,
-        as_bse: BasinStabilityStudy,
+        bs_study: BasinStabilityStudy,
         state_labels: dict[int, str] | None = None,
         compute_bse_callback: Callable[[int], BasinStabilityEstimator] | None = None,
     ):
         """
-        Initialize AS parameter manager.
+        Initialize parameter study page manager.
 
-        :param as_bse: Adaptive study basin stability estimator.
+        :param bs_study: Basin stability study instance.
         :param state_labels: Optional mapping of state indices to labels.
         :param compute_bse_callback: Optional callback to compute BSE for a parameter index.
         """
-        self.as_bse = as_bse
+        self.bs_study = bs_study
         self.state_labels = state_labels or {}
         self.compute_bse_callback = compute_bse_callback
         self._page_cache: OrderedDict[int, dict[str, BseBasePageAIO]] = OrderedDict()
@@ -74,30 +74,36 @@ class ASParameterManagerAIO:
         if self.compute_bse_callback is not None:
             bse = self.compute_bse_callback(param_index)
         else:
-            param_value = self.as_bse.parameter_values[param_index]
-            param_name = list(self.as_bse.labels[0].keys())[0] if self.as_bse.labels else "param"
+            # Get the RunConfig for this parameter index from study_params
+            run_configs = list(self.bs_study.study_params)
+            if param_index >= len(run_configs):
+                raise ValueError(f"Parameter index {param_index} out of range")
+            run_config = run_configs[param_index]
 
-            assignment = f"{param_name} = {param_value}"
             context: dict[str, object] = {
-                "n": self.as_bse.n,
-                "ode_system": self.as_bse.ode_system,
-                "sampler": self.as_bse.sampler,
-                "solver": self.as_bse.solver,
-                "feature_extractor": self.as_bse.feature_extractor,
-                "estimator": self.as_bse.estimator,
-                "template_integrator": self.as_bse.template_integrator,
+                "n": self.bs_study.n,
+                "ode_system": self.bs_study.ode_system,
+                "sampler": self.bs_study.sampler,
+                "solver": self.bs_study.solver,
+                "feature_extractor": self.bs_study.feature_extractor,
+                "estimator": self.bs_study.estimator,
+                "template_integrator": self.bs_study.template_integrator,
             }
 
-            eval(compile(assignment, "<string>", "exec"), context, context)
+            # Apply all parameter assignments (uses full paths)
+            for assignment in run_config.assignments:
+                context["_param_value"] = assignment.value
+                exec_code = f"{assignment.name} = _param_value"
+                exec(compile(exec_code, "<string>", "exec"), context, context)
 
             bse = BasinStabilityEstimator(
-                n=self.as_bse.n,
-                ode_system=self.as_bse.ode_system,
-                sampler=self.as_bse.sampler,
-                solver=self.as_bse.solver,
-                feature_extractor=self.as_bse.feature_extractor,
-                predictor=self.as_bse.estimator,
-                template_integrator=self.as_bse.template_integrator,
+                n=self.bs_study.n,
+                ode_system=context["ode_system"],  # type: ignore[arg-type]
+                sampler=context["sampler"],  # type: ignore[arg-type]
+                solver=context["solver"],  # type: ignore[arg-type]
+                feature_extractor=context["feature_extractor"],  # type: ignore[arg-type]
+                predictor=context["estimator"],  # type: ignore[arg-type]
+                template_integrator=context["template_integrator"],  # type: ignore[arg-type]
                 feature_selector=None,
             )
             bse.estimate_bs()

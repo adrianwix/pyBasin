@@ -52,7 +52,7 @@ heading_level: 3
 
 ## Result Types
 
-::: pybasin.types.AdaptiveStudyResult
+::: pybasin.types.StudyResult
 options:
 heading_level: 3
 

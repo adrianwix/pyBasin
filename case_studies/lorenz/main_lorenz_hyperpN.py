@@ -35,7 +35,7 @@ def main():
         save_to="results_hyperpN",
     )
 
-    bse.estimate_as_bs()
+    bse.run()
 
     return bse
 
@@ -45,5 +45,6 @@ if __name__ == "__main__":
     plotter = MatplotlibStudyPlotter(bse)
 
     plotter.plot_basin_stability_variation(interval="log")
+    plotter.show()
 
     bse.save()

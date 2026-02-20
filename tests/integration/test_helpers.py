@@ -432,10 +432,10 @@ def run_basin_stability_test(
     return bse, comparison_result
 
 
-def run_adaptive_basin_stability_test(
+def run_parameter_study_test(
     json_path: Path,
     setup_function: Callable[[], SetupProperties],
-    adaptative_parameter_name: str,
+    parameter_name: str,
     label_keys: list[str] | None = None,
     label_map: dict[str, str] | None = None,
     system_name: str = "",
@@ -443,7 +443,7 @@ def run_adaptive_basin_stability_test(
     ground_truths_dir: Path | None = None,
     mcc_threshold: float = 0.95,
 ) -> tuple[BasinStabilityStudy, list[ComparisonResult]]:
-    """Run adaptive basin stability test with classification metrics validation against MATLAB reference.
+    """Run parameter study test with classification metrics validation against MATLAB reference.
 
     This function:
     1. Loads expected results from MATLAB JSON file with parameter sweep
@@ -455,7 +455,7 @@ def run_adaptive_basin_stability_test(
 
     :param json_path: Path to JSON file with expected parameter study results from MATLAB.
     :param setup_function: Function that returns system properties.
-    :param adaptative_parameter_name: Name of parameter to vary.
+    :param parameter_name: Name of parameter to vary.
     :param label_keys: List of label keys to check. If None, auto-detect from JSON.
     :param label_map: Optional mapping from JSON labels to Python labels.
     :param system_name: Name of the dynamical system for artifact generation.
@@ -470,7 +470,7 @@ def run_adaptive_basin_stability_test(
     with open(json_path) as f:
         expected_results = json.load(f)
 
-    # Setup system and run adaptive parameter study
+    # Setup system and run parameter study
     props = setup_function()
 
     # Extract parameter values from JSON
@@ -513,13 +513,13 @@ def run_adaptive_basin_stability_test(
     if csv_samplers is not None:
         study_params = ZipStudyParams(
             **{
-                adaptative_parameter_name: list(parameter_values),
+                parameter_name: list(parameter_values),
                 "sampler": csv_samplers,
             }
         )
     else:
         study_params = SweepStudyParams(
-            name=adaptative_parameter_name,
+            name=parameter_name,
             values=list(parameter_values),
         )
 
@@ -536,7 +536,7 @@ def run_adaptive_basin_stability_test(
     # For non-CSV cases, use the n from props
     n: int = props["n"] if csv_samplers is None else csv_samplers[0].n_samples
 
-    as_bse = BasinStabilityStudy(
+    bs_study = BasinStabilityStudy(
         n=n,
         ode_system=props["ode_system"],
         sampler=props["sampler"],
@@ -547,7 +547,7 @@ def run_adaptive_basin_stability_test(
         template_integrator=template_integrator,
     )
 
-    as_bse.estimate_as_bs()
+    bs_study.run()
 
     # Auto-detect label keys if not provided
     if label_keys is None:
@@ -561,10 +561,10 @@ def run_adaptive_basin_stability_test(
     # Compare results at each parameter value
     for i, expected in enumerate(expected_results):
         param_value = expected["parameter"]
-        actual_bs = as_bse.basin_stabilities[i]
+        actual_bs = bs_study.basin_stabilities[i]
 
         # Get errors for this parameter point
-        errors = as_bse.get_errors(i)
+        errors = bs_study.results[i]["errors"]
 
         # Load ground truth labels if ground_truths_dir provided
         if ground_truths_dir is not None and csv_samplers is not None:
@@ -574,8 +574,8 @@ def run_adaptive_basin_stability_test(
                 y_true = np.array([label_map.get(str(lbl), str(lbl)) for lbl in y_true])
 
             # Get predicted labels for this parameter point from results
-            result_labels_obj = as_bse.results[i]["labels"]
-            if i < len(as_bse.results) and result_labels_obj is not None:
+            result_labels_obj = bs_study.results[i]["labels"]
+            if i < len(bs_study.results) and result_labels_obj is not None:
                 y_pred = np.array([str(label) for label in result_labels_obj])
             else:
                 raise ValueError(f"Result {i} must have labels after estimation")
@@ -636,7 +636,7 @@ def run_adaptive_basin_stability_test(
 
     # Print classification quality summary
     print(f"\n{'=' * 80}")
-    print("Adaptive Basin Stability Classification Results")
+    print("Parameter Study Classification Results")
     print(f"{'=' * 80}")
     mcc_values: list[float] = []
     for _i, result in enumerate(comparison_results):
@@ -659,7 +659,7 @@ def run_adaptive_basin_stability_test(
                 f"at parameter={result.parameter_value}"
             )
 
-    return as_bse, comparison_results
+    return bs_study, comparison_results
 
 
 def run_single_point_test(

@@ -90,75 +90,6 @@ See the [Solvers guide](solvers.md) for a detailed comparison of available solve
 
 ---
 
-## Unsupervised Clustering (Default)
-
-By default, the estimator uses `HDBSCANClusterer` to discover attractor basins without any prior knowledge. This is the simplest workflow -- no templates, no labels:
-
-```python
-bse = BasinStabilityEstimator(
-    ode_system=ode,
-    sampler=sampler,
-    n=10_000,
-)
-bs_vals = bse.estimate_bs()
-```
-
-HDBSCAN auto-tunes its `min_cluster_size` parameter and reassigns noise points so that every trajectory receives a basin label. To swap in a different clusterer, pass any sklearn-compatible estimator:
-
-```python
-from sklearn.cluster import KMeans
-
-bse = BasinStabilityEstimator(
-    ode_system=ode,
-    sampler=sampler,
-    predictor=KMeans(n_clusters=3),
-)
-```
-
-See the [Predictors guide](predictors.md) for all available clusterers and their tuning options.
-
----
-
-## Supervised Classification
-
-When the attractor structure of the system is known, supervised classification produces more reliable basin labels. This requires a `TemplateIntegrator` that provides labeled initial conditions -- one per known attractor -- along with a sklearn classifier.
-
-```python
-import torch
-from sklearn.neighbors import KNeighborsClassifier
-from pybasin.template_integrator import TemplateIntegrator
-
-# Template ICs: one per known attractor
-template_y0 = torch.tensor([
-    [1.2, 0.0],   # IC converging to attractor "fp"
-    [2.5, 0.0],   # IC converging to attractor "lc"
-])
-template_labels = ["fp", "lc"]
-
-template_integrator = TemplateIntegrator(
-    template_y0=template_y0,
-    labels=template_labels,
-)
-
-bse = BasinStabilityEstimator(
-    ode_system=ode,
-    sampler=sampler,
-    predictor=KNeighborsClassifier(n_neighbors=1),
-    template_integrator=template_integrator,
-)
-bs_vals = bse.estimate_bs()
-# e.g. {'fp': 0.35, 'lc': 0.65}
-```
-
-The estimator integrates template trajectories alongside the main batch, extracts features from both, fits the classifier on the template features, and then predicts basin labels for all N sampled ICs. By default, template and main integrations run in parallel.
-
-!!! warning "Classifier requires templates"
-Passing a classifier without a `template_integrator` raises `ValueError`. Regressors are rejected outright with `TypeError`.
-
-See the [Predictors guide](predictors.md) for more on supervised vs. unsupervised workflows.
-
----
-
 ## Customizing Feature Extraction
 
 The default feature extractor computes 10 statistical features per state variable (mean, variance, min, max, etc.) from the steady-state portion of each trajectory. Override it for richer or more targeted feature sets:
@@ -254,6 +185,75 @@ See the [Handling Unbounded Trajectories](../guides/unbounded-trajectories.md) g
 
 ---
 
+## Unsupervised Clustering (Default)
+
+By default, the estimator uses `HDBSCANClusterer` to discover attractor basins without any prior knowledge. This is the simplest workflow -- no templates, no labels:
+
+```python
+bse = BasinStabilityEstimator(
+    ode_system=ode,
+    sampler=sampler,
+    n=10_000,
+)
+bs_vals = bse.estimate_bs()
+```
+
+HDBSCAN auto-tunes its `min_cluster_size` parameter and reassigns noise points so that every trajectory receives a basin label. To swap in a different clusterer, pass any sklearn-compatible estimator:
+
+```python
+from sklearn.cluster import KMeans
+
+bse = BasinStabilityEstimator(
+    ode_system=ode,
+    sampler=sampler,
+    predictor=KMeans(n_clusters=3),
+)
+```
+
+See the [Predictors guide](predictors.md) for all available clusterers and their tuning options.
+
+---
+
+## Supervised Classification
+
+When the attractor structure of the system is known, supervised classification produces more reliable basin labels. This requires a `TemplateIntegrator` that provides labeled initial conditions -- one per known attractor -- along with a sklearn classifier.
+
+```python
+import torch
+from sklearn.neighbors import KNeighborsClassifier
+from pybasin.template_integrator import TemplateIntegrator
+
+# Template ICs: one per known attractor
+template_y0 = torch.tensor([
+    [1.2, 0.0],   # IC converging to attractor "fp"
+    [2.5, 0.0],   # IC converging to attractor "lc"
+])
+template_labels = ["fp", "lc"]
+
+template_integrator = TemplateIntegrator(
+    template_y0=template_y0,
+    labels=template_labels,
+)
+
+bse = BasinStabilityEstimator(
+    ode_system=ode,
+    sampler=sampler,
+    predictor=KNeighborsClassifier(n_neighbors=1),
+    template_integrator=template_integrator,
+)
+bs_vals = bse.estimate_bs()
+# e.g. {'fp': 0.35, 'lc': 0.65}
+```
+
+The estimator integrates template trajectories alongside the main batch, extracts features from both, fits the classifier on the template features, and then predicts basin labels for all N sampled ICs. By default, template and main integrations run in parallel.
+
+!!! warning "Classifier requires templates"
+Passing a classifier without a `template_integrator` raises `ValueError`. Regressors are rejected outright with `TypeError`.
+
+See the [Predictors guide](predictors.md) for more on supervised vs. unsupervised workflows.
+
+---
+
 ## Output Attributes
 
 After `estimate_bs()` completes, three attributes hold the results:
@@ -326,6 +326,8 @@ plotter.plot_bse_results()              # 4-panel diagnostic
 plotter.plot_basin_stability_bars()     # bar chart of BS values
 plotter.plot_state_space()              # labeled phase portrait
 plotter.plot_feature_space()            # feature space clusters
+plotter.save()  # save all to bse.save_to
+plotter.show()  # or use plt.show() directly
 ```
 
 ```python
@@ -420,6 +422,7 @@ print(errors)
 # 10. Visualize
 plotter = MatplotlibPlotter(bse)
 plotter.plot_bse_results()
+plotter.save()  # or plotter.show() for interactive display
 
 # 11. Save
 bse.save()
@@ -435,6 +438,6 @@ bse.save_to_excel()
 - [Feature Selectors](feature-selectors.md) -- variance and correlation filtering
 - [Predictors](predictors.md) -- HDBSCAN, DBSCAN, supervised classifiers, and custom predictors
 - [Plotters](plotters.md) -- static and interactive visualization options
-- [Adaptive Parameter Studies](adaptive-studies.md) -- sweeping ODE parameters with `BasinStabilityStudy`
+- [Parameter Studies](parameter-studies.md) -- sweeping ODE parameters with `BasinStabilityStudy`
 - [Handling Unbounded Trajectories](../guides/unbounded-trajectories.md) -- event functions and unboundedness detection
 - [Case Studies](../case-studies/overview.md) -- worked examples with Pendulum, Duffing, Lorenz, and more

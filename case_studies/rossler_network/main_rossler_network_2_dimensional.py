@@ -18,6 +18,7 @@ Work in progress: The code crashes when using WSL probably due to memory issues
 
 import json
 import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +41,8 @@ from case_studies.rossler_network.synchronization_feature_extractor import (
 from pybasin.basin_stability_study import BasinStabilityStudy
 from pybasin.sampler import UniformRandomSampler
 from pybasin.solvers import JaxSolver
-from pybasin.study_params import SweepStudyParams
+from pybasin.study_params import CustomStudyParams, ParamAssignment, RunConfig
+from pybasin.types import StudyResult
 from pybasin.utils import generate_filename, time_execution
 
 logger = logging.getLogger(__name__)
@@ -49,17 +51,8 @@ logger = logging.getLogger(__name__)
 def build_edge_arrays_from_networkx(graph: Any) -> tuple[np.ndarray, np.ndarray]:
     """Build edge index arrays from NetworkX graph for sparse Laplacian.
 
-    Parameters
-    ----------
-    graph : Any
-        NetworkX graph
-
-    Returns
-    -------
-    edges_i : np.ndarray
-        Source node indices, shape (2*E,)
-    edges_j : np.ndarray
-        Target node indices, shape (2*E,)
+    :param graph: NetworkX graph.
+    :return: Tuple of (source node indices, target node indices), each shape (2*E,).
     """
     edges_i: list[int] = []
     edges_j: list[int] = []
@@ -75,17 +68,8 @@ def build_edge_arrays_from_networkx(graph: Any) -> tuple[np.ndarray, np.ndarray]
 def compute_stability_interval(graph: Any) -> tuple[float, float]:
     """Compute stability interval for coupling constant K.
 
-    Parameters
-    ----------
-    graph : Any
-        NetworkX graph
-
-    Returns
-    -------
-    k_min : float
-        Lower bound of stability interval
-    k_max : float
-        Upper bound of stability interval
+    :param graph: NetworkX graph.
+    :return: Tuple of (k_min, k_max) bounds of the stability interval.
     """
     ALPHA_1 = 0.1232
     ALPHA_2 = 4.663
@@ -110,55 +94,84 @@ def rossler_stop_event(t: Array, y: Array, args: Any, **kwargs: Any) -> Any:
     return MAX_VAL - max_abs_y
 
 
-def run_k_study_for_p(p: float) -> dict[str, Any]:
-    """Run basin stability study for a single rewiring probability p.
+def main() -> None:
+    """Run the two-dimensional parameter study.
 
-    Parameters
-    ----------
-    p : float
-        Rewiring probability for Watts-Strogatz network
-
-    Returns
-    -------
-    dict[str, Any]
-        Results dictionary containing p, K values, S_B values, and metadata
+    Uses ``CustomStudyParams`` to define all (p, K) combinations upfront as a
+    single flat study. For each rewiring probability *p*, a Watts-Strogatz
+    network is generated and *K* values are sampled from the stability interval.
+    Each ``RunConfig`` assigns a fully-configured ``ode_system`` (with the
+    correct edges and coupling constant), so the ``BasinStabilityStudy`` handles
+    everything in one ``run()`` call.
     """
+    P_VALUES = np.arange(0.0, 1.05, 0.05)
     N_NODES = 400
     K_DEGREE = 8
+    N_EDGES = N_NODES * K_DEGREE // 2
     N_SAMPLES = 500
     N_K_VALUES = 11
     SEED = 42
-    save_dir = f"results_2d/p_{p:.2f}"
+    ROSSLER_A = 0.2
+    ROSSLER_B = 0.2
+    ROSSLER_C = 7.0
 
-    logger.info(f"\n{'=' * 80}")
-    logger.info(f"Running study for p = {p:.3f}")
-    logger.info(f"{'=' * 80}")
-
-    graph = nx.watts_strogatz_graph(n=N_NODES, k=K_DEGREE, p=p, seed=SEED)
-    logger.info(f"Generated WS network: N={N_NODES}, k={K_DEGREE}, p={p}, seed={SEED}")
-    logger.info(f"  Actual edges: {graph.number_of_edges()}")
-
-    k_min, k_max = compute_stability_interval(graph)
-    logger.info(f"Stability interval: K ∈ [{k_min:.4f}, {k_max:.4f}]")
-
-    k_values = np.linspace(k_min, k_max, N_K_VALUES)
-
-    edges_i, edges_j = build_edge_arrays_from_networkx(graph)
+    save_dir = Path("results_2d")
+    save_dir.mkdir(exist_ok=True)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
 
-    params: RosslerNetworkParams = {
-        "a": 0.2,
-        "b": 0.2,
-        "c": 7.0,
-        "K": float(k_values[0]),
-        "edges_i": jnp.array([edges_i]),
-        "edges_j": jnp.array(edges_j),
-        "N": N_NODES,
-    }
+    logger.info(f"\n{'=' * 80}")
+    logger.info("Two-Dimensional Parameter Study: K vs p")
+    logger.info(f"{'=' * 80}")
+    logger.info(f"Network: N={N_NODES}, k={K_DEGREE}")
+    logger.info(f"Samples per (K,p) pair: {N_SAMPLES}")
+    logger.info(f"Number of K values per p: {N_K_VALUES}")
+    logger.info(f"Number of p values: {len(P_VALUES)}")
+    logger.info(f"Total parameter combinations: {len(P_VALUES) * N_K_VALUES}")
+    logger.info(f"{'=' * 80}\n")
 
-    ode_system = RosslerNetworkJaxODE(params)
+    # ------------------------------------------------------------------
+    # Build all (p, K) parameter combinations as CustomStudyParams
+    # ------------------------------------------------------------------
+    configs: list[RunConfig] = []
+
+    for p in P_VALUES:
+        p_float = float(p)
+        graph = nx.watts_strogatz_graph(n=N_NODES, k=K_DEGREE, p=p_float, seed=SEED)
+        edges_i, edges_j = build_edge_arrays_from_networkx(graph)
+        k_min, k_max = compute_stability_interval(graph)
+        k_values = np.linspace(k_min, k_max, N_K_VALUES)
+
+        logger.info(
+            f"p={p_float:.2f}: K ∈ [{k_min:.4f}, {k_max:.4f}], edges={graph.number_of_edges()}"
+        )
+
+        for K in k_values:
+            ode_params: RosslerNetworkParams = {
+                "a": ROSSLER_A,
+                "b": ROSSLER_B,
+                "c": ROSSLER_C,
+                "K": float(K),
+                "edges_i": jnp.array([edges_i]),
+                "edges_j": jnp.array(edges_j),
+                "N": N_NODES,
+            }
+            ode = RosslerNetworkJaxODE(ode_params)
+            configs.append(
+                RunConfig(
+                    assignments=[ParamAssignment("ode_system", ode)],
+                    study_label={"p": p_float, "K": float(K)},
+                )
+            )
+
+    study_params = CustomStudyParams(configs)
+
+    # ------------------------------------------------------------------
+    # Shared components (unchanged across runs)
+    # ------------------------------------------------------------------
+    # The first config's ODE serves as the base; it gets replaced per run.
+    base_ode: RosslerNetworkJaxODE = configs[0].assignments[0].value
 
     min_limits = [-15.0] * N_NODES + [-15.0] * N_NODES + [-4.0] * N_NODES
     max_limits = [15.0] * N_NODES + [15.0] * N_NODES + [35.0] * N_NODES
@@ -185,102 +198,81 @@ def run_k_study_for_p(p: float) -> dict[str, Any]:
         device=device,
     )
 
-    sync_classifier = SynchronizationClassifier(
-        epsilon=1.5,
-    )
+    sync_classifier = SynchronizationClassifier(epsilon=1.5)
 
-    study_params = SweepStudyParams(
-        name='ode_system.params["K"]',
-        values=list(k_values),
-    )
-
-    bse = BasinStabilityStudy(
+    # ------------------------------------------------------------------
+    # Run the study
+    # ------------------------------------------------------------------
+    study = BasinStabilityStudy(
         n=N_SAMPLES,
-        ode_system=ode_system,
+        ode_system=base_ode,
         sampler=sampler,
         solver=solver,
         feature_extractor=feature_extractor,
         estimator=sync_classifier,
         study_params=study_params,
-        save_to=save_dir,
+        save_to=str(save_dir),
         verbose=False,
     )
 
-    bse.estimate_as_bs()
+    results = study.run()
 
-    sync_values: list[float] = [bs.get("synchronized", 0.0) for bs in bse.basin_stabilities]
-    mean_sb = float(np.mean(sync_values))
+    # ------------------------------------------------------------------
+    # Group results by p for summary and JSON export
+    # ------------------------------------------------------------------
+    p_groups: dict[float, list[StudyResult]] = defaultdict(list)
+    for result in results:
+        p_groups[result["study_label"]["p"]].append(result)
 
-    logger.info(f"\nResults for p = {p:.3f}:")
-    logger.info(f"  Mean S_B = {mean_sb:.3f}")
-    logger.info(f"  K range: [{k_values[0]:.4f}, {k_values[-1]:.4f}]")
-    logger.info(f"  S_B range: [{min(sync_values):.3f}, {max(sync_values):.3f}]")
+    p_summaries: list[dict[str, Any]] = []
+    for p_val in sorted(p_groups.keys()):
+        group = p_groups[p_val]
+        k_values_in_group: list[float] = [r["study_label"]["K"] for r in group]
+        sync_values: list[float] = [r["basin_stability"].get("synchronized", 0.0) for r in group]
+        p_summaries.append(
+            {
+                "p": p_val,
+                "seed": SEED,
+                "n_nodes": N_NODES,
+                "k_degree": K_DEGREE,
+                "n_edges": N_EDGES,
+                "n_samples": N_SAMPLES,
+                "stability_interval": {
+                    "K_min": min(k_values_in_group),
+                    "K_max": max(k_values_in_group),
+                },
+                "K_values": k_values_in_group,
+                "basin_stabilities": [r["basin_stability"] for r in group],
+                "mean_sb": float(np.mean(sync_values)),
+                "study_labels": [r["study_label"] for r in group],
+            }
+        )
 
-    results: dict[str, Any] = {
-        "p": float(p),
-        "seed": SEED,
-        "n_nodes": N_NODES,
-        "k_degree": K_DEGREE,
-        "n_edges": graph.number_of_edges(),
-        "n_samples": N_SAMPLES,
-        "stability_interval": {"K_min": k_min, "K_max": k_max},
-        "K_values": k_values.tolist(),
-        "basin_stabilities": bse.basin_stabilities,
-        "mean_sb": mean_sb,
-        "parameter_values": bse.parameter_values,
-    }
-
-    return results
-
-
-def main():
-    """Run the two-dimensional parameter study."""
-    p_values = np.arange(0.0, 1.05, 0.05)
-    N_NODES = 400
-    K_DEGREE = 8
-    N_SAMPLES = 500
-    N_K_VALUES = 11
-
-    save_dir = Path("results_2d")
-    save_dir.mkdir(exist_ok=True)
-
-    results_2d: list[dict[str, Any]] = []
-
-    logger.info(f"\n{'=' * 80}")
-    logger.info("Two-Dimensional Parameter Study: K vs p")
-    logger.info(f"{'=' * 80}")
-    logger.info(f"Network: N={N_NODES}, k={K_DEGREE}")
-    logger.info(f"Samples per (K,p) pair: {N_SAMPLES}")
-    logger.info(f"Number of K values per p: {N_K_VALUES}")
-    logger.info(f"Number of p values: {len(p_values)}")
-    logger.info(f"Total parameter combinations: {len(p_values) * N_K_VALUES}")
-    logger.info(f"{'=' * 80}\n")
-
-    for p in p_values:
-        results = run_k_study_for_p(float(p))
-        results_2d.append(results)
-
-    filename = generate_filename(
-        name="2d_parameter_study",
-        file_extension="json",
-    )
+    filename = generate_filename(name="2d_parameter_study", file_extension="json")
     filepath = save_dir / filename
     with open(filepath, "w") as f:
-        json.dump(results_2d, f, indent=2)
+        json.dump(p_summaries, f, indent=2)
 
+    # ------------------------------------------------------------------
+    # Print summary
+    # ------------------------------------------------------------------
     logger.info(f"\n{'=' * 80}")
     logger.info("SUMMARY: Basin Stability vs Rewiring Probability")
     logger.info(f"{'=' * 80}")
     logger.info(f"{'p':>6} | {'Mean S_B':>9} | {'K_min':>8} | {'K_max':>8} | {'Edges':>6}")
     logger.info("-" * 55)
 
-    for result in results_2d:
-        p = result["p"]
+    mean_sbs: list[float] = []
+    for result in p_summaries:
+        p_val = result["p"]
         mean_sb = result["mean_sb"]
         k_min = result["stability_interval"]["K_min"]
         k_max = result["stability_interval"]["K_max"]
         n_edges = result["n_edges"]
-        logger.info(f"{p:>6.2f} | {mean_sb:>9.3f} | {k_min:>8.4f} | {k_max:>8.4f} | {n_edges:>6}")
+        logger.info(
+            f"{p_val:>6.2f} | {mean_sb:>9.3f} | {k_min:>8.4f} | {k_max:>8.4f} | {n_edges:>6}"
+        )
+        mean_sbs.append(mean_sb)
 
     logger.info("-" * 55)
     logger.info(f"\nResults saved to: {filepath}")
@@ -288,11 +280,10 @@ def main():
     print("\n" + "=" * 80)
     print("Key Finding:")
     print("=" * 80)
-    mean_sbs: list[float] = [r["mean_sb"] for r in results_2d]
     if mean_sbs[-1] > mean_sbs[0]:
         print("✓ Basin stability INCREASES with rewiring probability")
-        print(f"  Regular lattice (p={p_values[0]:.1f}): S_B = {mean_sbs[0]:.3f}")
-        print(f"  Random network (p={p_values[-1]:.1f}):  S_B = {mean_sbs[-1]:.3f}")
+        print(f"  Regular lattice (p={P_VALUES[0]:.1f}): S_B = {mean_sbs[0]:.3f}")
+        print(f"  Random network (p={P_VALUES[-1]:.1f}):  S_B = {mean_sbs[-1]:.3f}")
         if mean_sbs[0] > 0:
             print(f"  Relative increase: {(mean_sbs[-1] / mean_sbs[0] - 1) * 100:.1f}%")
         else:

@@ -8,8 +8,8 @@ import pytest
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
-    run_adaptive_basin_stability_test,
     run_basin_stability_test,
+    run_parameter_study_test,
     run_single_point_test,
 )
 
@@ -73,10 +73,10 @@ class TestPendulum:
         json_path = Path(__file__).parent / "main_pendulum_case2.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "case2"
 
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_pendulum_system,
-            adaptative_parameter_name='ode_system.params["T"]',
+            parameter_name='ode_system.params["T"]',
             label_keys=["FP", "LC", "NaN"],
             system_name="pendulum",
             case_name="case2",
@@ -84,7 +84,7 @@ class TestPendulum:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)
 
     @pytest.mark.integration
     def test_hyperparameter_n(
@@ -104,10 +104,10 @@ class TestPendulum:
         json_path = Path(__file__).parent / "main_pendulum_hyperparameters.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "hyperparameters"
 
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_pendulum_system,
-            adaptative_parameter_name="n",
+            parameter_name="n",
             label_keys=["FP", "LC", "NaN"],
             system_name="pendulum",
             case_name="case3",
@@ -115,7 +115,7 @@ class TestPendulum:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts

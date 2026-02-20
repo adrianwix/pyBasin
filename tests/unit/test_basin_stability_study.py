@@ -66,13 +66,13 @@ class TestBasinStabilityStudyWithSweep:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert mock_bse_class.call_count == 3
 
@@ -93,13 +93,13 @@ class TestBasinStabilityStudyWithSweep:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert captured_ode_systems == t_values
 
@@ -121,17 +121,17 @@ class TestBasinStabilityStudyWithSweep:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            labels, _, _ = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            # Verify labels use short name
-            assert labels[0] == {"T": 0.15}
-            assert labels[1] == {"T": 0.25}
+            # Verify study_labels use short name
+            assert results[0]["study_label"] == {"T": 0.15}
+            assert results[1]["study_label"] == {"T": 0.25}
 
             # Verify actual nested parameter was updated
             assert captured_full_params[0]["T"] == 0.15
@@ -140,26 +140,26 @@ class TestBasinStabilityStudyWithSweep:
             assert captured_full_params[0]["K"] == 0.1
             assert captured_full_params[1]["K"] == 0.1
 
-    def test_returns_correct_labels(
+    def test_returns_correct_study_labels(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
     ) -> None:
-        """Should return labels matching parameter values."""
+        """Should return study_labels matching parameter values."""
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            labels, basin_stabilities, results = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            assert labels == [{"T": 0.1}, {"T": 0.2}]
-            assert len(basin_stabilities) == 2
+            assert bs_study.study_labels == [{"T": 0.1}, {"T": 0.2}]
+            assert len(bs_study.basin_stabilities) == 2
             assert len(results) == 2
 
 
@@ -181,20 +181,20 @@ class TestBasinStabilityStudyWithGrid:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert mock_bse_class.call_count == 6
 
-    def test_grid_produces_correct_labels(
+    def test_grid_produces_correct_study_labels(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
     ) -> None:
-        """Grid should produce all combinations as labels."""
+        """Grid should produce all combinations as study_labels."""
         study_params = GridStudyParams(
             **{
                 'ode_system.params["T"]': [0.1, 0.2],
@@ -206,21 +206,21 @@ class TestBasinStabilityStudyWithGrid:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            labels, _, _ = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            expected_labels = [
+            expected_study_labels = [
                 {"T": 0.1, "K": 1.0},
                 {"T": 0.1, "K": 2.0},
                 {"T": 0.2, "K": 1.0},
                 {"T": 0.2, "K": 2.0},
             ]
-            assert labels == expected_labels
+            assert [r["study_label"] for r in results] == expected_study_labels
 
 
 class TestBasinStabilityStudyWithZip:
@@ -241,17 +241,17 @@ class TestBasinStabilityStudyWithZip:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert mock_bse_class.call_count == 3
 
-    def test_zip_produces_paired_labels(
+    def test_zip_produces_paired_study_labels(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
     ) -> None:
         """Zip should pair parameters at same index."""
@@ -266,19 +266,19 @@ class TestBasinStabilityStudyWithZip:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            labels, _, _ = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            expected_labels = [
+            expected_study_labels = [
                 {"T": 0.1, "K": 1.0},
                 {"T": 0.2, "K": 2.0},
             ]
-            assert labels == expected_labels
+            assert [r["study_label"] for r in results] == expected_study_labels
 
 
 class TestBasinStabilityStudyWithSampler:
@@ -304,13 +304,13 @@ class TestBasinStabilityStudyWithSampler:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert captured_samplers == [sampler1, sampler2, sampler3]
 
@@ -340,17 +340,17 @@ class TestBasinStabilityStudyWithSampler:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             side_effect=capture_bse_args,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            labels, _, _ = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            # Verify labels have both parameters
-            assert labels[0] == {"T": 0.1, "sampler": sampler1}
-            assert labels[1] == {"T": 0.2, "sampler": sampler2}
+            # Verify study_labels have both parameters
+            assert results[0]["study_label"] == {"T": 0.1, "sampler": sampler1}
+            assert results[1]["study_label"] == {"T": 0.2, "sampler": sampler2}
 
             # Verify actual nested parameter AND sampler were updated correctly
             assert captured_args[0]["T"] == 0.1
@@ -372,13 +372,13 @@ class TestBasinStabilityStudyBSEArguments:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ) as mock_bse_class:
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             call_kwargs = mock_bse_class.call_args.kwargs
             assert call_kwargs["n"] == 100
@@ -398,13 +398,13 @@ class TestBasinStabilityStudyBSEArguments:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert mock_bse.estimate_bs.call_count == 3
 
@@ -418,13 +418,13 @@ class TestBasinStabilityStudyBSEArguments:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            as_bse.estimate_as_bs()
+            bs_study.run()
 
             assert mock_bse.get_errors.call_count == 2
 
@@ -452,33 +452,13 @@ class TestBasinStabilityStudyResults:
             "pybasin.basin_stability_study.BasinStabilityEstimator",
             return_value=mock_bse,
         ):
-            as_bse = BasinStabilityStudy(
+            bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
                 save_to=None,
                 **mock_components,
             )
-            _, basin_stabilities, _ = as_bse.estimate_as_bs()
+            results = bs_study.run()
 
-            assert basin_stabilities[0] == {"a": 0.7, "b": 0.3}
-            assert basin_stabilities[1] == {"a": 0.5, "b": 0.5}
-
-    def test_parameter_values_property(
-        self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
-    ) -> None:
-        """parameter_values property should return first label values."""
-        study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2, 0.3])
-
-        with patch(
-            "pybasin.basin_stability_study.BasinStabilityEstimator",
-            return_value=mock_bse,
-        ):
-            as_bse = BasinStabilityStudy(
-                n=100,
-                study_params=study_params,
-                save_to=None,
-                **mock_components,
-            )
-            as_bse.estimate_as_bs()
-
-            assert as_bse.parameter_values == [0.1, 0.2, 0.3]
+            assert results[0]["basin_stability"] == {"a": 0.7, "b": 0.3}
+            assert results[1]["basin_stability"] == {"a": 0.5, "b": 0.5}

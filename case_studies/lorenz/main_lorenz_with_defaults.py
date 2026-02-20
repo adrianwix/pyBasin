@@ -7,12 +7,14 @@ from case_studies.lorenz.setup_lorenz_system import lorenz_stop_event, setup_lor
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.plotters.types import InteractivePlotterOptions
+from pybasin.sampler import Sampler
 from pybasin.solvers.jax_solver import JaxSolver
 from pybasin.utils import time_execution
 
 
-def main():
+def main(sampler_override: Sampler | None = None) -> BasinStabilityEstimator:
     props = setup_lorenz_system()
+    sampler = sampler_override if sampler_override is not None else props.get("sampler")
 
     # Auto-detect device (use GPU if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,7 +29,7 @@ def main():
     bse = BasinStabilityEstimator(
         n=props.get("n"),
         ode_system=props.get("ode_system"),
-        sampler=props.get("sampler"),
+        sampler=sampler,
         solver=solver,
     )
 

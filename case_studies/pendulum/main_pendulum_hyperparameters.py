@@ -43,7 +43,7 @@ def main():
         save_to="results_hyperparameters",
     )
 
-    bse.estimate_as_bs()
+    bse.run()
 
     return bse
 
@@ -54,5 +54,6 @@ if __name__ == "__main__":
     plotter = MatplotlibStudyPlotter(bse)
 
     plotter.plot_basin_stability_variation()
+    plotter.show()
 
     bse.save()

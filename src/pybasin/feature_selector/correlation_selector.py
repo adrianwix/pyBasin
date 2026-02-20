@@ -1,4 +1,10 @@
-"""Scikit-learn transformer for removing highly correlated features."""
+"""Scikit-learn transformer for removing highly correlated features.
+
+Uses the mean absolute correlation ranking from Kuhn & Johnson (2013),
+"Applied Predictive Modeling", Chapter 3. When two features exceed the
+correlation threshold, the one with higher mean absolute correlation
+across all remaining features is dropped (more globally redundant).
+"""
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -7,21 +13,32 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class CorrelationSelector(BaseEstimator, TransformerMixin):
     """Scikit-learn transformer to remove highly correlated features.
 
-    This transformer removes features with high pairwise correlations,
-    keeping only one feature from each correlated group.
+    When a pair of features has absolute correlation above ``threshold``,
+    the feature with the higher mean absolute correlation against all
+    remaining features is removed. This follows the algorithm described
+    by Kuhn & Johnson (2013) and implemented in R's
+    ``caret::findCorrelation()``.
 
-    :ivar threshold: Correlation threshold. Features with absolute correlation above this value will be considered redundant.
-    :ivar min_features: Minimum number of features to keep. If removing correlated features would result in fewer than this many, some correlated features are retained.
-    :ivar support_: Boolean mask of selected features.
-    :ivar n_features_in_: Number of input features.
+    The mean absolute correlation is recomputed after each removal so
+    that subsequent decisions reflect the current feature set.
+
+    :ivar threshold: Correlation threshold. Feature pairs with absolute
+        correlation above this value trigger a removal decision.
+    :ivar min_features: Minimum number of features to keep.
+    :ivar support_: Boolean mask of selected features (set after ``fit``).
+    :ivar n_features_in_: Number of input features (set after ``fit``).
     """
 
-    def __init__(self, threshold: float = 0.95, min_features: int = 2):
+    def __init__(self, threshold: float = 0.9, min_features: int = 3):
         self.threshold: float = threshold
         self.min_features: int = min_features
 
     def fit(self, X: np.ndarray, y: np.ndarray | None = None):
-        """Compute which features to keep.
+        """Compute which features to keep using mean absolute correlation ranking.
+
+        For each pair exceeding the threshold, the feature with the higher
+        mean absolute correlation across all remaining features is dropped.
+        The correlation statistics are recomputed after each removal.
 
         :param X: Training data of shape (n_samples, n_features).
         :param y: Not used, present for API consistency.
@@ -33,18 +50,27 @@ class CorrelationSelector(BaseEstimator, TransformerMixin):
             self.support_ = np.ones(self.n_features_in_, dtype=bool)
             return self
 
-        corr_matrix = np.corrcoef(X.T)
+        corr_matrix: np.ndarray = np.abs(np.corrcoef(X.T))
+        np.fill_diagonal(corr_matrix, 0.0)
 
-        to_drop: set[int] = set()
-        for i in range(corr_matrix.shape[0]):
-            for j in range(i + 1, corr_matrix.shape[1]):
-                if (
-                    abs(corr_matrix[i, j]) > self.threshold
-                    and self.n_features_in_ - len(to_drop) > self.min_features
-                ):
-                    to_drop.add(j)
+        remaining: list[int] = list(range(self.n_features_in_))
 
-        self.support_ = np.array([i not in to_drop for i in range(self.n_features_in_)])
+        while len(remaining) > self.min_features:
+            sub_corr: np.ndarray = corr_matrix[np.ix_(remaining, remaining)]
+            max_corr: float = float(np.max(sub_corr))
+
+            if max_corr <= self.threshold:
+                break
+
+            i_local, j_local = divmod(int(np.argmax(sub_corr)), len(remaining))
+            mean_corr_i: float = float(np.mean(sub_corr[i_local]))  # type: ignore[arg-type]
+            mean_corr_j: float = float(np.mean(sub_corr[j_local]))  # type: ignore[arg-type]
+
+            drop_local: int = i_local if mean_corr_i >= mean_corr_j else j_local
+            remaining.pop(drop_local)
+
+        self.support_ = np.zeros(self.n_features_in_, dtype=bool)
+        self.support_[remaining] = True
 
         return self
 

@@ -42,7 +42,7 @@ class ArtifactEntry:
     """Entry for artifact collection.
 
     :ivar bse: BasinStabilityEstimator instance (for single-point tests).
-    :ivar as_bse: BasinStabilityStudy instance (for parameter sweep tests).
+    :ivar bs_study: BasinStabilityStudy instance (for parameter sweep tests).
     :ivar comparison: Single ComparisonResult (for single-point tests).
     :ivar comparisons: List of ComparisonResult (for parameter sweep tests).
     :ivar unsupervised_comparison: UnsupervisedComparisonResult (for unsupervised tests).
@@ -53,7 +53,7 @@ class ArtifactEntry:
     """
 
     bse: BasinStabilityEstimator | None = None
-    as_bse: BasinStabilityStudy | None = None
+    bs_study: BasinStabilityStudy | None = None
     comparison: ComparisonResult | None = None
     comparisons: list[ComparisonResult] | None = None
     unsupervised_comparison: UnsupervisedComparisonResult | None = None
@@ -100,11 +100,11 @@ class ArtifactCollector:
 
     def add_parameter_sweep(
         self,
-        as_bse: BasinStabilityStudy,
+        bs_study: BasinStabilityStudy,
         comparisons: list[ComparisonResult],
     ) -> None:
         """Add a parameter sweep test result."""
-        self.entries.append(ArtifactEntry(as_bse=as_bse, comparisons=comparisons))
+        self.entries.append(ArtifactEntry(bs_study=bs_study, comparisons=comparisons))
 
     def add_unsupervised(
         self,
@@ -195,11 +195,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
                 trajectory_y_limits=entry.trajectory_y_limits,
                 phase_space_axes=entry.phase_space_axes,
             )
-        elif entry.as_bse is not None and entry.comparisons is not None:
+        elif entry.bs_study is not None and entry.comparisons is not None:
             system_name = entry.comparisons[0].system_name
             case_name = entry.comparisons[0].case_name
             print(f"\n📊 {system_name} - {case_name} (parameter sweep)")
-            generate_parameter_sweep_artifacts(entry.as_bse, entry.comparisons)
+            generate_parameter_sweep_artifacts(entry.bs_study, entry.comparisons)
 
     print(f"\n{'=' * 60}")
     print("✅ Artifact generation complete")

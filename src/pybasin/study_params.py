@@ -35,11 +35,12 @@ class RunConfig:
     """Configuration for a single BSE run with multiple parameter assignments.
 
     :ivar assignments: List of parameter assignments to apply for this run.
-    :ivar label: Dictionary for results indexing, e.g., {"T": 0.5, "p": 0.2}.
+    :ivar study_label: Dictionary identifying this run's parameter combination,
+        e.g., {"T": 0.5} or {"K": 0.1, "sigma": 0.3}.
     """
 
     assignments: list[ParamAssignment] = field(default_factory=lambda: [])
-    label: dict[str, Any] = field(default_factory=lambda: {})
+    study_label: dict[str, Any] = field(default_factory=lambda: {})
 
 
 class StudyParams(ABC):
@@ -58,6 +59,16 @@ class StudyParams(ABC):
     def __len__(self) -> int:
         """Return the total number of runs."""
         raise NotImplementedError
+
+    def to_list(self) -> list[RunConfig]:
+        """Return all RunConfig objects as a list.
+
+        Useful for inspecting the generated parameter combinations before running
+        the study.
+
+        :return: List of all RunConfig objects that would be yielded by iteration.
+        """
+        return list(self)
 
 
 def _extract_short_name(name: str) -> str:
@@ -104,7 +115,7 @@ class SweepStudyParams(StudyParams):
         for val in self.values:
             yield RunConfig(
                 assignments=[ParamAssignment(self.name, val)],
-                label={short_name: val},
+                study_label={short_name: val},
             )
 
     def __len__(self) -> int:
@@ -147,8 +158,8 @@ class GridStudyParams(StudyParams):
                 ParamAssignment(name, val)
                 for name, val in zip(self.param_names, combo, strict=True)
             ]
-            label = dict(zip(short_names, combo, strict=True))
-            yield RunConfig(assignments=assignments, label=label)
+            study_label = dict(zip(short_names, combo, strict=True))
+            yield RunConfig(assignments=assignments, study_label=study_label)
 
     def __len__(self) -> int:
         """Return the total number of combinations."""
@@ -201,8 +212,8 @@ class ZipStudyParams(StudyParams):
                 ParamAssignment(name, val)
                 for name, val in zip(self.param_names, combo, strict=True)
             ]
-            label = dict(zip(short_names, combo, strict=True))
-            yield RunConfig(assignments=assignments, label=label)
+            study_label = dict(zip(short_names, combo, strict=True))
+            yield RunConfig(assignments=assignments, study_label=study_label)
 
     def __len__(self) -> int:
         """Return the number of parameter tuples."""
@@ -224,7 +235,7 @@ class CustomStudyParams(StudyParams):
                 ParamAssignment("ode_system", ode),
                 ParamAssignment('ode_system.params["K"]', K),
             ],
-            label={"K": K, "p": p},
+            study_label={"K": K, "p": p},
         )
         for K, p in product(k_values, p_values)
     ]
@@ -269,6 +280,6 @@ class CustomStudyParams(StudyParams):
         configs: list[RunConfig] = []
         for d in param_dicts:
             assignments = [ParamAssignment(k, v) for k, v in d.items()]
-            label = {_extract_short_name(k): v for k, v in d.items()}
-            configs.append(RunConfig(assignments=assignments, label=label))
+            study_label = {_extract_short_name(k): v for k, v in d.items()}
+            configs.append(RunConfig(assignments=assignments, study_label=study_label))
         return cls(configs)

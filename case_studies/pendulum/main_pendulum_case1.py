@@ -2,8 +2,8 @@ import warnings
 from pathlib import Path
 
 import matplotlib
-from matplotlib import pyplot as plt
 
+# from matplotlib import pyplot as plt
 from case_studies.comparison_utils import compare_with_expected_by_size
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
@@ -56,12 +56,12 @@ if __name__ == "__main__":
     mpl_plotter = MatplotlibPlotter(bse)
 
     # Test individual plots
-    mpl_plotter.plot_basin_stability_bars()
-    mpl_plotter.plot_state_space()
-    mpl_plotter.plot_feature_space()
+    # mpl_plotter.plot_basin_stability_bars()
+    # mpl_plotter.plot_state_space()
+    # mpl_plotter.plot_feature_space()
 
-    mpl_plotter.plot_templates_trajectories(plotted_var=1, x_limits=(0, 150))
-    plt.show()  # type: ignore[misc]
+    # mpl_plotter.plot_templates_trajectories(plotted_var=1, x_limits=(0, 150))
+    # plt.show()  # type: ignore[misc]
 
     # Test combined plot
     # mpl_plotter.plot_bse_results()

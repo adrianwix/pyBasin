@@ -36,7 +36,7 @@ def main():
     # Matches MATLAB: props.roi.N = 20000
     n = 20000
 
-    # Define the adaptive study parameters
+    # Define the study parameters
     # Varies relative tolerance from 1e-3 to 1e-8
     # Matches MATLAB: props.ap_study.ap_values = [1.0e-03, ..., 1.0e-08]
     rtol_values = [1.0e-03, 1.0e-04, 1.0e-05, 1.0e-06, 1.0e-07, 1.0e-08]
@@ -54,7 +54,7 @@ def main():
     assert feature_extractor is not None, "feature_extractor is required for BasinStabilityStudy"
     assert estimator is not None, "estimator is required for BasinStabilityStudy"
 
-    # Initialize the Adaptive Study Basin Stability Estimator
+    # Initialize the Basin Stability Study
     bse = BasinStabilityStudy(
         n=n,
         ode_system=props["ode_system"],
@@ -67,7 +67,7 @@ def main():
         save_to="results_hyperpTol",
     )
 
-    bse.estimate_as_bs()
+    bse.run()
 
     return bse
 
@@ -78,5 +78,6 @@ if __name__ == "__main__":
     plotter = MatplotlibStudyPlotter(bse)
 
     plotter.plot_basin_stability_variation()
+    plotter.show()
 
     bse.save()

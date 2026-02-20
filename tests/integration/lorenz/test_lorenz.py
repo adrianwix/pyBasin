@@ -7,8 +7,8 @@ import pytest
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
-    run_adaptive_basin_stability_test,
     run_basin_stability_test,
+    run_parameter_study_test,
     run_single_point_test,
 )
 
@@ -75,10 +75,10 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_lorenz_system,
-            adaptative_parameter_name='ode_system.params["sigma"]',
+            parameter_name='ode_system.params["sigma"]',
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
             system_name="lorenz",
@@ -87,7 +87,7 @@ class TestLorenz:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)
 
     @pytest.mark.integration
     def test_hyperparameter_n(
@@ -108,10 +108,10 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_lorenz_system,
-            adaptative_parameter_name="n",
+            parameter_name="n",
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
             system_name="lorenz",
@@ -120,7 +120,7 @@ class TestLorenz:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts
@@ -167,10 +167,10 @@ class TestLorenz:
             "unbounded": "unbounded",
             "NaN": "NaN",
         }
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_lorenz_system,
-            adaptative_parameter_name="solver.rtol",
+            parameter_name="solver.rtol",
             label_keys=["butterfly1", "butterfly2", "unbounded", "NaN"],
             label_map=label_map,
             system_name="lorenz",
@@ -180,4 +180,4 @@ class TestLorenz:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)

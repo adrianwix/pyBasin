@@ -2,18 +2,25 @@ import numpy as np
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
+
+# from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.plotters.interactive_plotter import InteractivePlotter
-from pybasin.study_params import SweepStudyParams
+from pybasin.study_params import GridStudyParams
 from pybasin.utils import time_execution
 
+T_VALUES = list(np.round(np.linspace(0.1, 0.9, 5), 2))
+ALPHA_VALUES = list(np.round(np.linspace(0.05, 0.3, 5), 3))
+N = 500
 
-def main():
+
+def main() -> BasinStabilityStudy:
     props = setup_pendulum_system()
 
-    study_params = SweepStudyParams(
-        name='ode_system.params["T"]',
-        values=list(np.arange(0.01, 0.97, 0.05)),
+    study_params = GridStudyParams(
+        **{
+            'ode_system.params["T"]': T_VALUES,
+            'ode_system.params["alpha"]': ALPHA_VALUES,
+        }
     )
 
     solver = props.get("solver")
@@ -24,8 +31,8 @@ def main():
     assert feature_extractor is not None, "feature_extractor is required for BasinStabilityStudy"
     assert estimator is not None, "estimator is required for BasinStabilityStudy"
 
-    bse = BasinStabilityStudy(
-        n=props["n"],
+    bss = BasinStabilityStudy(
+        n=N,
         ode_system=props["ode_system"],
         sampler=props["sampler"],
         solver=solver,
@@ -33,20 +40,23 @@ def main():
         estimator=estimator,
         study_params=study_params,
         template_integrator=template_integrator,
-        save_to="results_case2",
+        save_to="results_multiparams",
     )
 
-    bse.run()
+    bss.run()
 
-    return bse
+    # plotter = MatplotlibStudyPlotter(bss)
+    # plotter.plot_basin_stability_variation(parameters=["T"])
+    # plotter.plot_bifurcation_diagram(dof=[0, 1])
+    # plt.show()
+
+    bss.save()
+
+    return bss
 
 
 if __name__ == "__main__":
-    bss = time_execution("main_pendulum_case2.py", main)
-
-    plotter = MatplotlibStudyPlotter(bss)
-    # plotter.plot_basin_stability_variation(parameters=None)
-    # plt.show()
+    bss = time_execution("main_pendulum_multiparams_study.py", main)
 
     state_labels = {0: "θ", 1: "ω"}
     plotter = InteractivePlotter(bss, state_labels=state_labels)

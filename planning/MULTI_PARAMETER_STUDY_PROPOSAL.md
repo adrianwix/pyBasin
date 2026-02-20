@@ -221,7 +221,7 @@ class BasinStabilityStudy:
     ):
         ...
 
-    def estimate_as_bs(self):
+    def run(self):
         for run_config in self.study_params:
             # Build context with base components
             context: dict[str, Any] = {

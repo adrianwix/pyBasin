@@ -7,8 +7,8 @@ import pytest
 from case_studies.friction.setup_friction_system import setup_friction_system
 from tests.conftest import ArtifactCollector
 from tests.integration.test_helpers import (
-    run_adaptive_basin_stability_test,
     run_basin_stability_test,
+    run_parameter_study_test,
 )
 
 
@@ -53,7 +53,7 @@ class TestFriction:
         self,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
-        """Test friction oscillator v_d parameter sweep - adaptive parameter study varying v_d.
+        """Test friction oscillator v_d parameter sweep - parameter study varying v_d.
 
         Studies the effect of varying driving velocity v_d from 1.85 to 2.0.
 
@@ -63,10 +63,10 @@ class TestFriction:
         """
         json_path = Path(__file__).parent / "main_friction_v_study.json"
         ground_truths_dir = Path(__file__).parent / "ground_truths" / "vStudy"
-        as_bse, comparisons = run_adaptive_basin_stability_test(
+        bs_study, comparisons = run_parameter_study_test(
             json_path,
             setup_friction_system,
-            adaptative_parameter_name='ode_system.params["v_d"]',
+            parameter_name='ode_system.params["v_d"]',
             label_keys=["FP", "LC", "NaN"],
             system_name="friction",
             case_name="case2",
@@ -74,4 +74,4 @@ class TestFriction:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons)

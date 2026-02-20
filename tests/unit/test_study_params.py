@@ -42,12 +42,12 @@ class TestSweepStudyParams:
         assert configs[1].assignments[0].value == 0.2
         assert configs[2].assignments[0].value == 0.3
 
-    def test_generates_correct_labels(self) -> None:
+    def test_generates_correct_study_labels(self) -> None:
         params = SweepStudyParams(name='ode_system.params["T"]', values=[0.5, 1.0])
         configs = list(params)
 
-        assert configs[0].label == {"T": 0.5}
-        assert configs[1].label == {"T": 1.0}
+        assert configs[0].study_label == {"T": 0.5}
+        assert configs[1].study_label == {"T": 1.0}
 
     def test_len_returns_correct_count(self) -> None:
         params = SweepStudyParams(name="x", values=[1, 2, 3, 4, 5])
@@ -75,7 +75,7 @@ class TestGridStudyParams:
         configs = list(params)
 
         assert len(configs) == 4
-        labels = [c.label for c in configs]
+        labels = [c.study_label for c in configs]
         assert {"T": 0.1, "sigma": 1.0} in labels
         assert {"T": 0.1, "sigma": 2.0} in labels
         assert {"T": 0.2, "sigma": 1.0} in labels
@@ -104,7 +104,7 @@ class TestGridStudyParams:
 
         assert len(grid_configs) == len(sweep_configs)
         for gc, sc in zip(grid_configs, sweep_configs, strict=True):
-            assert gc.label == sc.label
+            assert gc.study_label == sc.study_label
 
 
 class TestZipStudyParams:
@@ -115,9 +115,9 @@ class TestZipStudyParams:
         configs = list(params)
 
         assert len(configs) == 3
-        assert configs[0].label == {"T": 0.1, "sigma": 1.0}
-        assert configs[1].label == {"T": 0.2, "sigma": 2.0}
-        assert configs[2].label == {"T": 0.3, "sigma": 3.0}
+        assert configs[0].study_label == {"T": 0.1, "sigma": 1.0}
+        assert configs[1].study_label == {"T": 0.2, "sigma": 2.0}
+        assert configs[2].study_label == {"T": 0.3, "sigma": 3.0}
 
     def test_raises_on_length_mismatch(self) -> None:
         with pytest.raises(ValueError, match="same length"):
@@ -144,7 +144,7 @@ class TestZipStudyParams:
         configs = list(params)
 
         assert len(configs) == 2
-        assert configs[0].label["T"] == 0.1
+        assert configs[0].study_label["T"] == 0.1
         assert configs[0].assignments[1].value.t == 0.1
 
 
@@ -155,19 +155,19 @@ class TestCustomStudyParams:
         configs_input = [
             RunConfig(
                 assignments=[ParamAssignment("T", 0.1)],
-                label={"T": 0.1},
+                study_label={"T": 0.1},
             ),
             RunConfig(
                 assignments=[ParamAssignment("T", 0.2)],
-                label={"T": 0.2},
+                study_label={"T": 0.2},
             ),
         ]
         params = CustomStudyParams(configs_input)
         configs = list(params)
 
         assert len(configs) == 2
-        assert configs[0].label == {"T": 0.1}
-        assert configs[1].label == {"T": 0.2}
+        assert configs[0].study_label == {"T": 0.1}
+        assert configs[1].study_label == {"T": 0.2}
 
     def test_len_returns_config_count(self) -> None:
         configs_input = [RunConfig() for _ in range(5)]
@@ -183,8 +183,8 @@ class TestCustomStudyParams:
         configs = list(params)
 
         assert len(configs) == 2
-        assert configs[0].label == {"T": 0.1, "n": 100}
-        assert configs[1].label == {"T": 0.2, "n": 200}
+        assert configs[0].study_label == {"T": 0.1, "n": 100}
+        assert configs[1].study_label == {"T": 0.2, "n": 200}
 
     def test_from_dicts_handles_full_param_names(self) -> None:
         dicts = [
@@ -193,5 +193,5 @@ class TestCustomStudyParams:
         params = CustomStudyParams.from_dicts(dicts)
         configs = list(params)
 
-        assert configs[0].label == {"K": 0.1, "p": 0.5}
+        assert configs[0].study_label == {"K": 0.1, "p": 0.5}
         assert configs[0].assignments[0].name == 'ode_system.params["K"]'

@@ -1,4 +1,4 @@
-"""Adaptive Study Basin Stability Estimator."""
+"""Parameter Study Basin Stability Estimator."""
 
 import gc
 import json
@@ -14,7 +14,7 @@ from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.study_params import StudyParams
 from pybasin.template_integrator import TemplateIntegrator
-from pybasin.types import AdaptiveStudyResult, ErrorInfo
+from pybasin.types import StudyResult
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
@@ -68,21 +68,33 @@ class BasinStabilityStudy:
         self.save_to = save_to
         self.verbose = verbose
 
-        # Add storage for parameter study results
-        self.labels: list[dict[str, Any]] = []
-        self.basin_stabilities: list[dict[str, float]] = []
-        self.results: list[AdaptiveStudyResult] = []
+        self.results: list[StudyResult] = []
 
     @property
-    def parameter_values(self) -> list[Any]:
-        """Legacy access to parameter values (for backward compatibility).
+    def study_labels(self) -> list[dict[str, Any]]:
+        """Study labels for each run, derived from results.
 
-        :return: List of parameter values from labels.
+        :return: List of study label dicts, one per run.
         """
-        if not self.labels:
+        return [r["study_label"] for r in self.results]
+
+    @property
+    def basin_stabilities(self) -> list[dict[str, float]]:
+        """Basin stability dicts for each run, derived from results.
+
+        :return: List of basin stability dicts, one per run.
+        """
+        return [r["basin_stability"] for r in self.results]
+
+    @property
+    def studied_parameter_names(self) -> list[str]:
+        """Names of the parameters varied in this study.
+
+        :return: List of parameter names extracted from the study labels.
+        """
+        if not self.results:
             return []
-        first_key = next(iter(self.labels[0].keys()))
-        return [label[first_key] for label in self.labels]
+        return list(self.results[0]["study_label"].keys())
 
     def _suppress_verbose_logs(self) -> dict[str, int]:
         """Suppress verbose logs from BasinStabilityEstimator and related components.
@@ -114,9 +126,9 @@ class BasinStabilityStudy:
         for logger_name, level in original_levels.items():
             logging.getLogger(logger_name).setLevel(level)
 
-    def estimate_as_bs(
+    def run(
         self,
-    ) -> tuple[list[dict[str, Any]], list[dict[str, float]], list[AdaptiveStudyResult]]:
+    ) -> list[StudyResult]:
         """
         Estimate basin stability for each parameter combination in the study.
 
@@ -131,14 +143,10 @@ class BasinStabilityStudy:
         Uses GPU acceleration automatically when available for significant performance gains.
         Memory is explicitly freed after each iteration to prevent accumulation.
 
-        :return: Tuple of three lists with matching indices:
-
-                 - labels: List of label dictionaries identifying each run
-                 - basin_stabilities: List of basin stability dictionaries (label -> fraction)
-                 - results: List of AdaptiveStudyResult with complete information including errors
+        :return: List of StudyResult dicts, one per parameter combination, containing
+                 study_label, basin_stability, errors, n_samples, labels, and
+                 bifurcation_amplitudes.
         """
-        self.labels = []
-        self.basin_stabilities = []
         self.results = []
 
         total_runs = len(self.study_params)
@@ -169,7 +177,7 @@ class BasinStabilityStudy:
                 eval(compile(exec_code, "<string>", "exec"), context, context)
 
             logger.info("\n" + "-" * 80)
-            label_str = ", ".join(f"{k}={v}" for k, v in run_config.label.items())
+            label_str = ", ".join(f"{k}={v}" for k, v in run_config.study_label.items())
             logger.info("[%d/%d] %s", idx, total_runs, label_str)
             logger.info("-" * 80)
 
@@ -199,16 +207,9 @@ class BasinStabilityStudy:
             errors = bse.get_errors()
 
             # Store only essential results (not the full solution to save memory)
-            self.labels.append(run_config.label)
-            self.basin_stabilities.append(basin_stability)
-
-            # Get the primary parameter value for backward compatibility
-            param_value = next(iter(run_config.label.values())) if run_config.label else None
-
-            # Extract only necessary data from solution before storing
             if bse.solution is not None:
-                solution_summary: AdaptiveStudyResult = {
-                    "param_value": param_value,
+                solution_summary: StudyResult = {
+                    "study_label": run_config.study_label,
                     "basin_stability": basin_stability,
                     "errors": errors,
                     "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
@@ -223,7 +224,7 @@ class BasinStabilityStudy:
                 }
             else:
                 solution_summary = {
-                    "param_value": param_value,
+                    "study_label": run_config.study_label,
                     "basin_stability": basin_stability,
                     "errors": errors,
                     "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
@@ -244,21 +245,21 @@ class BasinStabilityStudy:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-        return self.labels, self.basin_stabilities, self.results
+        return self.results
 
     def save(self) -> None:
         """
         Save the basin stability results to a JSON file.
         Handles numpy arrays and Solution objects by converting them to standard Python types.
         """
-        if len(self.basin_stabilities) == 0:
-            raise ValueError("No results to save. Please run estimate_as_bs() first.")
+        if len(self.results) == 0:
+            raise ValueError("No results to save. Please run run() first.")
 
         if self.save_to is None:
             raise ValueError("No path to save the results was specified.")
 
         full_folder = resolve_folder(self.save_to)
-        file_name = generate_filename("adaptative_params_basin_stability_results", "json")
+        file_name = generate_filename("parameter_study_results", "json")
         full_path = os.path.join(full_folder, file_name)
 
         def format_ode_system(ode_str: str) -> list[str]:
@@ -275,14 +276,12 @@ class BasinStabilityStudy:
             ]
         )
 
-        # Build study results with labels
         parameter_study = [
-            {"label": label, "basin_of_attraction": bs}
-            for label, bs in zip(self.labels, self.basin_stabilities, strict=True)
+            {"study_label": r["study_label"], "basin_of_attraction": r["basin_stability"]}
+            for r in self.results
         ]
 
-        # Determine studied parameters from first label keys
-        studied_params = list(self.labels[0].keys()) if self.labels else []
+        studied_params = self.studied_parameter_names
 
         results: dict[str, Any] = {
             "studied_parameters": studied_params,
@@ -299,25 +298,3 @@ class BasinStabilityStudy:
             json.dump(results, f, cls=NumpyEncoder, indent=2)
 
         logger.info("Results saved to %s", full_path)
-
-    def get_errors(self, param_index: int) -> dict[str, ErrorInfo]:
-        """
-        Get error information for basin stability estimates at a specific parameter value.
-
-        Retrieves the pre-computed error estimates (absolute and relative standard errors)
-        for all attractor labels at the specified parameter index.
-
-        :param param_index: Index of the parameter value in the adaptive study (0-based).
-        :return: Dictionary mapping each attractor label to its ErrorInfo containing e_abs and e_rel.
-        :raises ValueError: If estimate_as_bs() has not been called yet.
-        :raises ValueError: If param_index is out of range.
-        """
-        if len(self.results) == 0:
-            raise ValueError("No basin stability values available. Call estimate_as_bs() first.")
-
-        if param_index < 0 or param_index >= len(self.results):
-            raise ValueError(
-                f"Parameter index {param_index} out of range [0, {len(self.results) - 1}]"
-            )
-
-        return self.results[param_index]["errors"]

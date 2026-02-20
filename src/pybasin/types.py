@@ -26,14 +26,14 @@ class ErrorInfo(TypedDict):
     e_rel: float
 
 
-class AdaptiveStudyResult(TypedDict):
-    """Results for a single parameter value in an adaptive parameter study.
+class StudyResult(TypedDict):
+    """Results for a single parameter combination in a parameter study.
 
-    Contains complete information about basin stability estimation at one parameter value,
-    including the basin stability values, error estimates, sample metadata, and optional
-    detailed solution data.
+    Contains complete information about basin stability estimation at one parameter
+    combination, including the study label identifying the run, basin stability values,
+    error estimates, sample metadata, and optional detailed solution data.
 
-    :ivar param_value: The parameter value used for this estimation, or None if no parameter is being varied.
+    :ivar study_label: Dictionary identifying this run's parameter combination, e.g., {"K": 0.1, "sigma": 0.3}.
     :ivar basin_stability: Dictionary mapping attractor labels to their basin stability values (fraction of samples).
     :ivar errors: Dictionary mapping attractor labels to their ErrorInfo (absolute and relative errors).
     :ivar n_samples: Number of initial conditions actually used (may differ from requested N due to grid rounding).
@@ -41,7 +41,7 @@ class AdaptiveStudyResult(TypedDict):
     :ivar bifurcation_amplitudes: Amplitude values for bifurcation analysis, or None if not computed.
     """
 
-    param_value: float | None
+    study_label: dict[str, Any]
     basin_stability: dict[str, float]
     errors: dict[str, ErrorInfo]
     n_samples: int

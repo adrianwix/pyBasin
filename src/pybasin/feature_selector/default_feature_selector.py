@@ -38,8 +38,8 @@ class DefaultFeatureSelector(Pipeline):
     def __init__(
         self,
         variance_threshold: float = 0.01,
-        correlation_threshold: float = 0.95,
-        min_features: int = 2,
+        correlation_threshold: float = 0.9,
+        min_features: int = 3,
     ):
         self.variance_threshold: float = variance_threshold
         self.correlation_threshold: float = correlation_threshold

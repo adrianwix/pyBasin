@@ -179,14 +179,14 @@ def generate_unsupervised_artifacts(
 
 
 def generate_parameter_sweep_artifacts(
-    as_bse: BasinStabilityStudy,
+    bs_study: BasinStabilityStudy,
     comparisons: list[ComparisonResult],
 ) -> None:
     """Generate artifacts for a parameter sweep basin stability test.
 
     Writes comparison JSON to artifacts/results/ and plot images to docs/assets/.
 
-    :param as_bse: The BasinStabilityStudy instance with results.
+    :param bs_study: The BasinStabilityStudy instance with results.
     :param comparisons: List of comparison results, one per parameter point.
     """
     if not comparisons:
@@ -224,13 +224,16 @@ def generate_parameter_sweep_artifacts(
 
     print(f"  Written: {json_path}")
 
-    plotter = MatplotlibStudyPlotter(as_bse)
+    plotter = MatplotlibStudyPlotter(bs_study)
 
-    fig = plotter.plot_basin_stability_variation(show=False)
-    recolor_figure(fig, palette)
-    thesis_export(fig, f"{prefix}_basin_stability_variation.png", DOCS_ASSETS_DIR)
+    figs = plotter.plot_basin_stability_variation()
+    for fig in figs:
+        param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
+        suffix = f"_{param_name}" if len(figs) > 1 else ""
+        recolor_figure(fig, palette)
+        thesis_export(fig, f"{prefix}_basin_stability_variation{suffix}.png", DOCS_ASSETS_DIR)
 
-    state_dim = as_bse.sampler.state_dim
+    state_dim = bs_study.sampler.state_dim
     if state_dim > 3:
         print(f"  Skipped bifurcation_diagram plot: state_dim={state_dim} > 3")
         return
@@ -238,8 +241,11 @@ def generate_parameter_sweep_artifacts(
     dof = list(range(state_dim))
 
     try:
-        fig = plotter.plot_bifurcation_diagram(dof=dof, show=False)
-        recolor_figure(fig, palette)
-        thesis_export(fig, f"{prefix}_bifurcation_diagram.png", DOCS_ASSETS_DIR)
+        figs = plotter.plot_bifurcation_diagram(dof=dof)
+        for fig in figs:
+            param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
+            suffix = f"_{param_name}" if len(figs) > 1 else ""
+            recolor_figure(fig, palette)
+            thesis_export(fig, f"{prefix}_bifurcation_diagram{suffix}.png", DOCS_ASSETS_DIR)
     except (ValueError, KeyError) as e:
         print(f"  Skipped bifurcation_diagram plot: {e}")

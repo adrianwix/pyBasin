@@ -174,7 +174,7 @@ class TestRosslerNetwork:
         assert feature_extractor is not None
         assert estimator is not None
 
-        as_bse = BasinStabilityStudy(
+        bs_study = BasinStabilityStudy(
             n=props["n"],
             ode_system=props["ode_system"],
             sampler=props["sampler"],
@@ -185,7 +185,7 @@ class TestRosslerNetwork:
             template_integrator=template_integrator,
         )
 
-        as_bse.estimate_as_bs()
+        bs_study.run()
 
         comparison_results: list[ComparisonResult] = []
         computed_sync: list[float] = []
@@ -201,9 +201,10 @@ class TestRosslerNetwork:
         print("-" * 80)
 
         within_threshold = 0
-        for idx, (param_val, bs_dict) in enumerate(
-            zip(as_bse.parameter_values, as_bse.basin_stabilities, strict=True)
-        ):
+        for idx, result in enumerate(bs_study.results):
+            study_label = result["study_label"]
+            bs_dict = result["basin_stability"]
+            param_val = study_label["K"]
             sync_val = bs_dict.get("synchronized", 0.0)
             unbounded_val = bs_dict.get("unbounded", 0.0)
 
@@ -287,4 +288,4 @@ class TestRosslerNetwork:
         print(f"Note: e_abs = sqrt(S_B*(1-S_B)/N), N={n_samples}, z-threshold={z_threshold:.1f}")
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(as_bse, comparison_results)
+            artifact_collector.add_parameter_sweep(bs_study, comparison_results)

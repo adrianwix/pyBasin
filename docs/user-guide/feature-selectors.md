@@ -9,7 +9,7 @@ By default, `BasinStabilityEstimator` applies a `DefaultFeatureSelector` that ch
 | Class                    | Strategy                                | Best for                                                  |
 | ------------------------ | --------------------------------------- | --------------------------------------------------------- |
 | `DefaultFeatureSelector` | Variance threshold + correlation filter | **Default.** General-purpose two-stage pipeline.          |
-| `CorrelationSelector`    | Pairwise absolute correlation filter    | Targeted removal of redundant correlated features.        |
+| `CorrelationSelector`    | Mean absolute correlation ranking       | Targeted removal of redundant correlated features.        |
 | Any sklearn transformer  | Custom (e.g., `SelectKBest`, k-best)    | Domain-specific selection when defaults are insufficient. |
 
 ## Default Behavior in BasinStabilityEstimator
@@ -17,7 +17,7 @@ By default, `BasinStabilityEstimator` applies a `DefaultFeatureSelector` that ch
 When no `feature_selector` argument is provided, the estimator creates a `DefaultFeatureSelector()` with these defaults:
 
 - **Variance threshold**: 0.01 -- features with variance below this are dropped
-- **Correlation threshold**: 0.95 -- among features with |correlation| above this, only one is kept
+- **Correlation threshold**: 0.95 -- among features with |correlation| above this, the more globally redundant one is dropped
 - **Minimum features**: 2 -- at least two features are always retained
 
 The selector's `feature_selector` parameter uses a sentinel pattern to distinguish "not specified" (use default) from `None` (disable). Passing `None` explicitly turns off all feature filtering.
@@ -88,12 +88,14 @@ The method composes the variance mask and the correlation mask internally, retur
 
 ## CorrelationSelector
 
-An sklearn transformer that removes features with high pairwise absolute correlation. It iterates over the upper triangle of the correlation matrix and drops the later column in each correlated pair, subject to a minimum feature count.
+An sklearn transformer that removes features whose pairwise absolute correlation exceeds a threshold. Rather than dropping columns in index order, it applies the ranking algorithm from Kuhn & Johnson (2013), _Applied Predictive Modeling_, Chapter 3 -- the same logic behind R's `caret::findCorrelation()`.
+
+At each step, the selector finds the most correlated pair among the remaining features and computes each member's mean absolute correlation against all other remaining features. The feature with the higher mean -- the more globally redundant one -- is dropped. Because the correlation statistics are recomputed after every removal, later decisions reflect the reduced feature set.
 
 ```python
 from pybasin.feature_selector import CorrelationSelector
 
-selector = CorrelationSelector(threshold=0.95, min_features=2)
+selector = CorrelationSelector(threshold=0.9, min_features=3)
 X_filtered = selector.fit_transform(X)
 ```
 
@@ -101,11 +103,11 @@ X_filtered = selector.fit_transform(X)
 
 | Parameter      | Type    | Default | Description                                                                          |
 | -------------- | ------- | ------- | ------------------------------------------------------------------------------------ |
-| `threshold`    | `float` | `0.95`  | Correlation ceiling. Pairs with \|corr\| above this trigger removal.                 |
-| `min_features` | `int`   | `2`     | Minimum features to retain. Prevents aggressive filtering from removing all columns. |
+| `threshold`    | `float` | `0.9`   | Correlation ceiling. Pairs with \|corr\| above this trigger removal.                 |
+| `min_features` | `int`   | `3`     | Minimum features to retain. Prevents aggressive filtering from removing all columns. |
 
-!!! note "Greedy column-order removal"
-The selector iterates column pairs in order and always drops the higher-indexed column. This greedy strategy is fast but not globally optimal -- the retained set depends on column ordering.
+!!! note "Column-order independence"
+Because removal is driven by mean absolute correlation rather than column position, reordering the input features does not change which features survive. Two datasets containing the same features in different column order produce the same retained set.
 
 ### Retrieving the Selection Mask
 
@@ -121,24 +123,16 @@ indices = selector.get_support(indices=True)  # integer indices
 Any sklearn-compatible transformer that implements `fit_transform()` can serve as a feature selector. If the transformer also provides `get_support()`, filtered feature names will appear in `Solution.feature_names`.
 
 ```python
-from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+from sklearn.feature_selection import VarianceThreshold
 
-# Simple variance filter
 bse = BasinStabilityEstimator(
     ode_system=...,
     sampler=...,
     feature_selector=VarianceThreshold(threshold=0.1),
 )
-
-# k-best features (supervised -- requires labels via TemplateIntegrator)
-bse = BasinStabilityEstimator(
-    ode_system=...,
-    sampler=...,
-    feature_selector=SelectKBest(f_classif, k=20),
-    predictor=some_classifier,
-    template_integrator=some_template,
-)
 ```
+
+The transformer must be unsupervised -- its `fit()` receives only the feature matrix `X`, with no labels. Supervised selectors like `SelectKBest(f_classif)` will fail because the pipeline never passes `y`.
 
 !!! warning "Feature name tracking"
 Only selectors with a `get_support()` method enable automatic feature name filtering. Without it, `Solution.feature_names` falls back to the full unfiltered list.

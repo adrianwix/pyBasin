@@ -4,15 +4,17 @@ from case_studies.comparison_utils import compare_with_expected
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter.plotter import InteractivePlotter
+from pybasin.sampler import Sampler
 from pybasin.utils import time_execution
 
 
-def main():
+def main(sampler_override: Sampler | None = None) -> BasinStabilityEstimator:
     props = setup_pendulum_system()
+    sampler = sampler_override if sampler_override is not None else props["sampler"]
 
     bse = BasinStabilityEstimator(
         ode_system=props["ode_system"],
-        sampler=props["sampler"],
+        sampler=sampler,
     )
 
     basin_stability = bse.estimate_bs()

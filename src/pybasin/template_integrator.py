@@ -60,7 +60,7 @@ class TemplateIntegrator:
         self,
         solver: SolverProtocol | None,
         ode_system: ODESystemProtocol,
-    ) -> None:
+    ) -> Solution:
         """Integrate ODE for template initial conditions.
 
         If no dedicated solver was provided at init, automatically creates a CPU
@@ -101,6 +101,8 @@ class TemplateIntegrator:
 
         t, y = effective_solver.integrate(template_ode_system, template_tensor)
         self.solution = Solution(initial_condition=template_tensor, time=t, y=y)
+
+        return self.solution
 
     def get_training_data(
         self,

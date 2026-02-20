@@ -36,7 +36,7 @@ def main():
     )
 
     print("Estimating Basin Stability...")
-    bse.estimate_as_bs()
+    bse.run()
 
     return bse
 
@@ -48,5 +48,6 @@ if __name__ == "__main__":
 
     plotter.plot_basin_stability_variation()
     plotter.plot_bifurcation_diagram([1])
+    plotter.show()
 
     bse.save()

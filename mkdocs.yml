@@ -88,7 +88,7 @@ nav:
   - User Guide:
       - Basin Stability Estimator:
           - Overview & Flow: user-guide/bse-overview.md
-          - Adaptive Parameter Studies: user-guide/adaptive-studies.md
+          - Parameter Studies: user-guide/parameter-studies.md
       - Solution: user-guide/solution.md
       - Samplers: user-guide/samplers.md
       - Solvers: user-guide/solvers.md
@@ -118,7 +118,7 @@ nav:
   - API Reference:
       - BasinStabilityEstimator: api/basin-stability-estimator.md
       - TemplateIntegrator: api/template-integrator.md
-      - BasinStabilityStudy: api/adaptive-sampling.md
+      - BasinStabilityStudy: api/parameter-studies.md
       - Solution: api/solution.md
       - Samplers: api/samplers.md
       - Solvers: api/solvers.md

@@ -24,23 +24,56 @@ class MatplotlibPlotter:
         :param bse: An instance of BasinStabilityEstimator.
         """
         self.bse = bse
+        self._pending_figures: list[tuple[str, Figure]] = []
 
-    # Do we need this if the methods save on their own alrady?
-    def save_plot(self, plot_name: str):
+    def save(self, dpi: int = 300) -> None:
+        """
+        Save all pending figures to the save_to directory.
+
+        Figures are tracked when plot methods create new figures (i.e., when
+        no ``ax`` parameter is passed). Call this after plotting to save
+        all figures at once.
+
+        :param dpi: Resolution for saved images.
+        :raises ValueError: If ``bse.save_to`` is not set or no figures pending.
+        """
         if self.bse.save_to is None:
-            raise ValueError("save_to is not defined.")
+            raise ValueError("bse.save_to is not defined. Set it before calling save().")
+
+        if not self._pending_figures:
+            raise ValueError("No figures to save. Call a plot method first.")
+
         full_folder = resolve_folder(self.bse.save_to)
-        file_name = generate_filename(plot_name, "png")
-        full_path = os.path.join(full_folder, file_name)
 
-        logger.info("Saving plots to: %s", full_path)
-        plt.savefig(full_path, dpi=300)  # type: ignore[misc]
+        for name, fig in self._pending_figures:
+            file_name = generate_filename(name, "png")
+            full_path = os.path.join(full_folder, file_name)
+            logger.info("Saving plot to: %s", full_path)
+            fig.savefig(full_path, dpi=dpi)
 
-    def plot_basin_stability_bars(self, ax: Axes | None = None):
+        self._pending_figures.clear()
+
+    def show(self) -> None:
+        """
+        Display all matplotlib figures.
+
+        Convenience wrapper around ``plt.show()`` so users don't need to
+        import matplotlib separately.
+        """
+        plt.show()  # type: ignore[misc]
+
+    def _track_figure(self, name: str, ax: Axes) -> None:
+        """Track a figure for later saving if it was created by this plotter."""
+        fig = ax.get_figure()
+        if fig is not None:
+            self._pending_figures.append((name, fig))  # type: ignore[arg-type]
+
+    def plot_basin_stability_bars(self, ax: Axes | None = None) -> Axes:
         """
         Plot basin stability values as a bar chart.
 
         :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        :return: The Axes object with the plot.
         """
         if self.bse.bs_vals is None:
             raise ValueError(
@@ -48,12 +81,10 @@ class MatplotlibPlotter:
             )
 
         # Create standalone figure if no axes provided
+        created_figure = ax is None
         if ax is None:
             plt.figure(figsize=(6, 5))  # type: ignore[misc]
             ax = plt.gca()  # type: ignore[assignment]
-            standalone = True
-        else:
-            standalone = False
 
         # Plot bar chart
         bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
@@ -62,20 +93,17 @@ class MatplotlibPlotter:
         ax.set_ylabel("Fraction of samples")  # type: ignore[misc]
         ax.set_title("Basin Stability")  # type: ignore[misc]
 
-        # Show/save if standalone
-        if standalone:
-            plt.tight_layout()
-            # TODO: review this is always called
-            if self.bse.save_to:
-                self.save_plot("basin_stability_bars")
-            else:
-                plt.show()  # type: ignore[misc]
+        if created_figure:
+            self._track_figure("basin_stability_bars", ax)  # type: ignore[arg-type]
 
-    def plot_state_space(self, ax: Axes | None = None):
+        return ax  # type: ignore[return-value]
+
+    def plot_state_space(self, ax: Axes | None = None) -> Axes:
         """
         Plot initial conditions in state space, colored by their attractor labels.
 
         :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        :return: The Axes object with the plot.
         """
         if self.bse.y0 is None:
             raise ValueError(
@@ -90,12 +118,10 @@ class MatplotlibPlotter:
         labels = np.array(self.bse.solution.labels)
 
         # Create standalone figure if no axes provided
+        created_figure = ax is None
         if ax is None:
             plt.figure(figsize=(6, 5))  # type: ignore[misc]
             ax = plt.gca()  # type: ignore[assignment]
-            standalone = True
-        else:
-            standalone = False
 
         # Plot state space scatter
         unique_labels = np.unique(labels)
@@ -113,19 +139,17 @@ class MatplotlibPlotter:
         ax.set_ylabel("y_2")  # type: ignore[misc]
         ax.legend(loc="upper left")  # type: ignore[misc]
 
-        # Show/save if standalone
-        if standalone:
-            plt.tight_layout()
-            if self.bse.save_to:
-                self.save_plot("state_space")
-            else:
-                plt.show()  # type: ignore[misc]
+        if created_figure:
+            self._track_figure("state_space", ax)  # type: ignore[arg-type]
 
-    def plot_feature_space(self, ax: Axes | None = None):
+        return ax  # type: ignore[return-value]
+
+    def plot_feature_space(self, ax: Axes | None = None) -> Axes:
         """
         Plot feature space with classifier results.
 
         :param ax: Matplotlib axes to plot on. If None, creates a new figure.
+        :return: The Axes object with the plot.
         """
         if self.bse.solution is None:
             raise ValueError("No solutions available. Please run estimate_bs() before plotting.")
@@ -159,12 +183,10 @@ class MatplotlibPlotter:
             features_array = features_array.reshape(-1, 1)
 
         # Create standalone figure if no axes provided
+        created_figure = ax is None
         if ax is None:
             plt.figure(figsize=(6, 5))  # type: ignore[misc]
             ax = plt.gca()  # type: ignore[assignment]
-            standalone = True
-        else:
-            standalone = False
 
         # Plot feature space scatter using boolean masks (matching feature_space_aio.py)
         unique_labels = np.unique(labels)
@@ -204,15 +226,12 @@ class MatplotlibPlotter:
 
         ax.legend()  # type: ignore[misc]
 
-        # Show/save if standalone
-        if standalone:
-            plt.tight_layout()
-            if self.bse.save_to:
-                self.save_plot("feature_space")
-            else:
-                plt.show()  # type: ignore[misc]
+        if created_figure:
+            self._track_figure("feature_space", ax)  # type: ignore[arg-type]
 
-    def plot_bse_results(self):
+        return ax  # type: ignore[return-value]
+
+    def plot_bse_results(self) -> Figure:
         """
         Generate diagnostic plots using the data stored in self.solution:
             1. A bar plot of basin stability values.
@@ -223,6 +242,8 @@ class MatplotlibPlotter:
         This method combines the individual plotting functions into a 2x2 grid.
         For individual plots, use plot_basin_stability_bars(), plot_state_space(),
         or plot_feature_space() directly.
+
+        :return: The Figure object with the 2x2 grid of plots.
         """
         # Create 2x2 subplot grid
         fig, axs = plt.subplots(2, 2, figsize=(10, 10))  # type: ignore[misc]
@@ -237,11 +258,9 @@ class MatplotlibPlotter:
 
         plt.tight_layout()
 
-        # Save the combined figure
-        if self.bse.save_to:
-            self.save_plot("bse_results_plot")
-        else:
-            plt.show()  # type: ignore[misc]
+        self._pending_figures.append(("bse_results", fig))
+
+        return fig  # type: ignore[return-value]
 
     # Plots 2 states over time for the same trajectory in the same space
     def plot_templates_phase_space(
@@ -339,6 +358,8 @@ class MatplotlibPlotter:
         plt.legend()  # type: ignore[misc]
         plt.tight_layout()
 
+        self._pending_figures.append(("templates_phase_space", fig))
+
         return fig
 
     def plot_templates_trajectories(
@@ -421,5 +442,7 @@ class MatplotlibPlotter:
 
         axes[-1].set_xlabel("time")  # type: ignore[misc]
         plt.tight_layout()
+
+        self._pending_figures.append(("templates_trajectories", fig))
 
         return fig

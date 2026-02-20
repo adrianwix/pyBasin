@@ -1,8 +1,8 @@
 # Solution
 
-The `Solution` class stores all results from a basin stability estimation run. After integration, feature extraction, and classification complete, the solution object holds trajectories, extracted features, cluster labels, and metadata. You can inspect it directly or pass it to plotters for visualization.
+Every basin stability run produces a `Solution` object that accumulates results as the pipeline progresses -- trajectories from integration, feature vectors from extraction, and basin labels from classification. You can inspect it directly for analysis or hand it to a plotter for visualization.
 
-`BasinStabilityEstimator` creates a `Solution` automatically during the integration step and mutates it through the pipeline. Access it via `bse.solution` after calling `estimate_bs()`.
+During `estimate_bs()`, the `BasinStabilityEstimator` creates the `Solution` and mutates it at each pipeline step. Access the finished object via `bse.solution`.
 
 ## What's Stored
 
@@ -17,6 +17,7 @@ The `Solution` class stores all results from a basin stability estimation run. A
 | `feature_names`           | `list[str]` or `None`      | Names of filtered features                     | Feature selection or None |
 | `labels`                  | `np.ndarray` or `None`     | Basin assignments for each IC (shape: `(N,)`)  | Classification            |
 | `model_params`            | `dict[str, Any]` or `None` | ODE parameters used during integration         | Integration               |
+| `bifurcation_amplitudes`  | `torch.Tensor` or `None`   | Max absolute values per state (shape: `(N, n_states)`) | Integration        |
 
 ## Accessing the Solution
 
@@ -43,19 +44,17 @@ labels = solution.labels  # (N,)
 
 ## Features and Feature Names
 
-Raw features extracted from trajectories are stored separately from filtered features. Feature selectors reduce the raw set down to a smaller collection based on variance thresholds or other criteria.
+Extracted features and filtered features are stored separately. After feature extraction, `extracted_features` holds the full raw matrix. When a feature selector is active, `features` contains the reduced subset; otherwise the BSE copies the unfiltered values into `features` as well. Both are always populated after `estimate_bs()` completes.
 
 ```python
 # Raw features before filtering
 raw_features = solution.extracted_features  # (N, F)
 raw_names = solution.extracted_feature_names  # list[str] with F names
 
-# Filtered features after selection
+# Filtered features after selection (or unfiltered copy if no selector)
 filtered_features = solution.features  # (N, F') where F' <= F
 filtered_names = solution.feature_names  # list[str] with F' names
 ```
-
-If no feature selector is used, `features` and `feature_names` will be `None`. The raw features remain accessible via `extracted_features` and `extracted_feature_names`.
 
 ## Summary Output
 
@@ -154,7 +153,7 @@ solution.set_features(filtered_features, filtered_names)
 ```
 
 !!! tip "Pipeline Usage"
-In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.
+    In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.
 
 ## Related Documentation
 

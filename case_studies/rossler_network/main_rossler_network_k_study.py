@@ -1,4 +1,4 @@
-"""Adaptive parameter study for Rössler network basin stability across K values.
+"""Parameter study for Rössler network basin stability across K values.
 
 This replicates the full K-sweep from the original paper, computing basin stability
 at 11 equally spaced values of K in the stability interval.
@@ -28,11 +28,11 @@ from pybasin.utils import time_execution
 
 
 def main() -> BasinStabilityStudy:
-    """Run adaptive parameter study for Rössler network coupling strength.
+    """Run parameter study for Rössler network coupling strength.
 
     Sweeps through K values from paper to analyze basin stability variation.
 
-    :return: Adaptive basin stability estimator with results.
+    :return: Basin stability study with results.
     """
     props = setup_rossler_network_system()
 
@@ -61,7 +61,7 @@ def main() -> BasinStabilityStudy:
         save_to="results_k_study",
     )
 
-    bse.estimate_as_bs()
+    bse.run()
 
     return bse
 
@@ -81,13 +81,14 @@ if __name__ == "__main__":
 
     computed_sync: list[float] = []
     within_2sigma = 0
-    for idx, (param_val, bs_dict) in enumerate(
-        zip(bse.parameter_values, bse.basin_stabilities, strict=True)
-    ):
+    for idx, result in enumerate(bse.results):
+        study_label = result["study_label"]
+        bs_dict = result["basin_stability"]
         sync_val = bs_dict.get("synchronized", 0.0)
         computed_sync.append(sync_val)
         expected_val = float(EXPECTED_SB_FROM_PAPER[idx])
         diff = sync_val - expected_val
+        param_val = study_label["K"]
 
         e_abs = np.sqrt(sync_val * (1 - sync_val) / n_samples)
         e_combined = e_abs * np.sqrt(2)
