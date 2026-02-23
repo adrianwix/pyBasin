@@ -2164,8 +2164,9 @@ and provides methods to estimate basin stability and save results.</p>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">feature_selector</span><span class="p">:</span> <span class="n">FeatureSelectorProtocol</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">UNSET</span><span class="p">,</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">compute_orbit_data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2322,6 +2323,22 @@ and provides methods to estimate basin stability and save results.</p>
             <td>
               <div class="doc-md-description">
                 <p>Enable unboundedness detection before feature extraction (default: True). Only activates when solver has event_fn configured (e.g., JaxSolver with event_fn). When enabled, unbounded trajectories are separated and labeled as "unbounded" before feature extraction to prevent imputed Inf values from contaminating features.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>compute_orbit_data</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="int">int</span>] | <span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Enable orbit data computation for orbit diagram plotting. - <code>True</code> (default): Compute for all state dimensions. - <code>False</code>: Disabled. - <code>list[int]</code>: Compute for specific state indices (e.g., <code>[0, 1]</code>).</p>
               </div>
             </td>
             <td>

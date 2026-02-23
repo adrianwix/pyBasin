@@ -2398,8 +2398,8 @@
 </table>
 <div class="admonition warning">
 <p class="admonition-title">BSE Must Be Run First</p>
-<p>The constructor raises <code>ValueError</code> if the estimator or study has not been executed yet. Call <code>bse.run()</code> or <code>bse.estimate_bs()</code> before creating the plotter.</p>
 </div>
+<p>The constructor raises <code>ValueError</code> if the estimator or study has not been executed yet. Call <code>bse.run()</code> or <code>bse.estimate_bs()</code> before creating the plotter.</p>
 <h3 id="two-operating-modes">Two Operating Modes</h3>
 <p><strong>BSE mode</strong> -- when given a <code>BasinStabilityEstimator</code>, the app shows five pages:</p>
 <ul>
@@ -2412,7 +2412,7 @@
 <p><strong>Study mode</strong> -- when given a <code>BasinStabilityStudy</code>, the app shows:</p>
 <ul>
 <li>Parameter Overview (basin stability across the parameter sweep)</li>
-<li>Parameter Bifurcation (attractor amplitude evolution)</li>
+<li>Parameter Orbit Diagram (peak attractor amplitudes over parameter variation)</li>
 <li>Per-parameter-value BSE pages accessible through a dropdown selector</li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.interactive_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlotter</span>
@@ -2483,14 +2483,14 @@
 <td>Parameter overview page defaults (study mode only).</td>
 </tr>
 <tr>
-<td><code>param_bifurcation</code></td>
-<td><code>ParamBifurcationOptions</code></td>
+<td><code>param_orbit_diagram</code></td>
+<td><code>ParamOrbitDiagramOptions</code></td>
 <td>--</td>
-<td>Parameter bifurcation page defaults (study mode only).</td>
+<td>Parameter orbit diagram page defaults (study mode only).</td>
 </tr>
 </tbody>
 </table>
-<p><code>ViewType</code> accepts: <code>"basin_stability"</code>, <code>"state_space"</code>, <code>"feature_space"</code>, <code>"templates_phase_space"</code>, <code>"templates_time_series"</code>, <code>"param_overview"</code>, <code>"param_bifurcation"</code>.</p>
+<p><code>ViewType</code> accepts: <code>"basin_stability"</code>, <code>"state_space"</code>, <code>"feature_space"</code>, <code>"templates_phase_space"</code>, <code>"templates_time_series"</code>, <code>"param_overview"</code>, <code>"param_orbit_diagram"</code>.</p>
 <h3 id="per-page-options">Per-Page Options</h3>
 <p><strong>StateSpaceOptions:</strong></p>
 <table>
@@ -2652,7 +2652,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>ParamBifurcationOptions:</strong></p>
+<p><strong>ParamOrbitDiagramOptions:</strong></p>
 <table>
 <thead>
 <tr>
@@ -2665,26 +2665,26 @@
 <tr>
 <td><code>state_dimensions</code></td>
 <td><code>list[int]</code></td>
-<td>State dimensions to show in the bifurcation.</td>
+<td>State dimensions to show. Corresponds to the <code>dof</code> indices stored in <code>orbit_data</code>.</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition note">
 <p class="admonition-title">Include/exclude are mutually exclusive</p>
-<p>Providing both <code>include_*</code> and <code>exclude_*</code> in the same options dict raises <code>ValueError</code>. Pick one or the other.</p>
 </div>
+<p>Providing both <code>include_*</code> and <code>exclude_*</code> in the same options dict raises <code>ValueError</code>. Pick one or the other.</p>
 <hr />
 <h2 id="matplotlibstudyplotter">MatplotlibStudyPlotter</h2>
 <p>Produces static bifurcation-style figures from a <code>BasinStabilityStudy</code> parameter sweep.</p>
 <div class="admonition note">
 <p class="admonition-title">Import path</p>
-<p>Unlike the other two plotters, <code>MatplotlibStudyPlotter</code> lives at <code>pybasin.matplotlib_study_plotter</code> -- not inside the <code>plotters/</code> subpackage.</p>
 </div>
+<p>Unlike the other two plotters, <code>MatplotlibStudyPlotter</code> lives at <code>pybasin.matplotlib_study_plotter</code> -- not inside the <code>plotters/</code> subpackage.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.matplotlib_study_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatplotlibStudyPlotter</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bss</span><span class="p">)</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_parameter_stability</span><span class="p">()</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="constructor-parameters_2">Constructor Parameters</h3>
@@ -2717,14 +2717,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>plot_basin_stability_variation</code></td>
+<td><code>plot_parameter_stability</code></td>
 <td><code>(interval: "linear" \| "log" = "linear", parameters: list[str] \| None = None) -&gt; list[Figure]</code></td>
 <td>Basin stability vs. parameter value. One figure per parameter. Supports linear or log x-axis.</td>
 </tr>
 <tr>
-<td><code>plot_bifurcation_diagram</code></td>
-<td><code>(dof: list[int], parameters: list[str] \| None = None) -&gt; list[Figure]</code></td>
-<td>Bifurcation diagram showing attractor amplitude locations. One figure per parameter.</td>
+<td><code>plot_orbit_diagram</code></td>
+<td><code>(dof: list[int] \| None = None, parameters: list[str] \| None = None) -&gt; list[Figure]</code></td>
+<td>Orbit diagram showing peak attractor amplitudes over parameter variation. One figure per parameter.</td>
 </tr>
 <tr>
 <td><code>save</code></td>
@@ -2738,14 +2738,18 @@
 </tr>
 </tbody>
 </table>
-<p>The <code>parameters</code> argument on both plotting methods filters which study parameters to plot. When <code>None</code>, all parameters are included. The <code>dof</code> argument in <code>plot_bifurcation_diagram</code> selects which state dimensions appear in the diagram -- amplitudes are extracted per dimension using k-means clustering internally.</p>
+<p>The <code>parameters</code> argument on both plotting methods filters which study parameters to plot. When <code>None</code>, all parameters are included. The <code>dof</code> argument in <code>plot_orbit_diagram</code> selects which state dimensions to include; when <code>None</code>, all DOFs stored in <code>orbit_data</code> are used.</p>
+<div class="admonition note">
+<p class="admonition-title">Orbit data is computed by default</p>
+</div>
+<p><code>BasinStabilityStudy</code> sets <code>compute_orbit_data=True</code> by default, so <code>plot_orbit_diagram</code> is available immediately after <code>run()</code> with no extra configuration. Pass <code>compute_orbit_data=False</code> to skip orbit computation and reduce runtime when orbit diagrams are not needed.</p>
 <hr />
 <h2 id="saving-figures">Saving Figures</h2>
 <p>Both <code>MatplotlibPlotter</code> and <code>MatplotlibStudyPlotter</code> track figures internally. Each call to a <code>plot_*</code> method adds the resulting figure to a pending queue, and <code>save()</code> writes them all as PNG files to the directory specified by <code>bse.save_to</code> or <code>bs_study.save_to</code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Requirements for <code>save()</code></p>
-<p><code>save()</code> raises <code>ValueError</code> if the output directory (<code>save_to</code>) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure <code>save_to</code> points to a valid path.</p>
 </div>
+<p><code>save()</code> raises <code>ValueError</code> if the output directory (<code>save_to</code>) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure <code>save_to</code> points to a valid path.</p>
 <p><code>show()</code> is a thin wrapper around <code>plt.show()</code> -- useful for quick inspection in notebooks or scripts. It does not clear the pending queue, so you can call both <code>show()</code> and <code>save()</code> on the same plotter.</p>
 <p>For full class signatures and docstrings, see the <a href="../../api/plotters/">API reference</a>.</p>
 

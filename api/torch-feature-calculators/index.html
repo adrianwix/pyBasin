@@ -2396,9 +2396,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pybasin.ts_torch.calculators.torch_features_pattern.find_peak_mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      find_peak_mask
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pybasin.ts_torch.calculators.torch_features_pattern.number_peaks" class="md-nav__link">
     <span class="md-ellipsis">
       number_peaks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.ts_torch.calculators.torch_features_pattern.extract_peak_values" class="md-nav__link">
+    <span class="md-ellipsis">
+      extract_peak_values
     </span>
   </a>
   
@@ -4087,9 +4105,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pybasin.ts_torch.calculators.torch_features_pattern.find_peak_mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      find_peak_mask
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pybasin.ts_torch.calculators.torch_features_pattern.number_peaks" class="md-nav__link">
     <span class="md-ellipsis">
       number_peaks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pybasin.ts_torch.calculators.torch_features_pattern.extract_peak_values" class="md-nav__link">
+    <span class="md-ellipsis">
+      extract_peak_values
     </span>
   </a>
   
@@ -6977,6 +7013,102 @@ heading_level: 3</p>
 <div class="doc doc-object doc-function">
 
 
+<h4 id="pybasin.ts_torch.calculators.torch_features_pattern.find_peak_mask" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">find_peak_mask</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">find_peak_mask</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Find local maxima with strict inequality.</p>
+<p>A point is a peak if it is strictly greater than all neighbors in a window
+of size 2n+1. Edge points (first n and last n) are excluded.</p>
+<p>.. note::
+    This matches <code>scipy.signal.argrelmax</code> behavior (strict inequality),
+    not <code>scipy.signal.find_peaks</code> which also handles flat plateaus by
+    returning their middle index. Flat plateaus return no peaks here.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>x</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input tensor of shape (N, B, S) where N=time, B=batch, S=states.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Support on each side (window size = 2n+1).</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Boolean mask of shape (N, B, S) indicating peak positions.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="pybasin.ts_torch.calculators.torch_features_pattern.number_peaks" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">number_peaks</span>
 
@@ -6988,6 +7120,100 @@ heading_level: 3</p>
     <div class="doc doc-contents ">
 
         <p>Count peaks with support n on each side (vectorized).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pybasin.ts_torch.calculators.torch_features_pattern.extract_peak_values" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">extract_peak_values</span>
+
+
+</h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_peak_values</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Extract peak amplitude values for orbit diagrams.</p>
+<p>Returns the y-values at detected peaks, useful for visualizing period-N orbits
+where N distinct amplitude levels indicate period-N behavior.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>x</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input tensor of shape (N, B, S) where N=time, B=batch, S=states.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Support on each side for peak detection (window size = 2n+1).</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="tuple">tuple</span>[<span title="torch.Tensor">Tensor</span>, <span title="torch.Tensor">Tensor</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tuple of (peak_values, peak_counts) where: - peak_values: Tensor of shape (max_peaks, B, S) with peak amplitudes, padded with NaN for trajectories with fewer peaks. - peak_counts: Tensor of shape (B, S) with number of peaks per trajectory.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -7031,12 +7257,76 @@ and avoid unnecessary dtype conversions during the loop.</p>
     <div class="doc doc-contents ">
 
         <p>Compute number_peaks for multiple n values at once.</p>
-<p>Uses max pooling for each unique n value, computing peaks efficiently.</p>
-<p>Args:
-    x: Input tensor of shape (N, B, S)
-    ns: List of n values (support on each side)</p>
-<p>Returns:
-    Tensor of shape (len(ns), B, S)</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>x</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input tensor of shape (N, B, S).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ns</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of n values (support on each side).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tensor of shape (len(ns), B, S).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

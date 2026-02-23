@@ -2237,78 +2237,17 @@
 <h2 id="basinstabilitystudy">BasinStabilityStudy</h2>
 <p>The main class that orchestrates parameter sweeps.</p>
 <h3 id="constructor-parameters">Constructor Parameters</h3>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>n</code></td>
-<td><code>int</code></td>
-<td>Required</td>
-<td>Number of samples per parameter combination</td>
-</tr>
-<tr>
-<td><code>ode_system</code></td>
-<td><code>ODESystemProtocol</code></td>
-<td>Required</td>
-<td>The dynamical system (modified via parameter assignments)</td>
-</tr>
-<tr>
-<td><code>sampler</code></td>
-<td><code>Sampler</code></td>
-<td>Required</td>
-<td>Initial condition generator</td>
-</tr>
-<tr>
-<td><code>solver</code></td>
-<td><code>SolverProtocol</code></td>
-<td>Required</td>
-<td>ODE integrator</td>
-</tr>
-<tr>
-<td><code>feature_extractor</code></td>
-<td><code>FeatureExtractor</code></td>
-<td>Required</td>
-<td>Extracts features from trajectories</td>
-</tr>
-<tr>
-<td><code>estimator</code></td>
-<td><code>BaseEstimator</code></td>
-<td>Required</td>
-<td>Sklearn-compatible clusterer or classifier</td>
-</tr>
-<tr>
-<td><code>study_params</code></td>
-<td><code>StudyParams</code></td>
-<td>Required</td>
-<td>Parameter variation specification</td>
-</tr>
-<tr>
-<td><code>template_integrator</code></td>
-<td><code>TemplateIntegrator</code> or <code>None</code></td>
-<td><code>None</code></td>
-<td>Template ICs for supervised classifiers</td>
-</tr>
-<tr>
-<td><code>save_to</code></td>
-<td><code>str</code> or <code>None</code></td>
-<td><code>"results"</code></td>
-<td>Output folder path, or <code>None</code> to disable saving</td>
-</tr>
-<tr>
-<td><code>verbose</code></td>
-<td><code>bool</code></td>
-<td><code>False</code></td>
-<td>Show detailed logs from each BSE run</td>
-</tr>
-</tbody>
-</table>
+<p>| Parameter             | Type                           | Default  | Description                                               |
+| --------------------- | ------------------------------ | -------- | --------------------------------------------------------- | --- | -------------------- | --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- | --- | --------- | --------------- | ----------- | ----------------------------------------------- |
+| <code>n</code>                   | <code>int</code>                          | Required | Number of samples per parameter combination               |
+| <code>ode_system</code>          | <code>ODESystemProtocol</code>            | Required | The dynamical system (modified via parameter assignments) |
+| <code>sampler</code>             | <code>Sampler</code>                      | Required | Initial condition generator                               |
+| <code>solver</code>              | <code>SolverProtocol</code>               | Required | ODE integrator                                            |
+| <code>feature_extractor</code>   | <code>FeatureExtractor</code>             | Required | Extracts features from trajectories                       |
+| <code>estimator</code>           | <code>BaseEstimator</code>                | Required | Sklearn-compatible clusterer or classifier                |
+| <code>study_params</code>        | <code>StudyParams</code>                  | Required | Parameter variation specification                         |
+| <code>template_integrator</code> | <code>TemplateIntegrator</code> or <code>None</code> | <code>None</code>   | Template ICs for supervised classifiers                   |     | <code>compute_orbit_data</code> | <code>list[int]</code> or <code>bool</code> | <code>True</code> | Compute orbit data for bifurcation plots. <code>True</code> for all state dimensions, <code>list[int]</code> for specific indices, <code>False</code> to disable |     | <code>save_to</code> | <code>str</code> or <code>None</code> | <code>"results"</code> | Output folder path, or <code>None</code> to disable saving |
+| <code>verbose</code>             | <code>bool</code>                         | <code>False</code>  | Show detailed logs from each BSE run                      |</p>
 <div class="admonition note">
 <p class="admonition-title">Required Components</p>
 </div>
@@ -2365,7 +2304,7 @@
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span>          <span class="c1"># Error estimates</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>                           <span class="c1"># Cluster assignments</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="s2">&quot;bifurcation_amplitudes&quot;</span><span class="p">:</span> <span class="n">tensor</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>     <span class="c1"># Steady-state amplitudes</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="s2">&quot;orbit_data&quot;</span><span class="p">:</span> <span class="n">OrbitData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>            <span class="c1"># Peak amplitudes for orbit/bifurcation diagrams</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
@@ -2560,18 +2499,18 @@
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># Basin stability vs parameter value</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_parameter_stability</span><span class="p">()</span>
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Bifurcation diagram showing attractor amplitudes</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Orbit diagram showing attractor peak amplitudes</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
 <a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1"># Save all figures to bs_study.save_to</span>
 <a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># or use plt.show() directly</span>
 </code></pre></div>
 <p>For multi-parameter studies, specify which parameter to plot on the x-axis:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_parameter_stability</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">parameters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
 </code></pre></div>
 <p>Results are grouped by the other parameters, with each group rendered as a separate curve.</p>
 <h3 id="interactiveplotter">InteractivePlotter</h3>
@@ -2683,12 +2622,18 @@
 <a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>
 <a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a><span class="c1"># Visualize</span>
 <a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a><span class="n">plotter</span> <span class="o">=</span> <span class="n">MatplotlibStudyPlotter</span><span class="p">(</span><span class="n">bs_study</span><span class="p">)</span>
-<a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_variation</span><span class="p">()</span>
-<a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_bifurcation_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># or plotter.show() for interactive display</span>
+<a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>
+<a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a><span class="c1"># Basin stability vs parameter value</span>
+<a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_parameter_stability</span><span class="p">()</span>
 <a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a>
-<a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a><span class="c1"># Save</span>
-<a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a><span class="c1"># Orbit diagram showing attractor peak amplitudes</span>
+<a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a>
+<a id="__codelineno-14-38" name="__codelineno-14-38" href="#__codelineno-14-38"></a><span class="c1"># Save all figures to bs_study.save_to</span>
+<a id="__codelineno-14-39" name="__codelineno-14-39" href="#__codelineno-14-39"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># or plotter.show() for interactive display</span>
+<a id="__codelineno-14-40" name="__codelineno-14-40" href="#__codelineno-14-40"></a>
+<a id="__codelineno-14-41" name="__codelineno-14-41" href="#__codelineno-14-41"></a><span class="c1"># Save</span>
+<a id="__codelineno-14-42" name="__codelineno-14-42" href="#__codelineno-14-42"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>For full API details, see the <a href="../../api/parameter-studies/">BasinStabilityStudy API reference</a>.</p>
 

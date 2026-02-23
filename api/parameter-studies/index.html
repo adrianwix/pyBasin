@@ -2886,9 +2886,10 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">study_params</span><span class="p">:</span> <span class="n">StudyParams</span><span class="p">,</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">template_integrator</span><span class="p">:</span> <span class="n">TemplateIntegrator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;results&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">compute_orbit_data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;results&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3040,6 +3041,22 @@ systematically varied across multiple values. Parameters can be in any component
           </tr>
           <tr class="doc-section-item">
             <td>
+                <code>compute_orbit_data</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="int">int</span>] | <span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Enable orbit data computation for orbit diagram plotting. - <code>True</code> (default): Compute for all state dimensions. - <code>False</code>: Disabled. - <code>list[int]</code>: Compute for specific state indices (e.g., <code>[0, 1]</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
                 <code>save_to</code>
             </td>
             <td>
@@ -3119,7 +3136,7 @@ Memory is explicitly freed after each iteration to prevent accumulation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of StudyResult dicts, one per parameter combination, containing study_label, basin_stability, errors, n_samples, labels, and bifurcation_amplitudes.</p>
+                <p>List of StudyResult dicts, one per parameter combination, containing study_label, basin_stability, errors, n_samples, labels, and orbit_data (if <code>compute_orbit_data</code> is set).</p>
               </div>
             </td>
           </tr>
@@ -4359,13 +4376,13 @@ error estimates, sample metadata, and optional detailed solution data.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><span title="pybasin.types.StudyResult.bifurcation_amplitudes">bifurcation_amplitudes</span></code></td>
+            <td><code><span title="pybasin.types.StudyResult.orbit_data">orbit_data</span></code></td>
             <td>
-                  <code><span title="torch.Tensor">Tensor</span> | None</code>
+                  <code><span title="pybasin.utils.OrbitData">OrbitData</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Amplitude values for bifurcation analysis, or None if not computed.</p>
+                <p>Peak amplitude data for orbit diagram plotting, or None if not computed.</p>
               </div>
             </td>
           </tr>

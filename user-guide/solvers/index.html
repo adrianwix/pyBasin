@@ -869,9 +869,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#float32-precision" class="md-nav__link">
+  <a href="#dtype-and-precision" class="md-nav__link">
     <span class="md-ellipsis">
-      float32 Precision
+      Dtype and Precision
     </span>
   </a>
   
@@ -2291,9 +2291,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#float32-precision" class="md-nav__link">
+  <a href="#dtype-and-precision" class="md-nav__link">
     <span class="md-ellipsis">
-      float32 Precision
+      Dtype and Precision
     </span>
   </a>
   
@@ -2722,8 +2722,12 @@ A <code>ValueError</code> is raised if <code>y0</code> is not 2D -- the error me
 <p>Several behaviors apply to all solvers and happen automatically. Understanding them prevents unexpected surprises.</p>
 <h3 id="device-auto-detection">Device Auto-Detection</h3>
 <p>When <code>device=None</code>, the solver checks whether CUDA is available via <code>torch.cuda.is_available()</code> (or the JAX equivalent for <code>JaxSolver</code>). If a GPU is found, <code>"cuda:0"</code> is selected; otherwise the solver falls back to <code>"cpu"</code>. The string <code>"cuda"</code> is always normalized to <code>"cuda:0"</code> internally.</p>
-<h3 id="float32-precision">float32 Precision</h3>
-<p>All solvers operate in <code>float32</code>. Time evaluation points are created as <code>float32</code> tensors, and the solver logs a warning if <code>y0</code> arrives with a different dtype or on a mismatched device. No automatic casting is performed -- you must ensure <code>y0</code> is <code>float32</code>.</p>
+<h3 id="dtype-and-precision">Dtype and Precision</h3>
+<p>Solvers do not enforce a specific dtype. Time evaluation points are created with the same dtype as <code>y0</code>, so <code>float32</code>, <code>float64</code>, and other dtypes are accepted. No automatic casting is performed -- the solver logs a warning only when <code>y0</code> is on a different device than the solver, not for dtype differences.</p>
+<div class="admonition tip">
+<p class="admonition-title">float32 for GPU workloads</p>
+</div>
+<p>GPU solvers (<code>JaxSolver</code>, <code>TorchDiffEqSolver</code>, <code>TorchOdeSolver</code>) perform best with <code>float32</code> tensors. CUDA devices process <code>float32</code> significantly faster than <code>float64</code>. When using <code>float32</code>, tighten tolerances accordingly -- the default <code>rtol=1e-8</code> targets <code>float64</code> precision and will cause the adaptive stepper to stagnate with single-precision arithmetic. Values such as <code>rtol=1e-5</code>, <code>atol=1e-6</code> are more appropriate for <code>float32</code>. Use <code>float64</code> when higher accuracy is required.</p>
 <h3 id="ode-system-device-transfer">ODE System Device Transfer</h3>
 <p>PyTorch-based solvers (<code>TorchDiffEqSolver</code>, <code>TorchOdeSolver</code>, <code>ScipyParallelSolver</code>) call <code>ode_system.to(self.device)</code> before integration. This moves the ODE system's parameters to the solver's device automatically. <code>JaxSolver</code> does not perform this transfer because JAX ODE systems are stateless and device placement is handled through <code>jax.device_put</code>.</p>
 <h2 id="caching">Caching</h2>

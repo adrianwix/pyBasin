@@ -2081,7 +2081,8 @@
 <li>Features extracted from the trajectory.</li>
 <li>Optional labels/classification for each trajectory.</li>
 <li>Optional model parameters that were used in the integration.</li>
-<li>Optional bifurcation amplitudes extracted from the trajectory.</li>
+<li>Optional orbit data for orbit diagram plotting.</li>
+<li>Optional bifurcation amplitudes (deprecated, use orbit_data instead).</li>
 </ul>
 
 
@@ -2195,13 +2196,24 @@
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code><span title="pybasin.solution.Solution.orbit_data">orbit_data</span></code></td>
+            <td>
+                  <code><span title="pybasin.utils.OrbitData">OrbitData</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Peak amplitude data for orbit diagram plotting.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
             <td><code><span title="pybasin.solution.Solution.bifurcation_amplitudes">bifurcation_amplitudes</span></code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Maximum absolute values along time dimension.</p>
+                <p>Deprecated. Maximum absolute values along time dimension.</p>
               </div>
             </td>
           </tr>

@@ -1969,18 +1969,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_basin_stability_variation" class="md-nav__link">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_parameter_stability" class="md-nav__link">
     <span class="md-ellipsis">
-      plot_basin_stability_variation
+      plot_parameter_stability
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_bifurcation_diagram" class="md-nav__link">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_orbit_diagram" class="md-nav__link">
     <span class="md-ellipsis">
-      plot_bifurcation_diagram
+      plot_orbit_diagram
     </span>
   </a>
   
@@ -2320,18 +2320,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_basin_stability_variation" class="md-nav__link">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_parameter_stability" class="md-nav__link">
     <span class="md-ellipsis">
-      plot_basin_stability_variation
+      plot_parameter_stability
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_bifurcation_diagram" class="md-nav__link">
+  <a href="#pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_orbit_diagram" class="md-nav__link">
     <span class="md-ellipsis">
-      plot_bifurcation_diagram
+      plot_orbit_diagram
     </span>
   </a>
   
@@ -3511,12 +3511,12 @@ import matplotlib separately.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_basin_stability_variation" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">plot_basin_stability_variation</span>
+<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_parameter_stability" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_parameter_stability</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_basin_stability_variation</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_parameter_stability</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
@@ -3607,22 +3607,24 @@ a separate set of lines in the figure.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_bifurcation_diagram" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">plot_bifurcation_diagram</span>
+<h4 id="pybasin.matplotlib_study_plotter.MatplotlibStudyPlotter.plot_orbit_diagram" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_orbit_diagram</span>
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_bifurcation_diagram</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">dof</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_orbit_diagram</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">dof</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Plot bifurcation diagrams showing attractor locations over parameter variation.</p>
-<p>Produces one figure per parameter. For multi-parameter studies,
-results are grouped by the other parameters and each group becomes
-a separate set of curves.</p>
+        <p>Plot orbit diagrams showing attractor amplitude levels over parameter variation.</p>
+<p>Produces one figure per parameter. For each attractor at each parameter value,
+displays the peak amplitudes detected from steady-state trajectories.
+Period-N orbits appear as N distinct amplitude bands.</p>
+<p>Requires <code>compute_orbit_data</code> when creating the BasinStabilityStudy.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3641,15 +3643,15 @@ a separate set of curves.</p>
                 <code>dof</code>
             </td>
             <td>
-                  <code><span title="list">list</span>[<span title="int">int</span>]</code>
+                  <code><span title="list">list</span>[<span title="int">int</span>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of indices of the state variables (DOFs) to plot.</p>
+                <p>List of state indices to plot. If None, uses the DOFs from orbit_data.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -3688,6 +3690,29 @@ a separate set of curves.</p>
             <td>
               <div class="doc-md-description">
                 <p>List of matplotlib Figure objects (one per parameter).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If orbit_data was not computed during the study.</p>
               </div>
             </td>
           </tr>
