@@ -73,9 +73,12 @@ Several behaviors apply to all solvers and happen automatically. Understanding t
 
 When `device=None`, the solver checks whether CUDA is available via `torch.cuda.is_available()` (or the JAX equivalent for `JaxSolver`). If a GPU is found, `"cuda:0"` is selected; otherwise the solver falls back to `"cpu"`. The string `"cuda"` is always normalized to `"cuda:0"` internally.
 
-### float32 Precision
+### Dtype and Precision
 
-All solvers operate in `float32`. Time evaluation points are created as `float32` tensors, and the solver logs a warning if `y0` arrives with a different dtype or on a mismatched device. No automatic casting is performed -- you must ensure `y0` is `float32`.
+Solvers do not enforce a specific dtype. Time evaluation points are created with the same dtype as `y0`, so `float32`, `float64`, and other dtypes are accepted. No automatic casting is performed -- the solver logs a warning only when `y0` is on a different device than the solver, not for dtype differences.
+
+!!! tip "float32 for GPU workloads"
+GPU solvers (`JaxSolver`, `TorchDiffEqSolver`, `TorchOdeSolver`) perform best with `float32` tensors. CUDA devices process `float32` significantly faster than `float64`. When using `float32`, tighten tolerances accordingly -- the default `rtol=1e-8` targets `float64` precision and will cause the adaptive stepper to stagnate with single-precision arithmetic. Values such as `rtol=1e-5`, `atol=1e-6` are more appropriate for `float32`. Use `float64` when higher accuracy is required.
 
 ### ODE System Device Transfer
 

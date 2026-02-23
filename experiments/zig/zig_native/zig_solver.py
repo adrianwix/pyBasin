@@ -13,14 +13,23 @@ Usage:
 
     solver = ZigODESolver()
 
-    # Solve pendulum ODE (compiles pendulum.zig on first use if needed)
+    # Single IC
     t, y = solver.solve(
         ode_name="pendulum",
         y0=[0.5, 0.0],
         t_span=(0.0, 10.0),
         t_eval=np.linspace(0, 10, 100),
         params={"alpha": 0.1, "T": 0.5, "K": 1.0},
-    )
+    )  # y shape: (1, 100, 2)
+
+    # Batch of ICs (auto-parallelised with pthreads)
+    t, y = solver.solve(
+        ode_name="pendulum",
+        y0=np.random.randn(1000, 2),
+        t_span=(0.0, 10.0),
+        t_eval=np.linspace(0, 10, 100),
+        params={"alpha": 0.1, "T": 0.5, "K": 1.0},
+    )  # y shape: (1000, 100, 2)
 
 Adding new ODEs:
     1. Create user_odes/your_ode.zig following the template (see pendulum.zig)
@@ -164,11 +173,6 @@ def ode_needs_compile(ode_name: str) -> bool:
 
 
 WRAPPER_TEMPLATE = SRC_DIR / "ode_wrapper_template.zig"
-
-
-def _get_wrapper_path(ode_name: str) -> Path:
-    """Get path to generated wrapper file."""
-    return ODE_LIB_DIR / f"_wrapper_{ode_name}.zig"
 
 
 def compile_ode(ode_name: str, optimize: bool = True) -> None:
@@ -413,84 +417,7 @@ class ZigODESolver:
     def solve(
         self,
         ode_name: str,
-        y0: NDArray[np.float64] | list[float],
-        t_span: tuple[float, float],
-        t_eval: NDArray[np.float64] | list[float],
-        params: dict[str, float] | None = None,
-        rtol: float = 1e-8,
-        atol: float = 1e-6,
-        max_steps: int = 1_000_000,
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Solve an ODE system.
-
-        :param ode_name: Name of the ODE (e.g., "pendulum").
-        :param y0: Initial conditions.
-        :param t_span: Integration interval (t0, t1).
-        :param t_eval: Times at which to store the solution.
-        :param params: ODE parameters as a dictionary.
-        :param rtol: Relative tolerance.
-        :param atol: Absolute tolerance.
-        :param max_steps: Maximum number of integration steps.
-        :return: Tuple of (t_eval, solution) where solution has shape (len(t_eval), dim).
-        """
-        # Load ODE (compiles if needed)
-        ode = self._load_ode(ode_name)
-
-        # Get dimension
-        dim = ode.dim
-
-        # Convert inputs to numpy arrays
-        y0_arr = np.asarray(y0, dtype=np.float64)
-        t_eval_arr = np.asarray(t_eval, dtype=np.float64)
-
-        if len(y0_arr) != dim:
-            raise ValueError(f"y0 has length {len(y0_arr)}, expected {dim} for ODE '{ode_name}'")
-
-        # Create params struct
-        params_ptr = None
-        if ode_name in ODE_PARAM_TYPES:
-            param_type = ODE_PARAM_TYPES[ode_name]
-            params_struct = param_type() if params is None else param_type(**params)
-            params_ptr = ctypes.cast(ctypes.pointer(params_struct), ctypes.c_void_p)
-
-        # Allocate output buffer
-        n_save = len(t_eval_arr)
-        result = np.zeros((n_save, dim), dtype=np.float64)
-
-        # Call solver with ODE function pointer
-        t0, t1 = t_span
-        error_code = self._solver_lib.solve_ode(
-            ode.func_ptr,
-            y0_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            dim,
-            t0,
-            t1,
-            t_eval_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            n_save,
-            rtol,
-            atol,
-            max_steps,
-            params_ptr,
-            result.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-        )
-
-        # Check for errors
-        if error_code != 0:
-            error_messages = {
-                -1: "Invalid ODE function pointer",
-                -2: "Memory allocation failed",
-                -3: "Solver failed",
-                -4: "Thread spawn failed",
-            }
-            msg = error_messages.get(error_code, f"Unknown error {error_code}")
-            raise RuntimeError(f"Zig solver error: {msg}")
-
-        return t_eval_arr, result
-
-    def solve_batch(
-        self,
-        ode_name: str,
-        y0s: NDArray[np.float64],
+        y0: NDArray[np.float64] | list[float] | list[list[float]],
         t_span: tuple[float, float],
         t_eval: NDArray[np.float64] | list[float],
         params: dict[str, float] | None = None,
@@ -499,48 +426,54 @@ class ZigODESolver:
         max_steps: int = 1_000_000,
         n_threads: int = 0,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Solve an ODE system for multiple initial conditions in parallel.
+        """Solve an ODE system for one or many initial conditions.
+
+        Accepts either a single IC of shape ``(dim,)`` or a batch of shape ``(n_ics, dim)``.
+        When a single IC is provided it is treated as a batch of size 1 so the return
+        shape is always 3-D: ``(n_ics, n_save, dim)``.
 
         :param ode_name: Name of the ODE (e.g., "pendulum").
-        :param y0s: Initial conditions array of shape (n_ics, dim).
-        :param t_span: Integration interval (t0, t1).
+        :param y0: Initial conditions — shape ``(dim,)`` for one IC or ``(n_ics, dim)`` for many.
+        :param t_span: Integration interval ``(t0, t1)``.
         :param t_eval: Times at which to store the solution.
         :param params: ODE parameters as a dictionary.
         :param rtol: Relative tolerance.
         :param atol: Absolute tolerance.
         :param max_steps: Maximum number of integration steps.
         :param n_threads: Number of threads (0 = auto-detect CPU count).
-        :return: Tuple of (t_eval, solutions) where solutions has shape (n_ics, len(t_eval), dim).
+        :return: Tuple of ``(t_eval, y)`` where ``y`` has shape ``(n_ics, n_save, dim)``.
         """
-        # Load ODE (compiles if needed)
         ode = self._load_ode(ode_name)
         dim = ode.dim
 
-        # Convert inputs to numpy arrays
-        y0s_arr = np.ascontiguousarray(y0s, dtype=np.float64)
+        y0_arr = np.ascontiguousarray(y0, dtype=np.float64)
         t_eval_arr = np.asarray(t_eval, dtype=np.float64)
 
-        if y0s_arr.ndim != 2 or y0s_arr.shape[1] != dim:
-            raise ValueError(f"y0s must have shape (n_ics, {dim}), got {y0s_arr.shape}")
+        if y0_arr.ndim == 1:
+            if y0_arr.shape[0] != dim:
+                raise ValueError(f"y0 has length {y0_arr.shape[0]}, expected {dim}")
+            y0_arr = y0_arr.reshape(1, dim)
+        elif y0_arr.ndim == 2:
+            if y0_arr.shape[1] != dim:
+                raise ValueError(f"y0 second axis is {y0_arr.shape[1]}, expected {dim}")
+        else:
+            raise ValueError(f"y0 must be 1-D or 2-D, got {y0_arr.ndim}-D")
 
-        n_ics = y0s_arr.shape[0]
+        n_ics = y0_arr.shape[0]
         n_save = len(t_eval_arr)
 
-        # Create params struct
         params_ptr = None
         if ode_name in ODE_PARAM_TYPES:
             param_type = ODE_PARAM_TYPES[ode_name]
             params_struct = param_type() if params is None else param_type(**params)
             params_ptr = ctypes.cast(ctypes.pointer(params_struct), ctypes.c_void_p)
 
-        # Allocate output buffer (n_ics * n_save * dim)
         results = np.zeros((n_ics, n_save, dim), dtype=np.float64)
 
-        # Call solver with ODE function pointer
         t0, t1 = t_span
         error_code = self._solver_lib.solve_batch(
             ode.func_ptr,
-            y0s_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            y0_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             n_ics,
             dim,
             t0,
@@ -555,9 +488,8 @@ class ZigODESolver:
             n_threads,
         )
 
-        # Check for errors
         if error_code != 0:
-            error_messages = {
+            error_messages: dict[int, str] = {
                 -1: "Invalid ODE function pointer",
                 -2: "Memory allocation failed",
                 -3: "Solver failed",
@@ -598,15 +530,15 @@ if __name__ == "__main__":
     # Warm-up (includes first compile if needed)
     t, y = solver.solve("pendulum", [0.5, 0.0], (0.0, 10.0), t_eval, params)
 
-    # Benchmark
+    # Benchmark single IC
     n_runs = 100
     start = time.perf_counter()
     for _ in range(n_runs):
         t, y = solver.solve("pendulum", [0.5, 0.0], (0.0, 10.0), t_eval, params)
     elapsed = time.perf_counter() - start
 
-    print(f"\nBenchmark ({n_runs} runs):")
+    print(f"\nBenchmark single IC ({n_runs} runs):")
     print(f"  Total: {elapsed * 1000:.1f} ms")
     print(f"  Per solve: {elapsed / n_runs * 1000:.3f} ms")
     print(f"  Solution shape: {y.shape}")
-    print(f"  Final state: θ={y[-1, 0]:.4f}, θ̇={y[-1, 1]:.4f}")
+    print(f"  Final state: θ={y[0, -1, 0]:.4f}, θ̇={y[0, -1, 1]:.4f}")

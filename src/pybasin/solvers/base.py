@@ -104,18 +104,14 @@ class Solver(SolverProtocol, DisplayNameMixin, ABC):
     def _prepare_tensors(self, y0: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Prepare time evaluation points and initial conditions with correct device and dtype."""
         t_start, t_end = self.time_span
-        # Use float32 for GPU efficiency (5-10x faster than float64 on consumer GPUs)
-        t_eval = torch.linspace(
-            t_start, t_end, self.n_steps, dtype=torch.float32, device=self.device
-        )
+
+        t_eval = torch.linspace(t_start, t_end, self.n_steps, dtype=y0.dtype, device=self.device)
 
         # Warn if y0 is on wrong device or has wrong dtype
         if y0.device != self.device:
             logger.warning(
                 "  Warning: y0 is on device %s but solver expects %s", y0.device, self.device
             )
-        if y0.dtype != torch.float32:
-            logger.warning("  Warning: y0 has dtype %s but solver expects torch.float32", y0.dtype)
 
         return t_eval, y0
 

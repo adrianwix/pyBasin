@@ -103,11 +103,12 @@ class ScipyParallelSolver(Solver):
         t_eval_np = t_eval.cpu().numpy()
         y0_np = y0.cpu().numpy()
         batch_size = y0_np.shape[0]
+        dtype = y0.dtype
 
         def ode_func(t: float, y: np.ndarray) -> np.ndarray:
             # Convert to torch, call ODE system, convert back
-            t_torch = torch.tensor(t, dtype=torch.float32, device=self.device)
-            y_torch = torch.tensor(y, dtype=torch.float32, device=self.device)
+            t_torch = torch.tensor(t, dtype=dtype, device=self.device)
+            y_torch = torch.tensor(y, dtype=dtype, device=self.device)
             # Ensure y_torch is 2D: (1, n_dims) for ODE system
             if y_torch.ndim == 1:
                 y_torch = y_torch.unsqueeze(0)
@@ -146,6 +147,6 @@ class ScipyParallelSolver(Solver):
         valid_results = [r for r in results if r is not None]  # type: ignore[misc]
         y_result_np: np.ndarray = np.stack(valid_results, axis=1)  # type: ignore[arg-type]
 
-        y_result = torch.tensor(y_result_np, dtype=torch.float32, device=self.device)
+        y_result = torch.tensor(y_result_np, dtype=dtype, device=self.device)
 
         return t_eval, y_result

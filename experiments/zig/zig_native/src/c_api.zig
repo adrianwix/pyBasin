@@ -98,9 +98,8 @@ export fn solve_ode(
     const y0_slice = y0[0..dim];
     const save_at_slice = save_at[0..n_save];
 
-    // Solve - pass the C function pointer directly
-    // (dopri5_generic.GenericOdeFn is compatible with OdeFnC)
-    const sol = solver.solve(
+    // Solve directly into the output buffer (zero-copy)
+    solver.solve_into(
         fn_ptr,
         params,
         y0_slice,
@@ -108,17 +107,11 @@ export fn solve_ode(
         t0,
         t1,
         save_at_slice,
+        result,
         allocator,
     ) catch {
         return @intFromEnum(ErrorCode.solve_failed);
     };
-
-    // Copy results to output buffer (row-major: result[i*dim + j] = sol[i][j])
-    for (sol, 0..) |row, i| {
-        for (row, 0..) |val, j| {
-            result[i * dim + j] = val;
-        }
-    }
 
     return @intFromEnum(ErrorCode.success);
 }
@@ -157,8 +150,9 @@ fn workerFnC(arg: ?*anyopaque) callconv(.c) ?*anyopaque {
     var i = data.start_ic;
     while (i < data.end_ic) : (i += 1) {
         const y0_slice = data.y0s[i * data.dim .. (i + 1) * data.dim];
+        const output_ptr = data.results + i * traj_size;
 
-        const sol = solver_instance.solve(
+        solver_instance.solve_into(
             data.ode_fn,
             data.params,
             y0_slice,
@@ -166,19 +160,12 @@ fn workerFnC(arg: ?*anyopaque) callconv(.c) ?*anyopaque {
             data.t0,
             data.t1,
             save_at_slice,
+            output_ptr,
             allocator,
         ) catch {
             // On error, leave zeros in output
             continue;
         };
-
-        // Copy to output buffer
-        const result_base = i * traj_size;
-        for (sol, 0..) |row, t| {
-            for (row, 0..) |val, d| {
-                data.results[result_base + t * data.dim + d] = val;
-            }
-        }
 
         // Reset arena to avoid memory growth
         _ = arena.reset(.retain_capacity);
@@ -247,8 +234,9 @@ pub export fn solve_batch(
 
         for (0..n_ics) |i| {
             const y0_slice = y0s[i * dim .. (i + 1) * dim];
+            const output_ptr = results + i * out_traj_size;
 
-            const sol = solver_instance.solve(
+            solver_instance.solve_into(
                 fn_ptr,
                 params,
                 y0_slice,
@@ -256,18 +244,11 @@ pub export fn solve_batch(
                 t0,
                 t1,
                 save_at_slice,
+                output_ptr,
                 allocator,
             ) catch {
                 return @intFromEnum(ErrorCode.solve_failed);
             };
-
-            // Copy to output buffer
-            const result_base = i * out_traj_size;
-            for (sol, 0..) |row, ti| {
-                for (row, 0..) |val, d| {
-                    results[result_base + ti * dim + d] = val;
-                }
-            }
 
             // Reset arena to avoid memory growth
             _ = arena.reset(.retain_capacity);

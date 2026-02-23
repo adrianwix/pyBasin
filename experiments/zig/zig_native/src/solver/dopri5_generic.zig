@@ -39,12 +39,21 @@ pub const Dopri5Generic = struct {
     const c4: f64 = 4.0 / 5.0;
     const c5: f64 = 8.0 / 9.0;
 
-    const e1: f64 = 71.0 / 57600.0;
-    const e3: f64 = -71.0 / 16695.0;
-    const e4: f64 = 71.0 / 1920.0;
-    const e5: f64 = -17253.0 / 339200.0;
-    const e6: f64 = 22.0 / 525.0;
-    const e7: f64 = -1.0 / 40.0;
+    // Shampine error coefficients (c_sol - c_hat, matching torchdiffeq)
+    const e1: f64 = 35.0 / 384.0 - 1951.0 / 21600.0;
+    const e3: f64 = 500.0 / 1113.0 - 22642.0 / 50085.0;
+    const e4: f64 = 125.0 / 192.0 - 451.0 / 720.0;
+    const e5: f64 = -2187.0 / 6784.0 - -12231.0 / 42400.0;
+    const e6: f64 = 11.0 / 84.0 - 649.0 / 6300.0;
+    const e7: f64 = -1.0 / 60.0;
+
+    // DPS_C_MID coefficients for Hermite interpolation (Shampine midpoint)
+    const mid1: f64 = 6025192743.0 / 30085553152.0 / 2.0;
+    const mid3: f64 = 51252292925.0 / 65400821598.0 / 2.0;
+    const mid4: f64 = -2691868925.0 / 45128329728.0 / 2.0;
+    const mid5: f64 = 187940372067.0 / 1594534317056.0 / 2.0;
+    const mid6: f64 = -1776094331.0 / 19743644256.0 / 2.0;
+    const mid7: f64 = 11237099.0 / 235043384.0 / 2.0;
 
     rtol: f64,
     atol: f64,
@@ -61,7 +70,11 @@ pub const Dopri5Generic = struct {
         };
     }
 
-    pub fn solve(
+    /// Solve an ODE and write results directly into a pre-allocated contiguous buffer.
+    ///
+    /// The output buffer layout is row-major: output[t_idx * dim + d] = y[d] at time save_at[t_idx].
+    /// This avoids all intermediate allocations for the result — only working buffers (k-stages) are allocated.
+    pub fn solve_into(
         self: *const Self,
         ode_fn: GenericOdeFn,
         params: ?*const anyopaque,
@@ -70,8 +83,9 @@ pub const Dopri5Generic = struct {
         t0: f64,
         t1: f64,
         save_at: []const f64,
+        output: [*]f64,
         allocator: Allocator,
-    ) ![][]f64 {
+    ) !void {
         // Working buffers
         const y = try allocator.alloc(f64, dim);
         defer allocator.free(y);
@@ -94,20 +108,22 @@ pub const Dopri5Generic = struct {
         const y_stage = try allocator.alloc(f64, dim);
         defer allocator.free(y_stage);
 
-        // Output array
-        const result = try allocator.alloc([]f64, save_at.len);
-        for (result) |*row| {
-            row.* = try allocator.alloc(f64, dim);
-        }
+        // Hermite interpolation coefficient buffers
+        const interp_a = try allocator.alloc(f64, dim);
+        defer allocator.free(interp_a);
+        const interp_b = try allocator.alloc(f64, dim);
+        defer allocator.free(interp_b);
+        const interp_c = try allocator.alloc(f64, dim);
+        defer allocator.free(interp_c);
 
         // Initialize
         @memcpy(y, y0);
         var t = t0;
-        var dt = self.initialStepSize(t0, t1);
         var save_idx: usize = 0;
 
-        // Initial k1
+        // Initial k1 (needed for Hairer initial step size)
         ode_fn(t, y.ptr, k_bufs[k1_idx].ptr, params, dim);
+        var dt = try self.initialStepSize(ode_fn, params, y0, dim, t0, k_bufs[k1_idx], allocator);
 
         // Main loop
         var step_count: usize = 0;
@@ -177,14 +193,28 @@ pub const Dopri5Generic = struct {
 
             if (err_norm <= 1.0) {
                 const t_new = t + dt;
-                while (save_idx < save_at.len and save_at[save_idx] <= t_new + 1e-12) {
-                    if (save_at[save_idx] <= t + 1e-12) {
-                        @memcpy(result[save_idx], y);
-                    } else {
-                        const th = (save_at[save_idx] - t) / dt;
-                        self.denseOutput(th, dt, y, k1, k3, k4, k5, k6, k7, result[save_idx], dim);
+
+                // Precompute Hermite interpolation coefficients (torchdiffeq-style)
+                if (save_idx < save_at.len and save_at[save_idx] <= t_new + 1e-12) {
+                    for (0..dim) |i| {
+                        const ymid = y[i] + dt * (mid1 * k1[i] + mid3 * k3[i] + mid4 * k4[i] + mid5 * k5[i] + mid6 * k6[i] + mid7 * k7[i]);
+                        interp_a[i] = 2.0 * dt * (k7[i] - k1[i]) - 8.0 * (y_new[i] + y[i]) + 16.0 * ymid;
+                        interp_b[i] = dt * (5.0 * k1[i] - 3.0 * k7[i]) + 18.0 * y[i] + 14.0 * y_new[i] - 32.0 * ymid;
+                        interp_c[i] = dt * (k7[i] - 4.0 * k1[i]) - 11.0 * y[i] - 5.0 * y_new[i] + 16.0 * ymid;
                     }
-                    save_idx += 1;
+
+                    while (save_idx < save_at.len and save_at[save_idx] <= t_new + 1e-12) {
+                        const out_row = output[save_idx * dim .. (save_idx + 1) * dim];
+                        if (save_at[save_idx] <= t + 1e-12) {
+                            @memcpy(out_row, y);
+                        } else {
+                            const x = (save_at[save_idx] - t) / dt;
+                            for (0..dim) |i| {
+                                out_row[i] = y[i] + x * (dt * k1[i] + x * (interp_c[i] + x * (interp_b[i] + x * interp_a[i])));
+                            }
+                        }
+                        save_idx += 1;
+                    }
                 }
 
                 @memcpy(y, y_new);
@@ -195,49 +225,99 @@ pub const Dopri5Generic = struct {
                 k7_idx = tmp;
             }
 
+            // Step size adaptation (torchdiffeq-style: don't shrink on accepted steps)
+            const accepted = err_norm <= 1.0;
+            const dfactor = if (accepted) 1.0 else self.min_factor;
             const factor = if (err_norm == 0.0)
                 self.max_factor
             else
-                @min(self.max_factor, @max(self.min_factor, self.safety * math.pow(f64, err_norm, -0.2)));
+                @min(self.max_factor, @max(dfactor, self.safety * math.pow(f64, err_norm, -0.2)));
             dt *= factor;
         }
 
         while (save_idx < save_at.len) : (save_idx += 1) {
-            @memcpy(result[save_idx], y);
+            const out_row = output[save_idx * dim .. (save_idx + 1) * dim];
+            @memcpy(out_row, y);
         }
+    }
 
+    /// Solve an ODE and return results as allocated slices (convenience wrapper).
+    /// Prefer solve_into() for batch solving to avoid intermediate allocations.
+    pub fn solve(
+        self: *const Self,
+        ode_fn: GenericOdeFn,
+        params: ?*const anyopaque,
+        y0: []const f64,
+        dim: usize,
+        t0: f64,
+        t1: f64,
+        save_at: []const f64,
+        allocator: Allocator,
+    ) ![][]f64 {
+        // Allocate contiguous buffer
+        const flat = try allocator.alloc(f64, save_at.len * dim);
+
+        try self.solve_into(ode_fn, params, y0, dim, t0, t1, save_at, flat.ptr, allocator);
+
+        // Wrap flat buffer as [][]f64 slices (no copy, same memory)
+        const result = try allocator.alloc([]f64, save_at.len);
+        for (result, 0..) |*row, i| {
+            row.* = flat[i * dim .. (i + 1) * dim];
+        }
         return result;
     }
 
-    fn initialStepSize(self: *const Self, t0: f64, t1: f64) f64 {
-        _ = self;
-        return (t1 - t0) * 1e-3;
-    }
-
-    fn denseOutput(
-        _: *const Self,
-        th: f64,
-        dt: f64,
-        y: []const f64,
-        k1: []const f64,
-        k3: []const f64,
-        k4: []const f64,
-        k5: []const f64,
-        k6: []const f64,
-        k7: []const f64,
-        out: []f64,
+    fn initialStepSize(
+        self: *const Self,
+        ode_fn: GenericOdeFn,
+        params: ?*const anyopaque,
+        y0: []const f64,
         dim: usize,
-    ) void {
-        const b1 = th * (1.0 + th * (-1337.0 / 480.0 + th * (1039.0 / 360.0 - th * 1163.0 / 1152.0)));
-        const b3 = th * th * (100.0 / 63.0 + th * (-536.0 / 189.0 + th * 2507.0 / 2016.0));
-        const b4 = th * th * (-125.0 / 96.0 + th * (2875.0 / 1152.0 - th * 13411.0 / 12288.0));
-        const b5 = th * th * (3567.0 / 14336.0 + th * (-24111.0 / 57344.0 + th * 16737.0 / 90112.0));
-        const b6 = th * th * (-11.0 / 70.0 + th * (187.0 / 630.0 - th * 11.0 / 84.0));
-        const b7 = th * th * th * (-11.0 / 40.0 + th * 11.0 / 40.0);
+        t0: f64,
+        f0: []const f64,
+        allocator: Allocator,
+    ) !f64 {
+        // Hairer, Nørsett & Wanner algorithm (Solving ODEs I, Sec. II.4)
+        const fdim: f64 = @floatFromInt(dim);
+        const scale = try allocator.alloc(f64, dim);
+        defer allocator.free(scale);
+        const y_tmp = try allocator.alloc(f64, dim);
+        defer allocator.free(y_tmp);
+        const f_tmp = try allocator.alloc(f64, dim);
+        defer allocator.free(f_tmp);
+
+        var d0: f64 = 0.0;
+        var d1: f64 = 0.0;
+        for (0..dim) |i| {
+            scale[i] = self.atol + @abs(y0[i]) * self.rtol;
+            const r0 = y0[i] / scale[i];
+            d0 += r0 * r0;
+            const r1 = f0[i] / scale[i];
+            d1 += r1 * r1;
+        }
+        d0 = @sqrt(d0 / fdim);
+        d1 = @sqrt(d1 / fdim);
+
+        const h0: f64 = if (d0 < 1e-5 or d1 < 1e-5) 1e-6 else 0.01 * d0 / d1;
 
         for (0..dim) |i| {
-            out[i] = y[i] + dt * (b1 * k1[i] + b3 * k3[i] + b4 * k4[i] + b5 * k5[i] + b6 * k6[i] + b7 * k7[i]);
+            y_tmp[i] = y0[i] + h0 * f0[i];
         }
+        ode_fn(t0 + h0, y_tmp.ptr, f_tmp.ptr, params, dim);
+
+        var d2: f64 = 0.0;
+        for (0..dim) |i| {
+            const r = (f_tmp[i] - f0[i]) / scale[i];
+            d2 += r * r;
+        }
+        d2 = @sqrt(d2 / fdim) / h0;
+
+        const h1: f64 = if (d1 <= 1e-15 and d2 <= 1e-15)
+            @max(1e-6, h0 * 1e-3)
+        else
+            math.pow(f64, 0.01 / @max(d1, d2), 0.2);
+
+        return @min(100.0 * h0, h1);
     }
 
     pub fn freeResult(result: [][]f64, allocator: Allocator) void {
