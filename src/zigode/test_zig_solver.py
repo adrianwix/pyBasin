@@ -2,24 +2,24 @@
 
 Compares the Zig Dopri5 solver against the JAX Dopri5 solver (via Diffrax)
 and torchdiffeq Dopri5 on the pendulum ODE with identical parameters and tolerances.
+Also tests the SymPy-to-C codegen path produces results identical to the Zig ODE.
 
 Run:
     cd pyBasinWorkspace
-    uv run python -m experiments.zig.zig_native.test_zig_solver
+    uv run python -m zigode.test_zig_solver
 """
 
 from __future__ import annotations
 
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
+import sympy as sp
 import torch
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from zig_solver import ZigODESolver
+from zigode.sympy_ode import SymPyODE
+from zigode.zig_solver import ZigODE, ZigODESolver
 
 from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE
 from case_studies.pendulum.pendulum_ode import PendulumODE
@@ -39,6 +39,23 @@ TEST_ICS: list[list[float]] = [
     [1.0, 0.0],
 ]
 
+PENDULUM_ZIG: ZigODE = ZigODE(name="pendulum", param_names=["alpha", "T", "K"])
+
+
+def _make_sympy_pendulum(name: str = "pendulum_sympy_test") -> SymPyODE:
+    """Create a SymPy pendulum ODE identical to the Zig one."""
+    theta, dtheta = sp.symbols("theta dtheta")
+    alpha, T, K = sp.symbols("alpha T K")
+    return SymPyODE(
+        name=name,
+        state=[theta, dtheta],
+        params=[alpha, T, K],
+        rhs=[dtheta, -alpha * dtheta + T - K * sp.sin(theta)],
+    )
+
+
+PENDULUM_SYMPY: SymPyODE = _make_sympy_pendulum()
+
 passed: int = 0
 failed: int = 0
 
@@ -56,7 +73,7 @@ def report(name: str, ok: bool, detail: str = "") -> None:
 
 def solve_with_zig(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     solver = ZigODESolver(auto_rebuild_solver=False)
-    t, y = solver.solve("pendulum", y0s, T_SPAN, t_eval, params=PARAMS, rtol=RTOL, atol=ATOL)
+    t, y = solver.solve(PENDULUM_ZIG, y0s, T_SPAN, t_eval, params=PARAMS, rtol=RTOL, atol=ATOL)
     return t, y
 
 
@@ -103,13 +120,13 @@ def test_shapes() -> None:
     t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
 
     # Single IC (1-D input)
-    t, y = solver.solve("pendulum", [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
+    t, y = solver.solve(PENDULUM_ZIG, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
     report("single IC returns 3-D", y.ndim == 3, f"shape={y.shape}")
     report("single IC shape (1, N, 2)", y.shape == (1, N_STEPS, 2), f"shape={y.shape}")
 
     # Batch IC (2-D input)
     y0s = np.array(TEST_ICS, dtype=np.float64)
-    t, y = solver.solve("pendulum", y0s, T_SPAN, t_eval, params=PARAMS)
+    t, y = solver.solve(PENDULUM_ZIG, y0s, T_SPAN, t_eval, params=PARAMS)
     report(
         "batch IC shape (5, N, 2)",
         y.shape == (len(TEST_ICS), N_STEPS, 2),
@@ -221,8 +238,8 @@ def test_determinism() -> None:
     t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
     y0s = np.array(TEST_ICS, dtype=np.float64)
 
-    _, y1 = solver.solve("pendulum", y0s, T_SPAN, t_eval, params=PARAMS)
-    _, y2 = solver.solve("pendulum", y0s, T_SPAN, t_eval, params=PARAMS)
+    _, y1 = solver.solve(PENDULUM_ZIG, y0s, T_SPAN, t_eval, params=PARAMS)
+    _, y2 = solver.solve(PENDULUM_ZIG, y0s, T_SPAN, t_eval, params=PARAMS)
     report("two runs identical", np.array_equal(y1, y2))
 
 
@@ -232,15 +249,95 @@ def test_performance() -> None:
     t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
 
     # Warm-up
-    solver.solve("pendulum", [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
+    solver.solve(PENDULUM_ZIG, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
 
     n_runs = 500
     start = time.perf_counter()
     for _ in range(n_runs):
-        solver.solve("pendulum", [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
+        solver.solve(PENDULUM_ZIG, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
     elapsed = time.perf_counter() - start
     per_call_us = elapsed / n_runs * 1e6
     report(f"{n_runs} single-IC solves", True, f"{per_call_us:.0f} µs/call")
+
+
+# ============================================================
+# SymPy ODE tests
+# ============================================================
+
+
+def test_sympy_codegen() -> None:
+    """Test that SymPyODE generates valid C source code."""
+    print("\n--- SymPy ODE codegen tests ---")
+
+    c_src: str = PENDULUM_SYMPY.to_c_source()
+    report("C source contains ode_func", "ode_func" in c_src)
+    report("C source contains ode_dim", "ode_dim" in c_src)
+    report("C source contains ode_param_size", "ode_param_size" in c_src)
+    report("C source contains sin(", "sin(" in c_src)
+    report("source_exists before write", isinstance(PENDULUM_SYMPY.source_exists(), bool))
+    report("param_names correct", PENDULUM_SYMPY.param_names == ["alpha", "T", "K"])
+
+
+def test_sympy_shapes() -> None:
+    """Test that a SymPy-compiled ODE gives correct output shapes."""
+    print("\n--- SymPy ODE shape tests ---")
+
+    solver = ZigODESolver(auto_rebuild_solver=False)
+    t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
+
+    # Single IC
+    t, y = solver.solve(PENDULUM_SYMPY, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
+    report("sympy single IC 3-D", y.ndim == 3, f"shape={y.shape}")
+    report("sympy single IC shape (1, N, 2)", y.shape == (1, N_STEPS, 2), f"shape={y.shape}")
+
+    # Batch IC
+    y0s = np.array(TEST_ICS, dtype=np.float64)
+    t, y = solver.solve(PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS)
+    report(
+        "sympy batch shape (5, N, 2)",
+        y.shape == (len(TEST_ICS), N_STEPS, 2),
+        f"shape={y.shape}",
+    )
+
+
+def test_sympy_vs_zig() -> None:
+    """Test that the SymPy-generated C ODE produces results very close to the Zig ODE.
+
+    Both go through the same Dopri5 solver with the same tolerances. The RHS
+    expressions are mathematically identical, but the compilers (``cc`` vs ``zig``)
+    may produce slightly different ``sin()`` implementations, leading to tiny
+    floating-point differences that accumulate over long integration spans.
+    """
+    print("\n--- SymPy ODE vs Zig ODE ---")
+
+    solver = ZigODESolver(auto_rebuild_solver=False)
+    t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
+    y0s = np.array(TEST_ICS, dtype=np.float64)
+
+    _, y_zig = solver.solve(PENDULUM_ZIG, y0s, T_SPAN, t_eval, params=PARAMS, rtol=RTOL, atol=ATOL)
+    _, y_sympy = solver.solve(
+        PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS, rtol=RTOL, atol=ATOL
+    )
+
+    max_abs: float = float(np.abs(y_zig - y_sympy).max())
+    report("Zig vs SymPy close (atol=5e-5)", max_abs < 5e-5, f"max_abs={max_abs:.4e}")
+
+    for i, ic in enumerate(TEST_ICS):
+        diff_i: float = float(np.abs(y_zig[i] - y_sympy[i]).max())
+        report(f"  IC {ic} max|err|={diff_i:.4e}", diff_i < 5e-5)
+
+
+def test_sympy_determinism() -> None:
+    """Test that repeated SymPy ODE solves give identical results."""
+    print("\n--- SymPy ODE determinism ---")
+
+    solver = ZigODESolver(auto_rebuild_solver=False)
+    t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
+    y0s = np.array(TEST_ICS, dtype=np.float64)
+
+    _, y1 = solver.solve(PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS)
+    _, y2 = solver.solve(PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS)
+    report("sympy two runs identical", np.array_equal(y1, y2))
 
 
 def main() -> None:
@@ -252,6 +349,11 @@ def main() -> None:
     test_numerical_correctness()
     test_determinism()
     test_performance()
+
+    test_sympy_codegen()
+    test_sympy_shapes()
+    test_sympy_vs_zig()
+    test_sympy_determinism()
 
     print("\n" + "=" * 60)
     print(f"Results: {passed} passed, {failed} failed")

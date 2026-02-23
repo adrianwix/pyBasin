@@ -6,18 +6,18 @@ During `estimate_bs()`, the `BasinStabilityEstimator` creates the `Solution` and
 
 ## What's Stored
 
-| Property                  | Type                       | Description                                    | Available After           |
-| ------------------------- | -------------------------- | ---------------------------------------------- | ------------------------- |
-| `initial_condition`       | `torch.Tensor`             | Initial conditions (shape: `(N, n_states)`)    | Integration               |
-| `time`                    | `torch.Tensor`             | Time evaluation points (shape: `(n_steps,)`)   | Integration               |
-| `y`                       | `torch.Tensor`             | Trajectories (shape: `(n_steps, N, n_states)`) | Integration               |
-| `extracted_features`      | `torch.Tensor` or `None`   | Raw features pre-filtering (shape: `(N, F)`)   | Feature extraction        |
-| `extracted_feature_names` | `list[str]` or `None`      | Names of raw features                          | Feature extraction        |
-| `features`                | `torch.Tensor` or `None`   | Filtered features (shape: `(N, F')`)           | Feature selection or None |
-| `feature_names`           | `list[str]` or `None`      | Names of filtered features                     | Feature selection or None |
-| `labels`                  | `np.ndarray` or `None`     | Basin assignments for each IC (shape: `(N,)`)  | Classification            |
-| `model_params`            | `dict[str, Any]` or `None` | ODE parameters used during integration         | Integration               |
-| `bifurcation_amplitudes`  | `torch.Tensor` or `None`   | Max absolute values per state (shape: `(N, n_states)`) | Integration        |
+| Property                  | Type                       | Description                                                                 | Available After           |
+| ------------------------- | -------------------------- | --------------------------------------------------------------------------- | ------------------------- |
+| `initial_condition`       | `torch.Tensor`             | Initial conditions (shape: `(N, n_states)`)                                 | Integration               |
+| `time`                    | `torch.Tensor`             | Time evaluation points (shape: `(n_steps,)`)                                | Integration               |
+| `y`                       | `torch.Tensor`             | Trajectories (shape: `(n_steps, N, n_states)`)                              | Integration               |
+| `extracted_features`      | `torch.Tensor` or `None`   | Raw features pre-filtering (shape: `(N, F)`)                                | Feature extraction        |
+| `extracted_feature_names` | `list[str]` or `None`      | Names of raw features                                                       | Feature extraction        |
+| `features`                | `torch.Tensor` or `None`   | Filtered features (shape: `(N, F')`)                                        | Feature selection or None |
+| `feature_names`           | `list[str]` or `None`      | Names of filtered features                                                  | Feature selection or None |
+| `labels`                  | `np.ndarray` or `None`     | Basin assignments for each IC (shape: `(N,)`)                               | Classification            |
+| `model_params`            | `dict[str, Any]` or `None` | ODE parameters used during integration                                      | Integration               |
+| `orbit_data`              | `OrbitData` or `None`      | Peak amplitudes per attractor for orbit diagrams (see `compute_orbit_data`) | Integration               |
 
 ## Accessing the Solution
 
@@ -153,7 +153,7 @@ solution.set_features(filtered_features, filtered_names)
 ```
 
 !!! tip "Pipeline Usage"
-    In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.
+In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.
 
 ## Related Documentation
 

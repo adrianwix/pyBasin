@@ -2813,6 +2813,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "scalene" },
+    { name = "sympy" },
     { name = "vulture" },
 ]
 docs = [
@@ -2869,6 +2870,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "ruff", specifier = ">=0.1.0" },
     { name = "scalene", specifier = ">=2.1.0" },
+    { name = "sympy", specifier = ">=1.14.0" },
     { name = "vulture", specifier = ">=2.14" },
 ]
 docs = [

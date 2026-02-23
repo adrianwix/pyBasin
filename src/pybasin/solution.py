@@ -21,7 +21,6 @@ class Solution:
     - Optional labels/classification for each trajectory.
     - Optional model parameters that were used in the integration.
     - Optional orbit data for orbit diagram plotting.
-    - Optional bifurcation amplitudes (deprecated, use orbit_data instead).
 
     :ivar initial_condition: The initial condition used for integration (shape: B, S).
     :ivar time: Time points of the solution (shape: N).
@@ -33,7 +32,6 @@ class Solution:
     :ivar labels: Labels assigned to each solution in the batch.
     :ivar model_params: Parameters of the ODE model.
     :ivar orbit_data: Peak amplitude data for orbit diagram plotting.
-    :ivar bifurcation_amplitudes: Deprecated. Maximum absolute values along time dimension.
     """
 
     def __init__(
@@ -79,7 +77,6 @@ class Solution:
         self.labels: np.ndarray | None = labels
         self.model_params: dict[str, Any] | None = model_params
         self.orbit_data: OrbitData | None = None
-        self.bifurcation_amplitudes: torch.Tensor | None = None
 
     def set_labels(self, labels: np.ndarray):
         """
