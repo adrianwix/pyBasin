@@ -39,16 +39,15 @@ def main() -> None:
     omega_max: float = 10.0
 
     rng = np.random.default_rng(SEED)
-    y0: np.ndarray[tuple[int, int], np.dtype[np.float64]] = np.column_stack([
-        rng.uniform(theta_min, theta_max, N_ICS),
-        rng.uniform(omega_min, omega_max, N_ICS),
-    ])
+    y0: np.ndarray[tuple[int, int], np.dtype[np.float64]] = np.column_stack(
+        [
+            rng.uniform(theta_min, theta_max, N_ICS),
+            rng.uniform(omega_min, omega_max, N_ICS),
+        ]
+    )
 
     print(f"ICs: {N_ICS:,}  |  Steps: {N_STEPS:,}  |  t_span: {T_SPAN}")
-    print(
-        f"Region: theta=[{theta_min:.4f}, {theta_max:.4f}], "
-        f"omega=[{omega_min}, {omega_max}]"
-    )
+    print(f"Region: theta=[{theta_min:.4f}, {theta_max:.4f}], omega=[{omega_min}, {omega_max}]")
     print(f"y0 shape: {y0.shape}")
     print()
 
