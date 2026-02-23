@@ -24,7 +24,7 @@ Do not make partial changes that leave the codebase in an inconsistent state.
 - When the user asks a question, provide information and explanations only
 - Only take action (create/edit/delete files) when the user explicitly asks you to do so
 - Always use `uv run pytest` to run tests (not `pytest` or `python -m pytest`)
-- Always use `uv run python` to run Python scripts (not `python` or `python3`)
+- Always use `uv run python -m module.file` to run Python scripts (not `python` or `python3`)
 - Never created .md or README files unless explicitly requested by the user
 - Do not leave comments in the code explaining what you did. That's understandable from the code changes themselves
 - Use `uv add <package>` to install dependencies (NOT `uv pip install`)

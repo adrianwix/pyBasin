@@ -18,7 +18,7 @@ from pybasin.plotters.types import (
 from .basin_stability_aio import BasinStabilityAIO
 from .feature_space_aio import FeatureSpaceAIO
 from .ids import IDs
-from .param_bifurcation_aio import ParamBifurcationAIO
+from .param_orbit_diagram_aio import ParamOrbitDiagramAIO
 from .param_overview_aio import ParamOverviewAIO
 from .state_space_aio import StateSpaceAIO
 from .study_parameter_manager_aio import StudyParameterManagerAIO
@@ -171,8 +171,8 @@ class InteractivePlotter:
             self.bs_study, self.state_labels, self._compute_param_bse
         )
         self.param_overview = ParamOverviewAIO(self.bs_study, "as-overview", self.state_labels)
-        self.param_bifurcation = ParamBifurcationAIO(
-            self.bs_study, "as-bifurcation", self.state_labels
+        self.param_orbit_diagram = ParamOrbitDiagramAIO(
+            self.bs_study, "as-orbit-diagram", self.state_labels
         )
 
     def _init_bse_pages(self) -> None:
@@ -340,15 +340,15 @@ class InteractivePlotter:
         return [
             dmc.Divider(label="Parameter Study", my="sm"),
             dmc.NavLink(
-                label="Parameter Variation",
+                label="Stability analysis",
                 leftSection=html.Span("📊"),
                 href="/overview",
                 active="exact",
             ),
             dmc.NavLink(
-                label="Bifurcation",
+                label="Orbit Diagram",
                 leftSection=html.Span("🌀"),
-                href="/bifurcation",
+                href="/orbit-diagram",
                 active="exact",
             ),
             dmc.Divider(label="Parameter Value", my="sm"),
@@ -384,9 +384,6 @@ class InteractivePlotter:
         self._register_navigation_callbacks()
 
         logger.info("\n🚀 Starting Basin Stability Visualization Server")
-        logger.info("   Open http://localhost:%d in your browser", port)
-        logger.info("   Press Ctrl+C to stop the server\n")
-
         self.app.run(host="0.0.0.0", port=port, debug=debug)
 
     def _register_navigation_callbacks(self) -> None:
@@ -507,15 +504,15 @@ class InteractivePlotter:
         """Register navigation callbacks for parameter study mode.
 
         Uses URL-based routing with pattern: /{page}/{param_idx}
-        Examples: /overview, /state-space/1, /bifurcation
-        Study-level pages (overview, bifurcation) don't need param_idx.
+        Examples: /overview, /state-space/1, /orbit-diagram
+        Study-level pages (overview, orbit-diagram) don't need param_idx.
         BSE pages require param_idx: /state-space/2, /basin-stability/0
         """
         if self.app is None:
             return
 
         # Valid page names for URL routing
-        study_pages = {"overview", "bifurcation"}
+        study_pages = {"overview", "orbit-diagram"}
         bse_pages = {
             "state-space",
             "feature-space",
@@ -656,8 +653,8 @@ class InteractivePlotter:
             # Render the appropriate page
             if page == "overview":
                 content = self.param_overview.render()
-            elif page == "bifurcation":
-                content = self.param_bifurcation.render()
+            elif page == "orbit-diagram":
+                content = self.param_orbit_diagram.render()
             elif page in bse_pages:
                 pages, _ = self.param_manager.get_or_create_pages(param_idx)
                 page_component = pages.get(page)

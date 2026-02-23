@@ -6,7 +6,7 @@
   - This would enable more flexible template matching across parameter spaces
 - [ ] When varying parameters we should not vary initial conditions
 - [ ] Optimize parameters variation (not hyper-parameters)
-- [ ] Improve plotter API. Calling plt.show does not feels right
+- [x] Improve plotter API. Calling plt.show does not feels right
 
 ```python
 plotter.plot_templates_trajectories(
@@ -18,7 +18,7 @@ plt.show()  # type: ignore[misc]
 ```
 
 - [ ] Look into https://github.com/lmcinnes/umap for feature space visualization
-- [x] ~~Rename as_parameter_manager to bs_study_parameter_manager and as_bse to bs_study~~
+- [x] Rename as_parameter_manager to bs_study_parameter_manager and as_bse to bs_study
 - [ ] Fix Installation guideline, find out how to deploy to pip
 - [ ] Using JAX SaveAt and setting diffeqsolve.t0 = 0 we can make JAX return the transient time and save a lot of memory. Need to check if that behaviour applies to other solvers. This could help a lot for parameter sweeps with batch integration, saving 50 points intead of 1000 virtually saves 20x space
 - [ ] Review Equinox usage for Diffrax solver

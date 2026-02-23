@@ -79,7 +79,7 @@ class TemplateIntegrator:
         elif solver is not None:
             if hasattr(solver, "clone") and str(solver.device) != "cpu":
                 effective_solver = solver.clone(device="cpu")
-                logger.info(
+                logger.debug(
                     "[TemplateIntegrator] Auto-created CPU solver (faster for small batch sizes)"
                 )
             else:
@@ -90,10 +90,10 @@ class TemplateIntegrator:
                 "or provide one during initialization."
             )
 
-        logger.info("[TemplateIntegrator] ODE params: %s", template_ode_system.params)
-        logger.info("[TemplateIntegrator] Template ICs: %d templates", len(self.template_y0))
-        logger.info("[TemplateIntegrator] Labels: %s", self.labels)
-        logger.info("[TemplateIntegrator] Using solver: %s", type(effective_solver).__name__)
+        logger.debug("[TemplateIntegrator] ODE params: %s", template_ode_system.params)
+        logger.debug("[TemplateIntegrator] Template ICs: %d templates", len(self.template_y0))
+        logger.debug("[TemplateIntegrator] Labels: %s", self.labels)
+        logger.debug("[TemplateIntegrator] Using solver: %s", type(effective_solver).__name__)
 
         template_tensor = torch.tensor(
             self.template_y0, dtype=torch.float32, device=effective_solver.device
@@ -139,7 +139,7 @@ class TemplateIntegrator:
         else:
             train_x = features.detach().cpu().numpy()
 
-        logger.info(
+        logger.debug(
             "Template training data: %d samples, %d features",
             train_x.shape[0],
             train_x.shape[1],

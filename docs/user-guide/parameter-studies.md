@@ -20,18 +20,17 @@ The main class that orchestrates parameter sweeps.
 
 ### Constructor Parameters
 
-| Parameter             | Type                           | Default     | Description                                               |
-| --------------------- | ------------------------------ | ----------- | --------------------------------------------------------- |
-| `n`                   | `int`                          | Required    | Number of samples per parameter combination               |
-| `ode_system`          | `ODESystemProtocol`            | Required    | The dynamical system (modified via parameter assignments) |
-| `sampler`             | `Sampler`                      | Required    | Initial condition generator                               |
-| `solver`              | `SolverProtocol`               | Required    | ODE integrator                                            |
-| `feature_extractor`   | `FeatureExtractor`             | Required    | Extracts features from trajectories                       |
-| `estimator`           | `BaseEstimator`                | Required    | Sklearn-compatible clusterer or classifier                |
-| `study_params`        | `StudyParams`                  | Required    | Parameter variation specification                         |
-| `template_integrator` | `TemplateIntegrator` or `None` | `None`      | Template ICs for supervised classifiers                   |
-| `save_to`             | `str` or `None`                | `"results"` | Output folder path, or `None` to disable saving           |
-| `verbose`             | `bool`                         | `False`     | Show detailed logs from each BSE run                      |
+| Parameter             | Type                           | Default  | Description                                               |
+| --------------------- | ------------------------------ | -------- | --------------------------------------------------------- | --- | -------------------- | --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- | --- | --------- | --------------- | ----------- | ----------------------------------------------- |
+| `n`                   | `int`                          | Required | Number of samples per parameter combination               |
+| `ode_system`          | `ODESystemProtocol`            | Required | The dynamical system (modified via parameter assignments) |
+| `sampler`             | `Sampler`                      | Required | Initial condition generator                               |
+| `solver`              | `SolverProtocol`               | Required | ODE integrator                                            |
+| `feature_extractor`   | `FeatureExtractor`             | Required | Extracts features from trajectories                       |
+| `estimator`           | `BaseEstimator`                | Required | Sklearn-compatible clusterer or classifier                |
+| `study_params`        | `StudyParams`                  | Required | Parameter variation specification                         |
+| `template_integrator` | `TemplateIntegrator` or `None` | `None`   | Template ICs for supervised classifiers                   |     | `compute_orbit_data` | `list[int]` or `bool` | `True` | Compute orbit data for bifurcation plots. `True` for all state dimensions, `list[int]` for specific indices, `False` to disable |     | `save_to` | `str` or `None` | `"results"` | Output folder path, or `None` to disable saving |
+| `verbose`             | `bool`                         | `False`  | Show detailed logs from each BSE run                      |
 
 !!! note "Required Components"
 Unlike `BasinStabilityEstimator`, which auto-creates defaults, `BasinStabilityStudy` requires explicit components for `solver`, `feature_extractor`, and `estimator`. This ensures consistent configuration across all parameter combinations.
@@ -84,7 +83,7 @@ Each [`StudyResult`](https://adrianwix.github.io/pyBasin/api/parameter-studies/#
     "errors": {"0": 0.01, "1": 0.01},          # Error estimates
     "n_samples": 10000,
     "labels": [...],                           # Cluster assignments
-    "bifurcation_amplitudes": tensor(...),     # Steady-state amplitudes
+    "orbit_data": OrbitData | None,            # Peak amplitudes for orbit/bifurcation diagrams
 }
 ```
 
@@ -252,10 +251,10 @@ from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 plotter = MatplotlibStudyPlotter(bs_study)
 
 # Basin stability vs parameter value
-plotter.plot_basin_stability_variation()
+plotter.plot_parameter_stability()
 
-# Bifurcation diagram showing attractor amplitudes
-plotter.plot_bifurcation_diagram(dof=[0, 1])
+# Orbit diagram showing attractor peak amplitudes
+plotter.plot_orbit_diagram(dof=[0, 1])
 
 # Save all figures to bs_study.save_to
 plotter.save()
@@ -265,8 +264,8 @@ plotter.show()  # or use plt.show() directly
 For multi-parameter studies, specify which parameter to plot on the x-axis:
 
 ```python
-plotter.plot_basin_stability_variation(parameters=["T"])
-plotter.plot_bifurcation_diagram(dof=[0, 1], parameters=["T"])
+plotter.plot_parameter_stability(parameters=["T"])
+plotter.plot_orbit_diagram(dof=[0, 1], parameters=["T"])
 ```
 
 Results are grouped by the other parameters, with each group rendered as a separate curve.
@@ -399,8 +398,14 @@ bs_study.run()
 
 # Visualize
 plotter = MatplotlibStudyPlotter(bs_study)
-plotter.plot_basin_stability_variation()
-plotter.plot_bifurcation_diagram(dof=[0, 1])
+
+# Basin stability vs parameter value
+plotter.plot_parameter_stability()
+
+# Orbit diagram showing attractor peak amplitudes
+plotter.plot_orbit_diagram(dof=[0, 1])
+
+# Save all figures to bs_study.save_to
 plotter.save()  # or plotter.show() for interactive display
 
 # Save

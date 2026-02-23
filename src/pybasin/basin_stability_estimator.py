@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, cast
 
@@ -33,11 +34,13 @@ from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.types import ErrorInfo
 from pybasin.utils import (
     NumpyEncoder,
-    extract_amplitudes,
+    extract_orbit_data,
     generate_filename,
     get_feature_names,
     resolve_folder,
 )
+
+warnings.filterwarnings("ignore", message="os.fork\\(\\) was called")
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +68,7 @@ class BasinStabilityEstimator:
         template_integrator: TemplateIntegrator | None = None,
         feature_selector: FeatureSelectorProtocol | None = UNSET,  # type: ignore[assignment]
         detect_unbounded: bool = True,
+        compute_orbit_data: list[int] | bool = True,
         save_to: str | None = None,
     ):
         """
@@ -95,6 +99,10 @@ class BasinStabilityEstimator:
                                 Only activates when solver has event_fn configured (e.g., JaxSolver with event_fn).
                                 When enabled, unbounded trajectories are separated and labeled as "unbounded"
                                 before feature extraction to prevent imputed Inf values from contaminating features.
+        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting.
+                         - ``True`` (default): Compute for all state dimensions.
+                         - ``False``: Disabled.
+                         - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).
         :param save_to: Optional file path to save results.
         :raises TypeError: If ``predictor`` is a regressor.
         :raises ValueError: If ``predictor`` is a classifier but no ``template_integrator`` is provided.
@@ -161,6 +169,8 @@ class BasinStabilityEstimator:
                 "with template initial conditions and labels for supervised learning."
             )
         self.template_integrator = template_integrator
+
+        self.compute_orbit_data = compute_orbit_data
 
         self.bs_vals: dict[str, float] | None = None
         self.y0: torch.Tensor | None = None
@@ -315,8 +325,6 @@ class BasinStabilityEstimator:
         t3 = time.perf_counter()
         self.solution = Solution(initial_condition=self.y0, time=t, y=y)
 
-        # Always compute bifurcation amplitudes
-        self.solution.bifurcation_amplitudes = extract_amplitudes(t, y)
         t3_elapsed = time.perf_counter() - t3
         logger.info("  Solution object created in %.4fs", t3_elapsed)
 
@@ -370,9 +378,22 @@ class BasinStabilityEstimator:
                 y_bounded = y[:, bounded_mask, :]
 
                 self.solution = Solution(initial_condition=y0_bounded, time=t, y=y_bounded)
-                self.solution.bifurcation_amplitudes = extract_amplitudes(t, y_bounded)
         else:
             logger.info("Unboundedness detection: DISABLED")
+
+        # Extract orbit data once on final solution (after unbounded filtering)
+        if self.compute_orbit_data:
+            dof = (
+                list(range(self.solution.y.shape[2]))
+                if self.compute_orbit_data is True
+                else self.compute_orbit_data
+            )
+            t_orbit = time.perf_counter()
+            self.solution.orbit_data = extract_orbit_data(
+                self.solution.time, self.solution.y, dof=dof
+            )
+            t_orbit_elapsed = time.perf_counter() - t_orbit
+            logger.info("Orbit data extracted in %.4fs (DOFs: %s)", t_orbit_elapsed, dof)
 
         # Step 4: Feature extraction (main data - fits scaler on large dataset)
         logger.info("STEP 4: Feature Extraction")
@@ -692,18 +713,16 @@ class BasinStabilityEstimator:
 
         # Convert tensors to lists for DataFrame
         y0_list: list[Any] = self.y0.detach().cpu().numpy().tolist()
-        amplitudes_list: list[Any] = (
-            self.solution.bifurcation_amplitudes.detach().cpu().numpy().tolist()
-            if self.solution.bifurcation_amplitudes is not None
-            else []
-        )
 
-        df = pd.DataFrame(
-            {
-                "Grid Sample": [tuple(ic) for ic in y0_list],
-                "Labels": self.solution.labels if self.solution.labels is not None else [],
-                "Bifurcation Amplitudes": [tuple(amp) for amp in amplitudes_list],
-            }
-        )
+        data: dict[str, Any] = {
+            "Grid Sample": [tuple(ic) for ic in y0_list],
+            "Labels": self.solution.labels if self.solution.labels is not None else [],
+        }
+
+        if self.solution.orbit_data is not None:
+            peak_counts = self.solution.orbit_data.peak_counts.cpu().numpy().tolist()
+            data["Peak Counts"] = [tuple(pc) for pc in peak_counts]
+
+        df = pd.DataFrame(data)
 
         df.to_excel(full_path, index=False)  # type: ignore[call-overload]

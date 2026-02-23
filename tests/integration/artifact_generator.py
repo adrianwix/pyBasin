@@ -226,7 +226,7 @@ def generate_parameter_sweep_artifacts(
 
     plotter = MatplotlibStudyPlotter(bs_study)
 
-    figs = plotter.plot_basin_stability_variation()
+    figs = plotter.plot_parameter_stability()
     for fig in figs:
         param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
         suffix = f"_{param_name}" if len(figs) > 1 else ""
@@ -235,17 +235,17 @@ def generate_parameter_sweep_artifacts(
 
     state_dim = bs_study.sampler.state_dim
     if state_dim > 3:
-        print(f"  Skipped bifurcation_diagram plot: state_dim={state_dim} > 3")
+        print(f"  Skipped orbit_diagram plot: state_dim={state_dim} > 3")
         return
 
     dof = list(range(state_dim))
 
     try:
-        figs = plotter.plot_bifurcation_diagram(dof=dof)
+        figs = plotter.plot_orbit_diagram(dof)
         for fig in figs:
             param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
             suffix = f"_{param_name}" if len(figs) > 1 else ""
             recolor_figure(fig, palette)
             thesis_export(fig, f"{prefix}_bifurcation_diagram{suffix}.png", DOCS_ASSETS_DIR)
     except (ValueError, KeyError) as e:
-        print(f"  Skipped bifurcation_diagram plot: {e}")
+        print(f"  Skipped orbit_diagram plot: {e}")

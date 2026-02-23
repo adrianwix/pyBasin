@@ -44,7 +44,7 @@ if __name__ == "__main__":
     bse = time_execution("main_lorenz_hyperpN.py", main)
     plotter = MatplotlibStudyPlotter(bse)
 
-    plotter.plot_basin_stability_variation(interval="log")
+    plotter.plot_parameter_stability(interval="log")
     plotter.show()
 
     bse.save()

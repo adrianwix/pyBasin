@@ -89,8 +89,8 @@ class ParamOverviewOptions(TypedDict, total=False):
     """Attractor labels to display. Default: all labels."""
 
 
-class ParamBifurcationOptions(TypedDict, total=False):
-    """Options for the Parameter Bifurcation page."""
+class ParamOrbitDiagramOptions(TypedDict, total=False):
+    """Options for the Parameter Orbit Diagram page."""
 
     state_dimensions: list[int]
     """Indices of state dimensions to show. Default: all dimensions."""
@@ -103,7 +103,7 @@ ViewType = Literal[
     "templates_phase_space",
     "templates_time_series",
     "param_overview",
-    "param_bifurcation",
+    "param_orbit_diagram",
 ]
 
 
@@ -136,8 +136,8 @@ class InteractivePlotterOptions(TypedDict, total=False):
     """Options for the Templates Time Series visualization."""
     param_overview: ParamOverviewOptions
     """Options for the Parameter Overview visualization."""
-    param_bifurcation: ParamBifurcationOptions
-    """Options for the Parameter Bifurcation visualization."""
+    param_orbit_diagram: ParamOrbitDiagramOptions
+    """Options for the Parameter Orbit Diagram visualization."""
 
 
 # Default values for all options
@@ -168,7 +168,7 @@ _DEFAULT_PARAM_OVERVIEW: ParamOverviewOptions = {
     "x_scale": "linear",
 }
 
-_DEFAULT_PARAM_BIFURCATION: ParamBifurcationOptions = {}
+_DEFAULT_PARAM_ORBIT_DIAGRAM: ParamOrbitDiagramOptions = {}
 
 _DEFAULT_OPTIONS: InteractivePlotterOptions = {
     "initial_view": "basin_stability",
@@ -177,7 +177,7 @@ _DEFAULT_OPTIONS: InteractivePlotterOptions = {
     "templates_phase_space": _DEFAULT_TEMPLATES_PHASE_SPACE,
     "templates_time_series": _DEFAULT_TEMPLATES_TIME_SERIES,
     "param_overview": _DEFAULT_PARAM_OVERVIEW,
-    "param_bifurcation": _DEFAULT_PARAM_BIFURCATION,
+    "param_orbit_diagram": _DEFAULT_PARAM_ORBIT_DIAGRAM,
 }
 
 
@@ -256,5 +256,5 @@ VIEW_TO_PATH: dict[ViewType, str] = {
     "templates_phase_space": "/phase",
     "templates_time_series": "/time-series",
     "param_overview": "/param-overview",
-    "param_bifurcation": "/param-bifurcation",
+    "param_orbit_diagram": "/param-orbit-diagram",
 }

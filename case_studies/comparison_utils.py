@@ -125,9 +125,9 @@ def _print_comparison_simple(
 ) -> None:
     """Print simple comparison without error analysis."""
     title = "COMPARISON WITH EXPECTED RESULTS" + (" (sorted by size)" if by_size else "")
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 60)
     print(title)
-    print("=" * 70)
+    print("=" * 60)
 
     for (cluster_id, actual), expected_item in zip(actual_sorted, expected_sorted, strict=False):
         expected = expected_item["basinStability"]
@@ -144,7 +144,7 @@ def _print_comparison_simple(
     if len(actual_sorted) != len(expected_sorted):
         print(f"Warning: {len(actual_sorted)} clusters found, {len(expected_sorted)} expected")
 
-    print("=" * 70 + "\n")
+    print("=" * 60 + "\n")
 
 
 def _print_comparison_with_errors(
@@ -155,14 +155,14 @@ def _print_comparison_with_errors(
 ) -> None:
     """Print comparison with error analysis."""
     title = "COMPARISON WITH EXPECTED RESULTS" + (" (sorted by size)" if by_size else "")
-    print("\n" + "=" * 90)
+    print("\n" + "=" * 78)
     print(title)
-    print("=" * 90)
+    print("=" * 78)
     print(
         f"{'Label':<20}  {'Actual':>8}  {'Expected':>8}  {'Diff':>8}  "
         f"{'Comb.SE':>8}  {'Sigma':>6}  {'Status':<10}"
     )
-    print("-" * 90)
+    print("-" * 78)
 
     all_within_bounds = True
     for (cluster_id, actual), expected_item, error_info in zip(
@@ -199,9 +199,9 @@ def _print_comparison_with_errors(
     if len(actual_sorted) != len(expected_sorted):
         print(f"Warning: {len(actual_sorted)} clusters found, {len(expected_sorted)} expected")
 
-    print("-" * 90)
+    print("-" * 78)
     if all_within_bounds:
         print("All differences are within 2 sigma (statistically consistent)")
     else:
         print("Some differences exceed 2 sigma (may indicate systematic differences)")
-    print("=" * 90 + "\n")
+    print("=" * 78 + "\n")

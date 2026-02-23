@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 import torch
 
+from pybasin.constants import DEFAULT_STEADY_FRACTION
 from pybasin.solution import Solution
 
 
@@ -27,8 +28,6 @@ class FeatureExtractor(ABC):
         of the integration time span (derived from ``solution.time`` at extraction
         time). Set to ``0.0`` to explicitly use the entire time series.
     """
-
-    DEFAULT_STEADY_FRACTION: float = 0.85
 
     def __init__(self, time_steady: float | None = None):
         self.time_steady = time_steady
@@ -104,7 +103,7 @@ class FeatureExtractor(ABC):
         t = solution.time
         t0 = float(t[0])
         t1 = float(t[-1])
-        return t0 + self.DEFAULT_STEADY_FRACTION * (t1 - t0)
+        return t0 + DEFAULT_STEADY_FRACTION * (t1 - t0)
 
     def filter_time(self, solution: Solution) -> torch.Tensor:
         """Filter out transient behavior by removing early time steps.

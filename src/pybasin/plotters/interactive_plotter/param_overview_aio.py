@@ -135,7 +135,6 @@ class ParamOverviewAIO:
                         ),
                     ],
                     p="md",
-                    mb="md",
                     withBorder=True,
                 ),
                 dmc.Paper(
@@ -143,7 +142,7 @@ class ParamOverviewAIO:
                         dcc.Graph(
                             id=aio_id("ParamOverview", self.aio_id, "plot"),
                             figure=self.build_figure(x_param=default_param),
-                            style={"height": "70vh"},
+                            style={"height": "calc(100vh - 190px)"},
                             config={
                                 "displayModeBar": True,
                                 "scrollZoom": True,

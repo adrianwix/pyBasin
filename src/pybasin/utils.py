@@ -3,7 +3,9 @@ import os
 import re
 import sys
 import time
+import warnings
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from json import JSONEncoder
 from typing import Any, ParamSpec, TypeVar
@@ -11,8 +13,10 @@ from typing import Any, ParamSpec, TypeVar
 import numpy as np
 import torch
 
+from pybasin.constants import DEFAULT_STEADY_FRACTION
 from pybasin.protocols import FeatureSelectorProtocol
 from pybasin.solution import Solution
+from pybasin.ts_torch.calculators.torch_features_pattern import extract_peak_values
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -239,16 +243,94 @@ def get_feature_names(selector: FeatureSelectorProtocol, original_names: list[st
 
 
 def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    """
-    Extract amplitudes by taking the maximum absolute value along the time dimension.
+    """Extract amplitudes by taking the maximum absolute value along the time dimension.
 
-    :param t: Time points tensor (shape: (N,))
-    :param y: Input tensor (shape: (N, B, S)) where:
-        N = number of time steps
-        B = batch size
-        S = number of states
-    :return: Tensor containing maximum absolute values (shape: (B, S))
+    .. deprecated::
+        Use :func:`extract_orbit_data` instead for orbit diagram plotting.
+        This function computes max(abs(y)) over the entire trajectory, which
+        includes transients. For steady-state analysis, use ``extract_orbit_data``.
+
+    :param t: Time points tensor (shape: (N,)).
+    :param y: Input tensor (shape: (N, B, S)).
+    :return: Tensor containing maximum absolute values (shape: (B, S)).
     """
-    # Take absolute value and maximum along time dimension (dim=0)
+    warnings.warn(
+        "extract_amplitudes is deprecated. Use extract_orbit_data for orbit diagrams.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     amps = torch.max(torch.abs(y), dim=0)[0]
     return amps
+
+
+@dataclass
+class OrbitData:
+    """Data structure for orbit diagram plotting.
+
+    Stores peak amplitude information from steady-state trajectories,
+    organized by degree of freedom (DOF). For period-N orbits, trajectories
+    will have N distinct peak amplitude levels.
+
+    :ivar peak_values: Peak amplitudes for each DOF. Shape (max_peaks, B, D) where
+        D is number of DOFs. Padded with NaN for trajectories with fewer peaks.
+    :ivar peak_counts: Number of peaks per trajectory per DOF. Shape (B, D).
+    :ivar dof_indices: Which state indices were analyzed.
+    :ivar time_steady: Time threshold used for steady-state filtering.
+    """
+
+    peak_values: torch.Tensor
+    peak_counts: torch.Tensor
+    dof_indices: list[int]
+    time_steady: float
+
+
+def extract_orbit_data(
+    t: torch.Tensor,
+    y: torch.Tensor,
+    dof: list[int],
+    time_steady: float | None = None,
+    peak_support: int = 1,
+) -> OrbitData:
+    """Extract orbit data from trajectories for orbit diagram plotting.
+
+        Analyzes steady-state portion of trajectories to find peak amplitudes.
+        For period-N orbits, each trajectory will have N distinct peak amplitude
+        levels per oscillation cycle.
+
+        :param t: Time points tensor of shape (N,).
+        :param y: Trajectory tensor of shape (N, B, S) where N=timesteps, B=batch, S=states.
+        :param dof: List of state indices (degrees of freedom) to analyze.
+        :param time_steady: Time threshold for steady-state. Points with t >= time_steady
+            are considered steady-state. If None, uses 85% of the time span.
+    :param peak_support: Support for peak detection (window size = 2*peak_support+1).
+        :return: OrbitData containing peak amplitudes and counts per trajectory.
+    """
+    if time_steady is None:
+        t_min = float(t[0].item())
+        t_max = float(t[-1].item())
+        time_steady = t_min + DEFAULT_STEADY_FRACTION * (t_max - t_min)
+
+    steady_mask = t >= time_steady
+    t_steady = t[steady_mask]
+    y_steady = y[steady_mask]
+
+    if len(t_steady) == 0:
+        n_batch = y.shape[1]
+        n_dof = len(dof)
+        return OrbitData(
+            peak_values=torch.zeros(0, n_batch, n_dof, dtype=y.dtype, device=y.device),
+            peak_counts=torch.zeros(n_batch, n_dof, dtype=torch.long, device=y.device),
+            dof_indices=dof,
+            time_steady=time_steady,
+        )
+
+    y_dof = y_steady[:, :, dof]
+
+    peak_values, peak_counts = extract_peak_values(y_dof, n=peak_support)
+
+    return OrbitData(
+        peak_values=peak_values,
+        peak_counts=peak_counts.long(),
+        dof_indices=dof,
+        time_steady=time_steady,
+    )

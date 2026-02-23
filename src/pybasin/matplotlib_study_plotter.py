@@ -2,6 +2,7 @@
 
 import logging
 import os
+import warnings
 from collections import defaultdict
 from typing import Any, Literal
 
@@ -9,10 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from sklearn.cluster import KMeans
 
 from pybasin.basin_stability_study import BasinStabilityStudy
-from pybasin.utils import generate_filename, resolve_folder
+from pybasin.utils import OrbitData, generate_filename, resolve_folder
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class MatplotlibStudyPlotter:
             cmap = plt.cm.hsv  # type: ignore[misc]
         return [cmap(i / n) for i in range(n)]
 
-    def plot_basin_stability_variation(
+    def plot_parameter_stability(
         self,
         interval: Literal["linear", "log"] = "linear",
         parameters: list[str] | None = None,
@@ -235,152 +235,130 @@ class MatplotlibStudyPlotter:
             )
             plt.xlabel(param_name)  # type: ignore[misc]
             plt.ylabel("Basin Stability")  # type: ignore[misc]
-            plt.title(f"Basin Stability vs {param_name}")  # type: ignore[misc]
+            plt.title(f"Parameter Stability ({param_name})")  # type: ignore[misc]
             plt.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
             plt.tight_layout()
 
-            self._pending_figures.append((f"basin_stability_variation_{param_name}", fig))
+            self._pending_figures.append((f"parameter_stability_{param_name}", fig))
             figures.append(fig)
 
         return figures
 
-    def _get_amplitudes(
-        self, solution: Any, dof: list[int], n_clusters: int
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Extract amplitudes and compute differences via k-means clustering.
-
-        Assumes solution.bifurcation_amplitudes has been extracted using
-        extract_amplitudes (from utils.py) and might be a torch.Tensor.
-
-        :param solution: Solution object with attribute bifurcation_amplitudes.
-        :param dof: List of indices for degrees of freedom to analyze.
-        :param n_clusters: Number of clusters for k-means.
-        :return: Tuple of (centers, diffs) where centers is array of cluster
-            centroids (shape: n_clusters x len(dof)) and diffs is mean absolute
-            differences (shape: n_clusters x len(dof)).
-        """
-        temp = solution.bifurcation_amplitudes[:, dof]
-
-        temp_np: np.ndarray = (
-            temp.detach().cpu().numpy() if hasattr(temp, "detach") else np.asarray(temp)
-        )
-
-        finite_mask = np.all(np.isfinite(temp_np), axis=1)
-        temp_np_finite = temp_np[finite_mask]
-
-        if len(temp_np_finite) == 0:
-            return np.zeros((n_clusters, len(dof))), np.zeros((n_clusters, len(dof)))
-
-        n_samples_finite = len(temp_np_finite)
-        actual_n_clusters = min(n_clusters, n_samples_finite)
-
-        kmeans = KMeans(n_clusters=actual_n_clusters, random_state=42)
-        labels: np.ndarray = kmeans.fit_predict(temp_np_finite)  # type: ignore[assignment]
-        centers_raw = kmeans.cluster_centers_  # type: ignore[assignment]
-        centers: np.ndarray = np.asarray(centers_raw)  # type: ignore[arg-type]
-
-        if actual_n_clusters < n_clusters:
-            centers_padded = np.zeros((n_clusters, len(dof)))
-            centers_padded[:actual_n_clusters] = centers
-            centers = centers_padded
-
-        n_dofs = len(dof)
-        diffs = np.zeros((n_clusters, n_dofs))
-        for i in range(actual_n_clusters):
-            for j in range(n_dofs):
-                if np.any(labels == i):  # type: ignore[arg-type]
-                    diffs[i, j] = np.mean(np.abs(temp_np_finite[labels == i, j] - centers[i, j]))  # type: ignore[arg-type]
-        return centers, diffs
-
-    def plot_bifurcation_diagram(
+    def plot_orbit_diagram(
         self,
-        dof: list[int],
+        dof: list[int] | None = None,
         parameters: list[str] | None = None,
     ) -> list[Figure]:
-        """Plot bifurcation diagrams showing attractor locations over parameter variation.
+        """Plot orbit diagrams showing attractor amplitude levels over parameter variation.
 
-        Produces one figure per parameter. For multi-parameter studies,
-        results are grouped by the other parameters and each group becomes
-        a separate set of curves.
+        Produces one figure per parameter. For each attractor at each parameter value,
+        displays the peak amplitudes detected from steady-state trajectories.
+        Period-N orbits appear as N distinct amplitude bands.
 
-        :param dof: List of indices of the state variables (DOFs) to plot.
+        Requires ``compute_orbit_data`` when creating the BasinStabilityStudy.
+
+        :param dof: List of state indices to plot. If None, uses the DOFs from orbit_data.
         :param parameters: Which studied parameters to plot. ``None`` plots all.
         :return: List of matplotlib Figure objects (one per parameter).
+        :raises ValueError: If orbit_data was not computed during the study.
         """
         if not self.bs_study.results:
             raise ValueError("No results available. Run study first.")
 
+        first_orbit_data = self.bs_study.results[0].get("orbit_data")
+        if first_orbit_data is None:
+            raise ValueError(
+                "No orbit data available. Set compute_orbit_data=True when creating "
+                "BasinStabilityStudy to enable orbit diagram plotting."
+            )
+
+        if dof is None:
+            dof = first_orbit_data.dof_indices
+
         params_to_plot = self._resolve_parameters(parameters)
-        n_clusters = self.bs_study.sampler.state_dim
+        attractor_labels = self._get_attractor_labels()
         n_dofs = len(dof)
 
-        colors = self._generate_colors(n_clusters)
+        colors = self._generate_colors(len(attractor_labels))
         figures: list[Figure] = []
 
         for param_name in params_to_plot:
             groups = self._group_by_parameter(param_name)
 
-            fig, axes = plt.subplots(1, n_dofs, figsize=(5 * n_dofs, 4))  # type: ignore[misc]
+            fig, axes = plt.subplots(1, n_dofs, figsize=(6 * n_dofs, 5))  # type: ignore[misc]
             if n_dofs == 1:
                 axes = [axes]
 
-            for group_key, indices in groups.items():
+            for _, indices in groups.items():
                 x_values = [self.bs_study.results[i]["study_label"][param_name] for i in indices]
 
-                n_par_var = len(indices)
-                amplitudes = np.zeros((n_clusters, n_dofs, n_par_var))
-                errors = np.zeros((n_clusters, n_dofs, n_par_var))
+                for a_idx, attractor in enumerate(attractor_labels):
+                    color = colors[a_idx]
 
-                for pos, result_idx in enumerate(indices):
-                    result = self.bs_study.results[result_idx]
-                    bifurcation_amplitudes = result["bifurcation_amplitudes"]
-                    if bifurcation_amplitudes is None:
-                        study_label = self.bs_study.results[result_idx]["study_label"]
-                        raise ValueError(
-                            f"No bifurcation amplitudes found for parameter combination {study_label}"
+                    for pos, result_idx in enumerate(indices):
+                        result = self.bs_study.results[result_idx]
+                        orbit_data: OrbitData | None = result.get("orbit_data")
+                        labels = result.get("labels")
+
+                        if orbit_data is None or labels is None:
+                            continue
+
+                        attractor_mask = labels == attractor
+                        if not np.any(attractor_mask):
+                            continue
+
+                        x_val = x_values[pos]
+
+                        for j, dof_idx in enumerate(dof):
+                            try:
+                                dof_pos = orbit_data.dof_indices.index(dof_idx)
+                            except ValueError:
+                                continue
+
+                            peaks_all = orbit_data.peak_values[:, attractor_mask, dof_pos]
+                            peaks_flat = peaks_all.cpu().numpy().flatten()
+                            valid_peaks = peaks_flat[np.isfinite(peaks_flat)]
+
+                            if len(valid_peaks) == 0:
+                                continue
+
+                            ax = axes[j]
+                            ax.scatter(  # type: ignore[misc]
+                                [x_val] * len(valid_peaks),
+                                valid_peaks,
+                                c=[color],
+                                s=3,
+                                alpha=0.5,
+                            )
+
+            for j, dof_idx in enumerate(dof):
+                ax = axes[j]
+                ax.set_xlabel(param_name)  # type: ignore[misc]
+                ax.set_ylabel(f"Amplitude (state {dof_idx})")  # type: ignore[misc]
+                ax.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
+
+                handles: list[Any] = []
+                seen_labels: set[str] = set()
+                for a_idx, attractor in enumerate(attractor_labels):
+                    if attractor not in seen_labels:
+                        handles.append(
+                            Line2D(
+                                [0],
+                                [0],
+                                marker="o",
+                                color="w",
+                                markerfacecolor=colors[a_idx],
+                                markersize=10,
+                                label=attractor,
+                            )
                         )
+                        seen_labels.add(attractor)
+                ax.legend(handles=handles, title="Attractor")  # type: ignore[misc]
 
-                    class TempSolution:
-                        def __init__(self, amps: Any):
-                            self.bifurcation_amplitudes = amps
-
-                    solution = TempSolution(bifurcation_amplitudes)
-                    centers, diffs = self._get_amplitudes(solution, dof, n_clusters)
-                    amplitudes[:, :, pos] = centers
-                    errors[:, :, pos] = diffs
-
-                group_suffix = ""
-                if group_key:
-                    group_suffix = " (" + ", ".join(f"{k}={v}" for k, v in group_key) + ")"
-
-                for j in range(n_dofs):
-                    ax = axes[j]
-                    for i in range(n_clusters):
-                        ax.plot(  # type: ignore[misc]
-                            x_values,
-                            amplitudes[i, j, :],
-                            "o-",
-                            markersize=8,
-                            color=colors[i % n_clusters],
-                            label=f"Cluster {i + 1}{group_suffix}",
-                        )
-
-            for j in range(n_dofs):
-                axes[j].set_xlabel(param_name)  # type: ignore[misc]
-                axes[j].set_ylabel(f"Amplitude state {dof[j]}")  # type: ignore[misc]
-                axes[j].grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
-                axes[j].legend()  # type: ignore[misc]
-
-            y_min = min(ax.get_ylim()[0] for ax in axes)  # type: ignore[misc]
-            y_max = max(ax.get_ylim()[1] for ax in axes)  # type: ignore[misc]
-            for ax in axes:
-                ax.set_ylim(y_min, y_max)  # type: ignore[misc]
-
-            plt.suptitle(f"Bifurcation Diagram ({param_name})")  # type: ignore[misc]
+            plt.suptitle(f"Orbit Diagram ({param_name})")  # type: ignore[misc]
             plt.tight_layout()
 
-            self._pending_figures.append((f"bifurcation_diagram_{param_name}", fig))
+            self._pending_figures.append((f"orbit_diagram_{param_name}", fig))
             figures.append(fig)
 
         return figures

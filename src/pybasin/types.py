@@ -1,13 +1,17 @@
-from typing import Any, NotRequired, TypedDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
 
 import numpy as np
-import torch
 from sklearn.base import BaseEstimator  # type: ignore[import-untyped]
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
 from pybasin.protocols import ODESystemProtocol, SolverProtocol
 from pybasin.sampler import Sampler
 from pybasin.template_integrator import TemplateIntegrator
+
+if TYPE_CHECKING:
+    from pybasin.utils import OrbitData
 
 
 class ErrorInfo(TypedDict):
@@ -38,7 +42,7 @@ class StudyResult(TypedDict):
     :ivar errors: Dictionary mapping attractor labels to their ErrorInfo (absolute and relative errors).
     :ivar n_samples: Number of initial conditions actually used (may differ from requested N due to grid rounding).
     :ivar labels: Array of attractor labels for each initial condition, or None if not available.
-    :ivar bifurcation_amplitudes: Amplitude values for bifurcation analysis, or None if not computed.
+    :ivar orbit_data: Peak amplitude data for orbit diagram plotting, or None if not computed.
     """
 
     study_label: dict[str, Any]
@@ -46,7 +50,7 @@ class StudyResult(TypedDict):
     errors: dict[str, ErrorInfo]
     n_samples: int
     labels: np.ndarray[Any, Any] | None
-    bifurcation_amplitudes: torch.Tensor | None
+    orbit_data: OrbitData | None
 
 
 class SetupProperties(TypedDict):

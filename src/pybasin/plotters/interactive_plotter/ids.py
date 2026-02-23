@@ -28,7 +28,7 @@ class IDs:
     TEMPLATES_PHASE_SPACE: ViewType = "templates_phase_space"
     TEMPLATES_TIME_SERIES: ViewType = "templates_time_series"
     PARAM_OVERVIEW: ViewType = "param_overview"
-    PARAM_BIFURCATION: ViewType = "param_bifurcation"
+    PARAM_ORBIT_DIAGRAM: ViewType = "param_orbit_diagram"
 
     @staticmethod
     def id(prefix: str, suffix: str) -> str:

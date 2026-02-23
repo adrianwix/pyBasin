@@ -4,6 +4,8 @@ import gc
 import json
 import logging
 import os
+import time
+import warnings
 from typing import Any
 
 import torch
@@ -16,6 +18,8 @@ from pybasin.study_params import StudyParams
 from pybasin.template_integrator import TemplateIntegrator
 from pybasin.types import StudyResult
 from pybasin.utils import NumpyEncoder, generate_filename, resolve_folder
+
+warnings.filterwarnings("ignore", message="os.fork\\(\\) was called")
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,7 @@ class BasinStabilityStudy:
         estimator: Any,
         study_params: StudyParams,
         template_integrator: TemplateIntegrator | None = None,
+        compute_orbit_data: list[int] | bool = True,
         save_to: str | None = "results",
         verbose: bool = False,
     ):
@@ -53,6 +58,10 @@ class BasinStabilityStudy:
         :param estimator: Any sklearn-compatible estimator (classifier or clusterer).
         :param study_params: Parameter study specification (SweepStudyParams, GridStudyParams, etc.).
         :param template_integrator: Template integrator for supervised classifiers.
+        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting.
+                         - ``True`` (default): Compute for all state dimensions.
+                         - ``False``: Disabled.
+                         - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).
         :param save_to: Folder path where results will be saved, or None to disable saving.
         :param verbose: If True, show detailed logs from BasinStabilityEstimator instances.
                         If False, suppress INFO logs to reduce output clutter during parameter sweeps.
@@ -65,6 +74,7 @@ class BasinStabilityStudy:
         self.estimator = estimator
         self.study_params = study_params
         self.template_integrator = template_integrator
+        self.compute_orbit_data = compute_orbit_data
         self.save_to = save_to
         self.verbose = verbose
 
@@ -129,15 +139,15 @@ class BasinStabilityStudy:
 
         :return: List of StudyResult dicts, one per parameter combination, containing
                  study_label, basin_stability, errors, n_samples, labels, and
-                 bifurcation_amplitudes.
+                 orbit_data (if ``compute_orbit_data`` is set).
         """
         self.results = []
 
         total_runs = len(self.study_params)
 
-        logger.info("\n" + "=" * 80)
+        logger.info("\n" + "=" * 60)
         logger.info("PARAMETER STUDY: %d runs", total_runs)
-        logger.info("=" * 80)
+        logger.info("=" * 60)
 
         # Check if GPU is available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -160,10 +170,10 @@ class BasinStabilityStudy:
                 exec_code = f"{assignment.name} = _param_value"
                 eval(compile(exec_code, "<string>", "exec"), context, context)
 
-            logger.info("\n" + "-" * 80)
+            logger.info("-" * 60)
             label_str = ", ".join(f"{k}={v}" for k, v in run_config.study_label.items())
             logger.info("[%d/%d] %s", idx, total_runs, label_str)
-            logger.info("-" * 80)
+            logger.info("-" * 60)
 
             # Use sampler's n_samples if available (for CsvSampler), otherwise use self.n
             n_samples = (
@@ -181,10 +191,13 @@ class BasinStabilityStudy:
                 predictor=context["estimator"],
                 template_integrator=context["template_integrator"],
                 feature_selector=None,
+                compute_orbit_data=self.compute_orbit_data,
             )
 
             original_levels = self._suppress_verbose_logs()
+            run_start = time.perf_counter()
             basin_stability = bse.estimate_bs()
+            run_elapsed = time.perf_counter() - run_start
             self._restore_log_levels(original_levels)
 
             # Compute errors for this parameter value
@@ -200,11 +213,7 @@ class BasinStabilityStudy:
                     "labels": bse.solution.labels.copy()
                     if bse.solution.labels is not None
                     else None,
-                    "bifurcation_amplitudes": (
-                        bse.solution.bifurcation_amplitudes.detach().cpu().clone()
-                        if bse.solution.bifurcation_amplitudes is not None
-                        else None
-                    ),
+                    "orbit_data": bse.solution.orbit_data,
                 }
             else:
                 solution_summary = {
@@ -213,7 +222,7 @@ class BasinStabilityStudy:
                     "errors": errors,
                     "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
                     "labels": None,
-                    "bifurcation_amplitudes": None,
+                    "orbit_data": None,
                 }
 
             self.results.append(solution_summary)
@@ -221,7 +230,7 @@ class BasinStabilityStudy:
             # Format basin stability output
             bs_str = ", ".join([f"{k}: {v:.4f}" for k, v in basin_stability.items()])
             logger.info("Result: {%s}", bs_str)
-            logger.info("-" * 80 + "\n")
+            logger.info("Elapsed: %.2fs", run_elapsed)
 
             # Explicitly free memory after each iteration
             del bse

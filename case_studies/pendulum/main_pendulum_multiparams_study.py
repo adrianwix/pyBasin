@@ -46,8 +46,8 @@ def main() -> BasinStabilityStudy:
     bss.run()
 
     # plotter = MatplotlibStudyPlotter(bss)
-    # plotter.plot_basin_stability_variation(parameters=["T"])
-    # plotter.plot_bifurcation_diagram(dof=[0, 1])
+    # plotter.plot_parameter_stability(parameters=["T"])
+    # plotter.plot_orbit_diagram([0, 1], parameters=["T"])
     # plt.show()
 
     bss.save()

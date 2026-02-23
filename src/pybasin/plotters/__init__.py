@@ -4,7 +4,7 @@
 from pybasin.plotters.types import (
     FeatureSpaceOptions,
     InteractivePlotterOptions,
-    ParamBifurcationOptions,
+    ParamOrbitDiagramOptions,
     ParamOverviewOptions,
     StateSpaceOptions,
     TemplatesPhaseSpaceOptions,
@@ -18,7 +18,7 @@ from pybasin.plotters.types import (
 __all__ = [
     "FeatureSpaceOptions",
     "InteractivePlotterOptions",
-    "ParamBifurcationOptions",
+    "ParamOrbitDiagramOptions",
     "ParamOverviewOptions",
     "StateSpaceOptions",
     "TemplatesPhaseSpaceOptions",

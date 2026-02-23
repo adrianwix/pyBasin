@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     plotter = MatplotlibStudyPlotter(bse)
 
-    plotter.plot_basin_stability_variation()
+    plotter.plot_parameter_stability()
     plotter.show()
 
     bse.save()
