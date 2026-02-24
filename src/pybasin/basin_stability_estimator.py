@@ -73,7 +73,7 @@ class BasinStabilityEstimator:
         template_integrator: TemplateIntegrator | None = None,
         feature_selector: FeatureSelectorProtocol | None = UNSET,  # type: ignore[assignment]
         detect_unbounded: bool = True,
-        compute_orbit_data: list[int] | bool = True,
+        compute_orbit_data: list[int] | bool = False,
         output_dir: str | Path | None = None,
     ):
         """
@@ -105,8 +105,8 @@ class BasinStabilityEstimator:
                                 When enabled, unbounded trajectories are separated and labeled as "unbounded"
                                 before feature extraction to prevent imputed Inf values from contaminating features.
         :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting.
-                         - ``True`` (default): Compute for all state dimensions.
-                         - ``False``: Disabled.
+                         - ``False`` (default): Disabled.
+                         - ``True``: Compute for all state dimensions.
                          - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).
         :param output_dir: Directory path for saving results (JSON, Excel, plots), or None to disable.
         :raises TypeError: If ``predictor`` is a regressor.

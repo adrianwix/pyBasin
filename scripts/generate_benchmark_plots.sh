@@ -1,12 +1,24 @@
 #!/bin/bash
 # Generate benchmark comparison plots for documentation
 # These plots use CPSME styling for thesis-quality output
+#
+# Usage:
+#   bash scripts/generate_benchmark_plots.sh         # pyBasin + bSTAB only
+#   bash scripts/generate_benchmark_plots.sh --all    # all tools (+ Attractors.jl, pynamicalsys)
 set -e
 
 cd /home/adrian/code/thesis/pyBasinWorkspace
 
-echo "=== Generating End-to-End Benchmark Plots ==="
+echo "=== Generating End-to-End Benchmark Plots (MATLAB vs Python) ==="
 uv run python -m benchmarks.end_to_end.compare_matlab_vs_python
+
+echo ""
+echo "=== Generating End-to-End Benchmark Plots (All Tools) ==="
+if [[ "$1" == "--all" ]]; then
+    uv run python -m benchmarks.end_to_end.compare_all --all
+else
+    uv run python -m benchmarks.end_to_end.compare_all
+fi
 
 echo ""
 echo "=== Generating Solver Comparison Plots ==="

@@ -8,30 +8,31 @@ View the profiling results in speedscope:
 
 ## Example Run
 
-The pendulum case study with 10,000 initial conditions using pyBasin defaults:
+The [pendulum case study](../case-studies/pendulum.md) with 10,000 initial conditions using pyBasin defaults — only the ODE system and region of interest were provided, all other components (solver, feature extractor, predictor) use their default configurations:
 
 ```
 BASIN STABILITY ESTIMATION COMPLETE
-Total time: 17.3210s
+Total time: 17.0062s
 Timing Breakdown:
-  1. Sampling:             0.0629s  (  0.4%)
-  2. Integration:         12.1686s  ( 70.3%)
-  3. Solution/Amps:        0.0571s  (  0.3%)
-  4. Features:             0.4379s  (  2.5%)
-  5. Filtering:            0.0047s  (  0.0%)
-  6. Classification:       4.5817s  ( 26.5%)
-  7. BS Computation:       0.0073s  (  0.0%)
+  1. Sampling:               0.0266s  (  0.2%)
+  2. Integration:           12.6641s  ( 74.5%)
+     - Main:                12.6638s  ( 74.5%)
+  3. Solution/Amps:          0.0000s  (  0.0%)
+  4. Features:               0.3235s  (  1.9%)
+  5. Filtering:              0.0033s  (  0.0%)
+  6. Classification:         3.9861s  ( 23.4%)
+  7. BS Computation:         0.0020s  (  0.0%)
 ```
 
 ### Expensive Steps
 
 The three most computationally expensive steps are:
 
-1. **ODE Integration (~70%)** — Solving the differential equations for all initial conditions. Uses JAX/Diffrax by default with GPU acceleration.
+1. **ODE Integration (~75%)** — Solving the differential equations for all initial conditions. Uses JAX/Diffrax by default with GPU acceleration.
 
-2. **Classification (~26%)** — HDBSCAN clustering with auto-tuning enabled, followed by KMeans to assign noise points to the nearest cluster.
+2. **Classification (~23%)** — HDBSCAN clustering with auto-tuning enabled, followed by KMeans to assign noise points to the nearest cluster.
 
-3. **Feature Extraction (~2.5%)** — Extracts time series features from trajectories. The default `TorchFeatureExtractor` uses these statistical features: `median`, `mean`, `standard_deviation`, `variance`, `root_mean_square`, `maximum`, `absolute_maximum`, `minimum`, `delta`, `log_delta`.
+3. **Feature Extraction (~2%)** — Extracts time series features from trajectories. The default `TorchFeatureExtractor` uses these statistical features: `median`, `mean`, `standard_deviation`, `variance`, `root_mean_square`, `maximum`, `absolute_maximum`, `minimum`, `delta`, `log_delta`.
 
 !!! note "Feature Complexity"
 More complex features (e.g., entropy, autocorrelation, frequency domain) can significantly increase extraction time. The default minimal set is chosen for speed while maintaining classification accuracy.

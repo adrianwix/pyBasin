@@ -18,12 +18,18 @@ All implementations use the same:
 | MATLAB bSTAB-M | CPU      | MATLAB `parfor`     |
 | pyBasin + JAX  | CPU      | Vectorized (`vmap`) |
 | pyBasin + JAX  | CUDA GPU | Vectorized (`vmap`) |
+| Attractors.jl  | CPU      | Threaded            |
 
 ## Results
 
 ### Performance Comparison
 
 {{ benchmark_comparison_table() }}
+
+!!! note "Attractors.jl memory limit"
+Attractors.jl is not benchmarked at N=100,000. The `GroupViaClustering` (DBSCAN) step
+allocates a full N×N pairwise distance matrix, requiring ~80 GB of RAM at that scale.
+The practical ceiling on this machine is N=50,000 (~20 GB).
 
 ### Scaling Analysis
 
@@ -42,6 +48,7 @@ All implementations use the same:
 1. **Python CPU** becomes **3-5× faster** than MATLAB for N > 5,000
 2. **Python CUDA** achieves near-constant time (~12s) regardless of N due to GPU parallelization
 3. At N=100,000: GPU is **~25× faster** than MATLAB (as long as data fits in GPU memory)
+4. **Attractors.jl** scales linearly (O(N)) and matches Python CPU throughput up to N=50,000
 
 ## Hardware
 
