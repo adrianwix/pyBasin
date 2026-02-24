@@ -104,7 +104,7 @@ class BasinStabilityEstimator:
                                 Only activates when solver has event_fn configured (e.g., JaxSolver with event_fn).
                                 When enabled, unbounded trajectories are separated and labeled as "unbounded"
                                 before feature extraction to prevent imputed Inf values from contaminating features.
-        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting.
+        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting:
                          - ``False`` (default): Disabled.
                          - ``True``: Compute for all state dimensions.
                          - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).

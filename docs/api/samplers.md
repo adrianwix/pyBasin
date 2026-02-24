@@ -13,3 +13,7 @@
 ---
 
 ::: pybasin.sampler.GaussianSampler
+
+---
+
+::: pybasin.sampler.CsvSampler

@@ -58,7 +58,7 @@ class BasinStabilityStudy:
         :param estimator: Any sklearn-compatible estimator (classifier or clusterer).
         :param study_params: Parameter study specification (SweepStudyParams, GridStudyParams, etc.).
         :param template_integrator: Template integrator for supervised classifiers.
-        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting.
+        :param compute_orbit_data: Enable orbit data computation for orbit diagram plotting:
                          - ``True`` (default): Compute for all state dimensions.
                          - ``False``: Disabled.
                          - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).

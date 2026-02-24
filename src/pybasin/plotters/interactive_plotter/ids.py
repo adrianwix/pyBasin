@@ -15,10 +15,12 @@ class IDs:
     Each page has a unique prefix. Use the ``id()`` method to generate
     fully qualified component IDs.
 
-    Example::
+    Example:
 
-        IDs.id(IDs.STATE_SPACE, "plot")  # returns 'state_space-plot'
-        IDs.id(IDs.FEATURE_SPACE, "x-select")  # returns 'feature_space-x-select'
+    ```python
+    IDs.id(IDs.STATE_SPACE, "plot")  # returns 'state_space-plot'
+    IDs.id(IDs.FEATURE_SPACE, "x-select")  # returns 'feature_space-x-select'
+    ```
     """
 
     # Page prefixes - aligned with ViewType from types.py

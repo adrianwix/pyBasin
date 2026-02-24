@@ -7,4 +7,4 @@ cd "$(dirname "$0")/.." || exit 1
 path="${1:-src/pybasin/}"
 shift 2>/dev/null || true
 
-uv run python .github/skills/python-documentation-writer/check_docstrings.py "$path" "$@"
+uv run python .github/skills/python-comments-writer/check_docstrings.py "$path" "$@"

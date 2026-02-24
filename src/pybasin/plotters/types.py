@@ -5,19 +5,21 @@ This module provides TypedDict-based options for configuring the InteractivePlot
 All options use ``total=False`` so every field is optional - unspecified values
 use sensible defaults at runtime.
 
-Example usage::
+Example:
 
-    from pybasin.plotters import InteractivePlotter
+```python
+from pybasin.plotters import InteractivePlotter
 
-    plotter = InteractivePlotter(
-        bse,
-        state_labels={0: "θ", 1: "ω"},
-        options={
-            "initial_view": "templates_phase_space",
-            "templates_time_series": {"state_variable": 1},
-            "templates_phase_space": {"exclude_templates": ["unbounded"]},
-        },
-    )
+plotter = InteractivePlotter(
+    bse,
+    state_labels={0: "θ", 1: "ω"},
+    options={
+        "initial_view": "templates_phase_space",
+        "templates_time_series": {"state_variable": 1},
+        "templates_phase_space": {"exclude_templates": ["unbounded"]},
+    },
+)
+```
 """
 
 from copy import deepcopy
@@ -114,14 +116,16 @@ class InteractivePlotterOptions(TypedDict, total=False):
     Invalid values (e.g., out-of-bounds indices) trigger a warning and
     fall back to safe defaults.
 
-    Example::
+    Example:
 
-        options: InteractivePlotterOptions = {
-            "initial_view": "templates_phase_space",
-            "templates_time_series": {"state_variable": 1, "time_range": (0.0, 1.0)},
-            "templates_phase_space": {"x_axis": 0, "y_axis": 2, "exclude_templates": ["unbounded"]},
-        }
-        plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
+    ```python
+    options: InteractivePlotterOptions = {
+        "initial_view": "templates_phase_space",
+        "templates_time_series": {"state_variable": 1, "time_range": (0.0, 1.0)},
+        "templates_phase_space": {"x_axis": 0, "y_axis": 2, "exclude_templates": ["unbounded"]},
+    }
+    plotter = InteractivePlotter(bse, state_labels={0: "x", 1: "y"}, options=options)
+    ```
     """
 
     initial_view: ViewType
