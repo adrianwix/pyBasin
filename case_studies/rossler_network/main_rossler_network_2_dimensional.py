@@ -211,7 +211,7 @@ def main() -> None:
         feature_extractor=feature_extractor,
         estimator=sync_classifier,
         study_params=study_params,
-        save_to=str(save_dir),
+        output_dir=str(save_dir),
         verbose=False,
     )
 

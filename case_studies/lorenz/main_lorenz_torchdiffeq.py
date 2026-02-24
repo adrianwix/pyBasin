@@ -40,7 +40,7 @@ def main():
         ode_system=ode_system,
         sampler=sampler,
         solver=solver,
-        save_to="results_case1_torchdiffeq",
+        output_dir="results_case1_torchdiffeq",
     )
 
     basin_stability = bse.estimate_bs()

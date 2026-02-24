@@ -22,7 +22,7 @@ def main():
         feature_extractor=setup.get("feature_extractor"),
         predictor=setup.get("estimator"),
         template_integrator=setup.get("template_integrator"),
-        save_to="results",
+        output_dir="results",
         feature_selector=None,
     )
 

@@ -22,7 +22,7 @@ def main():
         solver=setup.get("solver"),
         feature_extractor=setup.get("feature_extractor"),
         predictor=estimator,
-        save_to="results_unsupervised",
+        output_dir="results_unsupervised",
         feature_selector=None,
     )
 

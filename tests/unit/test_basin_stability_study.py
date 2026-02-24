@@ -69,7 +69,7 @@ class TestBasinStabilityStudyWithSweep:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -96,7 +96,7 @@ class TestBasinStabilityStudyWithSweep:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -124,7 +124,7 @@ class TestBasinStabilityStudyWithSweep:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()
@@ -153,7 +153,7 @@ class TestBasinStabilityStudyWithSweep:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()
@@ -183,7 +183,7 @@ class TestBasinStabilityStudyWithGrid:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -208,7 +208,7 @@ class TestBasinStabilityStudyWithGrid:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()
@@ -243,7 +243,7 @@ class TestBasinStabilityStudyWithZip:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -268,7 +268,7 @@ class TestBasinStabilityStudyWithZip:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()
@@ -306,7 +306,7 @@ class TestBasinStabilityStudyWithSampler:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -342,7 +342,7 @@ class TestBasinStabilityStudyWithSampler:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()
@@ -374,7 +374,7 @@ class TestBasinStabilityStudyBSEArguments:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -400,7 +400,7 @@ class TestBasinStabilityStudyBSEArguments:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -420,7 +420,7 @@ class TestBasinStabilityStudyBSEArguments:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             bs_study.run()
@@ -454,7 +454,7 @@ class TestBasinStabilityStudyResults:
             bs_study = BasinStabilityStudy(
                 n=100,
                 study_params=study_params,
-                save_to=None,
+                output_dir=None,
                 **mock_components,
             )
             results = bs_study.run()

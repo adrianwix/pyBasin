@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from json import JSONEncoder
+from pathlib import Path
 from typing import Any, ParamSpec, TypeVar
 
 import numpy as np
@@ -202,13 +203,16 @@ def _get_caller_dir() -> str:
     return os.getcwd()
 
 
-def resolve_folder(save_to: str) -> str:
+def resolve_folder(output_dir: str | Path) -> Path:
     """
-    Resolves the folder path relative to the caller's directory and ensures it exists.
+    Resolve an output directory path relative to the caller's directory and ensure it exists.
+
+    :param output_dir: Directory path (relative to calling script, or absolute).
+    :return: Resolved absolute path.
     """
-    base_dir = _get_caller_dir()
-    full_folder = os.path.join(base_dir, save_to)
-    os.makedirs(full_folder, exist_ok=True)
+    base_dir = Path(_get_caller_dir())
+    full_folder = base_dir / output_dir
+    full_folder.mkdir(parents=True, exist_ok=True)
     return full_folder
 
 

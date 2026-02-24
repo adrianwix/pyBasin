@@ -3,9 +3,9 @@
 import gc
 import json
 import logging
-import os
 import time
 import warnings
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -40,7 +40,7 @@ class BasinStabilityStudy:
         study_params: StudyParams,
         template_integrator: TemplateIntegrator | None = None,
         compute_orbit_data: list[int] | bool = True,
-        save_to: str | None = "results",
+        output_dir: str | Path | None = "results",
         verbose: bool = False,
     ):
         """
@@ -62,7 +62,7 @@ class BasinStabilityStudy:
                          - ``True`` (default): Compute for all state dimensions.
                          - ``False``: Disabled.
                          - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).
-        :param save_to: Folder path where results will be saved, or None to disable saving.
+        :param output_dir: Directory path for saving results (JSON, plots), or None to disable.
         :param verbose: If True, show detailed logs from BasinStabilityEstimator instances.
                         If False, suppress INFO logs to reduce output clutter during parameter sweeps.
         """
@@ -75,7 +75,7 @@ class BasinStabilityStudy:
         self.study_params = study_params
         self.template_integrator = template_integrator
         self.compute_orbit_data = compute_orbit_data
-        self.save_to = save_to
+        self.output_dir = output_dir
         self.verbose = verbose
 
         self.results: list[StudyResult] = []
@@ -90,35 +90,63 @@ class BasinStabilityStudy:
             return []
         return list(self.results[0]["study_label"].keys())
 
-    def _suppress_verbose_logs(self) -> dict[str, int]:
-        """Suppress verbose logs from BasinStabilityEstimator and related components.
+    def _suppress_verbose_logs(self) -> dict[str, list[logging.Filter]]:
+        """Suppress verbose logs, keeping only the BSE timing breakdown.
 
-        :return: Dictionary mapping logger names to their original log levels.
+        Instead of raising the log level to WARNING (which hides everything),
+        a filter is attached so that only the final timing summary lines from
+        ``BasinStabilityEstimator.estimate_bs`` are printed.
+
+        :return: Mapping of logger names to the filters that were added.
         """
-        original_levels: dict[str, int] = {}
+        added_filters: dict[str, list[logging.Filter]] = {}
 
         if self.verbose:
-            return original_levels
+            return added_filters
 
-        loggers_to_suppress = [
-            "pybasin.basin_stability_estimator",
-            "pybasin.predictors.base",
-            "pybasin.solvers.jax_solver",
-        ]
-        for logger_name in loggers_to_suppress:
-            log = logging.getLogger(logger_name)
-            original_levels[logger_name] = log.level
-            log.setLevel(logging.WARNING)
+        _TIMING_PREFIXES = (
+            "BASIN STABILITY ESTIMATION COMPLETE",
+            "Total time:",
+            "Timing Breakdown:",
+            "  1. Sampling:",
+            "  2. Integration:",
+            "     - Template:",
+            "     - Main:",
+            "  3. Solution/Amps:",
+            "  4. Features:",
+            "  5. Filtering:",
+            "  6. Classification:",
+            "  7. BS Computation:",
+        )
 
-        return original_levels
+        class _TimingOnly(logging.Filter):
+            def filter(self, record: logging.LogRecord) -> bool:
+                msg = record.getMessage()
+                return any(msg.startswith(p) for p in _TIMING_PREFIXES)
 
-    def _restore_log_levels(self, original_levels: dict[str, int]) -> None:
-        """Restore original log levels.
+        timing_filter = _TimingOnly()
+        suppress_all = logging.Filter(name="__block_all__")
 
-        :param original_levels: Dictionary mapping logger names to their original log levels.
+        bse_logger = logging.getLogger("pybasin.basin_stability_estimator")
+        bse_logger.addFilter(timing_filter)
+        added_filters["pybasin.basin_stability_estimator"] = [timing_filter]
+
+        for name in ("pybasin.predictors.base", "pybasin.solvers.jax_solver"):
+            log = logging.getLogger(name)
+            log.addFilter(suppress_all)
+            added_filters[name] = [suppress_all]
+
+        return added_filters
+
+    def _restore_log_levels(self, added_filters: dict[str, list[logging.Filter]]) -> None:
+        """Remove filters added by :meth:`_suppress_verbose_logs`.
+
+        :param added_filters: Mapping returned by ``_suppress_verbose_logs``.
         """
-        for logger_name, level in original_levels.items():
-            logging.getLogger(logger_name).setLevel(level)
+        for logger_name, filters in added_filters.items():
+            log = logging.getLogger(logger_name)
+            for f in filters:
+                log.removeFilter(f)
 
     def run(
         self,
@@ -248,12 +276,12 @@ class BasinStabilityStudy:
         if len(self.results) == 0:
             raise ValueError("No results to save. Please run run() first.")
 
-        if self.save_to is None:
-            raise ValueError("No path to save the results was specified.")
+        if self.output_dir is None:
+            raise ValueError("output_dir is not defined.")
 
-        full_folder = resolve_folder(self.save_to)
+        full_folder = resolve_folder(self.output_dir)
         file_name = generate_filename("parameter_study_results", "json")
-        full_path = os.path.join(full_folder, file_name)
+        full_path = full_folder / file_name
 
         def format_ode_system(ode_str: str) -> list[str]:
             lines = ode_str.strip().split("\n")

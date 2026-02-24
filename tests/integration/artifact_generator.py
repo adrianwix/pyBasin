@@ -8,6 +8,7 @@ Uses CPSME color palette and export utilities for thesis-quality plots.
 
 import json
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 
@@ -181,6 +182,8 @@ def generate_unsupervised_artifacts(
 def generate_parameter_sweep_artifacts(
     bs_study: BasinStabilityStudy,
     comparisons: list[ComparisonResult],
+    interval: Literal["linear", "log"] = "linear",
+    skip_orbit_diagram: bool = False,
 ) -> None:
     """Generate artifacts for a parameter sweep basin stability test.
 
@@ -188,6 +191,8 @@ def generate_parameter_sweep_artifacts(
 
     :param bs_study: The BasinStabilityStudy instance with results.
     :param comparisons: List of comparison results, one per parameter point.
+    :param interval: x-axis scale — ``'linear'`` or ``'log'``.
+    :param skip_orbit_diagram: Skip orbit diagram generation.
     """
     if not comparisons:
         return
@@ -226,7 +231,7 @@ def generate_parameter_sweep_artifacts(
 
     plotter = MatplotlibStudyPlotter(bs_study)
 
-    figs = plotter.plot_parameter_stability()
+    figs = plotter.plot_parameter_stability(interval=interval)
     for fig in figs:
         param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
         suffix = f"_{param_name}" if len(figs) > 1 else ""
@@ -234,14 +239,16 @@ def generate_parameter_sweep_artifacts(
         thesis_export(fig, f"{prefix}_basin_stability_variation{suffix}.png", DOCS_ASSETS_DIR)
 
     state_dim = bs_study.sampler.state_dim
+    if skip_orbit_diagram:
+        return
     if state_dim > 3:
         print(f"  Skipped orbit_diagram plot: state_dim={state_dim} > 3")
         return
 
-    dof = list(range(state_dim))
+    dof = [1] if state_dim >= 2 else [0]
 
     try:
-        figs = plotter.plot_orbit_diagram(dof)
+        figs = plotter.plot_orbit_diagram(interval=interval, dof=dof)
         for fig in figs:
             param_name = fig.axes[0].get_xlabel() if fig.axes else ""  # type: ignore[union-attr]
             suffix = f"_{param_name}" if len(figs) > 1 else ""

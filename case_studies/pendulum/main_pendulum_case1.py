@@ -28,7 +28,7 @@ def main():
         feature_extractor=props.get("feature_extractor"),
         predictor=props.get("estimator"),
         template_integrator=props.get("template_integrator"),
-        save_to="results_case1",
+        output_dir="results_case1",
         feature_selector=None,
     )
 

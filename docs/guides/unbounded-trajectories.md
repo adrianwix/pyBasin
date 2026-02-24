@@ -92,7 +92,7 @@ def main():
         ode_system=ode_system,
         sampler=sampler,
         solver=solver,
-        save_to="results_lorenz",
+        output_dir="results_lorenz",
     )
 
     basin_stability = bse.estimate_bs()

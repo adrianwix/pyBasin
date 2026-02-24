@@ -511,3 +511,4 @@
 2026-02-23 18:04:55 - main_pendulum_case1.py: 0.9047679901123047 seconds
 2026-02-23 18:06:55 - main_pendulum_case1.py: 0.9360489845275879 seconds
 2026-02-23 18:07:14 - main_pendulum_case1.py: 0.8474299907684326 seconds
+2026-02-24 09:00:05 - main_pendulum_multiparams_study.py: 238.38128566741943 seconds

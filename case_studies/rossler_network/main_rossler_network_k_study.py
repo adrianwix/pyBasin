@@ -58,7 +58,7 @@ def main() -> BasinStabilityStudy:
         estimator=estimator,
         study_params=study_params,
         template_integrator=template_integrator,
-        save_to="results_k_study",
+        output_dir="results_k_study",
     )
 
     bse.run()

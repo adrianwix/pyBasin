@@ -1,9 +1,11 @@
+import pickle
+from pathlib import Path
+
 import numpy as np
 
 from case_studies.pendulum.setup_pendulum_system import setup_pendulum_system
 from pybasin.basin_stability_study import BasinStabilityStudy
-
-# from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
+from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.plotters.interactive_plotter import InteractivePlotter
 from pybasin.study_params import GridStudyParams
 from pybasin.utils import time_execution
@@ -11,6 +13,8 @@ from pybasin.utils import time_execution
 T_VALUES = list(np.round(np.linspace(0.1, 0.9, 5), 2))
 ALPHA_VALUES = list(np.round(np.linspace(0.05, 0.3, 5), 3))
 N = 500
+
+CACHE_PATH = Path(__file__).parent / ".bss_cache.pkl"
 
 
 def main() -> BasinStabilityStudy:
@@ -40,15 +44,26 @@ def main() -> BasinStabilityStudy:
         estimator=estimator,
         study_params=study_params,
         template_integrator=template_integrator,
-        save_to="results_multiparams",
+        output_dir="results_multiparams",
     )
 
-    bss.run()
+    if CACHE_PATH.exists():
+        print(f"Loading cached results from {CACHE_PATH}")
+        with open(CACHE_PATH, "rb") as f:
+            bss.results = pickle.load(f)  # noqa: S301
+    else:
+        bss.run()
+        tmp = CACHE_PATH.with_suffix(".tmp")
+        with open(tmp, "wb") as f:
+            pickle.dump(bss.results, f)
+        tmp.rename(CACHE_PATH)
+        print(f"Cached results to {CACHE_PATH}")
 
-    # plotter = MatplotlibStudyPlotter(bss)
-    # plotter.plot_parameter_stability(parameters=["T"])
-    # plotter.plot_orbit_diagram([0, 1], parameters=["T"])
-    # plt.show()
+    plotter = MatplotlibStudyPlotter(bss)
+    plotter.plot_parameter_stability(parameters=["T"])
+    plotter.plot_orbit_diagram([0, 1], parameters=["T"])
+    plotter.show()
+    plotter.save()
 
     bss.save()
 
@@ -60,4 +75,4 @@ if __name__ == "__main__":
 
     state_labels = {0: "θ", 1: "ω"}
     plotter = InteractivePlotter(bss, state_labels=state_labels)
-    plotter.run(port=8050)
+    # plotter.run(port=8050)

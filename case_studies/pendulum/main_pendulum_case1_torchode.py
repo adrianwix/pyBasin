@@ -17,7 +17,7 @@ def main():
         feature_extractor=props.get("feature_extractor"),
         predictor=props.get("estimator"),
         template_integrator=props.get("template_integrator"),
-        save_to="results_case1_torchode",
+        output_dir="results_case1_torchode",
         feature_selector=None,
     )
 

@@ -29,7 +29,7 @@ The main class that orchestrates parameter sweeps.
 | `feature_extractor`   | `FeatureExtractor`             | Required | Extracts features from trajectories                       |
 | `estimator`           | `BaseEstimator`                | Required | Sklearn-compatible clusterer or classifier                |
 | `study_params`        | `StudyParams`                  | Required | Parameter variation specification                         |
-| `template_integrator` | `TemplateIntegrator` or `None` | `None`   | Template ICs for supervised classifiers                   |     | `compute_orbit_data` | `list[int]` or `bool` | `True` | Compute orbit data for bifurcation plots. `True` for all state dimensions, `list[int]` for specific indices, `False` to disable |     | `save_to` | `str` or `None` | `"results"` | Output folder path, or `None` to disable saving |
+| `template_integrator` | `TemplateIntegrator` or `None` | `None`   | Template ICs for supervised classifiers                   |     | `compute_orbit_data` | `list[int]` or `bool` | `True` | Compute orbit data for bifurcation plots. `True` for all state dimensions, `list[int]` for specific indices, `False` to disable |     | `output_dir` | `str`, `Path`, or `None` | `"results"` | Output folder path, or `None` to disable saving |
 | `verbose`             | `bool`                         | `False`  | Show detailed logs from each BSE run                      |
 
 !!! note "Required Components"
@@ -50,7 +50,7 @@ bs_study = BasinStabilityStudy(
     feature_extractor=feature_extractor,
     estimator=clusterer,
     study_params=study_params,
-    save_to="results",
+    output_dir="results",
 )
 
 results = bs_study.run()
@@ -256,7 +256,7 @@ plotter.plot_parameter_stability()
 # Orbit diagram showing attractor peak amplitudes
 plotter.plot_orbit_diagram(dof=[0, 1])
 
-# Save all figures to bs_study.save_to
+# Save all figures to bs_study.output_dir
 plotter.save()
 plotter.show()  # or use plt.show() directly
 ```
@@ -290,7 +290,7 @@ See the [Plotters guide](plotters.md) for detailed plotter documentation.
 
 ## Saving Results
 
-Call `save()` to write results to a JSON file in the `save_to` folder:
+Call `save()` to write results to a JSON file in the `output_dir` folder:
 
 ```python
 bs_study.save()
@@ -391,7 +391,7 @@ bs_study = BasinStabilityStudy(
     estimator=props["estimator"],
     study_params=study_params,
     template_integrator=props.get("template_integrator"),
-    save_to="results_T",
+    output_dir="results_T",
 )
 
 bs_study.run()
@@ -405,7 +405,7 @@ plotter.plot_parameter_stability()
 # Orbit diagram showing attractor peak amplitudes
 plotter.plot_orbit_diagram(dof=[0, 1])
 
-# Save all figures to bs_study.save_to
+# Save all figures to bs_study.output_dir
 plotter.save()  # or plotter.show() for interactive display
 
 # Save

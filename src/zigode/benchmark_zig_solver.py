@@ -31,8 +31,8 @@ PENDULUM_ZIG: ZigODE = ZigODE(name="pendulum", param_names=["alpha", "T", "K"])
 
 def _make_sympy_pendulum() -> SymPyODE:
     """Create a SymPy pendulum ODE (identical RHS to ``pendulum.zig``)."""
-    theta, dtheta = sp.symbols("theta dtheta")
-    alpha, T, K = sp.symbols("alpha T K")
+    theta, dtheta = sp.symbols("theta dtheta")  # type: ignore[reportUnknownMemberType]
+    alpha, T, K = sp.symbols("alpha T K")  # type: ignore[reportUnknownMemberType]
     return SymPyODE(
         name="pendulum_sympy",
         state=[theta, dtheta],

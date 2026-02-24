@@ -216,7 +216,7 @@ class BasinStabilityStudy:
         feature_extractor: FeatureExtractor,
         estimator: LabelPredictor,
         study_params: StudyParams,  # NEW: replaces as_params
-        save_to: str | None = "results",
+        output_dir: str | None = "results",
         verbose: bool = False,
     ):
         ...
@@ -428,7 +428,7 @@ class MultiStudyEstimator:
     def __init__(
         self,
         configs: list[BSERunConfig] | Iterator[BSERunConfig],
-        save_to: str | None = None,
+        output_dir: str | None = None,
     ):
         self.configs = list(configs)  # Materialize if iterator
         ...
@@ -687,7 +687,7 @@ class MultiStudyEstimator:
         self,
         base: BaseConfig,
         variations: list[Variation],
-        save_to: str | None = None,
+        output_dir: str | None = None,
     ):
         self.base = base
         self.variations = variations
@@ -698,7 +698,7 @@ class MultiStudyEstimator:
     def from_configs(
         cls,
         configs: list[BSERunConfig],
-        save_to: str | None = None,
+        output_dir: str | None = None,
     ) -> "MultiStudyEstimator":
         """Create from full config list (Proposal 5 style)."""
         ...

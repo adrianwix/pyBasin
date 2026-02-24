@@ -1,8 +1,6 @@
 """Parameter Study Basin Stability Plotter."""
 
 import logging
-import os
-import warnings
 from collections import defaultdict
 from typing import Any, Literal
 
@@ -40,25 +38,25 @@ class MatplotlibStudyPlotter:
 
     def save(self, dpi: int = 300) -> None:
         """
-        Save all pending figures to the save_to directory.
+        Save all pending figures to the output directory.
 
         Figures are tracked when plot methods create new figures. Call this
         after plotting to save all figures at once.
 
         :param dpi: Resolution for saved images.
-        :raises ValueError: If ``bs_study.save_to`` is not set or no figures pending.
+        :raises ValueError: If ``bs_study.output_dir`` is not set or no figures pending.
         """
-        if self.bs_study.save_to is None:
-            raise ValueError("bs_study.save_to is not defined. Set it before calling save().")
+        if self.bs_study.output_dir is None:
+            raise ValueError("bs_study.output_dir is not defined. Set it before calling save().")
 
         if not self._pending_figures:
             raise ValueError("No figures to save. Call a plot method first.")
 
-        full_folder = resolve_folder(self.bs_study.save_to)
+        full_folder = resolve_folder(self.bs_study.output_dir)
 
         for name, fig in self._pending_figures:
             file_name = generate_filename(name, "png")
-            full_path = os.path.join(full_folder, file_name)
+            full_path = full_folder / file_name
             logger.info("Saving plot to: %s", full_path)
             fig.savefig(full_path, dpi=dpi)  # type: ignore[misc]
 
@@ -82,9 +80,8 @@ class MatplotlibStudyPlotter:
         :param param_name: The parameter whose values form the x-axis.
         :return: Mapping from a tuple of (other_param, value) pairs to sorted result indices.
         """
-        other_params: list[str] = [
-            p for p in self.bs_study.studied_parameter_names if p != param_name
-        ]
+        plottable = set(self._plottable_parameter_names())
+        other_params: list[str] = [p for p in plottable if p != param_name]
 
         groups: dict[tuple[tuple[str, Any], ...], list[int]] = defaultdict(list)
         for i, r in enumerate(self.bs_study.results):
@@ -99,16 +96,34 @@ class MatplotlibStudyPlotter:
 
         return dict(groups)
 
+    def _plottable_parameter_names(self) -> list[str]:
+        """Return studied parameter names whose values are numeric (plottable).
+
+        Parameters like ``sampler`` carry object values (e.g. ``CsvSampler``)
+        that cannot be placed on a numeric axis, so they are excluded.
+
+        :return: Filtered list of parameter names.
+        """
+        all_names = self.bs_study.studied_parameter_names
+        if not self.bs_study.results:
+            return all_names
+        first_label = self.bs_study.results[0]["study_label"]
+        return [
+            n
+            for n in all_names
+            if isinstance(first_label[n], (int, float, np.floating, np.integer))
+        ]
+
     def _resolve_parameters(self, parameters: list[str] | None) -> list[str]:
         """Resolve which parameters to iterate over.
 
-        :param parameters: Explicit list or None for all.
+        :param parameters: Explicit list or None for all plottable parameters.
         :return: List of parameter names.
         :raises ValueError: If a name is not among the studied parameters.
         """
         all_names = self.bs_study.studied_parameter_names
         if parameters is None:
-            return all_names
+            return self._plottable_parameter_names()
         for p in parameters:
             if p not in all_names:
                 raise ValueError(f"Parameter '{p}' not found. Studied parameters: {all_names}")
@@ -148,9 +163,10 @@ class MatplotlibStudyPlotter:
     ) -> list[Figure]:
         """Plot basin stability values against parameter variation.
 
-        Produces one figure per parameter. For multi-parameter studies,
-        results are grouped by the other parameters and each group becomes
-        a separate set of lines in the figure.
+        Produces one figure per parameter. Colors represent attractors so that
+        downstream ``recolor_figure`` calls reassign thesis-palette colors
+        correctly. For multi-parameter studies, line style and marker vary per
+        group (combination of the other parameters).
 
         :param interval: x-axis scale — ``'linear'`` or ``'log'``.
         :param parameters: Which studied parameters to plot. ``None`` plots all.
@@ -165,12 +181,13 @@ class MatplotlibStudyPlotter:
         markers = ["o", "s", "^", "D", "v", "P", "X", "*", "h", "+"]
         linestyles = ["-", "--", ":", "-."]
         all_groups = {p: self._group_by_parameter(p) for p in params_to_plot}
-        max_n_groups = max(len(g) for g in all_groups.values()) if all_groups else 1
-        colors = self._generate_colors(max_n_groups)
+        attractor_colors = self._generate_colors(len(attractor_labels))
         figures: list[Figure] = []
 
         for param_name in params_to_plot:
             groups = all_groups[param_name]
+            n_groups = len(groups)
+            single_group = n_groups <= 1
 
             fig = plt.figure(figsize=(10, 6))  # type: ignore[misc]
 
@@ -188,9 +205,9 @@ class MatplotlibStudyPlotter:
                     plt.plot(  # type: ignore[misc]
                         x_values,
                         y_values,
-                        marker=markers[a_idx // len(linestyles) % len(markers)],
-                        linestyle=linestyles[a_idx % len(linestyles)],
-                        color=colors[g_idx],
+                        marker=markers[g_idx % len(markers)],
+                        linestyle=linestyles[g_idx % len(linestyles)],
+                        color=attractor_colors[a_idx],
                         markersize=8,
                         linewidth=2,
                         alpha=0.8,
@@ -200,39 +217,52 @@ class MatplotlibStudyPlotter:
                 Line2D(
                     [0],
                     [0],
-                    color="black",
+                    color=attractor_colors[a_idx],
                     linewidth=2,
-                    linestyle=linestyles[a_idx % len(linestyles)],
-                    marker=markers[a_idx // len(linestyles) % len(markers)],
+                    linestyle="-",
+                    marker="o",
                     markersize=8,
                     label=attractor,
                 )
                 for a_idx, attractor in enumerate(attractor_labels)
             ]
-            group_handles = [
-                Line2D(
-                    [0],
-                    [0],
-                    color=colors[g_idx],
-                    linewidth=4,
-                    label=", ".join(f"{k}={v}" for k, v in group_key) if group_key else "all",
+
+            if single_group:
+                plt.legend(  # type: ignore[misc]
+                    handles=attractor_handles,
+                    title="Attractor",
+                    loc="best",
                 )
-                for g_idx, group_key in enumerate(groups.keys())
-            ]
-            legend1 = plt.legend(  # type: ignore[misc]
-                handles=attractor_handles,
-                title="Attractor",
-                bbox_to_anchor=(1.05, 1),
-                loc="upper left",
-                handlelength=5,
-            )
-            plt.gca().add_artist(legend1)  # type: ignore[misc]
-            plt.legend(  # type: ignore[misc]
-                handles=group_handles,
-                title="Group",
-                bbox_to_anchor=(1.05, 0.5),
-                loc="upper left",
-            )
+            else:
+                group_handles = [
+                    Line2D(
+                        [0],
+                        [0],
+                        color="black",
+                        linewidth=2,
+                        linestyle=linestyles[g_idx % len(linestyles)],
+                        marker=markers[g_idx % len(markers)],
+                        markersize=8,
+                        markevery=[0],
+                        label=", ".join(f"{k}={v}" for k, v in group_key),
+                    )
+                    for g_idx, group_key in enumerate(groups.keys())
+                ]
+                legend1 = plt.legend(  # type: ignore[misc]
+                    handles=attractor_handles,
+                    title="Attractor",
+                    bbox_to_anchor=(1.02, 1),
+                    loc="upper left",
+                )
+                plt.gca().add_artist(legend1)  # type: ignore[misc]
+                plt.legend(  # type: ignore[misc]
+                    handles=group_handles,
+                    title="Parameters",
+                    bbox_to_anchor=(1.02, 0.5),
+                    loc="upper left",
+                    handlelength=4,
+                )
+
             plt.xlabel(param_name)  # type: ignore[misc]
             plt.ylabel("Basin Stability")  # type: ignore[misc]
             plt.title(f"Parameter Stability ({param_name})")  # type: ignore[misc]
@@ -247,6 +277,7 @@ class MatplotlibStudyPlotter:
     def plot_orbit_diagram(
         self,
         dof: list[int] | None = None,
+        interval: Literal["linear", "log"] = "linear",
         parameters: list[str] | None = None,
     ) -> list[Figure]:
         """Plot orbit diagrams showing attractor amplitude levels over parameter variation.
@@ -257,6 +288,7 @@ class MatplotlibStudyPlotter:
 
         Requires ``compute_orbit_data`` when creating the BasinStabilityStudy.
 
+        :param interval: x-axis scale — ``'linear'`` or ``'log'``.
         :param dof: List of state indices to plot. If None, uses the DOFs from orbit_data.
         :param parameters: Which studied parameters to plot. ``None`` plots all.
         :return: List of matplotlib Figure objects (one per parameter).
@@ -289,12 +321,15 @@ class MatplotlibStudyPlotter:
             if n_dofs == 1:
                 axes = [axes]
 
+            scatter_data: dict[int, dict[int, tuple[list[float], list[float]]]] = {
+                j: {a_idx: ([], []) for a_idx in range(len(attractor_labels))}
+                for j in range(n_dofs)
+            }
+
             for _, indices in groups.items():
                 x_values = [self.bs_study.results[i]["study_label"][param_name] for i in indices]
 
                 for a_idx, attractor in enumerate(attractor_labels):
-                    color = colors[a_idx]
-
                     for pos, result_idx in enumerate(indices):
                         result = self.bs_study.results[result_idx]
                         orbit_data: OrbitData | None = result.get("orbit_data")
@@ -322,38 +357,38 @@ class MatplotlibStudyPlotter:
                             if len(valid_peaks) == 0:
                                 continue
 
-                            ax = axes[j]
-                            ax.scatter(  # type: ignore[misc]
-                                [x_val] * len(valid_peaks),
-                                valid_peaks,
-                                c=[color],
-                                s=3,
-                                alpha=0.5,
-                            )
+                            xs, ys = scatter_data[j][a_idx]
+                            xs.extend([x_val] * len(valid_peaks))
+                            ys.extend(valid_peaks.tolist())
 
             for j, dof_idx in enumerate(dof):
                 ax = axes[j]
+                for a_idx, attractor in enumerate(attractor_labels):
+                    xs, ys = scatter_data[j][a_idx]
+                    if xs:
+                        ax.scatter(xs, ys, c=[colors[a_idx]], s=3, alpha=0.5, label=attractor)  # type: ignore[misc]
+
+                if interval == "log":
+                    ax.set_xscale("log")  # type: ignore[misc]
                 ax.set_xlabel(param_name)  # type: ignore[misc]
                 ax.set_ylabel(f"Amplitude (state {dof_idx})")  # type: ignore[misc]
                 ax.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
 
-                handles: list[Any] = []
-                seen_labels: set[str] = set()
-                for a_idx, attractor in enumerate(attractor_labels):
-                    if attractor not in seen_labels:
-                        handles.append(
-                            Line2D(
-                                [0],
-                                [0],
-                                marker="o",
-                                color="w",
-                                markerfacecolor=colors[a_idx],
-                                markersize=10,
-                                label=attractor,
-                            )
-                        )
-                        seen_labels.add(attractor)
-                ax.legend(handles=handles, title="Attractor")  # type: ignore[misc]
+                handles: list[Any] = [
+                    Line2D(
+                        [0],
+                        [0],
+                        marker="o",
+                        color="w",
+                        markerfacecolor=colors[a_idx],
+                        markersize=10,
+                        label=attractor,
+                    )
+                    for a_idx, attractor in enumerate(attractor_labels)
+                    if scatter_data[j][a_idx][0]
+                ]
+                if handles:
+                    ax.legend(handles=handles, title="Attractor")  # type: ignore[misc]
 
             plt.suptitle(f"Orbit Diagram ({param_name})")  # type: ignore[misc]
             plt.tight_layout()

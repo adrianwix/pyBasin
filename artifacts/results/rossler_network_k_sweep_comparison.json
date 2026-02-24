@@ -11,8 +11,8 @@
       "attractors": [
         {
           "label": "synchronized",
-          "python_bs": 0.078,
-          "python_se": 0.011992997957141493,
+          "python_bs": 0.092,
+          "python_se": 0.012925633446759968,
           "matlab_bs": 0.226,
           "matlab_se": 0.01870422412183943,
           "f1_score": 0.0,
@@ -39,8 +39,8 @@
       "attractors": [
         {
           "label": "synchronized",
-          "python_bs": 0.222,
-          "python_se": 0.018585801031970616,
+          "python_bs": 0.216,
+          "python_se": 0.01840347793217358,
           "matlab_bs": 0.274,
           "matlab_se": 0.01994612744369192,
           "f1_score": 0.0,
@@ -67,8 +67,8 @@
       "attractors": [
         {
           "label": "synchronized",
-          "python_bs": 0.302,
-          "python_se": 0.020532705618110828,
+          "python_bs": 0.304,
+          "python_se": 0.020571047615520213,
           "matlab_bs": 0.33,
           "matlab_se": 0.02102855201862458,
           "f1_score": 0.0,
@@ -291,8 +291,8 @@
       "attractors": [
         {
           "label": "synchronized",
-          "python_bs": 0.678,
-          "python_se": 0.020895741192884256,
+          "python_bs": 0.68,
+          "python_se": 0.020861447696648473,
           "matlab_bs": 0.69,
           "matlab_se": 0.02068332661831747,
           "f1_score": 0.0,

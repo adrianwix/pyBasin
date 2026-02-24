@@ -1,7 +1,6 @@
 # pyright: basic
 
 import logging
-import os
 
 import numpy as np
 import torch
@@ -28,26 +27,26 @@ class MatplotlibPlotter:
 
     def save(self, dpi: int = 300) -> None:
         """
-        Save all pending figures to the save_to directory.
+        Save all pending figures to the output directory.
 
         Figures are tracked when plot methods create new figures (i.e., when
         no ``ax`` parameter is passed). Call this after plotting to save
         all figures at once.
 
         :param dpi: Resolution for saved images.
-        :raises ValueError: If ``bse.save_to`` is not set or no figures pending.
+        :raises ValueError: If ``bse.output_dir`` is not set or no figures pending.
         """
-        if self.bse.save_to is None:
-            raise ValueError("bse.save_to is not defined. Set it before calling save().")
+        if self.bse.output_dir is None:
+            raise ValueError("bse.output_dir is not defined. Set it before calling save().")
 
         if not self._pending_figures:
             raise ValueError("No figures to save. Call a plot method first.")
 
-        full_folder = resolve_folder(self.bse.save_to)
+        full_folder = resolve_folder(self.bse.output_dir)
 
         for name, fig in self._pending_figures:
             file_name = generate_filename(name, "png")
-            full_path = os.path.join(full_folder, file_name)
+            full_path = full_folder / file_name
             logger.info("Saving plot to: %s", full_path)
             fig.savefig(full_path, dpi=dpi)
 

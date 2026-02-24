@@ -33,7 +33,7 @@ THESIS_PALETTE: list[str] = [
 # Lorenz-specific palette: red, blue, gray (sorted alphabetically: chaotic attractor 1, chaotic attractor 2, unbounded)
 LORENZ_PALETTE: list[str] = [
     _CPSME_COLORS["red"],  # chaotic attractor 1
-    _CPSME_COLORS["blue_4"],  # chaotic attractor 2
+    _CPSME_COLORS["blue_3"],  # chaotic attractor 2
     _CPSME_COLORS["grey_4"],  # unbounded
 ]
 

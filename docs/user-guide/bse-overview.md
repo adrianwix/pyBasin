@@ -56,7 +56,7 @@ Sample ICs --> Integrate ODEs --> Detect Unbounded --> Extract Features
 | `template_integrator` | `TemplateIntegrator` or `None` | `None`                   | Required for supervised classifiers. Holds template ICs and labels. |
 | `feature_selector`    | `BaseEstimator` or `None`      | `DefaultFeatureSelector` | Filters redundant features. `None` disables filtering.              |
 | `detect_unbounded`    | `bool`                         | `True`                   | Separate diverging trajectories before feature extraction.          |
-| `save_to`             | `str` or `None`                | `None`                   | Directory path for saving results to JSON or Excel.                 |
+| `output_dir`             | `str`, `Path`, or `None`       | `None`                   | Directory path for saving results to JSON or Excel.                 |
 
 For full method signatures and docstrings, see the [API reference](../api/basin-stability-estimator.md).
 
@@ -288,7 +288,7 @@ Increasing `n` reduces the error proportionally to $1/\sqrt{N}$.
 
 ## Saving Results
 
-Two export methods are available after running `estimate_bs()`. Both require `save_to` to be set in the constructor.
+Two export methods are available after running `estimate_bs()`. Both require `output_dir` to be set in the constructor.
 
 ### JSON Export
 
@@ -298,7 +298,7 @@ Two export methods are available after running `estimate_bs()`. Both require `sa
 bse = BasinStabilityEstimator(
     ode_system=ode,
     sampler=sampler,
-    save_to="results/pendulum",
+    output_dir="results/pendulum",
 )
 bse.estimate_bs()
 bse.save()  # writes results/pendulum/basin_stability_results_<timestamp>.json
@@ -326,7 +326,7 @@ plotter.plot_bse_results()              # 4-panel diagnostic
 plotter.plot_basin_stability_bars()     # bar chart of BS values
 plotter.plot_state_space()              # labeled phase portrait
 plotter.plot_feature_space()            # feature space clusters
-plotter.save()  # save all to bse.save_to
+plotter.save()  # save all to bse.output_dir
 plotter.show()  # or use plt.show() directly
 ```
 
@@ -409,7 +409,7 @@ bse = BasinStabilityEstimator(
     predictor=predictor,
     template_integrator=template_integrator,
     feature_selector=selector,
-    save_to="results/pendulum",
+    output_dir="results/pendulum",
 )
 
 bs_vals = bse.estimate_bs()

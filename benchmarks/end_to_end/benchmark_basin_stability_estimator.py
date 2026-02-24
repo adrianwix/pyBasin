@@ -91,7 +91,7 @@ def create_bse(n: int, device: str) -> BasinStabilityEstimator:
         template_integrator=template_integrator,
         feature_selector=None,
         detect_unbounded=False,
-        save_to=None,
+        output_dir=None,
     )
 
 

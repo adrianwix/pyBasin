@@ -34,7 +34,7 @@ def main() -> BasinStabilityEstimator:
         feature_extractor=props.get("feature_extractor"),
         predictor=props.get("estimator"),
         template_integrator=props.get("template_integrator"),
-        save_to="results",
+        output_dir="results",
         feature_selector=None,
         detect_unbounded=False,
     )

@@ -115,7 +115,9 @@ class TestPendulum:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(bs_study, comparisons)
+            artifact_collector.add_parameter_sweep(
+                bs_study, comparisons, interval="log", skip_orbit_diagram=True
+            )
 
     @pytest.mark.integration
     @pytest.mark.no_artifacts

@@ -39,6 +39,9 @@ class Sampler(ABC):
         self.max_limits = torch.tensor(max_limits, dtype=torch.float32, device=self.device)
         self.state_dim = len(min_limits)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(dim={self.state_dim})"
+
     @abstractmethod
     def sample(self, n: int) -> torch.Tensor:
         """
@@ -192,6 +195,9 @@ class CsvSampler(Sampler):
             dtype=torch.float32,
             device=self.device,
         )
+
+    def __repr__(self) -> str:
+        return f"CsvSampler({self.csv_path.name}, n={self.n_samples})"
 
     @property
     def labels(self) -> np.ndarray | None:

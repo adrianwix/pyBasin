@@ -114,7 +114,3 @@ This hyperparameter study varies the number of initial conditions $N$ from ~50 t
 #### Basin Stability Variation
 
 ![Basin Stability Variation](../assets/case_studies/pendulum_case3_basin_stability_variation.png)
-
-#### Bifurcation Diagram
-
-![Bifurcation Diagram](../assets/case_studies/pendulum_case3_bifurcation_diagram.png)

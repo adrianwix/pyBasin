@@ -180,4 +180,4 @@ class TestLorenz:
         )
 
         if artifact_collector is not None:
-            artifact_collector.add_parameter_sweep(bs_study, comparisons)
+            artifact_collector.add_parameter_sweep(bs_study, comparisons, interval="log")

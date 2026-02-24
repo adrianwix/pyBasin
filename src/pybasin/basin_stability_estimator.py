@@ -1,9 +1,9 @@
 import json
 import logging
-import os
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
@@ -69,7 +69,7 @@ class BasinStabilityEstimator:
         feature_selector: FeatureSelectorProtocol | None = UNSET,  # type: ignore[assignment]
         detect_unbounded: bool = True,
         compute_orbit_data: list[int] | bool = True,
-        save_to: str | None = None,
+        output_dir: str | Path | None = None,
     ):
         """
         Initialize the BasinStabilityEstimator.
@@ -103,14 +103,14 @@ class BasinStabilityEstimator:
                          - ``True`` (default): Compute for all state dimensions.
                          - ``False``: Disabled.
                          - ``list[int]``: Compute for specific state indices (e.g., ``[0, 1]``).
-        :param save_to: Optional file path to save results.
+        :param output_dir: Directory path for saving results (JSON, Excel, plots), or None to disable.
         :raises TypeError: If ``predictor`` is a regressor.
         :raises ValueError: If ``predictor`` is a classifier but no ``template_integrator`` is provided.
         """
         self.n = int(n)
         self.ode_system = ode_system
         self.sampler = sampler
-        self.save_to = save_to
+        self.output_dir = output_dir
 
         if solver is not None:
             self.solver = solver
@@ -621,17 +621,17 @@ class BasinStabilityEstimator:
         Converts numpy arrays and Solution objects to standard Python types.
 
         :raises ValueError: If ``estimate_bs()`` has not been called yet.
-        :raises ValueError: If ``save_to`` path is not defined.
+        :raises ValueError: If ``output_dir`` is not defined.
         """
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
 
-        if self.save_to is None:
-            raise ValueError("save_to is not defined.")
+        if self.output_dir is None:
+            raise ValueError("output_dir is not defined.")
 
-        full_folder = resolve_folder(self.save_to)
+        full_folder = resolve_folder(self.output_dir)
         file_name = generate_filename("basin_stability_results", "json")
-        full_path = os.path.join(full_folder, file_name)
+        full_path = full_folder / file_name
 
         def format_ode_system(ode_str: str) -> list[str]:
             lines = ode_str.strip().split("\n")
@@ -695,21 +695,21 @@ class BasinStabilityEstimator:
         Includes grid samples, labels, and bifurcation amplitudes.
 
         :raises ValueError: If ``estimate_bs()`` has not been called yet.
-        :raises ValueError: If ``save_to`` path is not defined.
+        :raises ValueError: If ``output_dir`` is not defined.
         :raises ValueError: If no solution data is available.
         """
         if self.bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
 
-        if self.save_to is None:
-            raise ValueError("save_to is not defined.")
+        if self.output_dir is None:
+            raise ValueError("output_dir is not defined.")
 
         if self.y0 is None or self.solution is None:
             raise ValueError("No solution data available. Please run estimate_bs() first.")
 
-        full_folder = resolve_folder(self.save_to)
+        full_folder = resolve_folder(self.output_dir)
         file_name = generate_filename("basin_stability_results", "xlsx")
-        full_path = os.path.join(full_folder, file_name)
+        full_path = full_folder / file_name
 
         # Convert tensors to lists for DataFrame
         y0_list: list[Any] = self.y0.detach().cpu().numpy().tolist()

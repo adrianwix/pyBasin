@@ -39,7 +39,6 @@ from ._compiler import (
 )
 from ._paths import LIB_DIR, SOLVER_LIB_NAME, USER_ODE_DIR
 
-
 # ============================================================
 # ODE Definition Interface
 # ============================================================

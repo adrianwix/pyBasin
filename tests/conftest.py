@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import pytest
 
@@ -50,6 +50,8 @@ class ArtifactEntry:
     :ivar trajectory_x_limits: X-axis limits (x_min, x_max) for trajectory plot.
     :ivar trajectory_y_limits: Y-axis limits (y_min, y_max) for trajectory plot.
     :ivar phase_space_axes: Tuple (x_var, y_var) for 2D phase space plot.
+    :ivar interval: x-axis scale for parameter sweep plots.
+    :ivar skip_orbit_diagram: Skip orbit diagram generation for this entry.
     """
 
     bse: BasinStabilityEstimator | None = None
@@ -61,6 +63,8 @@ class ArtifactEntry:
     trajectory_x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None
     trajectory_y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None
     phase_space_axes: tuple[int, int] | None = None
+    interval: Literal["linear", "log"] = "linear"
+    skip_orbit_diagram: bool = False
 
 
 class ArtifactCollector:
@@ -102,9 +106,24 @@ class ArtifactCollector:
         self,
         bs_study: BasinStabilityStudy,
         comparisons: list[ComparisonResult],
+        interval: Literal["linear", "log"] = "linear",
+        skip_orbit_diagram: bool = False,
     ) -> None:
-        """Add a parameter sweep test result."""
-        self.entries.append(ArtifactEntry(bs_study=bs_study, comparisons=comparisons))
+        """Add a parameter sweep test result.
+
+        :param bs_study: The BasinStabilityStudy instance with results.
+        :param comparisons: List of ComparisonResult for each parameter point.
+        :param interval: x-axis scale for parameter sweep plots.
+        :param skip_orbit_diagram: Skip orbit diagram generation.
+        """
+        self.entries.append(
+            ArtifactEntry(
+                bs_study=bs_study,
+                comparisons=comparisons,
+                interval=interval,
+                skip_orbit_diagram=skip_orbit_diagram,
+            )
+        )
 
     def add_unsupervised(
         self,
@@ -199,7 +218,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
             system_name = entry.comparisons[0].system_name
             case_name = entry.comparisons[0].case_name
             print(f"\n📊 {system_name} - {case_name} (parameter sweep)")
-            generate_parameter_sweep_artifacts(entry.bs_study, entry.comparisons)
+            generate_parameter_sweep_artifacts(
+                entry.bs_study,
+                entry.comparisons,
+                interval=entry.interval,
+                skip_orbit_diagram=entry.skip_orbit_diagram,
+            )
 
     print(f"\n{'=' * 60}")
     print("✅ Artifact generation complete")

@@ -328,7 +328,7 @@ print(basin_stability)  # {'FP': 0.52, 'LC': 0.48}
      | `predictor`         | `BaseEstimator`     | `HDBSCANClusterer`       | Classification method       |
      | `feature_selector`  | `BaseEstimator`     | `DefaultFeatureSelector` | Feature filtering           |
      | `detect_unbounded`  | `bool`              | `True`                   | Stop diverging trajectories |
-     | `save_to`           | `str`               | `None`                   | Output directory            |
+     | `output_dir`           | `str`               | `None`                   | Output directory            |
 
 3. **Default Flow Diagram**
 

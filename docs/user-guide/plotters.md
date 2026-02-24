@@ -33,7 +33,7 @@ plotter.plot_feature_space()
 plotter.plot_templates_phase_space(x_var=0, y_var=1, time_range=(700, 1000))
 plotter.plot_templates_trajectories(plotted_var=0, y_limits=(-1.4, 1.4))
 
-# Save all pending figures to bse.save_to
+# Save all pending figures to bse.output_dir
 plotter.save(dpi=300)
 ```
 
@@ -53,7 +53,7 @@ plotter.save(dpi=300)
 | `plot_feature_space`          | `(ax: Axes \| None = None) -> Axes`                                | Feature space scatter with classifier results. Handles 1D (strip plot) and 2D cases. |
 | `plot_templates_phase_space`  | `(x_var=0, y_var=1, z_var=None, time_range=(700, 1000)) -> Figure` | Template trajectories in 2D or 3D phase space.                                       |
 | `plot_templates_trajectories` | `(plotted_var: int, y_limits=None, x_limits=None) -> Figure`       | Stacked subplots, one per template trajectory.                                       |
-| `save`                        | `(dpi: int = 300) -> None`                                         | Saves all pending figures as PNG files to `bse.save_to`.                             |
+| `save`                        | `(dpi: int = 300) -> None`                                         | Saves all pending figures as PNG files to `bse.output_dir`.                             |
 | `show`                        | `() -> None`                                                       | Calls `plt.show()`.                                                                  |
 
 ### Composing into Existing Figures
@@ -243,7 +243,7 @@ plotter.save(dpi=300)
 | -------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | `plot_parameter_stability` | `(interval: "linear" \| "log" = "linear", parameters: list[str] \| None = None) -> list[Figure]` | Basin stability vs. parameter value. One figure per parameter. Supports linear or log x-axis.       |
 | `plot_orbit_diagram`       | `(dof: list[int] \| None = None, parameters: list[str] \| None = None) -> list[Figure]`          | Orbit diagram showing peak attractor amplitudes over parameter variation. One figure per parameter. |
-| `save`                     | `(dpi: int = 300) -> None`                                                                       | Saves all pending figures as PNG files to `bs_study.save_to`.                                       |
+| `save`                     | `(dpi: int = 300) -> None`                                                                       | Saves all pending figures as PNG files to `bs_study.output_dir`.                                       |
 | `show`                     | `() -> None`                                                                                     | Calls `plt.show()`.                                                                                 |
 
 The `parameters` argument on both plotting methods filters which study parameters to plot. When `None`, all parameters are included. The `dof` argument in `plot_orbit_diagram` selects which state dimensions to include; when `None`, all DOFs stored in `orbit_data` are used.
@@ -255,10 +255,10 @@ The `parameters` argument on both plotting methods filters which study parameter
 
 ## Saving Figures
 
-Both `MatplotlibPlotter` and `MatplotlibStudyPlotter` track figures internally. Each call to a `plot_*` method adds the resulting figure to a pending queue, and `save()` writes them all as PNG files to the directory specified by `bse.save_to` or `bs_study.save_to`.
+Both `MatplotlibPlotter` and `MatplotlibStudyPlotter` track figures internally. Each call to a `plot_*` method adds the resulting figure to a pending queue, and `save()` writes them all as PNG files to the directory specified by `bse.output_dir` or `bs_study.output_dir`.
 
 !!! warning "Requirements for `save()`"
-`save()` raises `ValueError` if the output directory (`save_to`) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure `save_to` points to a valid path.
+`save()` raises `ValueError` if the output directory (`output_dir`) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure `output_dir` points to a valid path.
 
 `show()` is a thin wrapper around `plt.show()` -- useful for quick inspection in notebooks or scripts. It does not clear the pending queue, so you can call both `show()` and `save()` on the same plotter.
 

@@ -144,7 +144,8 @@ class SymPyODE(ODEDefinition):
         state_vars = "\n".join(f"    double {s.name} = y[{i}];" for i, s in enumerate(self._state))
         param_vars = "\n".join(f"    double {p.name} = p->{p.name};" for p in self._params)
         rhs_lines = "\n".join(
-            f"    dydt[{i}] = {printer.doprint(expr)};" for i, expr in enumerate(self._rhs)
+            f"    dydt[{i}] = {printer.doprint(expr)};"  # type: ignore[reportUnknownMemberType]
+            for i, expr in enumerate(self._rhs)
         )
 
         return _C_TEMPLATE.format(

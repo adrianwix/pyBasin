@@ -13,17 +13,19 @@ from __future__ import annotations
 
 import sys
 import time
+from typing import cast
 
 import numpy as np
 import sympy as sp
 import torch
 
+from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE
+from case_studies.pendulum.pendulum_jax_ode import PendulumParams as PendulumJaxParams
+from case_studies.pendulum.pendulum_ode import PendulumODE
+from case_studies.pendulum.pendulum_ode import PendulumParams as PendulumTorchParams
+from pybasin.solvers import JaxSolver, TorchDiffEqSolver
 from zigode.sympy_ode import SymPyODE
 from zigode.zig_solver import ZigODE, ZigODESolver
-
-from case_studies.pendulum.pendulum_jax_ode import PendulumJaxODE
-from case_studies.pendulum.pendulum_ode import PendulumODE
-from pybasin.solvers import JaxSolver, TorchDiffEqSolver
 
 PARAMS: dict[str, float] = {"alpha": 0.1, "T": 0.5, "K": 1.0}
 T_SPAN: tuple[float, float] = (0.0, 1000.0)
@@ -44,8 +46,8 @@ PENDULUM_ZIG: ZigODE = ZigODE(name="pendulum", param_names=["alpha", "T", "K"])
 
 def _make_sympy_pendulum(name: str = "pendulum_sympy_test") -> SymPyODE:
     """Create a SymPy pendulum ODE identical to the Zig one."""
-    theta, dtheta = sp.symbols("theta dtheta")
-    alpha, T, K = sp.symbols("alpha T K")
+    theta, dtheta = sp.symbols("theta dtheta")  # type: ignore[reportUnknownMemberType]
+    alpha, T, K = sp.symbols("alpha T K")  # type: ignore[reportUnknownMemberType]
     return SymPyODE(
         name=name,
         state=[theta, dtheta],
@@ -78,7 +80,7 @@ def solve_with_zig(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.
 
 
 def solve_with_jax(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    ode = PendulumJaxODE(PARAMS)
+    ode = PendulumJaxODE(cast(PendulumJaxParams, PARAMS))
     solver = JaxSolver(
         time_span=T_SPAN,
         n_steps=N_STEPS,
@@ -86,7 +88,7 @@ def solve_with_jax(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.
         atol=ATOL,
         cache_dir=None,
     )
-    y0_torch = torch.from_numpy(y0s)
+    y0_torch = torch.from_numpy(y0s)  # type: ignore[reportUnknownMemberType]
     t_torch, y_torch = solver.integrate(ode, y0_torch)
     t_np: np.ndarray = t_torch.numpy()
     y_np: np.ndarray = y_torch.numpy()
@@ -97,7 +99,7 @@ def solve_with_torchdiffeq(
     y0s: np.ndarray,
     t_eval: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    ode = PendulumODE(PARAMS)
+    ode = PendulumODE(cast(PendulumTorchParams, PARAMS))
     solver = TorchDiffEqSolver(
         time_span=T_SPAN,
         n_steps=N_STEPS,
@@ -106,7 +108,7 @@ def solve_with_torchdiffeq(
         atol=ATOL,
         cache_dir=None,
     )
-    y0_torch = torch.from_numpy(y0s).to(solver.device)
+    y0_torch = torch.from_numpy(y0s).to(solver.device)  # type: ignore[reportUnknownMemberType]
     t_torch, y_torch = solver.integrate(ode, y0_torch)
     t_np: np.ndarray = t_torch.cpu().numpy()
     y_np: np.ndarray = y_torch.cpu().numpy()
@@ -135,7 +137,7 @@ def test_shapes() -> None:
 
     # t_eval returned correctly
     report("t_eval length", len(t) == N_STEPS, f"len={len(t)}")
-    report("t_eval endpoints", np.isclose(t[0], 0.0) and np.isclose(t[-1], 1000.0))
+    report("t_eval endpoints", bool(np.isclose(t[0], 0.0) and np.isclose(t[-1], 1000.0)))  # type: ignore[reportUnknownArgumentType]
 
 
 def _compare_solver_pair(
@@ -274,7 +276,7 @@ def test_sympy_codegen() -> None:
     report("C source contains ode_dim", "ode_dim" in c_src)
     report("C source contains ode_param_size", "ode_param_size" in c_src)
     report("C source contains sin(", "sin(" in c_src)
-    report("source_exists before write", isinstance(PENDULUM_SYMPY.source_exists(), bool))
+    report("source_exists before write", PENDULUM_SYMPY.source_exists())
     report("param_names correct", PENDULUM_SYMPY.param_names == ["alpha", "T", "K"])
 
 
@@ -286,13 +288,13 @@ def test_sympy_shapes() -> None:
     t_eval = np.linspace(T_SPAN[0], T_SPAN[1], N_STEPS)
 
     # Single IC
-    t, y = solver.solve(PENDULUM_SYMPY, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
+    _, y = solver.solve(PENDULUM_SYMPY, [0.4, 0.0], T_SPAN, t_eval, params=PARAMS)
     report("sympy single IC 3-D", y.ndim == 3, f"shape={y.shape}")
     report("sympy single IC shape (1, N, 2)", y.shape == (1, N_STEPS, 2), f"shape={y.shape}")
 
     # Batch IC
     y0s = np.array(TEST_ICS, dtype=np.float64)
-    t, y = solver.solve(PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS)
+    _, y = solver.solve(PENDULUM_SYMPY, y0s, T_SPAN, t_eval, params=PARAMS)
     report(
         "sympy batch shape (5, N, 2)",
         y.shape == (len(TEST_ICS), N_STEPS, 2),
