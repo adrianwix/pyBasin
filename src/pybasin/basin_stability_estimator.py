@@ -45,6 +45,11 @@ warnings.filterwarnings("ignore", message="os.fork\\(\\) was called")
 logger = logging.getLogger(__name__)
 
 
+def _log_timing(label: str, step_time: float, total_time: float) -> None:
+    if step_time > 0:
+        logger.info("  %-24s %8.4fs  (%5.1f%%)", label, step_time, step_time / total_time * 100)
+
+
 class BasinStabilityEstimator:
     """
     Core class for basin stability analysis.
@@ -276,6 +281,9 @@ class BasinStabilityEstimator:
         t2_start = time.perf_counter()  # Track total integration time
         t2a_elapsed = 0.0  # Template integration time
         t2b_elapsed = 0.0  # Main integration time
+        t3b_elapsed = 0.0  # Unbounded detection time
+        t_orbit_elapsed = 0.0  # Orbit data extraction time
+        t5b_elapsed = 0.0  # Classifier fitting time
 
         if parallel_integration and self.template_integrator is not None:
             logger.info("  Mode: PARALLEL (integration only)")
@@ -530,60 +538,25 @@ class BasinStabilityEstimator:
             logger.info("    %s: %.2f%%", label, basin_stability_fraction * 100)
 
         t7_elapsed = time.perf_counter() - t7
-        logger.info("  Basin stability computed in %.4fs", t6_elapsed)
+        logger.info("  Basin stability computed in %.4fs", t7_elapsed)
 
         # Summary
         total_elapsed = time.perf_counter() - total_start
         logger.info("BASIN STABILITY ESTIMATION COMPLETE")
         logger.info("Total time: %.4fs", total_elapsed)
         logger.info("Timing Breakdown:")
-        logger.info(
-            "  1. Sampling:           %8.4fs  (%5.1f%%)",
-            t1_elapsed,
-            t1_elapsed / total_elapsed * 100,
-        )
-        logger.info(
-            "  2. Integration:        %8.4fs  (%5.1f%%)",
-            t2_elapsed,
-            t2_elapsed / total_elapsed * 100,
-        )
-        if t2a_elapsed > 0:
-            logger.info(
-                "     - Template:         %8.4fs  (%5.1f%%)",
-                t2a_elapsed,
-                t2a_elapsed / total_elapsed * 100,
-            )
-        if t2b_elapsed > 0:
-            logger.info(
-                "     - Main:             %8.4fs  (%5.1f%%)",
-                t2b_elapsed,
-                t2b_elapsed / total_elapsed * 100,
-            )
-        logger.info(
-            "  3. Solution/Amps:      %8.4fs  (%5.1f%%)",
-            t3_elapsed,
-            t3_elapsed / total_elapsed * 100,
-        )
-        logger.info(
-            "  4. Features:           %8.4fs  (%5.1f%%)",
-            t4_elapsed,
-            t4_elapsed / total_elapsed * 100,
-        )
-        logger.info(
-            "  5. Filtering:          %8.4fs  (%5.1f%%)",
-            t5_elapsed,
-            t5_elapsed / total_elapsed * 100,
-        )
-        logger.info(
-            "  6. Classification:     %8.4fs  (%5.1f%%)",
-            t6_elapsed,
-            t6_elapsed / total_elapsed * 100,
-        )
-        logger.info(
-            "  7. BS Computation:     %8.4fs  (%5.1f%%)",
-            t7_elapsed,
-            t7_elapsed / total_elapsed * 100,
-        )
+        _log_timing("1. Sampling:", t1_elapsed, total_elapsed)
+        _log_timing("2. Integration:", t2_elapsed, total_elapsed)
+        _log_timing("   - Template:", t2a_elapsed, total_elapsed)
+        _log_timing("   - Main:", t2b_elapsed, total_elapsed)
+        _log_timing("3. Solution/Amps:", t3_elapsed, total_elapsed)
+        _log_timing("(3b) Unbounded Det.:", t3b_elapsed, total_elapsed)
+        _log_timing("(3c) Orbit Data:", t_orbit_elapsed, total_elapsed)
+        _log_timing("4. Features:", t4_elapsed, total_elapsed)
+        _log_timing("5. Filtering:", t5_elapsed, total_elapsed)
+        _log_timing("(5b) Classifier Fit:", t5b_elapsed, total_elapsed)
+        _log_timing("6. Classification:", t6_elapsed, total_elapsed)
+        _log_timing("7. BS Computation:", t7_elapsed, total_elapsed)
 
         return self.bs_vals
 
