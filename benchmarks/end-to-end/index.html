@@ -2112,6 +2112,11 @@
 <td>CUDA GPU</td>
 <td>Vectorized (<code>vmap</code>)</td>
 </tr>
+<tr>
+<td>Attractors.jl</td>
+<td>CPU</td>
+<td>Threaded</td>
+</tr>
 </tbody>
 </table>
 <h2 id="results">Results</h2>
@@ -2120,96 +2125,103 @@
 <thead>
 <tr>
 <th style="text-align: right;">N</th>
-<th style="text-align: right;">MATLAB (s)</th>
-<th style="text-align: right;">Python CPU (s)</th>
-<th style="text-align: right;">Python CUDA (s)</th>
-<th style="text-align: right;">CPU vs MATLAB</th>
-<th style="text-align: right;">GPU vs MATLAB</th>
+<th style="text-align: right;">MATLAB</th>
+<th style="text-align: right;">Python CPU</th>
+<th style="text-align: right;">Python CUDA</th>
+<th style="text-align: right;">Attractors.jl</th>
+<th style="text-align: right;">pynamicalsys</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: right;">100</td>
-<td style="text-align: right;">0.76</td>
-<td style="text-align: right;">1.30</td>
-<td style="text-align: right;">12.86</td>
-<td style="text-align: right;">0.6x</td>
-<td style="text-align: right;">0.1x</td>
+<td style="text-align: right;">0.76s</td>
+<td style="text-align: right;">1.30s (0.6×)</td>
+<td style="text-align: right;">12.86s (0.1×)</td>
+<td style="text-align: right;">0.19s (4.0×)</td>
+<td style="text-align: right;"><strong>0.16s (4.7×)</strong></td>
 </tr>
 <tr>
 <td style="text-align: right;">200</td>
-<td style="text-align: right;">1.02</td>
-<td style="text-align: right;">1.50</td>
-<td style="text-align: right;">12.87</td>
-<td style="text-align: right;">0.7x</td>
-<td style="text-align: right;">0.1x</td>
+<td style="text-align: right;">1.02s</td>
+<td style="text-align: right;">1.50s (0.7×)</td>
+<td style="text-align: right;">12.87s (0.1×)</td>
+<td style="text-align: right;"><strong>0.16s (6.4×)</strong></td>
+<td style="text-align: right;">0.28s (3.6×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">500</td>
-<td style="text-align: right;">1.90</td>
-<td style="text-align: right;">1.62</td>
-<td style="text-align: right;">12.98</td>
-<td style="text-align: right;">1.2x</td>
-<td style="text-align: right;">0.1x</td>
+<td style="text-align: right;">1.90s</td>
+<td style="text-align: right;">1.62s (1.2×)</td>
+<td style="text-align: right;">12.98s (0.1×)</td>
+<td style="text-align: right;"><strong>0.41s (4.6×)</strong></td>
+<td style="text-align: right;">0.62s (3.1×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">1,000</td>
-<td style="text-align: right;">3.27</td>
-<td style="text-align: right;">2.00</td>
-<td style="text-align: right;">12.05</td>
-<td style="text-align: right;">1.6x</td>
-<td style="text-align: right;">0.3x</td>
+<td style="text-align: right;">3.27s</td>
+<td style="text-align: right;">2.00s (1.6×)</td>
+<td style="text-align: right;">12.05s (0.3×)</td>
+<td style="text-align: right;"><strong>0.85s (3.9×)</strong></td>
+<td style="text-align: right;">1.15s (2.8×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">2,000</td>
-<td style="text-align: right;">6.29</td>
-<td style="text-align: right;">2.72</td>
-<td style="text-align: right;">12.32</td>
-<td style="text-align: right;">2.3x</td>
-<td style="text-align: right;">0.5x</td>
+<td style="text-align: right;">6.29s</td>
+<td style="text-align: right;">2.72s (2.3×)</td>
+<td style="text-align: right;">12.32s (0.5×)</td>
+<td style="text-align: right;"><strong>1.68s (3.8×)</strong></td>
+<td style="text-align: right;">2.51s (2.5×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">5,000</td>
-<td style="text-align: right;">15.90</td>
-<td style="text-align: right;">5.73</td>
-<td style="text-align: right;">12.82</td>
-<td style="text-align: right;">2.8x</td>
-<td style="text-align: right;">1.2x</td>
+<td style="text-align: right;">15.90s</td>
+<td style="text-align: right;">5.73s (2.8×)</td>
+<td style="text-align: right;">12.82s (1.2×)</td>
+<td style="text-align: right;"><strong>4.22s (3.8×)</strong></td>
+<td style="text-align: right;">5.55s (2.9×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">10,000</td>
-<td style="text-align: right;">31.01</td>
-<td style="text-align: right;">10.52</td>
-<td style="text-align: right;">12.64</td>
-<td style="text-align: right;">2.9x</td>
-<td style="text-align: right;">2.5x</td>
+<td style="text-align: right;">31.01s</td>
+<td style="text-align: right;">10.52s (2.9×)</td>
+<td style="text-align: right;">12.64s (2.5×)</td>
+<td style="text-align: right;"><strong>9.12s (3.4×)</strong></td>
+<td style="text-align: right;">11.11s (2.8×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">20,000</td>
-<td style="text-align: right;">62.73</td>
-<td style="text-align: right;">20.94</td>
-<td style="text-align: right;">12.27</td>
-<td style="text-align: right;">3.0x</td>
-<td style="text-align: right;">5.1x</td>
+<td style="text-align: right;">62.73s</td>
+<td style="text-align: right;"><strong>20.94s (3.0×)</strong></td>
+<td style="text-align: right;"><strong>12.27s (5.1×)</strong></td>
+<td style="text-align: right;">21.08s (3.0×)</td>
+<td style="text-align: right;">23.03s (2.7×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">50,000</td>
-<td style="text-align: right;">153.04</td>
-<td style="text-align: right;">30.07</td>
-<td style="text-align: right;">12.40</td>
-<td style="text-align: right;">5.1x</td>
-<td style="text-align: right;">12.3x</td>
+<td style="text-align: right;">153.04s</td>
+<td style="text-align: right;"><strong>30.07s (5.1×)</strong></td>
+<td style="text-align: right;"><strong>12.40s (12.3×)</strong></td>
+<td style="text-align: right;">86.38s (1.8×)</td>
+<td style="text-align: right;">56.02s (2.7×)</td>
 </tr>
 <tr>
 <td style="text-align: right;">100,000</td>
-<td style="text-align: right;">309.07</td>
-<td style="text-align: right;">62.94</td>
-<td style="text-align: right;">12.57</td>
-<td style="text-align: right;">4.9x</td>
-<td style="text-align: right;">24.6x</td>
+<td style="text-align: right;">309.07s</td>
+<td style="text-align: right;"><strong>62.94s (4.9×)</strong></td>
+<td style="text-align: right;"><strong>12.57s (24.6×)</strong></td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">115.96s (2.7×)</td>
 </tr>
 </tbody>
 </table>
+<p><em>Bold marks the fastest per row. When the GPU wins, the best CPU-only option is also bolded — use it as the recommended alternative when no GPU is available.</em></p>
+<div class="admonition note">
+<p class="admonition-title">Attractors.jl memory limit</p>
+</div>
+<p>Attractors.jl is not benchmarked at N=100,000. The <code>GroupViaClustering</code> (DBSCAN) step
+allocates a full N×N pairwise distance matrix, requiring ~80 GB of RAM at that scale.
+The practical ceiling on this machine is N=50,000 (~20 GB).</p>
 <h3 id="scaling-analysis">Scaling Analysis</h3>
 <table>
 <thead>
@@ -2222,16 +2234,28 @@
 </thead>
 <tbody>
 <tr>
-<td>MATLAB</td>
+<td>Attractors.jl</td>
 <td>O(N)</td>
-<td>0.90 ± 0.06</td>
-<td>0.992</td>
+<td>1.02 ± 0.12</td>
+<td>0.977</td>
+</tr>
+<tr>
+<td>pynamicalsys</td>
+<td>O(N)</td>
+<td>0.96 ± 0.02</td>
+<td>0.999</td>
 </tr>
 <tr>
 <td>Python CPU</td>
 <td>O(N^0.59)</td>
 <td>0.59 ± 0.10</td>
 <td>0.942</td>
+</tr>
+<tr>
+<td>MATLAB</td>
+<td>O(N)</td>
+<td>0.90 ± 0.06</td>
+<td>0.992</td>
 </tr>
 <tr>
 <td>Python CUDA</td>
@@ -2250,6 +2274,7 @@
 <li><strong>Python CPU</strong> becomes <strong>3-5× faster</strong> than MATLAB for N &gt; 5,000</li>
 <li><strong>Python CUDA</strong> achieves near-constant time (~12s) regardless of N due to GPU parallelization</li>
 <li>At N=100,000: GPU is <strong>~25× faster</strong> than MATLAB (as long as data fits in GPU memory)</li>
+<li><strong>Attractors.jl</strong> scales linearly (O(N)) and matches Python CPU throughput up to N=50,000</li>
 </ol>
 <h2 id="hardware">Hardware</h2>
 <p>Benchmarks run on:</p>

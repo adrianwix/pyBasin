@@ -1992,29 +1992,30 @@
 <p>View the profiling results in speedscope:</p>
 <p><a class="md-button md-button--primary" href="https://www.speedscope.app/#profileURL=https%3A%2F%2Fraw.githubusercontent.com%2Fadrianwix%2FpyBasin%2Fmain%2Fbenchmarks%2Fprofiling%2Fprofile.speedscope.json&amp;title=pyBasin%20Profiling">Open in speedscope</a></p>
 <h2 id="example-run">Example Run</h2>
-<p>The pendulum case study with 10,000 initial conditions using pyBasin defaults:</p>
+<p>The <a href="../../case-studies/pendulum/">pendulum case study</a> with 10,000 initial conditions using pyBasin defaults — only the ODE system and region of interest were provided, all other components (solver, feature extractor, predictor) use their default configurations:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>BASIN STABILITY ESTIMATION COMPLETE
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Total time: 17.3210s
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Total time: 17.0062s
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Timing Breakdown:
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  1. Sampling:             0.0629s  (  0.4%)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  2. Integration:         12.1686s  ( 70.3%)
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  3. Solution/Amps:        0.0571s  (  0.3%)
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  4. Features:             0.4379s  (  2.5%)
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  5. Filtering:            0.0047s  (  0.0%)
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  6. Classification:       4.5817s  ( 26.5%)
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  7. BS Computation:       0.0073s  (  0.0%)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  1. Sampling:               0.0266s  (  0.2%)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  2. Integration:           12.6641s  ( 74.5%)
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>     - Main:                12.6638s  ( 74.5%)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  3. Solution/Amps:          0.0000s  (  0.0%)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  4. Features:               0.3235s  (  1.9%)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  5. Filtering:              0.0033s  (  0.0%)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  6. Classification:         3.9861s  ( 23.4%)
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  7. BS Computation:         0.0020s  (  0.0%)
 </code></pre></div>
 <h3 id="expensive-steps">Expensive Steps</h3>
 <p>The three most computationally expensive steps are:</p>
 <ol>
 <li>
-<p><strong>ODE Integration (~70%)</strong> — Solving the differential equations for all initial conditions. Uses JAX/Diffrax by default with GPU acceleration.</p>
+<p><strong>ODE Integration (~75%)</strong> — Solving the differential equations for all initial conditions. Uses JAX/Diffrax by default with GPU acceleration.</p>
 </li>
 <li>
-<p><strong>Classification (~26%)</strong> — HDBSCAN clustering with auto-tuning enabled, followed by KMeans to assign noise points to the nearest cluster.</p>
+<p><strong>Classification (~23%)</strong> — HDBSCAN clustering with auto-tuning enabled, followed by KMeans to assign noise points to the nearest cluster.</p>
 </li>
 <li>
-<p><strong>Feature Extraction (~2.5%)</strong> — Extracts time series features from trajectories. The default <code>TorchFeatureExtractor</code> uses these statistical features: <code>median</code>, <code>mean</code>, <code>standard_deviation</code>, <code>variance</code>, <code>root_mean_square</code>, <code>maximum</code>, <code>absolute_maximum</code>, <code>minimum</code>, <code>delta</code>, <code>log_delta</code>.</p>
+<p><strong>Feature Extraction (~2%)</strong> — Extracts time series features from trajectories. The default <code>TorchFeatureExtractor</code> uses these statistical features: <code>median</code>, <code>mean</code>, <code>standard_deviation</code>, <code>variance</code>, <code>root_mean_square</code>, <code>maximum</code>, <code>absolute_maximum</code>, <code>minimum</code>, <code>delta</code>, <code>log_delta</code>.</p>
 </li>
 </ol>
 <div class="admonition note">

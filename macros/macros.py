@@ -1,3 +1,4 @@
+# pyright: basic
 """MkDocs macros for case study documentation.
 
 This module provides macros for rendering comparison tables from JSON artifacts
@@ -466,60 +467,107 @@ def solver_matlab_speedup_table() -> str:
 def benchmark_comparison_table() -> str:
     """Render benchmark comparison table from CSV data.
 
+    Each non-MATLAB column shows time and speedup vs MATLAB, e.g. ``5.73s (2.8x)``.
+    The fastest implementation per row is **bolded**. When the GPU wins, the best
+    CPU-only option is also bolded so readers can identify the best no-GPU alternative.
+    Prefers the all-tools CSV (generated with ``--all``) over the two-tool CSV.
+
     :return: Markdown table string.
     """
+    csv_path_all = BENCHMARK_RESULTS_DIR / "end_to_end_comparison_all.csv"
     csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
 
-    if not csv_path.exists():
-        return '!!! warning "Missing Data"\n    Benchmark data not found. Run `uv run python benchmarks/end_to_end/compare_matlab_vs_python.py` to generate.'
+    if csv_path_all.exists():
+        df = pd.read_csv(csv_path_all)
+    elif csv_path.exists():
+        df = pd.read_csv(csv_path)
+    else:
+        return '!!! warning "Missing Data"\n    Benchmark data not found. Run `bash scripts/generate_benchmark_plots.sh --all` to generate.'
 
-    df = pd.read_csv(csv_path)
-
-    n_values = sorted(df["N"].unique())
+    impl_order = ["MATLAB", "Python CPU", "Python CUDA", "Attractors.jl", "pynamicalsys"]
+    present_impls = [impl for impl in impl_order if impl in df["implementation"].unique()]
+    has_cuda = "Python CUDA" in present_impls
 
     table_lines: list[str] = [
-        "| N | MATLAB (s) | Python CPU (s) | Python CUDA (s) | CPU vs MATLAB | GPU vs MATLAB |",
-        "|--:|----------:|---------------:|----------------:|--------------:|--------------:|",
+        "| N | " + " | ".join(present_impls) + " |",
+        "|--:|" + "|".join(["--:" for _ in present_impls]) + "|",
     ]
 
-    for n in n_values:
+    cuda_won_any = False
+
+    for n in sorted(df["N"].unique()):
         n_data = df[df["N"] == n]
-
         matlab_row = n_data[n_data["implementation"] == "MATLAB"]
-        cpu_row = n_data[n_data["implementation"] == "Python CPU"]
-        cuda_row = n_data[n_data["implementation"] == "Python CUDA"]
-
         matlab_time = matlab_row["mean_time"].values[0] if len(matlab_row) > 0 else float("nan")
-        cpu_time = cpu_row["mean_time"].values[0] if len(cpu_row) > 0 else float("nan")
-        cuda_time = cuda_row["mean_time"].values[0] if len(cuda_row) > 0 else float("nan")
 
-        cpu_speedup = matlab_time / cpu_time if cpu_time > 0 else float("nan")
-        gpu_speedup = matlab_time / cuda_time if cuda_time > 0 else float("nan")
+        # Collect times for present implementations
+        row_times: dict[str, float] = {}
+        for impl in present_impls:
+            impl_row = n_data[n_data["implementation"] == impl]
+            if len(impl_row) > 0:
+                row_times[impl] = float(impl_row["mean_time"].values[0])
 
-        table_lines.append(
-            f"| {n:,} | {matlab_time:.2f} | {cpu_time:.2f} | {cuda_time:.2f} | {cpu_speedup:.1f}x | {gpu_speedup:.1f}x |"
+        winner = min(row_times, key=lambda x: row_times[x]) if row_times else None
+        cuda_won = winner == "Python CUDA"
+        if cuda_won:
+            cuda_won_any = True
+            # Best non-GPU, non-MATLAB option for readers without a GPU
+            cpu_candidates = {
+                k: v for k, v in row_times.items() if k not in ("Python CUDA", "MATLAB")
+            }
+            best_cpu = (
+                min(cpu_candidates, key=lambda x: cpu_candidates[x]) if cpu_candidates else None
+            )
+        else:
+            best_cpu = None
+
+        cells: list[str] = [f"{n:,}"]
+        for impl in present_impls:
+            if impl not in row_times:
+                cells.append("—")
+                continue
+            t = row_times[impl]
+            if impl == "MATLAB":
+                cell = f"{t:.2f}s"
+            else:
+                factor = matlab_time / t if t > 0 and not np.isnan(matlab_time) else float("nan")
+                factor_str = f"{factor:.1f}×" if not np.isnan(factor) else "?"
+                cell = f"{t:.2f}s ({factor_str})"
+
+            if impl == winner or (cuda_won and impl == best_cpu):
+                cell = f"**{cell}**"
+            cells.append(cell)
+        table_lines.append("| " + " | ".join(cells) + " |")
+
+    result = "\n".join(table_lines)
+    if cuda_won_any and has_cuda:
+        result += (
+            "\n\n*Bold marks the fastest per row. "
+            "When the GPU wins, the best CPU-only option is also bolded — "
+            "use it as the recommended alternative when no GPU is available.*"
         )
-
-    return "\n".join(table_lines)
+    return result
 
 
 def benchmark_scaling_analysis() -> str:
-    """Render scaling analysis summary from benchmark data.
+    """Render scaling analysis summary from benchmark data, sorted fastest first.
 
     :return: Markdown summary string.
     """
+    csv_path_all = BENCHMARK_RESULTS_DIR / "end_to_end_comparison_all.csv"
     csv_path = BENCHMARK_RESULTS_DIR / "end_to_end_comparison.csv"
 
-    if not csv_path.exists():
+    if csv_path_all.exists():
+        df = pd.read_csv(csv_path_all)
+    elif csv_path.exists():
+        df = pd.read_csv(csv_path)
+    else:
         return '!!! warning "Missing Data"\n    Benchmark data not found.'
 
-    df = pd.read_csv(csv_path)
+    impl_order = ["MATLAB", "Python CPU", "Python CUDA", "Attractors.jl", "pynamicalsys"]
+    implementations = [impl for impl in impl_order if impl in df["implementation"].unique()]
 
-    implementations = ["MATLAB", "Python CPU", "Python CUDA"]
-    results: list[str] = [
-        "| Implementation | Scaling | Exponent α | R² |",
-        "|----------------|---------|------------|-----|",
-    ]
+    rows: list[dict] = []
 
     for impl in implementations:
         impl_data = df[df["implementation"] == impl].sort_values("N")
@@ -545,7 +593,30 @@ def benchmark_scaling_analysis() -> str:
         else:
             complexity = f"O(N^{alpha:.2f})"
 
-        results.append(f"| {impl} | {complexity} | {alpha:.2f} ± {alpha_ci:.2f} | {r2:.3f} |")
+        # Geometric mean of observed times as the sort key (lower = faster)
+        geomean = float(np.exp(np.mean(np.log(t_vals))))
+
+        rows.append(
+            {
+                "impl": impl,
+                "complexity": complexity,
+                "alpha": alpha,
+                "alpha_ci": alpha_ci,
+                "r2": r2,
+                "geomean": geomean,
+            }
+        )
+
+    rows.sort(key=lambda r: r["geomean"])
+
+    results: list[str] = [
+        "| Implementation | Scaling | Exponent α | R² |",
+        "|----------------|---------|------------|-----|",
+    ]
+    for r in rows:
+        results.append(
+            f"| {r['impl']} | {r['complexity']} | {r['alpha']:.2f} ± {r['alpha_ci']:.2f} | {r['r2']:.3f} |"
+        )
 
     return "\n".join(results)
 
