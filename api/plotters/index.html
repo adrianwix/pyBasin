@@ -2476,7 +2476,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Save all pending figures to the save_to directory.</p>
+        <p>Save all pending figures to the output directory.</p>
 <p>Figures are tracked when plot methods create new figures (i.e., when
 no <code>ax</code> parameter is passed). Call this after plotting to save
 all figures at once.</p>
@@ -2528,7 +2528,7 @@ all figures at once.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>bse.save_to</code> is not set or no figures pending.</p>
+                <p>If <code>bse.output_dir</code> is not set or no figures pending.</p>
               </div>
             </td>
           </tr>
@@ -3423,7 +3423,7 @@ studied parameter.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Save all pending figures to the save_to directory.</p>
+        <p>Save all pending figures to the output directory.</p>
 <p>Figures are tracked when plot methods create new figures. Call this
 after plotting to save all figures at once.</p>
 
@@ -3474,7 +3474,7 @@ after plotting to save all figures at once.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>bs_study.save_to</code> is not set or no figures pending.</p>
+                <p>If <code>bs_study.output_dir</code> is not set or no figures pending.</p>
               </div>
             </td>
           </tr>
@@ -3525,9 +3525,10 @@ import matplotlib separately.</p>
     <div class="doc doc-contents ">
 
         <p>Plot basin stability values against parameter variation.</p>
-<p>Produces one figure per parameter. For multi-parameter studies,
-results are grouped by the other parameters and each group becomes
-a separate set of lines in the figure.</p>
+<p>Produces one figure per parameter. Colors represent attractors so that
+downstream <code>recolor_figure</code> calls reassign thesis-palette colors
+correctly. For multi-parameter studies, line style and marker vary per
+group (combination of the other parameters).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3614,8 +3615,9 @@ a separate set of lines in the figure.</p>
 </h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">plot_orbit_diagram</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">dof</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Figure</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3638,6 +3640,22 @@ Period-N orbits appear as N distinct amplitude bands.</p>
         </tr>
       </thead>
       <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>interval</code>
+            </td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;linear&#39;, &#39;log&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>x-axis scale — <code>'linear'</code> or <code>'log'</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;linear&#39;</code>
+            </td>
+          </tr>
           <tr class="doc-section-item">
             <td>
                 <code>dof</code>

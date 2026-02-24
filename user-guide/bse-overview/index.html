@@ -2383,8 +2383,8 @@
 <td>Separate diverging trajectories before feature extraction.</td>
 </tr>
 <tr>
-<td><code>save_to</code></td>
-<td><code>str</code> or <code>None</code></td>
+<td><code>output_dir</code></td>
+<td><code>str</code>, <code>Path</code>, or <code>None</code></td>
 <td><code>None</code></td>
 <td>Directory path for saving results to JSON or Excel.</td>
 </tr>
@@ -2585,13 +2585,13 @@
 <p>Increasing <code>n</code> reduces the error proportionally to <span class="arithmatex">\(1/\sqrt{N}\)</span>.</p>
 <hr />
 <h2 id="saving-results">Saving Results</h2>
-<p>Two export methods are available after running <code>estimate_bs()</code>. Both require <code>save_to</code> to be set in the constructor.</p>
+<p>Two export methods are available after running <code>estimate_bs()</code>. Both require <code>output_dir</code> to be set in the constructor.</p>
 <h3 id="json-export">JSON Export</h3>
 <p><code>save()</code> writes basin stability values, ODE system definition, sampler settings, and feature selection metadata:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">bse</span> <span class="o">=</span> <span class="n">BasinStabilityEstimator</span><span class="p">(</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">ode_system</span><span class="o">=</span><span class="n">ode</span><span class="p">,</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">)</span>
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">bse</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># writes results/pendulum/basin_stability_results_&lt;timestamp&gt;.json</span>
@@ -2610,7 +2610,7 @@
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_basin_stability_bars</span><span class="p">()</span>     <span class="c1"># bar chart of BS values</span>
 <a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_state_space</span><span class="p">()</span>              <span class="c1"># labeled phase portrait</span>
 <a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_feature_space</span><span class="p">()</span>            <span class="c1"># feature space clusters</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># save all to bse.save_to</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># save all to bse.output_dir</span>
 <a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># or use plt.show() directly</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pybasin.plotters.interactive_plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlotter</span>
@@ -2685,7 +2685,7 @@
 <a id="__codelineno-15-61" name="__codelineno-15-61" href="#__codelineno-15-61"></a>    <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
 <a id="__codelineno-15-62" name="__codelineno-15-62" href="#__codelineno-15-62"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">template_integrator</span><span class="p">,</span>
 <a id="__codelineno-15-63" name="__codelineno-15-63" href="#__codelineno-15-63"></a>    <span class="n">feature_selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
-<a id="__codelineno-15-64" name="__codelineno-15-64" href="#__codelineno-15-64"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-64" name="__codelineno-15-64" href="#__codelineno-15-64"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results/pendulum&quot;</span><span class="p">,</span>
 <a id="__codelineno-15-65" name="__codelineno-15-65" href="#__codelineno-15-65"></a><span class="p">)</span>
 <a id="__codelineno-15-66" name="__codelineno-15-66" href="#__codelineno-15-66"></a>
 <a id="__codelineno-15-67" name="__codelineno-15-67" href="#__codelineno-15-67"></a><span class="n">bs_vals</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">estimate_bs</span><span class="p">()</span>

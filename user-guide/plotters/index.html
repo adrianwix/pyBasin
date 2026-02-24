@@ -2269,7 +2269,7 @@
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_templates_phase_space</span><span class="p">(</span><span class="n">x_var</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="p">(</span><span class="mi">700</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_templates_trajectories</span><span class="p">(</span><span class="n">plotted_var</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y_limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">1.4</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">))</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># Save all pending figures to bse.save_to</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># Save all pending figures to bse.output_dir</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="constructor-parameters">Constructor Parameters</h3>
@@ -2334,7 +2334,7 @@
 <tr>
 <td><code>save</code></td>
 <td><code>(dpi: int = 300) -&gt; None</code></td>
-<td>Saves all pending figures as PNG files to <code>bse.save_to</code>.</td>
+<td>Saves all pending figures as PNG files to <code>bse.output_dir</code>.</td>
 </tr>
 <tr>
 <td><code>show</code></td>
@@ -2729,7 +2729,7 @@
 <tr>
 <td><code>save</code></td>
 <td><code>(dpi: int = 300) -&gt; None</code></td>
-<td>Saves all pending figures as PNG files to <code>bs_study.save_to</code>.</td>
+<td>Saves all pending figures as PNG files to <code>bs_study.output_dir</code>.</td>
 </tr>
 <tr>
 <td><code>show</code></td>
@@ -2745,11 +2745,11 @@
 <p><code>BasinStabilityStudy</code> sets <code>compute_orbit_data=True</code> by default, so <code>plot_orbit_diagram</code> is available immediately after <code>run()</code> with no extra configuration. Pass <code>compute_orbit_data=False</code> to skip orbit computation and reduce runtime when orbit diagrams are not needed.</p>
 <hr />
 <h2 id="saving-figures">Saving Figures</h2>
-<p>Both <code>MatplotlibPlotter</code> and <code>MatplotlibStudyPlotter</code> track figures internally. Each call to a <code>plot_*</code> method adds the resulting figure to a pending queue, and <code>save()</code> writes them all as PNG files to the directory specified by <code>bse.save_to</code> or <code>bs_study.save_to</code>.</p>
+<p>Both <code>MatplotlibPlotter</code> and <code>MatplotlibStudyPlotter</code> track figures internally. Each call to a <code>plot_*</code> method adds the resulting figure to a pending queue, and <code>save()</code> writes them all as PNG files to the directory specified by <code>bse.output_dir</code> or <code>bs_study.output_dir</code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Requirements for <code>save()</code></p>
 </div>
-<p><code>save()</code> raises <code>ValueError</code> if the output directory (<code>save_to</code>) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure <code>save_to</code> points to a valid path.</p>
+<p><code>save()</code> raises <code>ValueError</code> if the output directory (<code>output_dir</code>) has not been set on the estimator or study, or if no figures are pending. Call at least one plot method before saving, and make sure <code>output_dir</code> points to a valid path.</p>
 <p><code>show()</code> is a thin wrapper around <code>plt.show()</code> -- useful for quick inspection in notebooks or scripts. It does not clear the pending queue, so you can call both <code>show()</code> and <code>save()</code> on the same plotter.</p>
 <p>For full class signatures and docstrings, see the <a href="../../api/plotters/">API reference</a>.</p>
 

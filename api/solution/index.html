@@ -1620,6 +1620,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pybasin.utils.OrbitData" class="md-nav__link">
+    <span class="md-ellipsis">
+      OrbitData
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2029,6 +2038,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pybasin.utils.OrbitData" class="md-nav__link">
+    <span class="md-ellipsis">
+      OrbitData
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2082,7 +2100,6 @@
 <li>Optional labels/classification for each trajectory.</li>
 <li>Optional model parameters that were used in the integration.</li>
 <li>Optional orbit data for orbit diagram plotting.</li>
-<li>Optional bifurcation amplitudes (deprecated, use orbit_data instead).</li>
 </ul>
 
 
@@ -2198,22 +2215,16 @@
           <tr class="doc-section-item">
             <td><code><span title="pybasin.solution.Solution.orbit_data">orbit_data</span></code></td>
             <td>
-                  <code><span title="pybasin.utils.OrbitData">OrbitData</span> | None</code>
+                  <code><a class="autorefs autorefs-internal" title="pybasin.utils.OrbitData
+
+
+  
+      dataclass
+  " href="#pybasin.utils.OrbitData">OrbitData</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>Peak amplitude data for orbit diagram plotting.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="pybasin.solution.Solution.bifurcation_amplitudes">bifurcation_amplitudes</span></code></td>
-            <td>
-                  <code><span title="torch.Tensor">Tensor</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Deprecated. Maximum absolute values along time dimension.</p>
               </div>
             </td>
           </tr>
@@ -2608,6 +2619,116 @@
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="pybasin.utils.OrbitData" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">pybasin.utils.OrbitData</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+
+
+        <p>Data structure for orbit diagram plotting.</p>
+<p>Stores peak amplitude information from steady-state trajectories,
+organized by degree of freedom (DOF). For period-N orbits, trajectories
+will have N distinct peak amplitude levels.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="pybasin.utils.OrbitData.peak_values">peak_values</span></code></td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Peak amplitudes for each DOF. Shape (max_peaks, B, D) where D is number of DOFs. Padded with NaN for trajectories with fewer peaks.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pybasin.utils.OrbitData.peak_counts">peak_counts</span></code></td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of peaks per trajectory per DOF. Shape (B, D).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pybasin.utils.OrbitData.dof_indices">dof_indices</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Which state indices were analyzed.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pybasin.utils.OrbitData.time_steady">time_steady</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time threshold used for steady-state filtering.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
 
 
 

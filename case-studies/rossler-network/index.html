@@ -2574,7 +2574,7 @@
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="n">feature_extractor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_extractor&quot;</span><span class="p">),</span>
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="n">predictor</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;estimator&quot;</span><span class="p">),</span>
 <a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="n">template_integrator</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_integrator&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="n">feature_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        <span class="n">detect_unbounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="p">)</span>
@@ -2615,7 +2615,7 @@
 <a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>        <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
 <a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>        <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
 <a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>        <span class="n">template_integrator</span><span class="o">=</span><span class="n">template_integrator</span><span class="p">,</span>
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_k_study&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results_k_study&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    <span class="p">)</span>
 <a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
 <a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    <span class="n">bse</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
@@ -2679,10 +2679,10 @@
 <tr>
 <td>0.119</td>
 <td>synchronized</td>
-<td>0.0780 ± 0.0120</td>
+<td>0.0920 ± 0.0129</td>
 <td>0.2260 ± 0.0187</td>
-<td>-0.1480</td>
-<td>±0.0435</td>
+<td>-0.1340</td>
+<td>±0.0446</td>
 <td>✗</td>
 </tr>
 <tr>
@@ -2697,11 +2697,11 @@
 <tr>
 <td>0.139</td>
 <td>synchronized</td>
-<td>0.2220 ± 0.0186</td>
+<td>0.2160 ± 0.0184</td>
 <td>0.2740 ± 0.0199</td>
-<td>-0.0520</td>
-<td>±0.0534</td>
-<td>✓</td>
+<td>-0.0580</td>
+<td>±0.0532</td>
+<td>✗</td>
 </tr>
 <tr>
 <td></td>
@@ -2715,10 +2715,10 @@
 <tr>
 <td>0.159</td>
 <td>synchronized</td>
-<td>0.3020 ± 0.0205</td>
+<td>0.3040 ± 0.0206</td>
 <td>0.3300 ± 0.0210</td>
-<td>-0.0280</td>
-<td>±0.0576</td>
+<td>-0.0260</td>
+<td>±0.0577</td>
 <td>✓</td>
 </tr>
 <tr>
@@ -2859,9 +2859,9 @@
 <tr>
 <td>0.317</td>
 <td>synchronized</td>
-<td>0.6780 ± 0.0209</td>
+<td>0.6800 ± 0.0209</td>
 <td>0.6900 ± 0.0207</td>
-<td>-0.0120</td>
+<td>-0.0100</td>
 <td>±0.0576</td>
 <td>✓</td>
 </tr>

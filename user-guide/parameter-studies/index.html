@@ -2246,7 +2246,7 @@
 | <code>feature_extractor</code>   | <code>FeatureExtractor</code>             | Required | Extracts features from trajectories                       |
 | <code>estimator</code>           | <code>BaseEstimator</code>                | Required | Sklearn-compatible clusterer or classifier                |
 | <code>study_params</code>        | <code>StudyParams</code>                  | Required | Parameter variation specification                         |
-| <code>template_integrator</code> | <code>TemplateIntegrator</code> or <code>None</code> | <code>None</code>   | Template ICs for supervised classifiers                   |     | <code>compute_orbit_data</code> | <code>list[int]</code> or <code>bool</code> | <code>True</code> | Compute orbit data for bifurcation plots. <code>True</code> for all state dimensions, <code>list[int]</code> for specific indices, <code>False</code> to disable |     | <code>save_to</code> | <code>str</code> or <code>None</code> | <code>"results"</code> | Output folder path, or <code>None</code> to disable saving |
+| <code>template_integrator</code> | <code>TemplateIntegrator</code> or <code>None</code> | <code>None</code>   | Template ICs for supervised classifiers                   |     | <code>compute_orbit_data</code> | <code>list[int]</code> or <code>bool</code> | <code>True</code> | Compute orbit data for bifurcation plots. <code>True</code> for all state dimensions, <code>list[int]</code> for specific indices, <code>False</code> to disable |     | <code>output_dir</code> | <code>str</code>, <code>Path</code>, or <code>None</code> | <code>"results"</code> | Output folder path, or <code>None</code> to disable saving |
 | <code>verbose</code>             | <code>bool</code>                         | <code>False</code>  | Show detailed logs from each BSE run                      |</p>
 <div class="admonition note">
 <p class="admonition-title">Required Components</p>
@@ -2264,7 +2264,7 @@
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">feature_extractor</span><span class="o">=</span><span class="n">feature_extractor</span><span class="p">,</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">clusterer</span><span class="p">,</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">results</span> <span class="o">=</span> <span class="n">bs_study</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
@@ -2504,7 +2504,7 @@
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Orbit diagram showing attractor peak amplitudes</span>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1"># Save all figures to bs_study.save_to</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1"># Save all figures to bs_study.output_dir</span>
 <a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># or use plt.show() directly</span>
 </code></pre></div>
@@ -2526,7 +2526,7 @@
 <p>See the <a href="../plotters/">Plotters guide</a> for detailed plotter documentation.</p>
 <hr />
 <h2 id="saving-results">Saving Results</h2>
-<p>Call <code>save()</code> to write results to a JSON file in the <code>save_to</code> folder:</p>
+<p>Call <code>save()</code> to write results to a JSON file in the <code>output_dir</code> folder:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>The JSON includes studied parameters, basin stability values for each configuration, region of interest, and ODE system equations.</p>
@@ -2615,7 +2615,7 @@
 <a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;estimator&quot;</span><span class="p">],</span>
 <a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>    <span class="n">study_params</span><span class="o">=</span><span class="n">study_params</span><span class="p">,</span>
 <a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>    <span class="n">template_integrator</span><span class="o">=</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_integrator&quot;</span><span class="p">),</span>
-<a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>    <span class="n">save_to</span><span class="o">=</span><span class="s2">&quot;results_T&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;results_T&quot;</span><span class="p">,</span>
 <a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="p">)</span>
 <a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>
 <a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a><span class="n">bs_study</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
@@ -2629,7 +2629,7 @@
 <a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a><span class="c1"># Orbit diagram showing attractor peak amplitudes</span>
 <a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="n">plotter</span><span class="o">.</span><span class="n">plot_orbit_diagram</span><span class="p">(</span><span class="n">dof</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a>
-<a id="__codelineno-14-38" name="__codelineno-14-38" href="#__codelineno-14-38"></a><span class="c1"># Save all figures to bs_study.save_to</span>
+<a id="__codelineno-14-38" name="__codelineno-14-38" href="#__codelineno-14-38"></a><span class="c1"># Save all figures to bs_study.output_dir</span>
 <a id="__codelineno-14-39" name="__codelineno-14-39" href="#__codelineno-14-39"></a><span class="n">plotter</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># or plotter.show() for interactive display</span>
 <a id="__codelineno-14-40" name="__codelineno-14-40" href="#__codelineno-14-40"></a>
 <a id="__codelineno-14-41" name="__codelineno-14-41" href="#__codelineno-14-41"></a><span class="c1"># Save</span>

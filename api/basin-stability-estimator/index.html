@@ -2165,7 +2165,7 @@ and provides methods to estimate basin stability and save results.</p>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">UNSET</span><span class="p">,</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">detect_unbounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">compute_orbit_data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">save_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
 </code></pre></div>
 
@@ -2347,14 +2347,14 @@ and provides methods to estimate basin stability and save results.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>save_to</code>
+                <code>output_dir</code>
             </td>
             <td>
-                  <code><span title="str">str</span> | None</code>
+                  <code><span title="str">str</span> | <span title="pathlib.Path">Path</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Optional file path to save results.</p>
+                <p>Directory path for saving results (JSON, Excel, plots), or None to disable.</p>
               </div>
             </td>
             <td>
@@ -2600,7 +2600,7 @@ and provides methods to estimate basin stability and save results.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>save_to</code> path is not defined.</p>
+                <p>If <code>output_dir</code> is not defined.</p>
               </div>
             </td>
           </tr>
@@ -2654,7 +2654,7 @@ and provides methods to estimate basin stability and save results.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>save_to</code> path is not defined.</p>
+                <p>If <code>output_dir</code> is not defined.</p>
               </div>
             </td>
           </tr>

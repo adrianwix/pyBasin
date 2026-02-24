@@ -2202,9 +2202,9 @@
 <td>Integration</td>
 </tr>
 <tr>
-<td><code>bifurcation_amplitudes</code></td>
-<td><code>torch.Tensor</code> or <code>None</code></td>
-<td>Max absolute values per state (shape: <code>(N, n_states)</code>)</td>
+<td><code>orbit_data</code></td>
+<td><code>OrbitData</code> or <code>None</code></td>
+<td>Peak amplitudes per attractor for orbit diagrams (see <code>compute_orbit_data</code>)</td>
 <td>Integration</td>
 </tr>
 </tbody>
@@ -2309,8 +2309,8 @@
 </code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Pipeline Usage</p>
-<p>In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.</p>
 </div>
+<p>In normal usage, you never call these setters yourself. Feature extractors, feature selectors, and predictors call them automatically as they process the solution object. These methods are documented here for completeness and for custom pipeline development.</p>
 <h2 id="related-documentation">Related Documentation</h2>
 <ul>
 <li><a href="../../api/solution/">API Reference</a> -- Full method signatures and docstrings.</li>
