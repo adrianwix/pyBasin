@@ -33,6 +33,13 @@ N_STEPS = 1000
 RTOL = 1e-8
 ATOL = 1e-6
 
+TIME_GRID_ATOL = 1e-10
+CROSS_SOLVER_ATOL = 0.05
+FIXED_POINT_ATOL = 1e-3
+LIMIT_CYCLE_OMEGA_ATOL = 1e-2
+EARLY_TIME_ATOL = 1e-3
+SYMPY_VS_ZIG_ATOL = 5e-5
+
 TEST_ICS: list[list[float]] = [
     [0.4, 0.0],
     [2.7, 0.0],
@@ -79,7 +86,7 @@ def solve_with_zig(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.
     return t, y
 
 
-def solve_with_jax(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def solve_with_jax(y0s: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     ode = PendulumJaxODE(cast(PendulumJaxParams, PARAMS))
     solver = JaxSolver(
         time_span=T_SPAN,
@@ -97,7 +104,6 @@ def solve_with_jax(y0s: np.ndarray, t_eval: np.ndarray) -> tuple[np.ndarray, np.
 
 def solve_with_torchdiffeq(
     y0s: np.ndarray,
-    t_eval: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
     ode = PendulumODE(cast(PendulumTorchParams, PARAMS))
     solver = TorchDiffEqSolver(
@@ -148,7 +154,7 @@ def _compare_solver_pair(
     t_ref: np.ndarray,
 ) -> None:
     """Compare Zig results (n_steps, batch, dim) against a reference solver."""
-    report(f"[{label}] time grids match", np.allclose(t_zig, t_ref, atol=1e-10))
+    report(f"[{label}] time grids match", np.allclose(t_zig, t_ref, atol=TIME_GRID_ATOL))
 
     print(
         f"\n  {'IC':>20} {'Max |err|':>12} {'Max rel err':>12} "
@@ -172,20 +178,23 @@ def _compare_solver_pair(
 
     # Two independent Dopri5 implementations may diverge in phase for oscillatory
     # trajectories over long integration spans due to different step-size controllers.
+    # Observed max ≈ 0.046 between Zig and JAX; 0.5 gives ~10× margin.
     report(
-        f"[{label}] all close (atol=2.0, long-span phase drift)",
-        np.allclose(y_zig_t, y_ref, atol=2.0),
+        f"[{label}] all close (atol={CROSS_SOLVER_ATOL}, long-span phase drift)",
+        np.allclose(y_zig_t, y_ref, atol=CROSS_SOLVER_ATOL),
         f"max_abs={overall_max_abs:.4e}",
     )
 
+    # Fixed-point ICs converge to a stable equilibrium; solvers must agree
+    # to near-solver-tolerance precision. Observed max ≈ 2e-5; 1e-3 gives margin.
     fp_indices: list[int] = [0, 4]
     fp_max: float = 0.0
     for i in fp_indices:
         abs_err_i: float = float(np.abs(y_zig_t[:, i, :] - y_ref[:, i, :]).max())
         fp_max = max(fp_max, abs_err_i)
     report(
-        f"[{label}] fixed-point ICs close (atol=0.1)",
-        fp_max < 0.1,
+        f"[{label}] fixed-point ICs close (atol={FIXED_POINT_ATOL})",
+        fp_max < FIXED_POINT_ATOL,
         f"max_abs={fp_max:.4e}",
     )
 
@@ -194,9 +203,11 @@ def _compare_solver_pair(
     for i in lc_indices:
         zig_omega: float = float(y_zig_t[-1, i, 1])
         ref_omega: float = float(y_ref[-1, i, 1])
-        if not np.isclose(zig_omega, ref_omega, atol=0.5):
+        if not np.isclose(zig_omega, ref_omega, atol=LIMIT_CYCLE_OMEGA_ATOL):
             omega_match = False
-    report(f"[{label}] limit-cycle ICs same attractor (ω atol=0.5)", omega_match)
+    report(
+        f"[{label}] limit-cycle ICs same attractor (ω atol={LIMIT_CYCLE_OMEGA_ATOL})", omega_match
+    )
 
 
 def test_numerical_correctness() -> None:
@@ -210,12 +221,12 @@ def test_numerical_correctness() -> None:
 
     # --- vs JAX/Diffrax ---
     print("\n  >> Zig vs JAX/Diffrax (Dopri5 + PID controller)")
-    t_jax, y_jax = solve_with_jax(y0s, t_eval)
+    t_jax, y_jax = solve_with_jax(y0s)
     _compare_solver_pair("JAX", y_zig_t, y_jax, t_zig, t_jax)
 
     # --- vs torchdiffeq ---
     print("\n  >> Zig vs torchdiffeq (Dopri5 + classic controller)")
-    t_tde, y_tde = solve_with_torchdiffeq(y0s, t_eval)
+    t_tde, y_tde = solve_with_torchdiffeq(y0s)
     _compare_solver_pair("torchdiffeq", y_zig_t, y_tde, t_zig, t_tde)
 
     # --- JAX vs torchdiffeq (triangulation) ---
@@ -223,15 +234,24 @@ def test_numerical_correctness() -> None:
     _compare_solver_pair("JAX↔torchdiffeq", y_jax, y_tde, t_jax, t_tde)
 
     # --- Early-time divergence check ---
+    # At short integration times all solvers should agree to near-solver-
+    # tolerance precision (observed max ≈ 2.5e-5; 1e-3 gives ample margin).
     print("\n  >> Early-time check (t=10, step index ~10)")
     early_idx = 10
+    early_max: float = 0.0
     print(f"  {'IC':>20} {'Zig-JAX @ t=10':>16} {'Zig-TDE @ t=10':>16} {'JAX-TDE @ t=10':>16}")
     print("  " + "-" * 72)
     for i, ic in enumerate(TEST_ICS):
         zig_jax = float(np.abs(y_zig_t[early_idx, i, :] - y_jax[early_idx, i, :]).max())
         zig_tde = float(np.abs(y_zig_t[early_idx, i, :] - y_tde[early_idx, i, :]).max())
         jax_tde = float(np.abs(y_jax[early_idx, i, :] - y_tde[early_idx, i, :]).max())
+        early_max = max(early_max, zig_jax, zig_tde, jax_tde)
         print(f"  {str(ic):>20} {zig_jax:>16.6e} {zig_tde:>16.6e} {jax_tde:>16.6e}")
+    report(
+        f"early-time all pairs close (atol={EARLY_TIME_ATOL})",
+        early_max < EARLY_TIME_ATOL,
+        f"max={early_max:.4e}",
+    )
 
 
 def test_determinism() -> None:
@@ -322,11 +342,15 @@ def test_sympy_vs_zig() -> None:
     )
 
     max_abs: float = float(np.abs(y_zig - y_sympy).max())
-    report("Zig vs SymPy close (atol=5e-5)", max_abs < 5e-5, f"max_abs={max_abs:.4e}")
+    report(
+        f"Zig vs SymPy close (atol={SYMPY_VS_ZIG_ATOL})",
+        max_abs < SYMPY_VS_ZIG_ATOL,
+        f"max_abs={max_abs:.4e}",
+    )
 
     for i, ic in enumerate(TEST_ICS):
         diff_i: float = float(np.abs(y_zig[i] - y_sympy[i]).max())
-        report(f"  IC {ic} max|err|={diff_i:.4e}", diff_i < 5e-5)
+        report(f"  IC {ic} max|err|={diff_i:.4e}", diff_i < SYMPY_VS_ZIG_ATOL)
 
 
 def test_sympy_determinism() -> None:
