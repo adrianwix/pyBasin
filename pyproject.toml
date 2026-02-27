@@ -154,6 +154,7 @@ case-studies = [
 ]
 experiments = [
     "cython>=3.2.4",
+    "diffeqpy>=2.5.5",
     "heyoka>=7.9.2",
     "pynamicalsys>=1.5.0",
 ]
