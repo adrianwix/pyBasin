@@ -23,6 +23,7 @@ from pybasin.feature_extractors.jax.jax_feature_calculators import (
     get_feature_names_from_config,
 )
 from pybasin.feature_extractors.jax.jax_feature_utilities import impute, impute_extreme
+from pybasin.feature_extractors.utils import format_feature_name
 from pybasin.jax_utils import get_jax_device, jax_to_torch, torch_to_jax
 from pybasin.solution import Solution
 
@@ -286,5 +287,5 @@ class JaxFeatureExtractor(FeatureExtractor):
         names: list[str] = []
         for state_idx, fc_params in self._state_feature_config.items():
             for fname in get_feature_names_from_config(fc_params):
-                names.append(f"state_{state_idx}__{fname}")
+                names.append(format_feature_name(fname, state_index=state_idx))
         return names

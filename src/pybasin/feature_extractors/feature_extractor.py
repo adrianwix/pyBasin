@@ -1,11 +1,11 @@
 """Abstract base class for extracting features from ODE solution trajectories."""
 
-import re
 from abc import ABC, abstractmethod
 
 import torch
 
 from pybasin.constants import DEFAULT_STEADY_FRACTION
+from pybasin.feature_extractors.utils import to_snake_case
 from pybasin.solution import Solution
 
 
@@ -68,7 +68,7 @@ class FeatureExtractor(ABC):
             return []
 
         class_name = self.__class__.__name__
-        snake_case_name = self._to_snake_case(class_name)
+        snake_case_name = to_snake_case(class_name)
 
         if snake_case_name.endswith("_feature_extractor") and len(snake_case_name) > len(
             "_feature_extractor"
@@ -81,12 +81,6 @@ class FeatureExtractor(ABC):
             snake_case_name = "feature"
 
         return [f"{snake_case_name}_{i + 1}" for i in range(self._num_features)]
-
-    @staticmethod
-    def _to_snake_case(name: str) -> str:
-        """Convert CamelCase to snake_case."""
-        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
     def _resolve_time_steady(self, solution: Solution) -> float:
         """Resolve the effective time_steady value.

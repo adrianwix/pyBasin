@@ -2,7 +2,6 @@
   "system_name": "rossler_network",
   "case_name": "baseline",
   "parameter_value": null,
-  "macro_f1": 0.0,
   "matthews_corrcoef": 0.0,
   "attractors": [
     {
@@ -10,18 +9,14 @@
       "python_bs": 0.484,
       "python_se": 0.022349228174592516,
       "matlab_bs": 0.496,
-      "matlab_se": 0.022359964221796064,
-      "f1_score": 0.0,
-      "matthews_corrcoef": 0.0
+      "matlab_se": 0.022359964221796064
     },
     {
       "label": "unbounded",
       "python_bs": 0.516,
       "python_se": 0.022349228174592516,
       "matlab_bs": 0.504,
-      "matlab_se": 0.022359964221796064,
-      "f1_score": 0.0,
-      "matthews_corrcoef": 0.0
+      "matlab_se": 0.022359964221796064
     }
   ],
   "paper_validation": true

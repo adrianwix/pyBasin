@@ -52,6 +52,8 @@ class ArtifactEntry:
     :ivar phase_space_axes: Tuple (x_var, y_var) for 2D phase space plot.
     :ivar interval: x-axis scale for parameter sweep plots.
     :ivar skip_orbit_diagram: Skip orbit diagram generation for this entry.
+    :ivar hidden_state_space_labels: Attractor labels to hide from the state space legend.
+    :ivar trajectory_y_ticks: Explicit y-axis tick values for trajectory subplots.
     """
 
     bse: BasinStabilityEstimator | None = None
@@ -65,6 +67,9 @@ class ArtifactEntry:
     phase_space_axes: tuple[int, int] | None = None
     interval: Literal["linear", "log"] = "linear"
     skip_orbit_diagram: bool = False
+    hidden_state_space_labels: list[str] | None = None
+    hidden_phase_space_labels: list[str] | None = None
+    trajectory_y_ticks: list[float] | None = None
 
 
 class ArtifactCollector:
@@ -81,6 +86,9 @@ class ArtifactCollector:
         trajectory_x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
         trajectory_y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
         phase_space_axes: tuple[int, int] | None = None,
+        hidden_state_space_labels: list[str] | None = None,
+        hidden_phase_space_labels: list[str] | None = None,
+        trajectory_y_ticks: list[float] | None = None,
     ) -> None:
         """Add a single-point test result.
 
@@ -90,6 +98,9 @@ class ArtifactCollector:
         :param trajectory_x_limits: X-axis limits for trajectory plot.
         :param trajectory_y_limits: Y-axis limits for trajectory plot.
         :param phase_space_axes: Tuple (x_var, y_var) for 2D phase space plot.
+        :param hidden_state_space_labels: Attractor labels to hide from the state space legend.
+        :param hidden_phase_space_labels: Attractor labels to hide from the phase space plot.
+        :param trajectory_y_ticks: Explicit y-axis tick values for trajectory subplots.
         """
         self.entries.append(
             ArtifactEntry(
@@ -99,6 +110,9 @@ class ArtifactCollector:
                 trajectory_x_limits=trajectory_x_limits,
                 trajectory_y_limits=trajectory_y_limits,
                 phase_space_axes=phase_space_axes,
+                hidden_state_space_labels=hidden_state_space_labels,
+                hidden_phase_space_labels=hidden_phase_space_labels,
+                trajectory_y_ticks=trajectory_y_ticks,
             )
         )
 
@@ -133,6 +147,9 @@ class ArtifactCollector:
         trajectory_x_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
         trajectory_y_limits: tuple[float, float] | dict[str, tuple[float, float]] | None = None,
         phase_space_axes: tuple[int, int] | None = None,
+        hidden_state_space_labels: list[str] | None = None,
+        hidden_phase_space_labels: list[str] | None = None,
+        trajectory_y_ticks: list[float] | None = None,
     ) -> None:
         """Add an unsupervised clustering test result.
 
@@ -142,6 +159,9 @@ class ArtifactCollector:
         :param trajectory_x_limits: X-axis limits for trajectory plot.
         :param trajectory_y_limits: Y-axis limits for trajectory plot.
         :param phase_space_axes: Tuple (x_var, y_var) for 2D phase space plot.
+        :param hidden_state_space_labels: Attractor labels to hide from the state space legend.
+        :param hidden_phase_space_labels: Attractor labels to hide from the phase space plot.
+        :param trajectory_y_ticks: Explicit y-axis tick values for trajectory subplots.
         """
         self.entries.append(
             ArtifactEntry(
@@ -151,6 +171,9 @@ class ArtifactCollector:
                 trajectory_x_limits=trajectory_x_limits,
                 trajectory_y_limits=trajectory_y_limits,
                 phase_space_axes=phase_space_axes,
+                hidden_state_space_labels=hidden_state_space_labels,
+                hidden_phase_space_labels=hidden_phase_space_labels,
+                trajectory_y_ticks=trajectory_y_ticks,
             )
         )
 
@@ -200,6 +223,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
                 trajectory_x_limits=entry.trajectory_x_limits,
                 trajectory_y_limits=entry.trajectory_y_limits,
                 phase_space_axes=entry.phase_space_axes,
+                hidden_state_space_labels=entry.hidden_state_space_labels,
+                hidden_phase_space_labels=entry.hidden_phase_space_labels,
+                trajectory_y_ticks=entry.trajectory_y_ticks,
             )
         elif entry.bse is not None and entry.unsupervised_comparison is not None:
             print(
@@ -213,6 +239,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
                 trajectory_x_limits=entry.trajectory_x_limits,
                 trajectory_y_limits=entry.trajectory_y_limits,
                 phase_space_axes=entry.phase_space_axes,
+                hidden_state_space_labels=entry.hidden_state_space_labels,
+                hidden_phase_space_labels=entry.hidden_phase_space_labels,
+                trajectory_y_ticks=entry.trajectory_y_ticks,
             )
         elif entry.bs_study is not None and entry.comparisons is not None:
             system_name = entry.comparisons[0].system_name

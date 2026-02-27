@@ -2,7 +2,6 @@
   "system_name": "lorenz",
   "case_name": "case1",
   "parameter_value": null,
-  "macro_f1": 0.9990597011798291,
   "matthews_corrcoef": 0.9985333621163177,
   "attractors": [
     {
@@ -10,27 +9,21 @@
       "python_bs": 0.0894,
       "python_se": 0.002017518773146857,
       "matlab_bs": 0.0894,
-      "matlab_se": 0.002017518773146857,
-      "f1_score": 0.9988814317673378,
-      "matthews_corrcoef": 0.9985333621163177
+      "matlab_se": 0.002017518773146857
     },
     {
       "label": "chaotic attractor 2",
       "python_bs": 0.0875,
       "python_se": 0.0019980459203932225,
       "matlab_bs": 0.08745,
-      "matlab_se": 0.0019975296931460116,
-      "f1_score": 0.9985710202915119,
-      "matthews_corrcoef": 0.9985333621163177
+      "matlab_se": 0.0019975296931460116
     },
     {
       "label": "unbounded",
       "python_bs": 0.8231,
       "python_se": 0.002698206719285978,
       "matlab_bs": 0.82315,
-      "matlab_se": 0.0026979073140121026,
-      "f1_score": 0.9997266514806378,
-      "matthews_corrcoef": 0.9985333621163177
+      "matlab_se": 0.0026979073140121026
     }
   ]
 }

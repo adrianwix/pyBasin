@@ -23,6 +23,7 @@ warnings.filterwarnings("ignore", message="os.fork\\(\\) was called")
 logging.getLogger("pybasin").setLevel(logging.WARNING)
 
 TESTS_DIR = Path(__file__).parent.parent / "tests" / "integration"
+ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"
 
 
 def compute_mcc(
@@ -67,16 +68,18 @@ def compute_mcc(
     return mcc, cluster_to_gt
 
 
-def print_results(
+def save_and_print_results(
     system_name: str,
+    case_name: str,
     bse: BasinStabilityEstimator,
     mcc: float,
     cluster_to_gt: dict[str, str],
     expected_json: Path,
 ) -> None:
-    """Print basin stability results with MCC comparison.
+    """Print basin stability results and save comparison JSON to artifacts/results/.
 
     :param system_name: Name of the dynamical system.
+    :param case_name: Case identifier for the artifact filename.
     :param bse: The basin stability estimator after estimation.
     :param mcc: Matthews Correlation Coefficient.
     :param cluster_to_gt: Mapping from cluster IDs to ground truth labels.
@@ -89,21 +92,67 @@ def print_results(
     print(f"  MCC:      {mcc:.4f}")
     print(f"  Cluster -> Ground Truth mapping: {cluster_to_gt}")
 
-    if bse.bs_vals is not None:
-        errors = bse.get_errors()
-        print("\n  Basin Stability (pyBasin defaults):")
-        for label, bs in sorted(bse.bs_vals.items()):
-            se = errors[label]["e_abs"] if label in errors else 0.0
-            print(f"    {label}: {bs:.4f} ± {se:.5f}")
+    if bse.bs_vals is None:
+        print(f"{'=' * 70}\n")
+        return
 
-        with open(expected_json) as f:
-            expected_results: list[dict[Any, Any]] = json.load(f)
-        print("  Basin Stability (bSTAB reference):")
-        for item in expected_results:
-            if item["basinStability"] > 0:
-                print(f"    {item['label']}: {item['basinStability']:.4f}")
+    errors = bse.get_errors()
+    print("\n  Basin Stability (pyBasin defaults):")
+    for label, bs in sorted(bse.bs_vals.items()):
+        se = errors[label]["e_abs"] if label in errors else 0.0
+        print(f"    {label}: {bs:.4f} ± {se:.5f}")
+
+    with open(expected_json) as f:
+        expected_results: list[dict[Any, Any]] = json.load(f)
+
+    print("  Basin Stability (bSTAB reference):")
+    for item in expected_results:
+        if item["basinStability"] > 0:
+            print(f"    {item['label']}: {item['basinStability']:.4f}")
 
     print(f"{'=' * 70}\n")
+
+    expected_by_label: dict[str, dict[str, float]] = {
+        item["label"]: {
+            "basinStability": item["basinStability"],
+            "standardError": item.get("standardError", 0.0),
+        }
+        for item in expected_results
+        if item["basinStability"] > 0
+    }
+
+    attractors: list[dict[str, str | float]] = []
+    for cluster_id, gt_label in sorted(cluster_to_gt.items()):
+        if gt_label == "NaN":
+            continue
+        python_bs: float = bse.bs_vals.get(cluster_id, 0.0)
+        python_se: float = errors[cluster_id]["e_abs"] if cluster_id in errors else 0.0
+        expected: dict[str, float] = expected_by_label.get(
+            gt_label, {"basinStability": 0.0, "standardError": 0.0}
+        )
+        attractors.append(
+            {
+                "label": gt_label,
+                "python_bs": python_bs,
+                "python_se": python_se,
+                "matlab_bs": expected["basinStability"],
+                "matlab_se": expected["standardError"],
+            }
+        )
+
+    result: dict[str, Any] = {
+        "system_name": system_name.lower(),
+        "case_name": case_name,
+        "parameter_value": None,
+        "matthews_corrcoef": mcc,
+        "attractors": attractors,
+    }
+
+    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = ARTIFACTS_DIR / f"{system_name.lower()}_{case_name}_comparison.json"
+    with open(json_path, "w") as f:
+        json.dump(result, f, indent=2)
+    print(f"  Written: {json_path}")
 
 
 if __name__ == "__main__":
@@ -115,8 +164,9 @@ if __name__ == "__main__":
     pendulum_sampler = CsvSampler(pendulum_csv, coordinate_columns=["x1", "x2"])
     bse = pendulum_main(sampler_override=pendulum_sampler)
     mcc, cluster_to_gt = compute_mcc(bse, pendulum_csv, state_dim=2)
-    print_results(
-        "PENDULUM",
+    save_and_print_results(
+        "pendulum",
+        "defaults",
         bse,
         mcc,
         cluster_to_gt,
@@ -131,8 +181,9 @@ if __name__ == "__main__":
     duffing_sampler = CsvSampler(duffing_csv, coordinate_columns=["x1", "x2"])
     bse = duffing_main(sampler_override=duffing_sampler)
     mcc, cluster_to_gt = compute_mcc(bse, duffing_csv, state_dim=2)
-    print_results(
-        "DUFFING",
+    save_and_print_results(
+        "duffing",
+        "defaults",
         bse,
         mcc,
         cluster_to_gt,
@@ -147,8 +198,9 @@ if __name__ == "__main__":
     friction_sampler = CsvSampler(friction_csv, coordinate_columns=["x1", "x2"])
     bse = friction_main(sampler_override=friction_sampler)
     mcc, cluster_to_gt = compute_mcc(bse, friction_csv, state_dim=2)
-    print_results(
-        "FRICTION",
+    save_and_print_results(
+        "friction",
+        "defaults",
         bse,
         mcc,
         cluster_to_gt,
@@ -163,8 +215,9 @@ if __name__ == "__main__":
     lorenz_sampler = CsvSampler(lorenz_csv, coordinate_columns=["x1", "x2", "x3"])
     bse = lorenz_main(sampler_override=lorenz_sampler)
     mcc, cluster_to_gt = compute_mcc(bse, lorenz_csv, state_dim=3)
-    print_results(
-        "LORENZ",
+    save_and_print_results(
+        "lorenz",
+        "defaults",
         bse,
         mcc,
         cluster_to_gt,

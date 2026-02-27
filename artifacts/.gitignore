@@ -8,3 +8,7 @@
 
 # But keep the directory structure
 !.gitkeep
+
+# Track case studies and benchmark artifacts
+# !case_studies/**
+# !benchmarks/**

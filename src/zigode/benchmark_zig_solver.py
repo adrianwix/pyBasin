@@ -78,7 +78,7 @@ def _benchmark_ode_scaling(
         y0: np.ndarray = _generate_ics(n)
         round_times: list[float] = []
 
-        for r in range(1, NUM_ROUNDS + 1):
+        for _ in range(1, NUM_ROUNDS + 1):
             start: float = time.perf_counter()
             solver.solve(ode, y0, T_SPAN, t_eval, PARAMS)
             elapsed: float = time.perf_counter() - start

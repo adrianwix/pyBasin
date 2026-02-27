@@ -21,12 +21,25 @@ from typing import cast
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
 from scipy import stats as scipy_stats
 from scipy.optimize import curve_fit
 
-from pybasin.thesis_utils import THESIS_PALETTE, thesis_export
+from pybasin.docs_plots_utils import thesis_export as docs_export
+from pybasin.thesis_plots_utils import (
+    THESIS_FULL_WIDTH_CM,
+    THESIS_PALETTE,
+    THESIS_SINGLE_HEIGHT_CM,
+    configure_thesis_style,
+    thesis_export,
+)
+
+configure_thesis_style()
 
 RESULTS_DIR: Path = Path(__file__).parent / "results"
+THESIS_ARTIFACTS_DIR: Path = (
+    Path(__file__).parent.parent.parent / "artifacts" / "benchmarks" / "end_to_end"
+)
 DOCS_ASSETS_DIR: Path = (
     Path(__file__).parent.parent.parent / "docs" / "assets" / "benchmarks" / "end_to_end"
 )
@@ -106,7 +119,8 @@ def extract_simple_format_data(results: dict, implementation: str) -> pd.DataFra
     return pd.DataFrame(rows)
 
 
-def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
+def _build_comparison_figure(df: pd.DataFrame) -> Figure:
+    """Build the comparison bar chart figure."""
     fig, ax = plt.subplots(figsize=(14, 7))
 
     n_values: list[int] = sorted(df["N"].unique())
@@ -149,9 +163,27 @@ def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
     ax.legend()
     ax.grid(True, alpha=0.3, axis="y")
 
-    plt.tight_layout()
-    thesis_export(fig, output_path.name, output_path.parent)
+    return fig
+
+
+def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
+    # Export PNG for docs
+    fig_docs = _build_comparison_figure(df)
+    docs_export(fig_docs, output_path.name, output_path.parent)
+    plt.close(fig_docs)
     print(f"Comparison plot saved to: {output_path}")
+
+    # Export PDF for thesis
+    fig_thesis = _build_comparison_figure(df)
+    pdf_name = output_path.stem + ".pdf"
+    thesis_export(
+        fig_thesis,
+        pdf_name,
+        THESIS_ARTIFACTS_DIR,
+        width=THESIS_FULL_WIDTH_CM,
+        height=THESIS_SINGLE_HEIGHT_CM,
+    )
+    plt.close(fig_thesis)
 
 
 def print_comparison_table(df: pd.DataFrame) -> None:
@@ -264,8 +296,8 @@ def analyze_scaling(df: pd.DataFrame) -> dict[str, dict]:
     return results
 
 
-def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
-    """Create log-log plot showing scaling behavior with fitted lines."""
+def _build_scaling_figure(df: pd.DataFrame) -> Figure:
+    """Build the log-log scaling plot figure."""
     fig, ax = plt.subplots(figsize=(10, 7))
 
     implementations: list[str] = [
@@ -279,16 +311,13 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
 
         n_vals = np.asarray(impl_data["N"].values, dtype=float)
         t_vals = np.asarray(impl_data["mean_time"].values, dtype=float)
-        t_std = np.asarray(impl_data["std_time"].values, dtype=float)
 
-        ax.errorbar(
+        ax.plot(
             n_vals,
             t_vals,
-            yerr=t_std,
-            fmt=MARKERS[impl],
+            MARKERS[impl],
             color=COLORS[impl],
             label=impl,
-            capsize=3,
             markersize=8,
         )
 
@@ -300,9 +329,7 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
 
         n_fit = np.logspace(np.log10(n_vals.min()), np.log10(n_vals.max()), 100)
         t_fit = np.exp(intercept) * n_fit**slope
-        ax.plot(
-            n_fit, t_fit, "--", color=COLORS[impl], alpha=0.7, label=f"{impl}: O(N^{slope:.2f})"
-        )
+        ax.plot(n_fit, t_fit, "--", color=COLORS[impl], alpha=0.7, label="_nolegend_")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -312,9 +339,28 @@ def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
     ax.legend()
     ax.grid(True, alpha=0.3, which="both")
 
-    plt.tight_layout()
-    thesis_export(fig, output_path.name, output_path.parent)
+    return fig
+
+
+def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
+    """Create log-log plot showing scaling behavior with fitted lines."""
+    # Export PNG for docs
+    fig_docs = _build_scaling_figure(df)
+    docs_export(fig_docs, output_path.name, output_path.parent)
+    plt.close(fig_docs)
     print(f"Scaling plot saved to: {output_path}")
+
+    # Export PDF for thesis
+    fig_thesis = _build_scaling_figure(df)
+    pdf_name = output_path.stem + ".pdf"
+    thesis_export(
+        fig_thesis,
+        pdf_name,
+        THESIS_ARTIFACTS_DIR,
+        width=THESIS_FULL_WIDTH_CM,
+        height=THESIS_SINGLE_HEIGHT_CM,
+    )
+    plt.close(fig_thesis)
 
 
 def main() -> None:
@@ -327,6 +373,7 @@ def main() -> None:
     args = parser.parse_args()
 
     DOCS_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    THESIS_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
     matlab_json: Path = RESULTS_DIR / "matlab_basin_stability_estimator_scaling.json"
     python_json: Path = RESULTS_DIR / "python_basin_stability_estimator_scaling.json"

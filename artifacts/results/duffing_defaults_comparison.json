@@ -1,0 +1,43 @@
+{
+  "system_name": "duffing",
+  "case_name": "defaults",
+  "parameter_value": null,
+  "matthews_corrcoef": 0.915972202166533,
+  "attractors": [
+    {
+      "label": "y2",
+      "python_bs": 0.495,
+      "python_se": 0.004999749993749687,
+      "matlab_bs": 0.495,
+      "matlab_se": 0.004999749993749688
+    },
+    {
+      "label": "y1",
+      "python_bs": 0.2023,
+      "python_se": 0.004017147122025779,
+      "matlab_bs": 0.2027,
+      "matlab_se": 0.0040201083318736576
+    },
+    {
+      "label": "y5",
+      "python_bs": 0.0858,
+      "python_se": 0.0028006849162303137,
+      "matlab_bs": 0.2478,
+      "matlab_se": 0.004317350576453109
+    },
+    {
+      "label": "y5",
+      "python_bs": 0.1022,
+      "python_se": 0.0030291114208625606,
+      "matlab_bs": 0.2478,
+      "matlab_se": 0.004317350576453109
+    },
+    {
+      "label": "y5",
+      "python_bs": 0.1147,
+      "python_se": 0.0031865955187315503,
+      "matlab_bs": 0.2478,
+      "matlab_se": 0.004317350576453109
+    }
+  ]
+}

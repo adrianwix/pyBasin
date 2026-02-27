@@ -44,7 +44,7 @@ class TestFriction:
                 bse,
                 comparison,
                 trajectory_state=1,
-                trajectory_x_limits={"FP": (0, 250), "LC": (0, 25)},
+                trajectory_x_limits=(0, 200),
                 trajectory_y_limits={"FP": (-1.1, 1.1), "LC": (-2.2, 2.2)},
             )
 

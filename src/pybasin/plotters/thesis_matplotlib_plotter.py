@@ -9,7 +9,6 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
-from pybasin.feature_extractors.utils import format_feature_for_display
 from pybasin.plotters.interactive_plotter.utils import get_color
 from pybasin.utils import generate_filename, resolve_folder
 
@@ -90,7 +89,7 @@ class MatplotlibPlotter:
         bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
         ax.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])  # type: ignore[misc]
         ax.set_xticks(bar_labels)  # type: ignore[misc]
-        ax.set_ylabel(r"$\mathcal{S}(\bar{y}_i)$")  # type: ignore[misc]
+        ax.set_ylabel(r"$\mathcal{S}(\mathcal{B}_i)$")  # type: ignore[misc]
         ax.set_title("Basin Stability")  # type: ignore[misc]
 
         if created_figure:
@@ -135,8 +134,8 @@ class MatplotlibPlotter:
                 label=str(label),
             )
         ax.set_title("Initial Conditions in State Space")  # type: ignore[misc]
-        ax.set_xlabel(r"$y_1$")  # type: ignore[misc]
-        ax.set_ylabel(r"$y_2$")  # type: ignore[misc]
+        ax.set_xlabel("$y_1$")  # type: ignore[misc]
+        ax.set_ylabel("$y_2$")  # type: ignore[misc]
         ax.legend(loc="upper left")  # type: ignore[misc]
 
         if created_figure:
@@ -215,20 +214,11 @@ class MatplotlibPlotter:
 
         if n_features >= 2:
             ax.set_title("Feature Space with Classifier Results")  # type: ignore[misc]
-            feature_names = self.bse.solution.feature_names
-            if feature_names and len(feature_names) >= 2:
-                ax.set_xlabel(format_feature_for_display(feature_names[0]))  # type: ignore[misc]
-                ax.set_ylabel(format_feature_for_display(feature_names[1]))  # type: ignore[misc]
-            else:
-                ax.set_xlabel(r"$\mathcal{X}_1$")  # type: ignore[misc]
-                ax.set_ylabel(r"$\mathcal{X}_2$")  # type: ignore[misc]
+            ax.set_xlabel("Feature 1")  # type: ignore[misc]
+            ax.set_ylabel("Feature 2")  # type: ignore[misc]
         else:
             ax.set_title("Feature Space (1D Strip Plot)")  # type: ignore[misc]
-            feature_names = self.bse.solution.feature_names
-            if feature_names and len(feature_names) >= 1:
-                ax.set_xlabel(format_feature_for_display(feature_names[0]))  # type: ignore[misc]
-            else:
-                ax.set_xlabel(r"$\mathcal{X}_1$")  # type: ignore[misc]
+            ax.set_xlabel("Feature 1")  # type: ignore[misc]
             ax.set_ylabel("")  # type: ignore[misc]
             ax.set_yticks([])  # type: ignore[misc]
             ax.set_ylim(-0.6, 0.6)  # type: ignore[misc]
@@ -442,15 +432,15 @@ class MatplotlibPlotter:
             else:
                 ax_i.plot(t, traj[:, plotted_var], linewidth=2.5, color=color)  # type: ignore[misc]
 
-            ax_i.set_ylabel(str(label), fontsize=10)  # type: ignore[misc]
-            ax_i.tick_params(axis="both", which="major", labelsize=8)  # type: ignore[misc]
+            ax_i.set_ylabel(f"$\\bar{{y}}_{{{i + 1}}}$")  # type: ignore[misc]
+            ax_i.yaxis.set_label_coords(-0.15, 0.5)  # type: ignore[misc]
 
             y_lim = y_limits[label] if isinstance(y_limits, dict) else y_limits
             if y_lim is not None:
                 ax_i.set_ylim(y_lim)  # type: ignore[misc]
 
         axes[-1].set_xlabel("time")  # type: ignore[misc]
-        plt.tight_layout()
+        fig.subplots_adjust(left=0.17, right=0.97, top=0.97, bottom=0.15, hspace=0.3)
 
         self._pending_figures.append(("templates_trajectories", fig))
 

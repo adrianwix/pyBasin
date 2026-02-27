@@ -6,6 +6,7 @@ import torch
 from pybasin.feature_extractors.feature_extractor import (
     FeatureExtractor as BaseFeatureExtractor,
 )
+from pybasin.feature_extractors.utils import to_snake_case
 from pybasin.solution import Solution
 
 
@@ -124,11 +125,8 @@ def test_feature_names_only_feature_extractor_class(test_solution: Solution) -> 
 
 
 def test_snake_case_conversion() -> None:
-    assert BaseFeatureExtractor._to_snake_case("MeanFeatureExtractor") == "mean_feature_extractor"
-    assert (
-        BaseFeatureExtractor._to_snake_case("SynchronizationFeatureExtractor")
-        == "synchronization_feature_extractor"
-    )
-    assert BaseFeatureExtractor._to_snake_case("FeatureExtractor") == "feature_extractor"
-    assert BaseFeatureExtractor._to_snake_case("ABC") == "abc"
-    assert BaseFeatureExtractor._to_snake_case("MyFEFeatureExtractor") == "my_fe_feature_extractor"
+    assert to_snake_case("MeanFeatureExtractor") == "mean_feature_extractor"
+    assert to_snake_case("SynchronizationFeatureExtractor") == "synchronization_feature_extractor"
+    assert to_snake_case("FeatureExtractor") == "feature_extractor"
+    assert to_snake_case("ABC") == "abc"
+    assert to_snake_case("MyFEFeatureExtractor") == "my_fe_feature_extractor"

@@ -119,7 +119,11 @@ src/zigode/.source_hash
 !benchmarks/time_integrations/results/
 !docs/assets/**/*.jpg
 !docs/assets/**/*.png
+!docs/assets/**/*.pdf
 !artifacts/results/
+!artifacts/case_studies/**/*.pdf
+!artifacts/benchmarks/**/*.png
+
 
 
 

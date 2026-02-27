@@ -113,8 +113,11 @@ class BasinStabilityStudy:
             "     - Template:",
             "     - Main:",
             "  3. Solution/Amps:",
+            "  (3b) Unbounded Det.:",
+            "  (3c) Orbit Data:",
             "  4. Features:",
             "  5. Filtering:",
+            "  (5b) Classifier Fit:",
             "  6. Classification:",
             "  7. BS Computation:",
         )

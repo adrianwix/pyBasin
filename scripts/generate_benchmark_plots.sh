@@ -9,9 +9,6 @@ set -e
 
 cd /home/adrian/code/thesis/pyBasinWorkspace
 
-echo "=== Generating End-to-End Benchmark Plots (MATLAB vs Python) ==="
-uv run python -m benchmarks.end_to_end.compare_matlab_vs_python
-
 echo ""
 echo "=== Generating End-to-End Benchmark Plots (All Tools) ==="
 if [[ "$1" == "--all" ]]; then

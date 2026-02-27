@@ -14,6 +14,7 @@ import torch
 from torch import Tensor
 
 from pybasin.feature_extractors.feature_extractor import FeatureExtractor
+from pybasin.feature_extractors.utils import format_feature_name
 from pybasin.solution import Solution
 from pybasin.ts_torch.settings import (
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
@@ -224,10 +225,14 @@ class TorchFeatureExtractor(FeatureExtractor):
                         if feature_tensor.dim() > 1:
                             for i in range(feature_tensor.shape[-1]):
                                 all_features.append(feature_tensor[:, i])
-                                all_feature_names.append(f"state_{state_idx}__{fname}__{i}")
+                                all_feature_names.append(
+                                    format_feature_name(f"{fname}__{i}", state_index=state_idx)
+                                )
                         else:
                             all_features.append(feature_tensor)
-                            all_feature_names.append(f"state_{state_idx}__{fname}")
+                            all_feature_names.append(
+                                format_feature_name(fname, state_index=state_idx)
+                            )
         else:
             for state_idx, fc_params in self._resulting_features_config.items():
                 y_state = y[:, :, state_idx : state_idx + 1]
@@ -241,10 +246,14 @@ class TorchFeatureExtractor(FeatureExtractor):
                         if feature_tensor.dim() > 1:
                             for i in range(feature_tensor.shape[-1]):
                                 all_features.append(feature_tensor[:, i])
-                                all_feature_names.append(f"state_{state_idx}__{fname}__{i}")
+                                all_feature_names.append(
+                                    format_feature_name(f"{fname}__{i}", state_index=state_idx)
+                                )
                         else:
                             all_features.append(feature_tensor)
-                            all_feature_names.append(f"state_{state_idx}__{fname}")
+                            all_feature_names.append(
+                                format_feature_name(fname, state_index=state_idx)
+                            )
 
         if not all_features:
             n_batches = y.shape[1]

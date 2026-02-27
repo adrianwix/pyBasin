@@ -517,3 +517,15 @@
 2026-02-24 12:48:30 - main_pendulum_case_1_with_defaults.py: 17.65670418739319 seconds
 2026-02-24 12:52:55 - main_pendulum_case_1_with_defaults.py: 4.976677894592285 seconds
 2026-02-24 12:55:04 - main_pendulum_case_1_with_defaults.py: 17.017253398895264 seconds
+2026-02-25 15:03:07 - main_duffing_oscillator_supervised.py: 14.308466911315918 seconds
+2026-02-25 15:04:26 - main_duffing_oscillator_supervised.py: 0.7853565216064453 seconds
+2026-02-25 15:10:32 - main_duffing_oscillator_unsupervised.py: 7.776167154312134 seconds
+2026-02-25 15:56:47 - main_duffing_oscillator_with_defaults.py: 13.941760301589966 seconds
+2026-02-25 20:58:11 - main_lorenz.py: 12.85592007637024 seconds
+2026-02-27 10:37:41 - main_lorenz.py: 14.419814825057983 seconds
+2026-02-27 10:38:15 - main_lorenz.py: 0.7302708625793457 seconds
+2026-02-27 10:40:09 - main_lorenz_sigma.py: 46.02778720855713 seconds
+2026-02-27 10:40:59 - main_lorenz_sigma.py: 2.015601396560669 seconds
+2026-02-27 10:43:12 - main_lorenz_sigma.py: 2.031501293182373 seconds
+2026-02-27 10:48:22 - main_lorenz_sigma.py: 7.76447319984436 seconds
+2026-02-27 10:50:45 - main_lorenz_sigma.py: 3.5613324642181396 seconds

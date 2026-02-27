@@ -4,6 +4,7 @@ from case_studies.comparison_utils import compare_with_expected_by_size
 from case_studies.lorenz.setup_lorenz_system import setup_lorenz_system
 from pybasin.basin_stability_estimator import BasinStabilityEstimator
 from pybasin.plotters.interactive_plotter import InteractivePlotter
+from pybasin.plotters.matplotlib_plotter import MatplotlibPlotter
 from pybasin.plotters.types import InteractivePlotterOptions
 from pybasin.utils import time_execution
 
@@ -45,6 +46,10 @@ if __name__ == "__main__":
     if bse.bs_vals is not None:
         errors = bse.get_errors()
         compare_with_expected_by_size(bse.bs_vals, expected_file, errors)
+
+    plotter = MatplotlibPlotter(bse)
+    plotter.plot_state_space()
+    plotter.show()
 
     options: InteractivePlotterOptions = {
         "templates_phase_space": {"x_axis": 1, "y_axis": 2, "exclude_templates": ["unbounded"]},

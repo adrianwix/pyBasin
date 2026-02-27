@@ -34,6 +34,7 @@ from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
 from pybasin.types import ErrorInfo
 from pybasin.utils import (
     NumpyEncoder,
+    OrbitData,
     extract_orbit_data,
     generate_filename,
     get_feature_names,
@@ -190,6 +191,32 @@ class BasinStabilityEstimator:
         :return: Boolean tensor of shape (B,) indicating unbounded trajectories.
         """
         return torch.isinf(y).any(dim=(0, 2))
+
+    def _expand_orbit_data(
+        self,
+        bounded_orbit_data: OrbitData,
+        bounded_mask: torch.Tensor,
+        total_samples: int,
+    ) -> OrbitData:
+        n_dof = len(bounded_orbit_data.dof_indices)
+        max_peaks = bounded_orbit_data.peak_values.shape[0]
+        device = bounded_orbit_data.peak_values.device
+        dtype = bounded_orbit_data.peak_values.dtype
+
+        full_peak_values = torch.full(
+            (max_peaks, total_samples, n_dof), float("nan"), dtype=dtype, device=device
+        )
+        full_peak_counts = torch.zeros((total_samples, n_dof), dtype=torch.long, device=device)
+
+        full_peak_values[:, bounded_mask, :] = bounded_orbit_data.peak_values
+        full_peak_counts[bounded_mask, :] = bounded_orbit_data.peak_counts
+
+        return OrbitData(
+            peak_values=full_peak_values,
+            peak_counts=full_peak_counts,
+            dof_indices=bounded_orbit_data.dof_indices,
+            time_steady=bounded_orbit_data.time_steady,
+        )
 
     def _get_feature_names(self) -> list[str]:
         """Get feature names from extractor.
@@ -389,7 +416,7 @@ class BasinStabilityEstimator:
         else:
             logger.info("Unboundedness detection: DISABLED")
 
-        # Extract orbit data once on final solution (after unbounded filtering)
+        # Extract orbit data from bounded solution (self.solution after filtering)
         if self.compute_orbit_data:
             dof = (
                 list(range(self.solution.y.shape[2]))
@@ -494,11 +521,12 @@ class BasinStabilityEstimator:
 
             # Restore original solution with full trajectories
             if original_solution is not None:
-                # Preserve extracted and filtered features from bounded solution
+                # Preserve data from bounded solution
                 bounded_extracted_features = self.solution.extracted_features
                 bounded_extracted_feature_names = self.solution.extracted_feature_names
                 bounded_features = self.solution.features
                 bounded_feature_names = self.solution.feature_names
+                bounded_orbit_data = self.solution.orbit_data
 
                 # Restore original solution
                 self.solution = original_solution
@@ -510,6 +538,13 @@ class BasinStabilityEstimator:
                 if bounded_features is not None:
                     self.solution.features = bounded_features
                     self.solution.feature_names = bounded_feature_names
+
+                # Expand orbit_data to full size (NaN for unbounded trajectories)
+                if bounded_orbit_data is not None:
+                    bounded_mask_cpu = (~unbounded_mask).cpu()
+                    self.solution.orbit_data = self._expand_orbit_data(
+                        bounded_orbit_data, bounded_mask_cpu, total_samples
+                    )
         else:
             labels = bounded_labels
 

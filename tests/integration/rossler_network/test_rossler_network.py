@@ -108,8 +108,6 @@ class TestRosslerNetwork:
                 python_se=sync_se,
                 matlab_bs=expected_sb,  # Paper reports total bounded
                 matlab_se=e_abs_paper,
-                f1_score=0.0,  # N/A - no ground truth labels
-                matthews_corrcoef=0.0,  # N/A - no ground truth labels
             )
         )
 
@@ -121,8 +119,6 @@ class TestRosslerNetwork:
                 python_se=unbounded_se,
                 matlab_bs=1.0 - expected_sb,  # Everything not synchronized
                 matlab_se=e_abs_paper,
-                f1_score=0.0,  # N/A - no ground truth labels
-                matthews_corrcoef=0.0,  # N/A - no ground truth labels
             )
         )
 
@@ -245,8 +241,6 @@ class TestRosslerNetwork:
                     python_se=sync_se,
                     matlab_bs=expected_val,  # Paper reports total bounded
                     matlab_se=e_abs_paper,
-                    f1_score=0.0,  # N/A - no ground truth labels
-                    matthews_corrcoef=0.0,  # N/A - no ground truth labels
                 )
             )
 
@@ -258,8 +252,6 @@ class TestRosslerNetwork:
                     python_se=unbounded_se,
                     matlab_bs=1.0 - expected_val,  # Everything not synchronized
                     matlab_se=e_abs_paper,
-                    f1_score=0.0,  # N/A - no ground truth labels
-                    matthews_corrcoef=0.0,  # N/A - no ground truth labels
                 )
             )
 

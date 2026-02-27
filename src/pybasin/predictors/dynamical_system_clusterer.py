@@ -8,8 +8,12 @@ from sklearn.base import BaseEstimator, ClusterMixin  # type: ignore[import-unty
 from sklearn.cluster import HDBSCAN  # type: ignore[attr-defined]
 from sklearn.preprocessing import StandardScaler
 
+from pybasin.feature_extractors.utils import (
+    get_feature_indices_by_base_name,
+    validate_feature_names,
+)
 from pybasin.predictors.hdbscan_clusterer import HDBSCANClusterer
-from pybasin.utils import DisplayNameMixin, get_feature_indices_by_base_name, validate_feature_names
+from pybasin.utils import DisplayNameMixin
 
 
 class DynamicalSystemClusterer(DisplayNameMixin, BaseEstimator, ClusterMixin):  # type: ignore[misc]

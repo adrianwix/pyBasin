@@ -64,6 +64,8 @@ import jax
 import jax.numpy as jnp
 from jax import Array, lax
 
+from pybasin.feature_extractors.utils import format_feature_name
+
 # =============================================================================
 # MINIMAL FEATURES (tsfresh MinimalFCParameters - 10 features)
 # =============================================================================
@@ -1525,22 +1527,6 @@ JAX_COMPREHENSIVE_FC_PARAMETERS: FCParameters = {
 }
 
 
-def _format_feature_name(feature_name: str, params: dict[str, object] | None) -> str:
-    """Format feature name with parameters in tsfresh naming convention.
-
-    ```python
-
-    - "mean" with None -> "mean"
-    - "autocorrelation" with {"lag": 5} -> "autocorrelation__lag_5"
-    - "ratio_beyond_r_sigma" with {"r": 2.0} -> "ratio_beyond_r_sigma__r_2.0"
-    ```
-    """
-    if params is None:
-        return feature_name
-    param_strs = [f"{k}_{v}" for k, v in sorted(params.items())]
-    return f"{feature_name}__{'_'.join(param_strs)}"
-
-
 def extract_features(
     x: Array,
     fc_parameters: FCParameters,
@@ -1583,11 +1569,11 @@ def extract_features(
         func = ALL_FEATURE_FUNCTIONS[feature_name]
 
         if param_list is None:
-            output_name = _format_feature_name(feature_name, None)
+            output_name = format_feature_name(feature_name)
             results[output_name] = func(x)
         else:
             for params in param_list:
-                output_name = _format_feature_name(feature_name, params)
+                output_name = format_feature_name(feature_name, params)
                 results[output_name] = func(x, **params)
 
     return results
@@ -1610,10 +1596,10 @@ def get_feature_names_from_config(
             continue
 
         if param_list is None:
-            names.append(_format_feature_name(feature_name, None))
+            names.append(format_feature_name(feature_name))
         else:
             for params in param_list:
-                names.append(_format_feature_name(feature_name, params))
+                names.append(format_feature_name(feature_name, params))
 
     return names
 

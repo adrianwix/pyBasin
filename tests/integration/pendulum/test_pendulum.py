@@ -52,6 +52,7 @@ class TestPendulum:
                 trajectory_state=1,
                 trajectory_x_limits=(0, 50 * math.pi),
                 trajectory_y_limits={"FP": (-0.12, 0.12), "LC": (0, 6)},
+                hidden_state_space_labels=["LC"],
             )
 
     @pytest.mark.integration

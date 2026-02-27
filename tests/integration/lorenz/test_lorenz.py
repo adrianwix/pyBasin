@@ -17,7 +17,7 @@ class TestLorenz:
     """Integration tests for Lorenz system basin stability estimation."""
 
     @pytest.mark.integration
-    def test_case1(
+    def test_baseline(
         self,
         artifact_collector: ArtifactCollector | None,
     ) -> None:
@@ -52,6 +52,8 @@ class TestLorenz:
                 bse,
                 comparison,
                 phase_space_axes=(0, 2),
+                hidden_state_space_labels=["unbounded"],
+                hidden_phase_space_labels=["unbounded"],
             )
 
     @pytest.mark.integration

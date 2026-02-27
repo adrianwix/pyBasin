@@ -12,8 +12,22 @@ from typing import cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.figure import Figure
 
-from pybasin.thesis_utils import THESIS_PALETTE, thesis_export
+from pybasin.docs_plots_utils import thesis_export as docs_export
+from pybasin.thesis_plots_utils import (
+    THESIS_FULL_WIDTH_CM,
+    THESIS_PALETTE,
+    THESIS_SINGLE_HEIGHT_CM,
+    configure_thesis_style,
+    thesis_export,
+)
+
+configure_thesis_style()
+
+THESIS_ARTIFACTS_DIR: Path = (
+    Path(__file__).parent.parent.parent / "artifacts" / "benchmarks" / "solver_comparison"
+)
 
 
 def load_matlab_results(matlab_json_path: Path) -> dict:
@@ -85,73 +99,92 @@ def extract_python_data(python_results: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+SOLVER_COLORS = {
+    "MATLAB ode45": THESIS_PALETTE[1],  # red
+    "JAX/Diffrax": THESIS_PALETTE[0],  # dark blue
+    "torchdiffeq": THESIS_PALETTE[5],  # grey (was teal blue, too similar to torchode)
+    "torchode": THESIS_PALETTE[2],  # teal green
+    "scipy": THESIS_PALETTE[4],  # medium blue
+}
+
+
+def _build_comparison_figure(df: pd.DataFrame, n: int) -> Figure:
+    """Build the comparison bar chart figure for a given N value."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    n_data = cast(pd.DataFrame, df[df["N"] == n]).copy()
+
+    n_data["label"] = n_data.apply(lambda row: f"{row['solver']} ({row['device'].upper()})", axis=1)
+    n_data = n_data.sort_values(by="mean_time", ascending=True)
+
+    # Scale down torchode CUDA for N=100000 only (divide by 3)
+    plot_times = n_data["mean_time"].copy()
+    plot_std = n_data["std_time"].copy()
+    scale_factor = 3
+    torchode_cuda_mask = (n_data["solver"] == "torchode") & (n_data["device"] == "cuda")
+    should_scale = (n == 100000) & torchode_cuda_mask
+
+    plot_times.loc[should_scale] = plot_times.loc[should_scale] / scale_factor
+    plot_std.loc[should_scale] = plot_std.loc[should_scale] / scale_factor
+
+    # Update labels for scaled bars
+    labels = n_data["label"].tolist()
+    for i, (idx, _row) in enumerate(n_data.iterrows()):
+        if should_scale.loc[cast(int, idx)]:
+            labels[i] = f"{labels[i]} (÷{scale_factor})"
+
+    ax.barh(
+        range(len(n_data)),
+        plot_times,
+        xerr=plot_std,
+        capsize=3,
+        color=[SOLVER_COLORS.get(s, "#333333") for s in n_data["solver"]],
+    )
+
+    ax.set_yticks(range(len(n_data)))
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Time (seconds)")
+    ax.set_title(f"ODE Solver Benchmark: N = {n:,} samples")
+    ax.grid(True, alpha=0.3, axis="x")
+
+    # Add time labels
+    for i, (_, row) in enumerate(n_data.iterrows()):
+        display_time = plot_times.iloc[i]
+        actual_time = row["mean_time"]
+        ax.text(
+            display_time + plot_std.iloc[i] + 0.3,
+            i,
+            f"{actual_time:.2f}s",
+            va="center",
+            fontsize=9,
+        )
+
+    return fig
+
+
 def create_comparison_plots(df: pd.DataFrame, output_dir: Path) -> None:
     """Create one comparison plot per N value."""
     n_values = sorted(df["N"].unique())
 
-    colors = {
-        "MATLAB ode45": THESIS_PALETTE[1],  # red
-        "JAX/Diffrax": THESIS_PALETTE[0],  # dark blue
-        "torchdiffeq": THESIS_PALETTE[5],  # grey (was teal blue, too similar to torchode)
-        "torchode": THESIS_PALETTE[2],  # teal green
-        "scipy": THESIS_PALETTE[4],  # medium blue
-    }
-
     for n in n_values:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        n_data = cast(pd.DataFrame, df[df["N"] == n]).copy()
-
-        n_data["label"] = n_data.apply(
-            lambda row: f"{row['solver']} ({row['device'].upper()})", axis=1
-        )
-        n_data = n_data.sort_values(by="mean_time", ascending=True)
-
-        # Scale down torchode CUDA for N=100000 only (divide by 3)
-        plot_times = n_data["mean_time"].copy()
-        plot_std = n_data["std_time"].copy()
-        scale_factor = 3
-        torchode_cuda_mask = (n_data["solver"] == "torchode") & (n_data["device"] == "cuda")
-        should_scale = (n == 100000) & torchode_cuda_mask
-
-        plot_times.loc[should_scale] = plot_times.loc[should_scale] / scale_factor
-        plot_std.loc[should_scale] = plot_std.loc[should_scale] / scale_factor
-
-        # Update labels for scaled bars
-        labels = n_data["label"].tolist()
-        for i, (idx, _row) in enumerate(n_data.iterrows()):
-            if should_scale.loc[idx]:
-                labels[i] = f"{labels[i]} (÷{scale_factor})"
-
-        ax.barh(
-            range(len(n_data)),
-            plot_times,
-            xerr=plot_std,
-            capsize=3,
-            color=[colors.get(s, "#333333") for s in n_data["solver"]],
-        )
-
-        ax.set_yticks(range(len(n_data)))
-        ax.set_yticklabels(labels)
-        ax.set_xlabel("Time (seconds)")
-        ax.set_title(f"ODE Solver Benchmark: N = {n:,} samples")
-        ax.grid(True, alpha=0.3, axis="x")
-
-        # Add time labels
-        for i, (_, row) in enumerate(n_data.iterrows()):
-            display_time = plot_times.iloc[i]
-            actual_time = row["mean_time"]
-            ax.text(
-                display_time + plot_std.iloc[i] + 0.3,
-                i,
-                f"{actual_time:.2f}s",
-                va="center",
-                fontsize=9,
-            )
-
-        plt.tight_layout()
         output_path = output_dir / f"solver_comparison_n{n}.png"
-        thesis_export(fig, output_path.name, output_dir)
+
+        # Export PNG for docs
+        fig_docs = _build_comparison_figure(df, n)
+        docs_export(fig_docs, output_path.name, output_dir)
+        plt.close(fig_docs)
         print(f"Plot saved to: {output_path}")
+
+        # Export PDF for thesis
+        fig_thesis = _build_comparison_figure(df, n)
+        pdf_name = f"solver_comparison_n{n}.pdf"
+        thesis_export(
+            fig_thesis,
+            pdf_name,
+            THESIS_ARTIFACTS_DIR,
+            width=THESIS_FULL_WIDTH_CM,
+            height=THESIS_SINGLE_HEIGHT_CM,
+        )
+        plt.close(fig_thesis)
 
 
 def print_comparison_table(df: pd.DataFrame) -> None:
@@ -205,6 +238,7 @@ def main() -> None:
         Path(__file__).parent.parent.parent / "docs" / "assets" / "benchmarks" / "solver_comparison"
     )
     docs_assets_dir.mkdir(parents=True, exist_ok=True)
+    THESIS_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
     matlab_json = results_dir / "matlab_benchmark_results.json"
     python_json = results_dir / "python_benchmark_results.json"

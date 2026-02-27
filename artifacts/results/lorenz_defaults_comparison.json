@@ -1,0 +1,29 @@
+{
+  "system_name": "lorenz",
+  "case_name": "defaults",
+  "parameter_value": null,
+  "matthews_corrcoef": 0.9980445772629885,
+  "attractors": [
+    {
+      "label": "butterfly2",
+      "python_bs": 0.08765,
+      "python_se": 0.0019995934274246855,
+      "matlab_bs": 0.08745,
+      "matlab_se": 0.0019975296931460116
+    },
+    {
+      "label": "butterfly1",
+      "python_bs": 0.08925,
+      "python_se": 0.0020159915364405673,
+      "matlab_bs": 0.0894,
+      "matlab_se": 0.002017518773146857
+    },
+    {
+      "label": "unbounded",
+      "python_bs": 0.8231,
+      "python_se": 0.002698206719285978,
+      "matlab_bs": 0.82315,
+      "matlab_se": 0.0026979073140121026
+    }
+  ]
+}

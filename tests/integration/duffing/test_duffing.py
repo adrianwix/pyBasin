@@ -45,9 +45,18 @@ class TestDuffing:
         """
         json_path = Path(__file__).parent / "main_duffing_supervised.json"
         ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_duffing.csv"
+        label_map = {
+            "y1": "$\\bar{y}_1$",
+            "y2": "$\\bar{y}_2$",
+            "y3": "$\\bar{y}_3$",
+            "y4": "$\\bar{y}_4$",
+            "y5": "$\\bar{y}_5$",
+            "NaN": "NaN",
+        }
         bse, comparison = run_basin_stability_test(
             json_path,
             setup_duffing_oscillator_system,
+            label_map=label_map,
             system_name="duffing",
             case_name="case1",
             ground_truth_csv=ground_truth_csv,
@@ -60,6 +69,7 @@ class TestDuffing:
                 trajectory_state=0,
                 trajectory_x_limits=(0, 50),
                 trajectory_y_limits=(-1.4, 1.4),
+                trajectory_y_ticks=[-1, 1],
                 phase_space_axes=(0, 1),
             )
 
@@ -82,8 +92,19 @@ class TestDuffing:
         # Load expected results from supervised JSON (the ground truth with meaningful labels)
         json_path = Path(__file__).parent / "main_duffing_supervised.json"
         ground_truth_csv = Path(__file__).parent / "ground_truths" / "main" / "main_duffing.csv"
+        label_map = {
+            "y1": "$\\bar{y}_1$",
+            "y2": "$\\bar{y}_2$",
+            "y3": "$\\bar{y}_3$",
+            "y4": "$\\bar{y}_4$",
+            "y5": "$\\bar{y}_5$",
+            "NaN": "NaN",
+        }
         with open(json_path) as f:
             expected_results = json.load(f)
+        # Map MATLAB labels to Python template labels
+        for result in expected_results:
+            result["label"] = label_map.get(result["label"], result["label"])
 
         # Setup system - we'll use its KNN classifier and template integrator for relabeling
         props = setup_duffing_oscillator_system()
@@ -213,6 +234,10 @@ class TestDuffing:
         # Load ground truth labels for classification metrics
         ground_truth_labels = sampler.labels
         assert ground_truth_labels is not None, "Ground truth CSV must have label column"
+        # Map ground truth labels to new Python template labels
+        ground_truth_labels = np.array(
+            [label_map.get(str(lbl), str(lbl)) for lbl in ground_truth_labels]
+        )
 
         # Compute classification metrics
 
@@ -245,8 +270,6 @@ class TestDuffing:
                     python_se=actual_se,
                     matlab_bs=expected_bs,
                     matlab_se=expected_se,
-                    f1_score=f1_for_class,
-                    matthews_corrcoef=metrics.matthews_corrcoef,
                     dbscan_label=str(dbscan_cluster),
                     cluster_size=int(purity_info.get("cluster_size", 0)),
                     majority_count=int(purity_info.get("majority_count", 0)),
@@ -267,7 +290,6 @@ class TestDuffing:
             n_clusters_found=actual_n_clusters,
             n_clusters_expected=expected_n_clusters,
             attractors=attractor_comparisons,
-            macro_f1=metrics.macro_f1,
             matthews_corrcoef=metrics.matthews_corrcoef,
         )
 
@@ -282,5 +304,6 @@ class TestDuffing:
                 trajectory_state=0,
                 trajectory_x_limits=(0, 50),
                 trajectory_y_limits=(-1.4, 1.4),
+                trajectory_y_ticks=[-1, 1],
                 phase_space_axes=(0, 1),
             )

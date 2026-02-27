@@ -208,8 +208,8 @@ class MatplotlibStudyPlotter:
                         marker=markers[g_idx % len(markers)],
                         linestyle=linestyles[g_idx % len(linestyles)],
                         color=attractor_colors[a_idx],
-                        markersize=8,
-                        linewidth=2,
+                        markersize=4,
+                        linewidth=1.0,
                         alpha=0.8,
                     )
 
@@ -218,10 +218,10 @@ class MatplotlibStudyPlotter:
                     [0],
                     [0],
                     color=attractor_colors[a_idx],
-                    linewidth=2,
+                    linewidth=1.0,
                     linestyle="-",
                     marker="o",
-                    markersize=8,
+                    markersize=4,
                     label=attractor,
                 )
                 for a_idx, attractor in enumerate(attractor_labels)
@@ -230,7 +230,6 @@ class MatplotlibStudyPlotter:
             if single_group:
                 plt.legend(  # type: ignore[misc]
                     handles=attractor_handles,
-                    title="Attractor",
                     loc="best",
                 )
             else:
@@ -239,10 +238,10 @@ class MatplotlibStudyPlotter:
                         [0],
                         [0],
                         color="black",
-                        linewidth=2,
+                        linewidth=1.0,
                         linestyle=linestyles[g_idx % len(linestyles)],
                         marker=markers[g_idx % len(markers)],
-                        markersize=8,
+                        markersize=4,
                         markevery=[0],
                         label=", ".join(f"{k}={v}" for k, v in group_key),
                     )
@@ -250,7 +249,6 @@ class MatplotlibStudyPlotter:
                 ]
                 legend1 = plt.legend(  # type: ignore[misc]
                     handles=attractor_handles,
-                    title="Attractor",
                     bbox_to_anchor=(1.02, 1),
                     loc="upper left",
                 )
@@ -264,7 +262,7 @@ class MatplotlibStudyPlotter:
                 )
 
             plt.xlabel(param_name)  # type: ignore[misc]
-            plt.ylabel(r"$\mathcal{S}(\bar{y}_i)$")  # type: ignore[misc]
+            plt.ylabel("Basin Stability")  # type: ignore[misc]
             plt.title(f"Parameter Stability ({param_name})")  # type: ignore[misc]
             plt.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
             plt.tight_layout()
@@ -366,12 +364,20 @@ class MatplotlibStudyPlotter:
                 for a_idx, attractor in enumerate(attractor_labels):
                     xs, ys = scatter_data[j][a_idx]
                     if xs:
-                        ax.scatter(xs, ys, c=[colors[a_idx]], s=3, alpha=0.5, label=attractor)  # type: ignore[misc]
+                        ax.scatter(
+                            xs,
+                            ys,
+                            c=[colors[a_idx]],
+                            s=3,
+                            alpha=0.5,
+                            label=attractor,
+                            rasterized=True,
+                        )  # type: ignore[misc]
 
                 if interval == "log":
                     ax.set_xscale("log")  # type: ignore[misc]
                 ax.set_xlabel(param_name)  # type: ignore[misc]
-                ax.set_ylabel(f"Peaks $y_{{{dof_idx + 1}}}$")  # type: ignore[misc]
+                ax.set_ylabel(f"peak $y_{{{dof_idx}}}$")  # type: ignore[misc]
                 ax.grid(True, linestyle="--", alpha=0.7)  # type: ignore[misc]
 
                 handles: list[Any] = [
@@ -379,16 +385,16 @@ class MatplotlibStudyPlotter:
                         [0],
                         [0],
                         marker="o",
-                        color="w",
+                        linestyle="none",
                         markerfacecolor=colors[a_idx],
-                        markersize=10,
+                        markersize=4,
                         label=attractor,
                     )
                     for a_idx, attractor in enumerate(attractor_labels)
                     if scatter_data[j][a_idx][0]
                 ]
                 if handles:
-                    ax.legend(handles=handles, title="Attractor")  # type: ignore[misc]
+                    ax.legend(handles=handles)  # type: ignore[misc]
 
             plt.suptitle(f"Orbit Diagram ({param_name})")  # type: ignore[misc]
             plt.tight_layout()

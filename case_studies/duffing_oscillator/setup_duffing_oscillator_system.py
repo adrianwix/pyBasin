@@ -47,11 +47,11 @@ def setup_duffing_oscillator_system() -> SetupProperties:
     ]
 
     classifier_labels = [
-        "y1",
-        "y2",
-        "y3",
-        "y4",
-        "y5",
+        "$\\bar{y}_1$",
+        "$\\bar{y}_2$",
+        "$\\bar{y}_3$",
+        "$\\bar{y}_4$",
+        "$\\bar{y}_5$",
     ]
 
     knn = KNeighborsClassifier(n_neighbors=1)

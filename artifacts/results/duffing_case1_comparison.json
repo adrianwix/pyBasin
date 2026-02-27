@@ -2,53 +2,42 @@
   "system_name": "duffing",
   "case_name": "case1",
   "parameter_value": null,
-  "macro_f1": 0.997965915729545,
   "matthews_corrcoef": 0.9976960093011171,
   "attractors": [
     {
-      "label": "y1",
+      "label": "$\\bar{y}_1$",
       "python_bs": 0.2023,
       "python_se": 0.004017147122025779,
       "matlab_bs": 0.2027,
-      "matlab_se": 0.0040201083318736576,
-      "f1_score": 0.9965432098765432,
-      "matthews_corrcoef": 0.9976960093011171
+      "matlab_se": 0.0040201083318736576
     },
     {
-      "label": "y2",
+      "label": "$\\bar{y}_2$",
       "python_bs": 0.495,
       "python_se": 0.004999749993749687,
       "matlab_bs": 0.495,
-      "matlab_se": 0.004999749993749688,
-      "f1_score": 1.0,
-      "matthews_corrcoef": 0.9976960093011171
+      "matlab_se": 0.004999749993749688
     },
     {
-      "label": "y3",
+      "label": "$\\bar{y}_3$",
       "python_bs": 0.0288,
       "python_se": 0.0016724401334576972,
       "matlab_bs": 0.0288,
-      "matlab_se": 0.0016724401334576972,
-      "f1_score": 1.0,
-      "matthews_corrcoef": 0.9976960093011171
+      "matlab_se": 0.0016724401334576972
     },
     {
-      "label": "y4",
+      "label": "$\\bar{y}_4$",
       "python_bs": 0.0257,
       "python_se": 0.0015823877527331915,
       "matlab_bs": 0.0257,
-      "matlab_se": 0.0015823877527331915,
-      "f1_score": 0.9961089494163424,
-      "matthews_corrcoef": 0.9976960093011171
+      "matlab_se": 0.0015823877527331915
     },
     {
-      "label": "y5",
+      "label": "$\\bar{y}_5$",
       "python_bs": 0.2482,
       "python_se": 0.004319684710716744,
       "matlab_bs": 0.2478,
-      "matlab_se": 0.004317350576453109,
-      "f1_score": 0.9971774193548387,
-      "matthews_corrcoef": 0.9976960093011171
+      "matlab_se": 0.004317350576453109
     }
   ]
 }

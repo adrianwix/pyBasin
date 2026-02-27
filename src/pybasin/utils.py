@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import time
-import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,8 +21,6 @@ from pybasin.ts_torch.calculators.torch_features_pattern import extract_peak_val
 P = ParamSpec("P")
 R = TypeVar("R")
 
-FEATURE_NAME_PATTERN = re.compile(r"^state_(\d+)__(.+)$")
-
 
 class DisplayNameMixin:
     """Mixin that provides a computed display_name property from the class name."""
@@ -35,74 +32,6 @@ class DisplayNameMixin:
         spaced = re.sub(r"([a-z])([A-Z])", r"\1 \2", class_name)
         spaced = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", spaced)
         return spaced
-
-
-def parse_feature_name(feature_name: str) -> tuple[int, str] | None:
-    """Parse a feature name into state index and feature identifier.
-
-    Feature names follow the convention: state_X__feature_name
-    where X is the state dimension index (0-based).
-
-    ```python
-
-    - "state_0__variance" -> (0, "variance")
-    - "state_1__mean" -> (1, "mean")
-    - "state_0__autocorrelation_periodicity__output_strength" -> (0, "autocorrelation_periodicity__output_strength")
-    - "invalid_name" -> None
-    ```
-
-    :param feature_name: Feature name string to parse.
-    :return: Tuple of (state_index, feature_identifier) if valid, None if invalid.
-    """
-    match = FEATURE_NAME_PATTERN.match(feature_name)
-    if match:
-        state_idx = int(match.group(1))
-        feature_id = match.group(2)
-        return (state_idx, feature_id)
-    return None
-
-
-def validate_feature_names(feature_names: list[str]) -> tuple[bool, list[str]]:
-    """Validate that all feature names follow the naming convention.
-
-    Feature names must follow: state_X__feature_name
-    where X is a non-negative integer.
-
-    :param feature_names: List of feature names to validate.
-    :return: Tuple of (all_valid, invalid_names) where all_valid is True if all names are valid,
-        and invalid_names is a list of names that don't match the convention.
-    """
-    invalid_names: list[str] = []
-    for name in feature_names:
-        if parse_feature_name(name) is None:
-            invalid_names.append(name)
-    return (len(invalid_names) == 0, invalid_names)
-
-
-def get_feature_indices_by_base_name(feature_names: list[str], base_feature: str) -> list[int]:
-    """Get column indices for features matching a base feature name.
-
-    Finds all features that have the given base name (after the state_X__ prefix).
-    Useful for predictors that need to access specific features across multiple states.
-
-    ```python
-    Given feature_names = ["state_0__variance", "state_1__variance", "state_0__mean"]:
-    - get_feature_indices_by_base_name(feature_names, "variance") -> [0, 1]
-    - get_feature_indices_by_base_name(feature_names, "mean") -> [2]
-    ```
-
-    :param feature_names: List of feature names.
-    :param base_feature: Base feature name to search for (e.g., "variance", "mean").
-    :return: List of column indices where the base feature appears.
-    """
-    indices: list[int] = []
-    for idx, name in enumerate(feature_names):
-        parsed = parse_feature_name(name)
-        if parsed is not None:
-            _, feature_id = parsed
-            if feature_id == base_feature or feature_id.startswith(base_feature + "__"):
-                indices.append(idx)
-    return indices
 
 
 def time_execution(script_name: str, func: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
@@ -244,27 +173,6 @@ def get_feature_names(selector: FeatureSelectorProtocol, original_names: list[st
     """
     mask = selector.get_support(indices=False)
     return [name for name, keep in zip(original_names, mask, strict=True) if keep]
-
-
-def extract_amplitudes(t: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    """Extract amplitudes by taking the maximum absolute value along the time dimension.
-
-    .. deprecated::
-        Use :func:`extract_orbit_data` instead for orbit diagram plotting.
-        This function computes max(abs(y)) over the entire trajectory, which
-        includes transients. For steady-state analysis, use ``extract_orbit_data``.
-
-    :param t: Time points tensor (shape: (N,)).
-    :param y: Input tensor (shape: (N, B, S)).
-    :return: Tensor containing maximum absolute values (shape: (B, S)).
-    """
-    warnings.warn(
-        "extract_amplitudes is deprecated. Use extract_orbit_data for orbit diagrams.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    amps = torch.max(torch.abs(y), dim=0)[0]
-    return amps
 
 
 @dataclass

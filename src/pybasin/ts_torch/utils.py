@@ -1,5 +1,6 @@
 from torch import Tensor
 
+from pybasin.feature_extractors.utils import format_feature_name
 from pybasin.ts_torch.settings import (
     ALL_FEATURE_FUNCTIONS,
     TORCH_COMPREHENSIVE_FC_PARAMETERS,
@@ -39,7 +40,7 @@ def get_feature_names_from_config(
             names.append(feature_name)
         else:
             for params in param_list:
-                names.append(_format_feature_name(feature_name, params))
+                names.append(format_feature_name(feature_name, params))
 
     if include_custom:
         for feature_name in TORCH_CUSTOM_FC_PARAMETERS:
@@ -47,14 +48,6 @@ def get_feature_names_from_config(
                 names.append(feature_name)
 
     return names
-
-
-def _format_feature_name(feature_name: str, params: dict[str, object] | None) -> str:
-    """Format feature name with parameters."""
-    if params is None:
-        return feature_name
-    param_str = "__".join(f"{k}_{v}" for k, v in sorted(params.items()))
-    return f"{feature_name}__{param_str}"
 
 
 def extract_features_from_config(
@@ -92,7 +85,7 @@ def extract_features_from_config(
             results[feature_name] = func(x)
         else:
             for params in param_list:
-                name = _format_feature_name(feature_name, params)
+                name = format_feature_name(feature_name, params)
                 results[name] = func(x, **params)
 
     if include_custom:

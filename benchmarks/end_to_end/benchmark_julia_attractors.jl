@@ -184,8 +184,12 @@ function main()
     println("Already completed: $(sort(collect(completed)))")
     println("Pending N values: $pending")
 
-    # Warmup run (JIT compilation) - excluded from timing
-    println("\nWarmup run (N=50, excluded from timing)...")
+    # Warmup run (JIT compilation) - excluded from timing.
+    # Use the same N as the first pending value (or 100 as a floor) so that all
+    # code paths — including silhouette clustering at realistic scale — are compiled
+    # before the timed rounds begin.
+    warmup_n = max(100, first(pending))
+    println("\nWarmup run (N=$warmup_n, excluded from timing)...")
     p = [ALPHA, T_TORQUE, K]
     u0 = SVector(0.4, 0.0)
     diffeq = (alg = DP5(), reltol = 1e-8, abstol = 1e-6, dt = 0.01)
@@ -199,7 +203,7 @@ function main()
     grouping = GroupViaClustering(; min_neighbors=10, optimal_radius_method="silhouettes", max_used_features=500)
     mapper = AttractorsViaFeaturizing(ds, featurizer, grouping; T=100.0, Ttr=900.0, Δt=1.0, threaded=true)
     warmup_sampler = make_sampler(0)
-    basins_fractions(mapper, warmup_sampler; N=50, show_progress=false)
+    basins_fractions(mapper, warmup_sampler; N=warmup_n, show_progress=false)
     println("Warmup complete.\n")
 
     for n in pending

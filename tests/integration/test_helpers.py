@@ -53,12 +53,10 @@ class ClassificationMetrics:
     """Classification metrics comparing predicted vs ground truth labels.
 
     :ivar f1_per_class: F1-score for each class label.
-    :ivar macro_f1: Macro-averaged F1-score across all classes.
     :ivar matthews_corrcoef: Matthews correlation coefficient for overall classification.
     """
 
     f1_per_class: dict[str, float]
-    macro_f1: float
     matthews_corrcoef: float
 
 
@@ -123,15 +121,11 @@ def compute_classification_metrics(
         # Single class case
         f1_per_class = {str(labels[0]): float(f1_per_class_scores)}
 
-    # Compute macro-averaged F1
-    macro_f1 = float(f1_score(y_true, y_pred, labels=labels, average="macro", zero_division=0))
-
     # Compute Matthews correlation coefficient
     mcc = float(matthews_corrcoef(y_true, y_pred))
 
     return ClassificationMetrics(
         f1_per_class=f1_per_class,
-        macro_f1=macro_f1,
         matthews_corrcoef=mcc,
     )
 
@@ -145,8 +139,6 @@ class AttractorComparison:
     :ivar python_se: Standard error from pyBasin.
     :ivar matlab_bs: Basin stability from MATLAB bSTAB reference.
     :ivar matlab_se: Standard error from MATLAB bSTAB reference.
-    :ivar f1_score: F1-score for this class label.
-    :ivar matthews_corrcoef: Matthews correlation coefficient (same for all attractors).
     """
 
     label: str
@@ -154,8 +146,6 @@ class AttractorComparison:
     python_se: float
     matlab_bs: float
     matlab_se: float
-    f1_score: float
-    matthews_corrcoef: float
 
     def to_dict(self) -> dict[str, str | float]:
         """Convert to dictionary for JSON serialization."""
@@ -178,8 +168,6 @@ class UnsupervisedAttractorComparison(AttractorComparison):
     cluster_size: int = 0
     majority_count: int = 0
     purity: float = 0.0
-    f1_score: float = 0.0
-    matthews_corrcoef: float = 0.0
 
 
 @dataclass
@@ -190,7 +178,6 @@ class ComparisonResult:
     :ivar case_name: Name of the case (e.g., "case1", "case2").
     :ivar attractors: List of attractor comparisons.
     :ivar parameter_value: Parameter value for parameter sweep tests (None for single-point).
-    :ivar macro_f1: Macro-averaged F1-score across all classes.
     :ivar matthews_corrcoef: Matthews correlation coefficient for overall classification.
     """
 
@@ -198,7 +185,6 @@ class ComparisonResult:
     case_name: str
     attractors: list[AttractorComparison]
     parameter_value: float | None = None
-    macro_f1: float = 0.0
     matthews_corrcoef: float = 0.0
     paper_validation: bool = False
 
@@ -216,7 +202,6 @@ class ComparisonResult:
             "system_name": self.system_name,
             "case_name": self.case_name,
             "parameter_value": self.parameter_value,
-            "macro_f1": self.macro_f1,
             "matthews_corrcoef": self.matthews_corrcoef,
             "attractors": [a.to_dict() for a in self.attractors],
         }
@@ -254,7 +239,6 @@ class UnsupervisedComparisonResult(ComparisonResult):
             "n_clusters_expected": self.n_clusters_expected,
             "overall_agreement": self.overall_agreement,
             "adjusted_rand_index": self.adjusted_rand_index,
-            "macro_f1": self.macro_f1,
             "matthews_corrcoef": self.matthews_corrcoef,
             "attractors": [a.to_dict() for a in self.attractors],
         }
@@ -379,9 +363,6 @@ def run_basin_stability_test(
         actual_bs: float = basin_stability.get(python_label, 0.0)
         actual_std_err: float = errors[python_label]["e_abs"] if python_label in errors else 0.0
 
-        # Get F1-score for this class
-        f1 = metrics.f1_per_class.get(python_label, 0.0)
-
         attractor_comparisons.append(
             AttractorComparison(
                 label=python_label,
@@ -389,8 +370,6 @@ def run_basin_stability_test(
                 python_se=actual_std_err,
                 matlab_bs=expected_bs,
                 matlab_se=expected_std_err,
-                f1_score=f1,
-                matthews_corrcoef=metrics.matthews_corrcoef,
             )
         )
 
@@ -413,17 +392,12 @@ def run_basin_stability_test(
         case_name=case_name,
         attractors=attractor_comparisons,
         parameter_value=None,
-        macro_f1=metrics.macro_f1,
         matthews_corrcoef=metrics.matthews_corrcoef,
     )
 
     # Print classification quality summary
     print("\nClassification Metrics:")
-    print(f"  Macro F1-score: {metrics.macro_f1:.4f}")
     print(f"  Matthews Correlation Coefficient: {metrics.matthews_corrcoef:.4f}")
-    print("  F1 per class:")
-    for label, f1 in sorted(metrics.f1_per_class.items()):
-        print(f"    {label}: {f1:.4f}")
 
     assert metrics.matthews_corrcoef >= mcc_threshold, (
         f"MCC {metrics.matthews_corrcoef:.4f} < {mcc_threshold} for {system_name} {case_name}"
@@ -607,9 +581,6 @@ def run_parameter_study_test(
             actual_bs_val = actual_bs.get(python_label, 0.0)
             actual_err = errors[python_label]["e_abs"] if python_label in errors else 0.0
 
-            # Get F1-score for this class
-            f1 = metrics.f1_per_class.get(python_label, 0.0)
-
             attractor_comparisons.append(
                 AttractorComparison(
                     label=python_label,
@@ -617,8 +588,6 @@ def run_parameter_study_test(
                     python_se=actual_err,
                     matlab_bs=expected_bs,
                     matlab_se=expected_err,
-                    f1_score=f1,
-                    matthews_corrcoef=metrics.matthews_corrcoef,
                 )
             )
 
@@ -629,7 +598,6 @@ def run_parameter_study_test(
                 case_name=case_name,
                 attractors=attractor_comparisons,
                 parameter_value=param_value,
-                macro_f1=metrics.macro_f1,
                 matthews_corrcoef=metrics.matthews_corrcoef,
             )
         )
@@ -642,11 +610,7 @@ def run_parameter_study_test(
     for _i, result in enumerate(comparison_results):
         param_val = result.parameter_value
         print(f"\nParameter {param_val:.4f}:")
-        print(f"  Macro F1: {result.macro_f1:.4f}")
         print(f"  MCC: {result.matthews_corrcoef:.4f}")
-        print("  F1 per class:")
-        for attractor in result.attractors:
-            print(f"    {attractor.label}: {attractor.f1_score:.4f}")
         mcc_values.append(result.matthews_corrcoef)
     print(f"{'=' * 80}\n")
 
