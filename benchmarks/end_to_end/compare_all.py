@@ -238,7 +238,9 @@ def analyze_scaling(df: pd.DataFrame) -> dict[str, dict]:
         r_value = result.rvalue
         std_err = result.stderr
         alpha = slope
-        alpha_ci = 1.96 * std_err
+        dof = len(n_vals) - 2
+        t_crit = scipy_stats.t.ppf(0.975, dof)
+        alpha_ci = t_crit * std_err
         r2_power = r_value**2
 
         def linear_model(n: np.ndarray, a: float, b: float) -> np.ndarray:
