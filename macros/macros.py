@@ -22,25 +22,25 @@ ARTIFACTS_DIR = Path(__file__).parent.parent / "artifacts" / "results"
 
 def _format_bs_with_se(bs: float, se: float) -> str:
     """Format basin stability with standard error."""
-    return f"{bs:.4f} ± {se:.4f}"
+    return f"{bs:.5f} ± {se:.5f}"
 
 
 def comparison_table(case_id: str) -> str:
     """Render a comparison table from a JSON artifact.
 
     For single-point tests, renders a table with columns:
-    Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+    Attractor | pyBasin BS ± SE | bSTAB BS ± SE
 
     For parameter sweep tests, adds a Parameter column first:
-    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+    Parameter | Attractor | pyBasin BS ± SE | bSTAB BS ± SE
 
     For unsupervised tests, adds cluster quality metrics and purity column:
-    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 | MCC
+    Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE
 
     For paper validation tests (no ground truth labels), shows confidence intervals:
     Attractor | pyBasin BS ± SE | Paper BS ± SE | Difference | 95% CI | Status
 
-    Also shows overall Macro F1 and MCC in a summary section.
+    Also shows overall MCC in a summary section.
 
     :param case_id: Case identifier (e.g., "pendulum_case1", "pendulum_case2").
     :return: Markdown table string.
@@ -122,30 +122,27 @@ def _render_single_point_table(data: dict[str, Any]) -> str:
         return '!!! warning "No Data"\n    No attractor data found in comparison.'
 
     # Get overall metrics
-    macro_f1 = data.get("macro_f1", 0.0)
     mcc = data.get("matthews_corrcoef", 0.0)
 
     # Summary metrics
     summary_lines: list[str] = [
         "**Overall Classification Quality:**",
         "",
-        f"- Macro F1-score: {macro_f1:.4f}",
         f"- Matthews Correlation Coefficient: {mcc:.4f}",
         "",
     ]
 
     # Attractor table
     table_lines: list[str] = [
-        "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
-        "|-----------|-----------------|---------------|-----|",
+        "| Attractor | pyBasin BS ± SE | bSTAB BS ± SE |",
+        "|-----------|-----------------|---------------|",
     ]
 
     for a in attractors:
         python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
         matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-        f1_score: float = a["f1_score"]
 
-        table_lines.append(f"| {a['label']} | {python_str} | {matlab_str} | {f1_score:.4f} |")
+        table_lines.append(f"| {a['label']} | {python_str} | {matlab_str} |")
 
     return "\n".join(summary_lines + table_lines)
 
@@ -162,7 +159,6 @@ def _render_unsupervised_table(data: dict[str, Any]) -> str:
     n_expected = data.get("n_clusters_expected", 0)
     agreement = data.get("overall_agreement", 0.0)
     ari = data.get("adjusted_rand_index", 0.0)
-    macro_f1 = data.get("macro_f1", 0.0)
     mcc = data.get("matthews_corrcoef", 0.0)
 
     summary_lines: list[str] = [
@@ -171,27 +167,25 @@ def _render_unsupervised_table(data: dict[str, Any]) -> str:
         f"- Clusters found: {n_found} (expected: {n_expected})",
         f"- Overall agreement: {agreement:.1%}",
         f"- Adjusted Rand Index: {ari:.4f}",
-        f"- Macro F1-score: {macro_f1:.4f}",
         f"- Matthews Correlation Coefficient: {mcc:.4f}",
         "",
     ]
 
     # Attractor table with purity info
     table_lines: list[str] = [
-        "| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE | F1 |",
-        "|-----------|--------|--------|-----------------|---------------|-----|",
+        "| Attractor | DBSCAN | Purity | pyBasin BS ± SE | bSTAB BS ± SE |",
+        "|-----------|--------|--------|-----------------|---------------|",
     ]
 
     for a in attractors:
         python_str = _format_bs_with_se(a["python_bs"], a["python_se"])
         matlab_str = _format_bs_with_se(a["matlab_bs"], a["matlab_se"])
-        f1_score: float = a["f1_score"]
         dbscan_label = a.get("dbscan_label", "-")
         purity = a.get("purity", 0.0)
         purity_str = f"{purity:.1%}"
 
         table_lines.append(
-            f"| {a['label']} | {dbscan_label} | {purity_str} | {python_str} | {matlab_str} | {f1_score:.4f} |"
+            f"| {a['label']} | {dbscan_label} | {purity_str} | {python_str} | {matlab_str} |"
         )
 
     return "\n".join(summary_lines + table_lines)
@@ -242,8 +236,8 @@ def _render_paper_validation_sweep_table(data: dict[str, Any]) -> str:
             within_ci = abs(diff) <= ci_margin
             status = "✓" if within_ci else "✗"
 
-            diff_str = f"{diff:+.4f}"
-            ci_str = f"±{ci_margin:.4f}"
+            diff_str = f"{diff:+.5f}"
+            ci_str = f"±{ci_margin:.5f}"
 
             if i == 0:
                 table_lines.append(
