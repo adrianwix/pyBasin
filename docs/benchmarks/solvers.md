@@ -27,23 +27,9 @@ indicating it is not properly optimized for GPU batch processing in this use cas
 
 {{ solver_comparison_table() }}
 
-## Comparison Plots
+## Scaling Plot
 
-### N = 5,000
-
-![Solver Comparison N=5000](../assets/benchmarks/solver_comparison/solver_comparison_n5000.png)
-
-### N = 10,000
-
-![Solver Comparison N=10000](../assets/benchmarks/solver_comparison/solver_comparison_n10000.png)
-
-### N = 100,000
-
-![Solver Comparison N=100000](../assets/benchmarks/solver_comparison/solver_comparison_n100000.png)
-
-_Note: torchode (CUDA) time is divided by 3 in the N=100,000 plot to improve readability._
-
-_Note: the first round of torchode tooks 2x longer than any following run inflating the average. The real average duration is around 310 seconds_
+![Solver Scaling](../assets/benchmarks/solver_comparison/solver_scaling.png)
 
 ## Key Findings
 

@@ -30,11 +30,11 @@
             "hz_advertised_friendly": "3.0720 GHz",
             "hz_actual_friendly": "3.0720 GHz",
             "hz_advertised": [
-                3071999000,
+                3071998000,
                 0
             ],
             "hz_actual": [
-                3071999000,
+                3071998000,
                 0
             ],
             "stepping": 2,
@@ -156,14 +156,239 @@
         }
     },
     "commit_info": {
-        "id": "d3b84eaf564c84cb20d70bce5b8a93d9539a35ed",
-        "time": "2026-02-09T15:26:36+01:00",
-        "author_time": "2026-02-09T15:26:36+01:00",
+        "id": "dfe778b1433ff59bd07416c28f1d5ec79a7f6645",
+        "time": "2026-02-28T09:54:42+01:00",
+        "author_time": "2026-02-28T09:54:42+01:00",
         "dirty": true,
         "project": "pyBasin",
         "branch": "main"
     },
     "benchmarks": [
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-100]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-100]",
+            "params": {
+                "device": "cpu",
+                "n": 100
+            },
+            "param": "cpu-100",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.0908927569998923,
+                "max": 1.004943532998368,
+                "mean": 0.27402853159983354,
+                "stddev": 0.4085939844025334,
+                "rounds": 5,
+                "median": 0.09136347400090017,
+                "iqr": 0.22867566749846446,
+                "q1": 0.09124528775055296,
+                "q3": 0.3199209552490174,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 0.0908927569998923,
+                "hd15iqr": 1.004943532998368,
+                "ops": 3.649255039837638,
+                "total": 1.3701426579991676,
+                "data": [
+                    1.004943532998368,
+                    0.09136279800077318,
+                    0.09136347400090017,
+                    0.0908927569998923,
+                    0.09158009599923389
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-200]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-200]",
+            "params": {
+                "device": "cpu",
+                "n": 200
+            },
+            "param": "cpu-200",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.22497899399968446,
+                "max": 0.7210751679995155,
+                "mean": 0.33645459699982894,
+                "stddev": 0.21525771887295844,
+                "rounds": 5,
+                "median": 0.24747438399936073,
+                "iqr": 0.13504376875062007,
+                "q1": 0.23401405049980895,
+                "q3": 0.369057819250429,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 0.22497899399968446,
+                "hd15iqr": 0.7210751679995155,
+                "ops": 2.972169228528949,
+                "total": 1.6822729849991447,
+                "data": [
+                    0.7210751679995155,
+                    0.22497899399968446,
+                    0.24747438399936073,
+                    0.23702573599985044,
+                    0.2517187030007335
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-500]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-500]",
+            "params": {
+                "device": "cpu",
+                "n": 500
+            },
+            "param": "cpu-500",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.4127302739998413,
+                "max": 0.8116168399992603,
+                "mean": 0.4949937005996617,
+                "stddev": 0.17700907283766693,
+                "rounds": 5,
+                "median": 0.4176036339995335,
+                "iqr": 0.10136699375152602,
+                "q1": 0.4147415504990022,
+                "q3": 0.5161085442505282,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 0.4127302739998413,
+                "hd15iqr": 0.8116168399992603,
+                "ops": 2.0202277297439277,
+                "total": 2.4749685029983084,
+                "data": [
+                    0.8116168399992603,
+                    0.4176036339995335,
+                    0.41760577900095086,
+                    0.4154119759987225,
+                    0.4127302739998413
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-1000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-1000]",
+            "params": {
+                "device": "cpu",
+                "n": 1000
+            },
+            "param": "cpu-1000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.7895191700008581,
+                "max": 1.3074985450002714,
+                "mean": 0.8941738198001985,
+                "stddev": 0.23105815071230673,
+                "rounds": 5,
+                "median": 0.7910230380002758,
+                "iqr": 0.1311304797509365,
+                "q1": 0.7901226042495182,
+                "q3": 0.9212530840004547,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 0.7895191700008581,
+                "hd15iqr": 1.3074985450002714,
+                "ops": 1.1183507924929497,
+                "total": 4.470869099000993,
+                "data": [
+                    1.3074985450002714,
+                    0.7903237489990715,
+                    0.7910230380002758,
+                    0.7895191700008581,
+                    0.7925045970005158
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-2000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-2000]",
+            "params": {
+                "device": "cpu",
+                "n": 2000
+            },
+            "param": "cpu-2000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.6643606629986607,
+                "max": 2.0648445110000466,
+                "mean": 1.7522489773997223,
+                "stddev": 0.17485053783621718,
+                "rounds": 5,
+                "median": 1.6759531059997244,
+                "iqr": 0.10442870775068513,
+                "q1": 1.672468770499563,
+                "q3": 1.7768974782502482,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 1.6643606629986607,
+                "hd15iqr": 2.0648445110000466,
+                "ops": 0.5706951539980157,
+                "total": 8.761244886998611,
+                "data": [
+                    2.0648445110000466,
+                    1.6809151340003154,
+                    1.675171472999864,
+                    1.6643606629986607,
+                    1.6759531059997244
+                ],
+                "iterations": 1
+            }
+        },
         {
             "group": null,
             "name": "test_benchmark_jax_diffrax[cpu-5000]",
@@ -183,28 +408,28 @@
                 "warmup": false
             },
             "stats": {
-                "min": 4.630156424999996,
-                "max": 5.387563150999995,
-                "mean": 4.802439137400006,
-                "stddev": 0.3274773558079738,
+                "min": 4.67363113600004,
+                "max": 5.083916568999484,
+                "mean": 4.769078601400179,
+                "stddev": 0.17703775920148557,
                 "rounds": 5,
-                "median": 4.664805161999993,
-                "iqr": 0.2000418897499685,
-                "q1": 4.650820608000032,
-                "q3": 4.850862497750001,
+                "median": 4.685231488001591,
+                "iqr": 0.13474215675023515,
+                "q1": 4.67830256499974,
+                "q3": 4.813044721749975,
                 "iqr_outliers": 1,
                 "stddev_outliers": 1,
                 "outliers": "1;1",
-                "ld15iqr": 4.630156424999996,
-                "hd15iqr": 5.387563150999995,
-                "ops": 0.20822752176332426,
-                "total": 24.01219568700003,
+                "ld15iqr": 4.67363113600004,
+                "hd15iqr": 5.083916568999484,
+                "ops": 0.20968410956917438,
+                "total": 23.845393007000894,
                 "data": [
-                    5.387563150999995,
-                    4.657708669000044,
-                    4.630156424999996,
-                    4.664805161999993,
-                    4.6719622800000025
+                    5.083916568999484,
+                    4.67985970799964,
+                    4.67363113600004,
+                    4.685231488001591,
+                    4.722754106000139
                 ],
                 "iterations": 1
             }
@@ -228,28 +453,118 @@
                 "warmup": false
             },
             "stats": {
-                "min": 9.410124655000004,
-                "max": 10.029905901000006,
-                "mean": 9.588220945599982,
-                "stddev": 0.25045838636957296,
+                "min": 9.624222143000225,
+                "max": 10.289158543999292,
+                "mean": 9.776981118399998,
+                "stddev": 0.28693350344576785,
                 "rounds": 5,
-                "median": 9.512109279000015,
-                "iqr": 0.18393310625000936,
-                "q1": 9.458899101249955,
-                "q3": 9.642832207499964,
+                "median": 9.658546096001373,
+                "iqr": 0.19219235700074933,
+                "q1": 9.63544346074923,
+                "q3": 9.827635817749979,
                 "iqr_outliers": 1,
                 "stddev_outliers": 1,
                 "outliers": "1;1",
-                "ld15iqr": 9.410124655000004,
-                "hd15iqr": 10.029905901000006,
-                "ops": 0.10429463460152096,
-                "total": 47.941104727999914,
+                "ld15iqr": 9.624222143000225,
+                "hd15iqr": 10.289158543999292,
+                "ops": 0.10228106077836527,
+                "total": 48.884905591999996,
                 "data": [
-                    10.029905901000006,
-                    9.512109279000015,
-                    9.51380764299995,
-                    9.475157249999938,
-                    9.410124655000004
+                    10.289158543999292,
+                    9.673794909000208,
+                    9.639183899998898,
+                    9.624222143000225,
+                    9.658546096001373
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-20000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-20000]",
+            "params": {
+                "device": "cpu",
+                "n": 20000
+            },
+            "param": "cpu-20000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 20.088746346000335,
+                "max": 21.044598227999813,
+                "mean": 20.615182113799893,
+                "stddev": 0.3511834434666129,
+                "rounds": 5,
+                "median": 20.592268104999675,
+                "iqr": 0.4035169140011021,
+                "q1": 20.44627132349933,
+                "q3": 20.849788237500434,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 20.088746346000335,
+                "hd15iqr": 21.044598227999813,
+                "ops": 0.04850793917219852,
+                "total": 103.07591056899946,
+                "data": [
+                    20.565446315998997,
+                    20.592268104999675,
+                    20.088746346000335,
+                    21.044598227999813,
+                    20.78485157400064
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cpu-50000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cpu-50000]",
+            "params": {
+                "device": "cpu",
+                "n": 50000
+            },
+            "param": "cpu-50000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 27.42388812900026,
+                "max": 28.79552241300007,
+                "mean": 27.879065923800226,
+                "stddev": 0.5963254207826774,
+                "rounds": 5,
+                "median": 27.537738073000583,
+                "iqr": 0.8749730804997853,
+                "q1": 27.45425765400023,
+                "q3": 28.329230734500015,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 27.42388812900026,
+                "hd15iqr": 28.79552241300007,
+                "ops": 0.03586920748109802,
+                "total": 139.39532961900113,
+                "data": [
+                    28.173800174999997,
+                    27.537738073000583,
+                    27.46438082900022,
+                    27.42388812900026,
+                    28.79552241300007
                 ],
                 "iterations": 1
             }
@@ -273,28 +588,253 @@
                 "warmup": false
             },
             "stats": {
-                "min": 58.33529541000007,
-                "max": 65.70688075399994,
-                "mean": 60.669928764200016,
-                "stddev": 3.0085464254217538,
+                "min": 60.307883011999365,
+                "max": 67.64050796400079,
+                "mean": 64.13286513060011,
+                "stddev": 3.48373000321041,
                 "rounds": 5,
-                "median": 59.613083491,
-                "iqr": 3.653271095000008,
-                "q1": 58.564030535250026,
-                "q3": 62.217301630250034,
+                "median": 65.1702361179996,
+                "iqr": 6.6092008862488,
+                "q1": 60.518585388500924,
+                "q3": 67.12778627474972,
+                "iqr_outliers": 0,
+                "stddev_outliers": 3,
+                "outliers": "3;0",
+                "ld15iqr": 60.307883011999365,
+                "hd15iqr": 67.64050796400079,
+                "ops": 0.015592629425858347,
+                "total": 320.66432565300056,
+                "data": [
+                    67.64050796400079,
+                    65.1702361179996,
+                    66.95687904499937,
+                    60.58881951400144,
+                    60.307883011999365
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-100]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-100]",
+            "params": {
+                "device": "cuda",
+                "n": 100
+            },
+            "param": "cuda-100",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.892187696001201,
+                "max": 11.625655668998661,
+                "mean": 11.19529008540012,
+                "stddev": 0.2779518533101404,
+                "rounds": 5,
+                "median": 11.113500737001232,
+                "iqr": 0.34843483450003987,
+                "q1": 11.019927875249778,
+                "q3": 11.368362709749817,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 10.892187696001201,
+                "hd15iqr": 11.625655668998661,
+                "ops": 0.08932327723281679,
+                "total": 55.9764504270006,
+                "data": [
+                    11.625655668998661,
+                    11.113500737001232,
+                    11.282598390000203,
+                    11.062507934999303,
+                    10.892187696001201
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-200]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-200]",
+            "params": {
+                "device": "cuda",
+                "n": 200
+            },
+            "param": "cuda-200",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.756717012000081,
+                "max": 11.32902794599977,
+                "mean": 11.143348524599787,
+                "stddev": 0.2344390407136121,
+                "rounds": 5,
+                "median": 11.210067042999071,
+                "iqr": 0.30191206149993377,
+                "q1": 11.01761107225002,
+                "q3": 11.319523133749954,
                 "iqr_outliers": 0,
                 "stddev_outliers": 1,
                 "outliers": "1;0",
-                "ld15iqr": 58.33529541000007,
-                "hd15iqr": 65.70688075399994,
-                "ops": 0.016482630198670644,
-                "total": 303.3496438210001,
+                "ld15iqr": 10.756717012000081,
+                "hd15iqr": 11.32902794599977,
+                "ops": 0.08973963237283875,
+                "total": 55.716742622998936,
                 "data": [
-                    59.613083491,
-                    58.33529541000007,
-                    58.64027557700001,
-                    61.054108589000066,
-                    65.70688075399994
+                    11.32902794599977,
+                    11.316354863000015,
+                    11.104575759,
+                    10.756717012000081,
+                    11.210067042999071
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-500]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-500]",
+            "params": {
+                "device": "cuda",
+                "n": 500
+            },
+            "param": "cuda-500",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.645834011000261,
+                "max": 11.60891753299984,
+                "mean": 11.21675801300007,
+                "stddev": 0.39251832592450203,
+                "rounds": 5,
+                "median": 11.302980219999881,
+                "iqr": 0.6155051877503865,
+                "q1": 10.92136321199996,
+                "q3": 11.536868399750347,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 10.645834011000261,
+                "hd15iqr": 11.60891753299984,
+                "ops": 0.08915232002339833,
+                "total": 56.08379006500036,
+                "data": [
+                    11.60891753299984,
+                    11.01320627899986,
+                    11.512852022000516,
+                    11.302980219999881,
+                    10.645834011000261
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-1000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-1000]",
+            "params": {
+                "device": "cuda",
+                "n": 1000
+            },
+            "param": "cuda-1000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.853845903999172,
+                "max": 11.8478809119988,
+                "mean": 11.171260346599592,
+                "stddev": 0.40069171835553197,
+                "rounds": 5,
+                "median": 11.018543189999036,
+                "iqr": 0.4579903932517482,
+                "q1": 10.90973255299923,
+                "q3": 11.367722946250979,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 10.853845903999172,
+                "hd15iqr": 11.8478809119988,
+                "ops": 0.08951541446300541,
+                "total": 55.85630173299796,
+                "data": [
+                    11.8478809119988,
+                    10.92836143599925,
+                    11.018543189999036,
+                    10.853845903999172,
+                    11.207670291001705
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-2000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-2000]",
+            "params": {
+                "device": "cuda",
+                "n": 2000
+            },
+            "param": "cuda-2000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 11.032384326999818,
+                "max": 11.51624091099984,
+                "mean": 11.190727001999766,
+                "stddev": 0.20974929083531343,
+                "rounds": 5,
+                "median": 11.0582481929996,
+                "iqr": 0.2945852917500815,
+                "q1": 11.051321100999758,
+                "q3": 11.34590639274984,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 11.032384326999818,
+                "hd15iqr": 11.51624091099984,
+                "ops": 0.08935969931366403,
+                "total": 55.953635009998834,
+                "data": [
+                    11.51624091099984,
+                    11.057633358999738,
+                    11.289128219999839,
+                    11.0582481929996,
+                    11.032384326999818
                 ],
                 "iterations": 1
             }
@@ -318,28 +858,28 @@
                 "warmup": false
             },
             "stats": {
-                "min": 12.02386973900002,
-                "max": 12.753598128000021,
-                "mean": 12.297774262800022,
-                "stddev": 0.2961506880803164,
+                "min": 11.046756748000917,
+                "max": 11.653463396000006,
+                "mean": 11.252327277000223,
+                "stddev": 0.2464284036824965,
                 "rounds": 5,
-                "median": 12.28276453400008,
-                "iqr": 0.42860383900006127,
-                "q1": 12.04362115624997,
-                "q3": 12.47222499525003,
+                "median": 11.216487994001,
+                "iqr": 0.32170582524850033,
+                "q1": 11.056022698000561,
+                "q3": 11.377728523249061,
                 "iqr_outliers": 0,
                 "stddev_outliers": 1,
                 "outliers": "1;0",
-                "ld15iqr": 12.02386973900002,
-                "hd15iqr": 12.753598128000021,
-                "ops": 0.08131552739790776,
-                "total": 61.48887131400011,
+                "ld15iqr": 11.046756748000917,
+                "hd15iqr": 11.653463396000006,
+                "ops": 0.08887050433060206,
+                "total": 56.26163638500111,
                 "data": [
-                    12.753598128000021,
-                    12.28276453400008,
-                    12.378433951000034,
-                    12.050204961999953,
-                    12.02386973900002
+                    11.653463396000006,
+                    11.216487994001,
+                    11.059111348000442,
+                    11.046756748000917,
+                    11.285816898998746
                 ],
                 "iterations": 1
             }
@@ -363,28 +903,118 @@
                 "warmup": false
             },
             "stats": {
-                "min": 12.169974785000022,
-                "max": 13.070213362999993,
-                "mean": 12.443031376000045,
-                "stddev": 0.3584771042441464,
+                "min": 10.874305891000404,
+                "max": 11.525842050999927,
+                "mean": 11.194134823200148,
+                "stddev": 0.31104035138199904,
                 "rounds": 5,
-                "median": 12.311556727000152,
-                "iqr": 0.29242559025016135,
-                "q1": 12.257590225249942,
-                "q3": 12.550015815500103,
-                "iqr_outliers": 1,
-                "stddev_outliers": 1,
-                "outliers": "1;1",
-                "ld15iqr": 12.169974785000022,
-                "hd15iqr": 13.070213362999993,
-                "ops": 0.08036626845840691,
-                "total": 62.21515688000022,
+                "median": 11.14471580999998,
+                "iqr": 0.6021526800000174,
+                "q1": 10.908621039250193,
+                "q3": 11.51077371925021,
+                "iqr_outliers": 0,
+                "stddev_outliers": 3,
+                "outliers": "3;0",
+                "ld15iqr": 10.874305891000404,
+                "hd15iqr": 11.525842050999927,
+                "ops": 0.0893324956143527,
+                "total": 55.97067411600074,
                 "data": [
-                    13.070213362999993,
-                    12.286795371999915,
-                    12.169974785000022,
-                    12.37661663300014,
-                    12.311556727000152
+                    11.505750942000304,
+                    10.874305891000404,
+                    11.525842050999927,
+                    11.14471580999998,
+                    10.920059422000122
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-20000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-20000]",
+            "params": {
+                "device": "cuda",
+                "n": 20000
+            },
+            "param": "cuda-20000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.57984360699993,
+                "max": 11.695416266000393,
+                "mean": 11.032190868999896,
+                "stddev": 0.423730514540103,
+                "rounds": 5,
+                "median": 10.865388035999786,
+                "iqr": 0.503667356250844,
+                "q1": 10.790188719499383,
+                "q3": 11.293856075750227,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 10.57984360699993,
+                "hd15iqr": 11.695416266000393,
+                "ops": 0.0906438269491845,
+                "total": 55.16095434499948,
+                "data": [
+                    11.695416266000393,
+                    11.160002679000172,
+                    10.865388035999786,
+                    10.860303756999201,
+                    10.57984360699993
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_jax_diffrax[cuda-50000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_jax_diffrax[cuda-50000]",
+            "params": {
+                "device": "cuda",
+                "n": 50000
+            },
+            "param": "cuda-50000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 10.456431274000352,
+                "max": 11.451342975000443,
+                "mean": 10.87444262060053,
+                "stddev": 0.3606016467662672,
+                "rounds": 5,
+                "median": 10.842167328000869,
+                "iqr": 0.31174109225048596,
+                "q1": 10.690953057250226,
+                "q3": 11.002694149500712,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 10.456431274000352,
+                "hd15iqr": 11.451342975000443,
+                "ops": 0.09195873617518578,
+                "total": 54.37221310300265,
+                "data": [
+                    11.451342975000443,
+                    10.769126985000185,
+                    10.456431274000352,
+                    10.842167328000869,
+                    10.853144541000802
                 ],
                 "iterations": 1
             }
@@ -408,28 +1038,253 @@
                 "warmup": false
             },
             "stats": {
-                "min": 11.801604238999971,
-                "max": 12.712605536999945,
-                "mean": 12.040152742799956,
-                "stddev": 0.3791699430205477,
+                "min": 11.340118536998489,
+                "max": 12.085236378001355,
+                "mean": 11.554065765400082,
+                "stddev": 0.30504870389080013,
                 "rounds": 5,
-                "median": 11.906803996999997,
-                "iqr": 0.2861591762500666,
-                "q1": 11.838602861749905,
-                "q3": 12.124762037999972,
+                "median": 11.406350367000414,
+                "iqr": 0.28183836800189965,
+                "q1": 11.389234009749089,
+                "q3": 11.671072377750988,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 11.340118536998489,
+                "hd15iqr": 12.085236378001355,
+                "ops": 0.08654961987446962,
+                "total": 57.77032882700041,
+                "data": [
+                    12.085236378001355,
+                    11.340118536998489,
+                    11.406350367000414,
+                    11.533017711000866,
+                    11.405605833999289
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-100]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-100]",
+            "params": {
+                "device": "cpu",
+                "n": 100
+            },
+            "param": "cpu-100",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.995552554999449,
+                "max": 2.069037635999848,
+                "mean": 2.0263825673999234,
+                "stddev": 0.02925641066668255,
+                "rounds": 5,
+                "median": 2.0248812890004046,
+                "iqr": 0.04431436949835188,
+                "q1": 2.0018320980007047,
+                "q3": 2.0461464674990566,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 1.995552554999449,
+                "hd15iqr": 2.069037635999848,
+                "ops": 0.4934902303680555,
+                "total": 10.131912836999618,
+                "data": [
+                    2.069037635999848,
+                    2.0039252790011233,
+                    2.0385160779987928,
+                    2.0248812890004046,
+                    1.995552554999449
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-200]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-200]",
+            "params": {
+                "device": "cpu",
+                "n": 200
+            },
+            "param": "cpu-200",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 2.1959473160004563,
+                "max": 2.228550751000512,
+                "mean": 2.2120461766004156,
+                "stddev": 0.012330423600694215,
+                "rounds": 5,
+                "median": 2.2139268619994255,
+                "iqr": 0.017052338750090712,
+                "q1": 2.202713321750707,
+                "q3": 2.219765660500798,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 2.1959473160004563,
+                "hd15iqr": 2.228550751000512,
+                "ops": 0.45207012881478387,
+                "total": 11.060230883002077,
+                "data": [
+                    2.1959473160004563,
+                    2.2049686570007907,
+                    2.216837297000893,
+                    2.2139268619994255,
+                    2.228550751000512
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-500]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-500]",
+            "params": {
+                "device": "cpu",
+                "n": 500
+            },
+            "param": "cpu-500",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 2.4614259409991064,
+                "max": 2.516668614000082,
+                "mean": 2.4961998762002624,
+                "stddev": 0.020834917884633077,
+                "rounds": 5,
+                "median": 2.5021852390000277,
+                "iqr": 0.02032704399925933,
+                "q1": 2.4873681425010545,
+                "q3": 2.507695186500314,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 2.4614259409991064,
+                "hd15iqr": 2.516668614000082,
+                "ops": 0.40060894543517445,
+                "total": 12.480999381001311,
+                "data": [
+                    2.496015543001704,
+                    2.5021852390000277,
+                    2.504704044000391,
+                    2.516668614000082,
+                    2.4614259409991064
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-1000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-1000]",
+            "params": {
+                "device": "cpu",
+                "n": 1000
+            },
+            "param": "cpu-1000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 2.907934981998551,
+                "max": 2.9301948729989817,
+                "mean": 2.9200075703996844,
+                "stddev": 0.009539892592462566,
+                "rounds": 5,
+                "median": 2.9192453779996868,
+                "iqr": 0.016710697999769764,
+                "q1": 2.912409365000258,
+                "q3": 2.9291200630000276,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 2.907934981998551,
+                "hd15iqr": 2.9301948729989817,
+                "ops": 0.34246486554934585,
+                "total": 14.600037851998422,
+                "data": [
+                    2.913900826000827,
+                    2.928761793000376,
+                    2.907934981998551,
+                    2.9301948729989817,
+                    2.9192453779996868
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-2000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-2000]",
+            "params": {
+                "device": "cpu",
+                "n": 2000
+            },
+            "param": "cpu-2000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 3.8664418640000804,
+                "max": 3.9177898350008036,
+                "mean": 3.8788842403999295,
+                "stddev": 0.02193942781317124,
+                "rounds": 5,
+                "median": 3.8686826649991417,
+                "iqr": 0.017651419750563946,
+                "q1": 3.867268316749687,
+                "q3": 3.884919736500251,
                 "iqr_outliers": 1,
                 "stddev_outliers": 1,
                 "outliers": "1;1",
-                "ld15iqr": 11.801604238999971,
-                "hd15iqr": 12.712605536999945,
-                "ops": 0.0830554247410194,
-                "total": 60.20076371399978,
+                "ld15iqr": 3.8664418640000804,
+                "hd15iqr": 3.9177898350008036,
+                "ops": 0.257806095264368,
+                "total": 19.39442120199965,
                 "data": [
-                    12.712605536999945,
-                    11.801604238999971,
-                    11.850935735999883,
-                    11.906803996999997,
-                    11.92881420499998
+                    3.9177898350008036,
+                    3.8686826649991417,
+                    3.873963037000067,
+                    3.867543800999556,
+                    3.8664418640000804
                 ],
                 "iterations": 1
             }
@@ -453,28 +1308,28 @@
                 "warmup": false
             },
             "stats": {
-                "min": 7.048030148999942,
-                "max": 7.774173492000045,
-                "mean": 7.3624535123999975,
-                "stddev": 0.3475893605261042,
+                "min": 7.749968160000208,
+                "max": 8.771823557000971,
+                "mean": 8.122420233599769,
+                "stddev": 0.44269337169164785,
                 "rounds": 5,
-                "median": 7.217955016999895,
-                "iqr": 0.6473869567499264,
-                "q1": 7.068622815750075,
-                "q3": 7.716009772500001,
+                "median": 7.969179830999565,
+                "iqr": 0.7206206622513491,
+                "q1": 7.7503372409987605,
+                "q3": 8.47095790325011,
                 "iqr_outliers": 0,
                 "stddev_outliers": 1,
                 "outliers": "1;0",
-                "ld15iqr": 7.048030148999942,
-                "hd15iqr": 7.774173492000045,
-                "ops": 0.13582428715044234,
-                "total": 36.81226756199999,
+                "ld15iqr": 7.749968160000208,
+                "hd15iqr": 8.771823557000971,
+                "ops": 0.12311601360679794,
+                "total": 40.612101167998844,
                 "data": [
-                    7.217955016999895,
-                    7.696621865999987,
-                    7.774173492000045,
-                    7.075487038000119,
-                    7.048030148999942
+                    8.771823557000971,
+                    8.370669351999823,
+                    7.969179830999565,
+                    7.750460267998278,
+                    7.749968160000208
                 ],
                 "iterations": 1
             }
@@ -498,28 +1353,118 @@
                 "warmup": false
             },
             "stats": {
-                "min": 9.064808864000042,
-                "max": 9.557076184000152,
-                "mean": 9.22156863220007,
-                "stddev": 0.19307205471764638,
+                "min": 10.040967197999635,
+                "max": 10.551007305000894,
+                "mean": 10.26743240360047,
+                "stddev": 0.18491080110902752,
                 "rounds": 5,
-                "median": 9.14823090699997,
-                "iqr": 0.15717771500004574,
-                "q1": 9.12579447575007,
-                "q3": 9.282972190750115,
-                "iqr_outliers": 1,
-                "stddev_outliers": 1,
-                "outliers": "1;1",
-                "ld15iqr": 9.064808864000042,
-                "hd15iqr": 9.557076184000152,
-                "ops": 0.1084414203141295,
-                "total": 46.107843161000346,
+                "median": 10.235989429000256,
+                "iqr": 0.192451127250024,
+                "q1": 10.16872053150064,
+                "q3": 10.361171658750663,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 10.040967197999635,
+                "hd15iqr": 10.551007305000894,
+                "ops": 0.09739533319443439,
+                "total": 51.337162018002346,
                 "data": [
-                    9.14823090699997,
-                    9.064808864000042,
-                    9.146123013000079,
-                    9.191604193000103,
-                    9.557076184000152
+                    10.235989429000256,
+                    10.211304976000974,
+                    10.551007305000894,
+                    10.040967197999635,
+                    10.297893110000587
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-20000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-20000]",
+            "params": {
+                "device": "cpu",
+                "n": 20000
+            },
+            "param": "cpu-20000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 14.434728448999522,
+                "max": 18.94063985200046,
+                "mean": 15.715828261999922,
+                "stddev": 1.8583473856649466,
+                "rounds": 5,
+                "median": 15.084771973999523,
+                "iqr": 1.8864830494994749,
+                "q1": 14.523304901000301,
+                "q3": 16.409787950499776,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 14.434728448999522,
+                "hd15iqr": 18.94063985200046,
+                "ops": 0.0636301175686648,
+                "total": 78.57914130999961,
+                "data": [
+                    14.434728448999522,
+                    18.94063985200046,
+                    14.552830385000561,
+                    15.084771973999523,
+                    15.566170649999549
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cpu-50000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cpu-50000]",
+            "params": {
+                "device": "cpu",
+                "n": 50000
+            },
+            "param": "cpu-50000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 22.34619160299917,
+                "max": 23.17540300300061,
+                "mean": 22.785214902800362,
+                "stddev": 0.30814600668258885,
+                "rounds": 5,
+                "median": 22.824239658000806,
+                "iqr": 0.40072894200011433,
+                "q1": 22.582424948500375,
+                "q3": 22.98315389050049,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 22.34619160299917,
+                "hd15iqr": 23.17540300300061,
+                "ops": 0.04388810920879651,
+                "total": 113.92607451400181,
+                "data": [
+                    22.824239658000806,
+                    22.661169397000776,
+                    22.91907085300045,
+                    22.34619160299917,
+                    23.17540300300061
                 ],
                 "iterations": 1
             }
@@ -543,28 +1488,253 @@
                 "warmup": false
             },
             "stats": {
-                "min": 30.765410721999842,
-                "max": 35.08881461300007,
-                "mean": 31.923293641599912,
-                "stddev": 1.795599294675751,
+                "min": 35.56511177200082,
+                "max": 37.107793684999706,
+                "mean": 36.37605389460005,
+                "stddev": 0.6361426725228349,
                 "rounds": 5,
-                "median": 31.40543506799986,
-                "iqr": 1.5019109965001576,
-                "q1": 30.86462559549983,
-                "q3": 32.36653659199999,
-                "iqr_outliers": 1,
-                "stddev_outliers": 1,
-                "outliers": "1;1",
-                "ld15iqr": 30.765410721999842,
-                "hd15iqr": 35.08881461300007,
-                "ops": 0.03132508854590364,
-                "total": 159.61646820799956,
+                "median": 36.42681706300027,
+                "iqr": 1.0752288639992003,
+                "q1": 35.83920385750025,
+                "q3": 36.91443272149945,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 35.56511177200082,
+                "hd15iqr": 37.107793684999706,
+                "ops": 0.027490612447889737,
+                "total": 181.88026947300023,
                 "data": [
-                    30.765410721999842,
-                    31.459110584999962,
-                    30.897697219999827,
-                    31.40543506799986,
-                    35.08881461300007
+                    36.42681706300027,
+                    35.93056788600006,
+                    37.107793684999706,
+                    35.56511177200082,
+                    36.84997906699937
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-100]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-100]",
+            "params": {
+                "device": "cuda",
+                "n": 100
+            },
+            "param": "cuda-100",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 31.06873819000066,
+                "max": 33.42407985799946,
+                "mean": 31.87810575959993,
+                "stddev": 0.9246325344322426,
+                "rounds": 5,
+                "median": 31.770222443999955,
+                "iqr": 1.020179019999432,
+                "q1": 31.22432086075014,
+                "q3": 32.24449988074957,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 31.06873819000066,
+                "hd15iqr": 33.42407985799946,
+                "ops": 0.03136949251443069,
+                "total": 159.39052879799965,
+                "data": [
+                    31.06873819000066,
+                    31.770222443999955,
+                    33.42407985799946,
+                    31.85130655499961,
+                    31.276181750999967
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-200]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-200]",
+            "params": {
+                "device": "cuda",
+                "n": 200
+            },
+            "param": "cuda-200",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 31.062555064998378,
+                "max": 33.01254847199925,
+                "mean": 31.808799508599623,
+                "stddev": 0.771973383043437,
+                "rounds": 5,
+                "median": 31.86148760099968,
+                "iqr": 1.0124501290001717,
+                "q1": 31.16844027949992,
+                "q3": 32.18089040850009,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 31.062555064998378,
+                "hd15iqr": 33.01254847199925,
+                "ops": 0.03143784158624554,
+                "total": 159.0439975429981,
+                "data": [
+                    31.86148760099968,
+                    33.01254847199925,
+                    31.062555064998378,
+                    31.90367105400037,
+                    31.203735351000432
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-500]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-500]",
+            "params": {
+                "device": "cuda",
+                "n": 500
+            },
+            "param": "cuda-500",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 32.025017203999596,
+                "max": 32.988165683998886,
+                "mean": 32.47104565079972,
+                "stddev": 0.35525423063215456,
+                "rounds": 5,
+                "median": 32.45659052799965,
+                "iqr": 0.4438556949994563,
+                "q1": 32.23676557775025,
+                "q3": 32.680621272749704,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 32.025017203999596,
+                "hd15iqr": 32.988165683998886,
+                "ops": 0.030796667614409624,
+                "total": 162.35522825399858,
+                "data": [
+                    32.57810646899998,
+                    32.025017203999596,
+                    32.307348369000465,
+                    32.45659052799965,
+                    32.988165683998886
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-1000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-1000]",
+            "params": {
+                "device": "cuda",
+                "n": 1000
+            },
+            "param": "cuda-1000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 31.523162142999354,
+                "max": 32.67690693000077,
+                "mean": 32.0510210745997,
+                "stddev": 0.5339196011913625,
+                "rounds": 5,
+                "median": 31.86053977299889,
+                "iqr": 0.9834360499999093,
+                "q1": 31.606226806749874,
+                "q3": 32.58966285674978,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 31.523162142999354,
+                "hd15iqr": 32.67690693000077,
+                "ops": 0.03120025404721024,
+                "total": 160.25510537299851,
+                "data": [
+                    32.560581498999454,
+                    31.633915028000047,
+                    31.523162142999354,
+                    31.86053977299889,
+                    32.67690693000077
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-2000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-2000]",
+            "params": {
+                "device": "cuda",
+                "n": 2000
+            },
+            "param": "cuda-2000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 32.073211119000916,
+                "max": 33.62871855599951,
+                "mean": 32.71277637659987,
+                "stddev": 0.7680685598939292,
+                "rounds": 5,
+                "median": 32.22134268300033,
+                "iqr": 1.3650828479985648,
+                "q1": 32.14542835725024,
+                "q3": 33.510511205248804,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 32.073211119000916,
+                "hd15iqr": 33.62871855599951,
+                "ops": 0.03056909595467173,
+                "total": 163.56388188299934,
+                "data": [
+                    32.073211119000916,
+                    32.22134268300033,
+                    32.16950077000001,
+                    33.62871855599951,
+                    33.47110875499857
                 ],
                 "iterations": 1
             }
@@ -588,28 +1758,28 @@
                 "warmup": false
             },
             "stats": {
-                "min": 36.749070171000085,
-                "max": 37.08261621199995,
-                "mean": 36.90105281760002,
-                "stddev": 0.13612544831849546,
+                "min": 31.881903202000103,
+                "max": 33.65614838500005,
+                "mean": 32.68622196879951,
+                "stddev": 0.7432676627311331,
                 "rounds": 5,
-                "median": 36.88656529500008,
-                "iqr": 0.2246287302498331,
-                "q1": 36.78677608650008,
-                "q3": 37.011404816749916,
+                "median": 32.84664027799954,
+                "iqr": 1.2253051484995012,
+                "q1": 31.972010616249463,
+                "q3": 33.197315764748964,
                 "iqr_outliers": 0,
                 "stddev_outliers": 2,
                 "outliers": "2;0",
-                "ld15iqr": 36.749070171000085,
-                "hd15iqr": 37.08261621199995,
-                "ops": 0.02709949780953264,
-                "total": 184.5052640880001,
+                "ld15iqr": 31.881903202000103,
+                "hd15iqr": 33.65614838500005,
+                "ops": 0.030593930401456176,
+                "total": 163.43110984399755,
                 "data": [
-                    36.88656529500008,
-                    36.749070171000085,
-                    37.08261621199995,
-                    36.79934472500008,
-                    36.987667684999906
+                    32.00204642099925,
+                    31.881903202000103,
+                    33.0443715579986,
+                    33.65614838500005,
+                    32.84664027799954
                 ],
                 "iterations": 1
             }
@@ -633,28 +1803,118 @@
                 "warmup": false
             },
             "stats": {
-                "min": 34.6246644429998,
-                "max": 37.901632801000005,
-                "mean": 35.94045024599991,
-                "stddev": 1.2398328838792885,
+                "min": 31.90089476799949,
+                "max": 32.83972358000028,
+                "mean": 32.267517438800134,
+                "stddev": 0.4634434396155557,
                 "rounds": 5,
-                "median": 35.92772401399998,
-                "iqr": 1.465213807500163,
-                "q1": 35.051266491249805,
-                "q3": 36.51648029874997,
+                "median": 31.948515546000635,
+                "iqr": 0.8049964315009674,
+                "q1": 31.933249065249584,
+                "q3": 32.73824549675055,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 31.90089476799949,
+                "hd15iqr": 32.83972358000028,
+                "ops": 0.030990918402589853,
+                "total": 161.33758719400066,
+                "data": [
+                    31.90089476799949,
+                    32.70441946900064,
+                    31.944033830999615,
+                    31.948515546000635,
+                    32.83972358000028
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-20000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-20000]",
+            "params": {
+                "device": "cuda",
+                "n": 20000
+            },
+            "param": "cuda-20000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 31.964433434000966,
+                "max": 33.13416214099925,
+                "mean": 32.38348898539989,
+                "stddev": 0.4734164090091757,
+                "rounds": 5,
+                "median": 32.18185478699888,
+                "iqr": 0.6414368430005197,
+                "q1": 32.0554789872499,
+                "q3": 32.69691583025042,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 31.964433434000966,
+                "hd15iqr": 33.13416214099925,
+                "ops": 0.03087993392098209,
+                "total": 161.91744492699945,
+                "data": [
+                    32.18185478699888,
+                    33.13416214099925,
+                    31.964433434000966,
+                    32.55116706000081,
+                    32.08582750499954
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchdiffeq[cuda-50000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchdiffeq[cuda-50000]",
+            "params": {
+                "device": "cuda",
+                "n": 50000
+            },
+            "param": "cuda-50000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 30.201988738999717,
+                "max": 31.29313130800074,
+                "mean": 30.6922678682,
+                "stddev": 0.3948127124194122,
+                "rounds": 5,
+                "median": 30.6907805259998,
+                "iqr": 0.40755430775016066,
+                "q1": 30.461402389999876,
+                "q3": 30.868956697750036,
                 "iqr_outliers": 0,
                 "stddev_outliers": 2,
                 "outliers": "2;0",
-                "ld15iqr": 34.6246644429998,
-                "hd15iqr": 37.901632801000005,
-                "ops": 0.027823802794771545,
-                "total": 179.70225122999955,
+                "ld15iqr": 30.201988738999717,
+                "hd15iqr": 31.29313130800074,
+                "ops": 0.03258149590946623,
+                "total": 153.46133934099998,
                 "data": [
-                    37.901632801000005,
-                    35.92772401399998,
-                    35.19346717399981,
-                    36.054762797999956,
-                    34.6246644429998
+                    30.54787360699993,
+                    30.727565160999802,
+                    30.6907805259998,
+                    31.29313130800074,
+                    30.201988738999717
                 ],
                 "iterations": 1
             }
@@ -678,28 +1938,248 @@
                 "warmup": false
             },
             "stats": {
-                "min": 30.527094328999965,
-                "max": 31.907006651000074,
-                "mean": 31.239913380799997,
-                "stddev": 0.5408573671690895,
+                "min": 29.550382829000228,
+                "max": 30.550041193000652,
+                "mean": 30.142805809999846,
+                "stddev": 0.3678578722064018,
                 "rounds": 5,
-                "median": 31.368138815000066,
-                "iqr": 0.8159129602502162,
-                "q1": 30.795303808249855,
-                "q3": 31.61121676850007,
+                "median": 30.220165972999894,
+                "iqr": 0.3693226857508307,
+                "q1": 29.975431305499114,
+                "q3": 30.344753991249945,
                 "iqr_outliers": 0,
                 "stddev_outliers": 2,
                 "outliers": "2;0",
-                "ld15iqr": 30.527094328999965,
-                "hd15iqr": 31.907006651000074,
-                "ops": 0.032010332032949826,
-                "total": 156.199566904,
+                "ld15iqr": 29.550382829000228,
+                "hd15iqr": 30.550041193000652,
+                "ops": 0.033175411947491996,
+                "total": 150.71402904999923,
                 "data": [
-                    30.88470696799982,
-                    31.51262014100007,
-                    31.368138815000066,
-                    30.527094328999965,
-                    31.907006651000074
+                    30.220165972999894,
+                    30.550041193000652,
+                    30.117114130998743,
+                    29.550382829000228,
+                    30.27632492399971
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[100]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[100]",
+            "params": {
+                "n": 100
+            },
+            "param": "100",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 27.143080413999996,
+                "max": 28.10454005000065,
+                "mean": 27.637057891199948,
+                "stddev": 0.3951490762350668,
+                "rounds": 5,
+                "median": 27.703316170000107,
+                "iqr": 0.6604146565009614,
+                "q1": 27.28862753799922,
+                "q3": 27.94904219450018,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 27.143080413999996,
+                "hd15iqr": 28.10454005000065,
+                "ops": 0.03618330156331202,
+                "total": 138.18528945599974,
+                "data": [
+                    27.703316170000107,
+                    27.33714324599896,
+                    27.897209576000023,
+                    28.10454005000065,
+                    27.143080413999996
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[200]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[200]",
+            "params": {
+                "n": 200
+            },
+            "param": "200",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 27.691933572999915,
+                "max": 28.49217120100002,
+                "mean": 27.95361732079982,
+                "stddev": 0.31051731695918994,
+                "rounds": 5,
+                "median": 27.858356684000682,
+                "iqr": 0.2424825974990199,
+                "q1": 27.798881227749916,
+                "q3": 28.041363825248936,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 27.691933572999915,
+                "hd15iqr": 28.49217120100002,
+                "ops": 0.03577354546010461,
+                "total": 139.7680866039991,
+                "data": [
+                    27.891094699998575,
+                    27.691933572999915,
+                    27.834530445999917,
+                    27.858356684000682,
+                    28.49217120100002
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[500]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[500]",
+            "params": {
+                "n": 500
+            },
+            "param": "500",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 28.617378963999727,
+                "max": 29.263314755000465,
+                "mean": 28.933133752600042,
+                "stddev": 0.306334022894339,
+                "rounds": 5,
+                "median": 28.848818317001133,
+                "iqr": 0.5818724410014511,
+                "q1": 28.67020926699888,
+                "q3": 29.252081708000333,
+                "iqr_outliers": 0,
+                "stddev_outliers": 3,
+                "outliers": "3;0",
+                "ld15iqr": 28.617378963999727,
+                "hd15iqr": 29.263314755000465,
+                "ops": 0.03456245039167719,
+                "total": 144.6656687630002,
+                "data": [
+                    29.24833735900029,
+                    29.263314755000465,
+                    28.617378963999727,
+                    28.6878193679986,
+                    28.848818317001133
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[1000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[1000]",
+            "params": {
+                "n": 1000
+            },
+            "param": "1000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 28.273005987999568,
+                "max": 29.309666267001376,
+                "mean": 28.683091602400236,
+                "stddev": 0.4123409389841303,
+                "rounds": 5,
+                "median": 28.725869634001356,
+                "iqr": 0.5663805024992143,
+                "q1": 28.32973732675009,
+                "q3": 28.896117829249306,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 28.273005987999568,
+                "hd15iqr": 29.309666267001376,
+                "ops": 0.034863745298513035,
+                "total": 143.41545801200118,
+                "data": [
+                    29.309666267001376,
+                    28.758268349998616,
+                    28.725869634001356,
+                    28.348647773000266,
+                    28.273005987999568
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[2000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[2000]",
+            "params": {
+                "n": 2000
+            },
+            "param": "2000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 27.386558688998775,
+                "max": 28.184813167001266,
+                "mean": 27.699826394799675,
+                "stddev": 0.32900577921133517,
+                "rounds": 5,
+                "median": 27.710413140999663,
+                "iqr": 0.5049538252505954,
+                "q1": 27.40044968574921,
+                "q3": 27.905403510999804,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 27.386558688998775,
+                "hd15iqr": 28.184813167001266,
+                "ops": 0.036101309291517385,
+                "total": 138.49913197399837,
+                "data": [
+                    28.184813167001266,
+                    27.710413140999663,
+                    27.405080017999353,
+                    27.386558688998775,
+                    27.812266958999317
                 ],
                 "iterations": 1
             }
@@ -722,28 +2202,28 @@
                 "warmup": false
             },
             "stats": {
-                "min": 28.8498814510001,
-                "max": 29.505864975999884,
-                "mean": 29.128994232399965,
-                "stddev": 0.26678247755996,
+                "min": 29.09234567599924,
+                "max": 30.156838378999964,
+                "mean": 29.732848736800225,
+                "stddev": 0.4258568064129397,
                 "rounds": 5,
-                "median": 29.029565091999984,
-                "iqr": 0.41244521700008363,
-                "q1": 28.9356180609999,
-                "q3": 29.348063277999984,
+                "median": 29.669768578000003,
+                "iqr": 0.5884300365009949,
+                "q1": 29.51641713275012,
+                "q3": 30.104847169251116,
                 "iqr_outliers": 0,
-                "stddev_outliers": 2,
-                "outliers": "2;0",
-                "ld15iqr": 28.8498814510001,
-                "hd15iqr": 29.505864975999884,
-                "ops": 0.034330055889389664,
-                "total": 145.64497116199982,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 29.09234567599924,
+                "hd15iqr": 30.156838378999964,
+                "ops": 0.03363283514647906,
+                "total": 148.66424368400112,
                 "data": [
-                    29.505864975999884,
-                    29.029565091999984,
-                    28.964196930999833,
-                    29.295462712000017,
-                    28.8498814510001
+                    29.657774285000414,
+                    29.669768578000003,
+                    30.156838378999964,
+                    30.0875167660015,
+                    29.09234567599924
                 ],
                 "iterations": 1
             }
@@ -766,28 +2246,116 @@
                 "warmup": false
             },
             "stats": {
-                "min": 29.670135326000036,
-                "max": 30.499333985999783,
-                "mean": 30.142221580200065,
-                "stddev": 0.3118103716474219,
+                "min": 29.285290282999995,
+                "max": 30.01040938299957,
+                "mean": 29.72948719699998,
+                "stddev": 0.27591735413112933,
                 "rounds": 5,
-                "median": 30.114256865000243,
-                "iqr": 0.3832234735003226,
-                "q1": 29.989840073749917,
-                "q3": 30.37306354725024,
+                "median": 29.80902197999967,
+                "iqr": 0.3253945782516894,
+                "q1": 29.57778304624935,
+                "q3": 29.90317762450104,
                 "iqr_outliers": 0,
                 "stddev_outliers": 2,
                 "outliers": "2;0",
-                "ld15iqr": 29.670135326000036,
-                "hd15iqr": 30.499333985999783,
-                "ops": 0.03317605496792193,
-                "total": 150.71110790100033,
+                "ld15iqr": 29.285290282999995,
+                "hd15iqr": 30.01040938299957,
+                "ops": 0.03363663804133529,
+                "total": 148.6474359849999,
                 "data": [
-                    30.096408322999878,
-                    30.330973401000392,
-                    29.670135326000036,
-                    30.114256865000243,
-                    30.499333985999783
+                    29.285290282999995,
+                    30.01040938299957,
+                    29.86743370500153,
+                    29.675280633999137,
+                    29.80902197999967
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[20000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[20000]",
+            "params": {
+                "n": 20000
+            },
+            "param": "20000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 32.620642890000454,
+                "max": 33.736136166000506,
+                "mean": 33.205780541399875,
+                "stddev": 0.4914272669032504,
+                "rounds": 5,
+                "median": 33.42137624299903,
+                "iqr": 0.8430486734991973,
+                "q1": 32.717103323250285,
+                "q3": 33.56015199674948,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 32.620642890000454,
+                "hd15iqr": 33.736136166000506,
+                "ops": 0.030115238482445336,
+                "total": 166.02890270699936,
+                "data": [
+                    33.42137624299903,
+                    32.620642890000454,
+                    33.736136166000506,
+                    32.74925680100023,
+                    33.50149060699914
+                ],
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_benchmark_torchode_cuda[50000]",
+            "fullname": "benchmarks/solver_comparison/benchmark_solver_comparison.py::test_benchmark_torchode_cuda[50000]",
+            "params": {
+                "n": 50000
+            },
+            "param": "50000",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 37.289700735000224,
+                "max": 43.04543967599966,
+                "mean": 40.01864499139956,
+                "stddev": 2.6333162037490747,
+                "rounds": 5,
+                "median": 39.93782735899913,
+                "iqr": 4.972495243498997,
+                "q1": 37.48824137475003,
+                "q3": 42.46073661824903,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 37.289700735000224,
+                "hd15iqr": 43.04543967599966,
+                "ops": 0.024988352309652434,
+                "total": 200.0932249569978,
+                "data": [
+                    43.04543967599966,
+                    37.55442158799997,
+                    37.289700735000224,
+                    39.93782735899913,
+                    42.26583559899882
                 ],
                 "iterations": 1
             }
@@ -810,33 +2378,33 @@
                 "warmup": false
             },
             "stats": {
-                "min": 309.4117136310001,
-                "max": 582.87340632,
-                "mean": 364.538324552,
-                "stddev": 122.05359692960249,
+                "min": 412.21660668299955,
+                "max": 543.809081587,
+                "mean": 444.74328831019955,
+                "stddev": 55.77971909684433,
                 "rounds": 5,
-                "median": 310.13977866799996,
-                "iqr": 68.8017814230003,
-                "q1": 309.73477083524983,
-                "q3": 378.53655225825014,
+                "median": 421.2760896229993,
+                "iqr": 43.24635648399908,
+                "q1": 415.2855316635,
+                "q3": 458.5318881474991,
                 "iqr_outliers": 1,
                 "stddev_outliers": 1,
                 "outliers": "1;1",
-                "ld15iqr": 309.4117136310001,
-                "hd15iqr": 582.87340632,
-                "ops": 0.0027431957976680552,
-                "total": 1822.69162276,
+                "ld15iqr": 412.21660668299955,
+                "hd15iqr": 543.809081587,
+                "ops": 0.0022484881195160835,
+                "total": 2223.716441550998,
                 "data": [
-                    582.87340632,
-                    309.84245656999974,
-                    310.4242675710002,
-                    310.13977866799996,
-                    309.4117136310001
+                    430.1061570009988,
+                    416.3085066570002,
+                    421.2760896229993,
+                    543.809081587,
+                    412.21660668299955
                 ],
                 "iterations": 1
             }
         }
     ],
-    "datetime": "2026-02-10T12:53:56.517489+00:00",
+    "datetime": "2026-02-28T13:52:37.526126+00:00",
     "version": "5.2.3"
 }

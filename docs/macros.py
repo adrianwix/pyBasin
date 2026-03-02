@@ -373,50 +373,112 @@ SOLVER_COMPARISON_RESULTS_DIR = (
 )
 
 
+SOLVER_IMPLEMENTATIONS: list[tuple[str, str, str]] = [
+    ("MATLAB ode45", "cpu", "MATLAB ode45"),
+    ("JAX/Diffrax", "cpu", "JAX (CPU)"),
+    ("JAX/Diffrax", "cuda", "JAX (CUDA)"),
+    ("torchdiffeq", "cpu", "torchdiffeq (CPU)"),
+    ("torchdiffeq", "cuda", "torchdiffeq (CUDA)"),
+    ("torchode", "cuda", "torchode (CUDA)"),
+    ("Julia Ensemble", "cpu", "Julia (CPU)"),
+    ("Julia Ensemble", "cuda", "Julia (GPU)"),
+]
+
+
+def _fmt_solver_cell(
+    t: float, baseline_t: float | None, rank: int, is_baseline: bool = False
+) -> str:
+    """Format a solver table cell with optional speedup and rank styling.
+
+    :param t: Time value in seconds.
+    :param baseline_t: Baseline time for speedup calculation.
+    :param rank: 1=bold (fastest), 2=italic (second fastest), 0=normal.
+    :param is_baseline: If True, don't show speedup.
+    :return: Formatted Markdown cell string.
+    """
+    if is_baseline:
+        cell = f"{t:.3f}s"
+    elif baseline_t is not None:
+        cell = f"{t:.3f}s ({baseline_t / t:.3f}×)"
+    else:
+        cell = f"{t:.3f}s"
+    if rank == 1:
+        return f"**{cell}**"
+    elif rank == 2:
+        return f"*{cell}*"
+    return cell
+
+
 def solver_comparison_table() -> str:
     """Render solver comparison table from CSV data.
+
+    Solvers as rows, N values as columns. Each non-baseline cell shows time and
+    speedup relative to MATLAB ode45. Bold marks the fastest solver per column,
+    italic marks the second fastest.
 
     :return: Markdown table string.
     """
     csv_path = SOLVER_COMPARISON_RESULTS_DIR / "solver_comparison.csv"
 
     if not csv_path.exists():
-        return '!!! warning "Missing Data"\n    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_matlab_vs_python.py` to generate.'
+        return '!!! warning "Missing Data"\n    Solver comparison data not found. Run `uv run python benchmarks/solver_comparison/compare_all.py` to generate.'
 
     df = pd.read_csv(csv_path)
 
-    n_values = sorted(df["N"].unique())
-    sections: list[str] = []
+    solver_keys: list[tuple[str, str]] = [(s, d) for s, d, _ in SOLVER_IMPLEMENTATIONS]
+    solver_labels: dict[tuple[str, str], str] = {
+        (s, d): lbl for s, d, lbl in SOLVER_IMPLEMENTATIONS
+    }
+    baseline_solver, baseline_device = "MATLAB ode45", "cpu"
 
-    for n in n_values:
-        n_data = df[df["N"] == n].sort_values("mean_time")
-        matlab_row = n_data[n_data["solver"] == "MATLAB ode45"]
-        matlab_time = matlab_row["mean_time"].values[0] if len(matlab_row) > 0 else None
+    n_values: list[int] = sorted(df["N"].unique().tolist())
 
-        table_lines: list[str] = [
-            f"### N = {n:,}",
-            "",
-            "| Solver | Device | Time (s) | Std Dev | vs MATLAB |",
-            "|--------|--------|----------:|--------:|----------:|",
-        ]
+    n_headers: list[str] = [f"N = {n:,}" for n in n_values]
+    table_lines: list[str] = [
+        "| Solver | " + " | ".join(n_headers) + " |",
+        "|--------|" + "|".join(["--:" for _ in n_values]) + "|",
+    ]
 
-        for _, row in n_data.iterrows():
-            if matlab_time is not None:
-                speedup = matlab_time / row["mean_time"]
-                speedup_str = f"{speedup:.2f}x"
-            else:
-                speedup_str = "-"
-            table_lines.append(
-                f"| {row['solver']} | {row['device'].upper()} | {row['mean_time']:.2f} | ±{row['std_time']:.2f} | {speedup_str} |"
+    times_grid: dict[tuple[str, str], dict[int, float | None]] = {}
+    for solver, device in solver_keys:
+        times_grid[(solver, device)] = {}
+        for n in n_values:
+            sub = df[(df["solver"] == solver) & (df["device"] == device) & (df["N"] == n)]
+            times_grid[(solver, device)][n] = (
+                float(sub["mean_time"].iloc[0]) if len(sub) > 0 else None
             )
 
-        sections.append("\n".join(table_lines))
+    ranks_per_n: dict[int, dict[tuple[str, str], int]] = {}
+    for n in n_values:
+        available: dict[tuple[str, str], float] = {}
+        for key in solver_keys:
+            t = times_grid[key][n]
+            if t is not None:
+                available[key] = t
+        sorted_keys = sorted(available, key=lambda k: available[k])
+        ranks_per_n[n] = {k: i + 1 for i, k in enumerate(sorted_keys)}
 
-    return "\n\n".join(sections)
+    for solver, device in solver_keys:
+        is_baseline = solver == baseline_solver and device == baseline_device
+        row_parts: list[str] = [solver_labels[(solver, device)]]
+        for n in n_values:
+            t = times_grid[(solver, device)][n]
+            if t is None:
+                row_parts.append("—")
+            else:
+                baseline_t = times_grid.get((baseline_solver, baseline_device), {}).get(n)
+                rank = ranks_per_n[n].get((solver, device), 0)
+                row_parts.append(_fmt_solver_cell(t, baseline_t, rank, is_baseline))
+        table_lines.append("| " + " | ".join(row_parts) + " |")
+
+    return "\n".join(table_lines)
 
 
 def solver_matlab_speedup_table() -> str:
     """Render speedup vs MATLAB table from CSV data.
+
+    Same layout as ``solver_comparison_table`` but only shows the speedup
+    factor relative to MATLAB ode45 (no absolute times).
 
     :return: Markdown table string.
     """
@@ -427,33 +489,45 @@ def solver_matlab_speedup_table() -> str:
 
     df = pd.read_csv(csv_path)
 
-    n_values = sorted(df["N"].unique())
+    solver_keys: list[tuple[str, str]] = [(s, d) for s, d, _ in SOLVER_IMPLEMENTATIONS]
+    solver_labels: dict[tuple[str, str], str] = {
+        (s, d): lbl for s, d, lbl in SOLVER_IMPLEMENTATIONS
+    }
+    baseline_solver, baseline_device = "MATLAB ode45", "cpu"
 
+    n_values: list[int] = sorted(df["N"].unique().tolist())
+
+    n_headers: list[str] = [f"N = {n:,}" for n in n_values]
     table_lines: list[str] = [
-        "| N | Solver | Device | Time (s) | vs MATLAB |",
-        "|--:|--------|--------|----------:|----------:|",
+        "| Solver | " + " | ".join(n_headers) + " |",
+        "|--------|" + "|".join(["--:" for _ in n_values]) + "|",
     ]
 
-    for n in n_values:
-        n_data = df[df["N"] == n]
-        matlab_row = n_data[n_data["solver"] == "MATLAB ode45"]
-
-        if matlab_row.empty:
-            continue
-
-        matlab_time = matlab_row["mean_time"].values[0]
-
-        for _, row in (
-            n_data[n_data["solver"] != "MATLAB ode45"].sort_values("mean_time").iterrows()
-        ):
-            speedup = matlab_time / row["mean_time"]
-            direction = "faster" if speedup > 1 else "slower"
-            speedup_str = f"{speedup:.2f}x {direction}"
-            table_lines.append(
-                f"| {n:,} | {row['solver']} | {row['device'].upper()} | {row['mean_time']:.2f} | {speedup_str} |"
-            )
-
-        table_lines.append(f"| {n:,} | MATLAB ode45 | CPU | {matlab_time:.2f} | *baseline* |")
+    for solver, device in solver_keys:
+        is_baseline = solver == baseline_solver and device == baseline_device
+        row_parts: list[str] = [solver_labels[(solver, device)]]
+        for n in n_values:
+            sub = df[(df["solver"] == solver) & (df["device"] == device) & (df["N"] == n)]
+            if len(sub) == 0:
+                row_parts.append("—")
+                continue
+            t = float(sub["mean_time"].iloc[0])
+            if is_baseline:
+                row_parts.append("*baseline*")
+            else:
+                baseline_sub = df[
+                    (df["solver"] == baseline_solver)
+                    & (df["device"] == baseline_device)
+                    & (df["N"] == n)
+                ]
+                if len(baseline_sub) > 0:
+                    baseline_t = float(baseline_sub["mean_time"].iloc[0])
+                    speedup = baseline_t / t
+                    direction = "faster" if speedup > 1 else "slower"
+                    row_parts.append(f"{speedup:.3f}× {direction}")
+                else:
+                    row_parts.append("—")
+        table_lines.append("| " + " | ".join(row_parts) + " |")
 
     return "\n".join(table_lines)
 

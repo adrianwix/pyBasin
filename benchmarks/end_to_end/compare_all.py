@@ -14,7 +14,7 @@ Run with:
 """
 
 import argparse
-import json
+from functools import partial
 from pathlib import Path
 from typing import cast
 
@@ -25,13 +25,14 @@ from matplotlib.figure import Figure
 from scipy import stats as scipy_stats
 from scipy.optimize import curve_fit
 
-from pybasin.docs_plots_utils import thesis_export as docs_export
+from benchmarks.utils import (
+    build_scaling_figure,
+    dual_export_figure,
+    load_json,
+)
 from pybasin.thesis_plots_utils import (
-    THESIS_FULL_WIDTH_CM,
     THESIS_PALETTE,
-    THESIS_SINGLE_HEIGHT_CM,
     configure_thesis_style,
-    thesis_export,
 )
 
 configure_thesis_style()
@@ -61,11 +62,6 @@ MARKERS: dict[str, str] = {
 }
 
 IMPL_ORDER: list[str] = ["Python CPU", "Python CUDA", "MATLAB", "Attractors.jl", "pynamicalsys"]
-
-
-def load_json(path: Path) -> dict:
-    with open(path) as f:
-        return json.load(f)
 
 
 def extract_matlab_data(matlab_results: dict) -> pd.DataFrame:
@@ -167,23 +163,15 @@ def _build_comparison_figure(df: pd.DataFrame) -> Figure:
 
 
 def create_comparison_plot(df: pd.DataFrame, output_path: Path) -> None:
-    # Export PNG for docs
-    fig_docs = _build_comparison_figure(df)
-    docs_export(fig_docs, output_path.name, output_path.parent)
-    plt.close(fig_docs)
-    print(f"Comparison plot saved to: {output_path}")
-
-    # Export PDF for thesis
-    fig_thesis = _build_comparison_figure(df)
-    pdf_name = output_path.stem + ".pdf"
-    thesis_export(
-        fig_thesis,
-        pdf_name,
-        THESIS_ARTIFACTS_DIR,
-        width=THESIS_FULL_WIDTH_CM,
-        height=THESIS_SINGLE_HEIGHT_CM,
+    build = partial(_build_comparison_figure, df)
+    dual_export_figure(
+        build,
+        docs_name=output_path.name,
+        docs_dir=output_path.parent,
+        thesis_name=output_path.stem + ".pdf",
+        thesis_dir=THESIS_ARTIFACTS_DIR,
     )
-    plt.close(fig_thesis)
+    print(f"Comparison plot saved to: {output_path}")
 
 
 def print_comparison_table(df: pd.DataFrame) -> None:
@@ -298,71 +286,25 @@ def analyze_scaling(df: pd.DataFrame) -> dict[str, dict]:
     return results
 
 
-def _build_scaling_figure(df: pd.DataFrame) -> Figure:
-    """Build the log-log scaling plot figure."""
-    fig, ax = plt.subplots(figsize=(10, 7))
-
-    implementations: list[str] = [
-        impl for impl in IMPL_ORDER if impl in df["implementation"].unique()
-    ]
-
-    for impl in implementations:
-        impl_data = cast(pd.DataFrame, df[df["implementation"] == impl]).sort_values(by="N")
-        if len(impl_data) < 3:
-            continue
-
-        n_vals = np.asarray(impl_data["N"].values, dtype=float)
-        t_vals = np.asarray(impl_data["mean_time"].values, dtype=float)
-
-        ax.plot(
-            n_vals,
-            t_vals,
-            MARKERS[impl],
-            color=COLORS[impl],
-            label=impl,
-            markersize=8,
-        )
-
-        log_n = np.log(n_vals)
-        log_t = np.log(t_vals)
-        result = scipy_stats.linregress(log_n, log_t)
-        slope = result.slope
-        intercept = result.intercept
-
-        n_fit = np.logspace(np.log10(n_vals.min()), np.log10(n_vals.max()), 100)
-        t_fit = np.exp(intercept) * n_fit**slope
-        ax.plot(n_fit, t_fit, "--", color=COLORS[impl], alpha=0.7, label="_nolegend_")
-
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Number of Samples (N)")
-    ax.set_ylabel("Time (seconds)")
-    ax.set_title("Scaling Analysis: Time vs N (log-log)")
-    ax.legend()
-    ax.grid(True, alpha=0.3, which="both")
-
-    return fig
-
-
 def create_scaling_plot(df: pd.DataFrame, output_path: Path) -> None:
     """Create log-log plot showing scaling behavior with fitted lines."""
-    # Export PNG for docs
-    fig_docs = _build_scaling_figure(df)
-    docs_export(fig_docs, output_path.name, output_path.parent)
-    plt.close(fig_docs)
-    print(f"Scaling plot saved to: {output_path}")
-
-    # Export PDF for thesis
-    fig_thesis = _build_scaling_figure(df)
-    pdf_name = output_path.stem + ".pdf"
-    thesis_export(
-        fig_thesis,
-        pdf_name,
-        THESIS_ARTIFACTS_DIR,
-        width=THESIS_FULL_WIDTH_CM,
-        height=THESIS_SINGLE_HEIGHT_CM,
+    build = partial(
+        build_scaling_figure,
+        df,
+        label_column="implementation",
+        colors=COLORS,
+        markers=MARKERS,
+        order=IMPL_ORDER,
+        title="Scaling Analysis: Time vs N (log-log)",
     )
-    plt.close(fig_thesis)
+    dual_export_figure(
+        build,
+        docs_name=output_path.name,
+        docs_dir=output_path.parent,
+        thesis_name=output_path.stem + ".pdf",
+        thesis_dir=THESIS_ARTIFACTS_DIR,
+    )
+    print(f"Scaling plot saved to: {output_path}")
 
 
 def main() -> None:

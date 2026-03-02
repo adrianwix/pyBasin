@@ -26,7 +26,7 @@ ATOL = 1e-6;
 MIN_LIMITS = [-pi + asin(T / K), -10.0];
 MAX_LIMITS = [pi + asin(T / K), 10.0];
 
-N_VALUES = [100000];
+N_VALUES = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
 NUM_ROUNDS = 5;
 
 options = odeset('RelTol', RTOL, 'AbsTol', ATOL);
@@ -64,15 +64,41 @@ pool = gcp('nocreate');
 fprintf('Using %d parallel workers\n\n', pool.NumWorkers);
 
 %% Results storage
-results = struct();
-results.solver = 'matlab_ode45';
-results.device = 'cpu';
-results.num_rounds = NUM_ROUNDS;
-results.benchmarks = [];
+results_dir = fullfile(fileparts(mfilename('fullpath')), 'results');
+if ~exist(results_dir, 'dir')
+    mkdir(results_dir);
+end
+json_file = fullfile(results_dir, 'matlab_benchmark_results.json');
+
+% Load existing results for incremental runs
+if isfile(json_file)
+    existing_json = fileread(json_file);
+    results = jsondecode(existing_json);
+    if ~isfield(results, 'benchmarks') || isempty(results.benchmarks)
+        results.benchmarks = [];
+        completed_n = [];
+    else
+        completed_n = [results.benchmarks.n];
+    end
+    fprintf('Loaded existing results. Completed N values: %s\n', mat2str(completed_n));
+else
+    results = struct();
+    results.solver = 'matlab_ode45';
+    results.device = 'cpu';
+    results.num_rounds = NUM_ROUNDS;
+    results.benchmarks = [];
+    completed_n = [];
+end
 
 %% Run benchmarks for each N value
 for n_idx = 1:length(N_VALUES)
     N = N_VALUES(n_idx);
+    
+    % Skip already completed N values
+    if ismember(N, completed_n)
+        fprintf('N = %d already completed, skipping.\n', N);
+        continue;
+    end
     fprintf('Running benchmark for N = %d (%d/%d) with %d rounds...\n', ...
             N, n_idx, length(N_VALUES), NUM_ROUNDS);
     
@@ -115,12 +141,24 @@ for n_idx = 1:length(N_VALUES)
     
     results.benchmarks = [results.benchmarks; benchmark_result];
     
+    % Sort benchmarks by N
+    [~, sort_idx] = sort([results.benchmarks.n]);
+    results.benchmarks = results.benchmarks(sort_idx);
+    results.num_rounds = NUM_ROUNDS;
+    
+    % Save results incrementally after each N
+    json_str = jsonencode(results, 'PrettyPrint', true);
+    fid = fopen(json_file, 'w');
+    fprintf(fid, '%s', json_str);
+    fclose(fid);
+    fprintf('  Saved N=%d to: %s\n', N, json_file);
+    
     fprintf('  Summary: mean=%.2f±%.2f s, min=%.2f s, max=%.2f s\n\n', ...
             benchmark_result.mean_time, benchmark_result.std_time, ...
             benchmark_result.min_time, benchmark_result.max_time);
 end
 
-%% Save results to JSON
+%% Print final summary
 fprintf('========================================\n');
 fprintf('Results Summary\n');
 fprintf('========================================\n');
@@ -131,19 +169,7 @@ for i = 1:length(results.benchmarks)
             r.n, r.mean_time, r.std_time, mat2str(r.round_times, 2));
 end
 
-% Save to JSON file
-results_dir = fullfile(fileparts(mfilename('fullpath')), 'results');
-if ~exist(results_dir, 'dir')
-    mkdir(results_dir);
-end
-
-json_file = fullfile(results_dir, 'matlab_benchmark_results.json');
-json_str = jsonencode(results, 'PrettyPrint', true);
-fid = fopen(json_file, 'w');
-fprintf(fid, '%s', json_str);
-fclose(fid);
-fprintf('\nResults saved to: %s\n', json_file);
-
+fprintf('\nAll results saved to: %s\n', json_file);
 fprintf('\nBenchmark complete.\n');
 
 

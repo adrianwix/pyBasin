@@ -19,7 +19,7 @@ fi
 
 echo ""
 echo "=== Generating Solver Comparison Plots ==="
-uv run python -m benchmarks.solver_comparison.compare_matlab_vs_python
+uv run python -m benchmarks.solver_comparison.compare_all
 
 echo ""
 echo "=== Done! ==="

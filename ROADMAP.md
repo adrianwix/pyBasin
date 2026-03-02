@@ -25,4 +25,4 @@ plt.show()  # type: ignore[misc]
 - [ ] Introduce a dataset library like https://nolds.readthedocs.io/en/latest/nolds.html#benchmark-dataset-for-hurst-exponent
 - [ ] Supervised feature filtering support
 - [ ] State space plot for the basin stability should support many dimensions
--
+- [ ] Extent the capabilities of the toolbox to maps and network systems.

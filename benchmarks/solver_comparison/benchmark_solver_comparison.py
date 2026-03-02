@@ -47,13 +47,17 @@ logging.getLogger("pybasin").setLevel(logging.WARNING)
 logging.getLogger("jax").setLevel(logging.WARNING)
 
 # Benchmark configuration
-N_VALUES = [5_000, 10_000, 100_000]
-N_VALUES_SCIPY = [5_000, 10_000]  # Skip 100k for scipy to avoid memory issues
-N_VALUES_TORCHODE = [
+N_VALUES = [100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000]
+N_VALUES_SCIPY = [
+    100,
+    200,
+    500,
+    1_000,
+    2_000,
     5_000,
     10_000,
-    100_000,
-]
+]  # Skip large N for scipy to avoid memory issues
+N_VALUES_TORCHODE = [100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000]
 
 # ODE parameters (same for all solvers)
 ALPHA = 0.1
