@@ -19,10 +19,11 @@ plt.show()  # type: ignore[misc]
 
 - [ ] Look into https://github.com/lmcinnes/umap for feature space visualization
 - [x] Rename as_parameter_manager to bs_study_parameter_manager and as_bse to bs_study
-- [ ] Fix Installation guideline, find out how to deploy to pip
+- [x] Fix Installation guideline, find out how to deploy to pip
 - [ ] Using JAX SaveAt and setting diffeqsolve.t0 = 0 we can make JAX return the transient time and save a lot of memory. Need to check if that behaviour applies to other solvers. This could help a lot for parameter sweeps with batch integration, saving 50 points intead of 1000 virtually saves 20x space
 - [ ] Review Equinox usage for Diffrax solver
 - [ ] Introduce a dataset library like https://nolds.readthedocs.io/en/latest/nolds.html#benchmark-dataset-for-hurst-exponent
 - [ ] Supervised feature filtering support
 - [ ] State space plot for the basin stability should support many dimensions
 - [ ] Extent the capabilities of the toolbox to maps and network systems.
+- [ ] Can piecewise functions be supported with events? https://github.com/rtqichen/torchdiffeq/blob/master/examples/bouncing_ball.py
