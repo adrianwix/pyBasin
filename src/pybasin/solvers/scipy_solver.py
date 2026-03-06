@@ -8,7 +8,7 @@ from scipy.integrate import solve_ivp
 from sklearn.utils.parallel import Parallel, delayed  # type: ignore[import-untyped]
 
 from pybasin.constants import DEFAULT_CACHE_DIR, UNSET
-from pybasin.ode_system import ODESystem
+from pybasin.ode_system import NumpyODESystem
 from pybasin.solvers.base import Solver
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,9 @@ class ScipyParallelSolver(Solver):
 
     Uses multiprocessing (loky backend) to solve multiple initial conditions in parallel.
     Each worker solves one trajectory at a time using scipy's solve_ivp.
+
+    Requires a :class:`~pybasin.ode_system.NumpyODESystem` subclass. The ODE is passed
+    directly to ``solve_ivp`` with no PyTorch-to-NumPy conversion overhead.
 
     See also: [scipy.integrate.solve_ivp](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html)
     """
@@ -96,8 +99,8 @@ class ScipyParallelSolver(Solver):
             cache_dir=effective_cache_dir,  # type: ignore[arg-type]
         )
 
-    def _integrate(
-        self, ode_system: ODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
+    def _integrate(  # type: ignore[override]
+        self, ode_system: NumpyODESystem[Any], y0: torch.Tensor, t_eval: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Integrate using sklearn parallel processing with scipy's solve_ivp."""
         t_eval_np = t_eval.cpu().numpy()
@@ -105,25 +108,11 @@ class ScipyParallelSolver(Solver):
         batch_size = y0_np.shape[0]
         dtype = y0.dtype
 
-        def ode_func(t: float, y: np.ndarray) -> np.ndarray:
-            # Convert to torch, call ODE system, convert back
-            t_torch = torch.tensor(t, dtype=dtype, device=self.device)
-            y_torch = torch.tensor(y, dtype=dtype, device=self.device)
-            # Ensure y_torch is 2D: (1, n_dims) for ODE system
-            if y_torch.ndim == 1:
-                y_torch = y_torch.unsqueeze(0)
-            dy_torch = ode_system(t_torch, y_torch)
-            # Return as 1D array
-            if dy_torch.ndim == 2:
-                dy_torch = dy_torch.squeeze(0)
-            return dy_torch.cpu().numpy()
-
-        # Define solver for single trajectory using scipy's solve_ivp
         def solve_single_trajectory(y0_single: np.ndarray) -> np.ndarray:
             """Solve ODE for a single initial condition using scipy's solve_ivp."""
             # scipy.integrate.solve_ivp has incomplete type stubs
             solution = solve_ivp(  # type: ignore[no-untyped-call]
-                fun=lambda t, y: ode_func(float(t), np.asarray(y)),  # type: ignore[arg-type]
+                fun=ode_system,
                 t_span=(t_eval_np[0], t_eval_np[-1]),
                 y0=y0_single,
                 method=self.method,  # type: ignore[arg-type]

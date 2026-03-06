@@ -18,14 +18,14 @@ All solvers accept `torch.Tensor` inputs and return `torch.Tensor` outputs. Inte
 
 Each solver backend expects a specific ODE system base class:
 
-| Solver                | ODE System Class | Why                                                                  |
-| --------------------- | ---------------- | -------------------------------------------------------------------- |
-| `JaxSolver`           | `JaxODESystem`   | Uses pure JAX operations for JIT compilation and `jax.vmap` batching |
-| `TorchDiffEqSolver`   | `ODESystem`      | Wraps a `torch.nn.Module` with standard PyTorch tensor operations    |
-| `TorchOdeSolver`      | `ODESystem`      | Same PyTorch interface as `TorchDiffEqSolver`                        |
-| `ScipyParallelSolver` | `ODESystem`      | Converts PyTorch ODE to NumPy internally                             |
+| Solver                | ODE System Class | Why                                                                              |
+| --------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| `JaxSolver`           | `JaxODESystem`   | Uses pure JAX operations for JIT compilation and `jax.vmap` batching             |
+| `TorchDiffEqSolver`   | `ODESystem`      | Wraps a `torch.nn.Module` with standard PyTorch tensor operations                |
+| `TorchOdeSolver`      | `ODESystem`      | Same PyTorch interface as `TorchDiffEqSolver`                                    |
+| `ScipyParallelSolver` | `NumpyODESystem` | Passed directly to `solve_ivp` as `fun`; no PyTorch-to-NumPy conversion overhead |
 
-`JaxODESystem` subclasses define `ode(t, y)` using `jax.numpy` operations, which enables JIT compilation and vectorized GPU execution. `ODESystem` subclasses define `ode(t, y)` using `torch` operations and inherit from `torch.nn.Module`, so their parameters can be moved between devices with `.to(device)`.
+`JaxODESystem` subclasses define `ode(t, y)` using `jax.numpy` operations, which enables JIT compilation and vectorized GPU execution. `ODESystem` subclasses define `ode(t, y)` using `torch` operations and inherit from `torch.nn.Module`, so their parameters can be moved between devices with `.to(device)`. `NumpyODESystem` subclasses define `ode(t, y)` using plain `numpy` -- no framework overhead, no GIL contention when running under multiprocessing.
 
 When `solver=None` is passed to `BasinStabilityEstimator`, the solver is chosen automatically based on the ODE class:
 
@@ -102,7 +102,7 @@ GPU solvers (`JaxSolver`, `TorchDiffEqSolver`, `TorchOdeSolver`) perform best wi
 
 ### ODE System Device Transfer
 
-PyTorch-based solvers (`TorchDiffEqSolver`, `TorchOdeSolver`, `ScipyParallelSolver`) call `ode_system.to(self.device)` before integration. This moves the ODE system's parameters to the solver's device automatically. `JaxSolver` does not perform this transfer because JAX ODE systems are stateless and device placement is handled through `jax.device_put`.
+PyTorch-based solvers (`TorchDiffEqSolver`, `TorchOdeSolver`) call `ode_system.to(self.device)` before integration, moving the ODE system's `nn.Module` parameters to the solver's device automatically. `JaxSolver` does not perform this transfer because JAX ODE systems are stateless and device placement is handled through `jax.device_put`. `ScipyParallelSolver` calls `.to()` as well, but `NumpyODESystem.to()` is a no-op -- the method exists only for interface compatibility and does nothing.
 
 ## Caching
 
@@ -352,7 +352,7 @@ Benchmark results show that `TorchOdeSolver` scales poorly at large sample sizes
 
 ## ScipyParallelSolver
 
-A CPU-only solver that delegates integration to [`scipy.integrate.solve_ivp`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html) and parallelizes across initial conditions using `sklearn.utils.parallel.Parallel` with the loky backend. Each trajectory is solved independently in a separate process. This solver is primarily useful for debugging, for validating results against a well-established reference implementation, and for accessing scipy's implicit solvers (`Radau`, `BDF`) which handle stiff systems.
+A CPU-only solver that delegates integration to [`scipy.integrate.solve_ivp`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html) and parallelizes across initial conditions using joblib's loky backend. Each trajectory is solved independently in a separate worker process. Requires a `NumpyODESystem` subclass -- the ODE instance is passed directly to `solve_ivp` as the `fun` argument, with no PyTorch tensor conversions on the hot path. This solver is primarily useful for debugging, validating results against a well-established reference, and accessing scipy's implicit methods (`Radau`, `BDF`) for stiff systems.
 
 ```python
 from pybasin.solvers.scipy_solver import ScipyParallelSolver
@@ -391,7 +391,7 @@ Scipy provides explicit methods (`RK45`, `RK23`, `DOP853`) and implicit methods 
 
 ### Parallelization Behavior
 
-When `batch_size > 1` and `n_jobs != 1`, trajectories are distributed across worker processes using the loky backend. For a single trajectory (`batch_size == 1`) or when `n_jobs == 1`, execution is sequential with no multiprocessing overhead. Each worker converts tensors from PyTorch to NumPy, calls `solve_ivp`, and converts results back -- so this solver carries per-trajectory conversion overhead that the GPU-based solvers avoid.
+When `batch_size > 1` and `n_jobs != 1`, trajectories are distributed across worker processes using the loky backend. For a single trajectory (`batch_size == 1`) or when `n_jobs == 1`, execution is sequential with no multiprocessing overhead. Because `NumpyODESystem.ode` is pure NumPy, each worker process can call `solve_ivp` without any PyTorch state, avoiding GIL contention and import overhead inside the worker.
 
 ---
 

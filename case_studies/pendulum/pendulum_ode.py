@@ -1,8 +1,9 @@
 from typing import TypedDict
 
+import numpy as np
 import torch
 
-from pybasin.ode_system import ODESystem
+from pybasin.ode_system import NumpyODESystem, ODESystem
 
 
 class PendulumParams(TypedDict):
@@ -33,3 +34,11 @@ class PendulumODE(ODESystem[PendulumParams]):
         dtheta_dot_dt = -alpha * theta_dot + torque - k * torch.sin(theta)
 
         return torch.stack([dtheta_dt, dtheta_dot_dt], dim=1)
+
+
+class PendulumNumpyODE(NumpyODESystem[PendulumParams]):
+    def ode(self, t: float, y: np.ndarray) -> np.ndarray:
+        alpha = self.params["alpha"]
+        torque = self.params["T"]
+        k = self.params["K"]
+        return np.array([y[1], -alpha * y[1] + torque - k * np.sin(y[0])])
