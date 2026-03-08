@@ -11,6 +11,7 @@ from pybasin.study_params import (
     SweepStudyParams,
     ZipStudyParams,
 )
+from pybasin.types import StudyResult
 
 
 @pytest.fixture
@@ -42,11 +43,14 @@ def mock_components() -> dict[str, MagicMock]:
 def mock_bse() -> MagicMock:
     """Create a mock BasinStabilityEstimator."""
     mock = MagicMock()
-    mock.estimate_bs.return_value = {"attractor_1": 0.6, "attractor_2": 0.4}
-    mock.get_errors.return_value = {
-        "attractor_1": {"e_abs": 0.01, "e_rel": 0.02},
-        "attractor_2": {"e_abs": 0.01, "e_rel": 0.025},
-    }
+    mock.estimate_bs.return_value = StudyResult(
+        study_label={"baseline": True},
+        basin_stability={"attractor_1": 0.6, "attractor_2": 0.4},
+        errors={},
+        n_samples=100,
+        labels=None,
+        orbit_data=None,
+    )
     mock.solution = None
     mock.y0 = None
     mock.n = 100
@@ -410,7 +414,7 @@ class TestBasinStabilityStudyBSEArguments:
     def test_bse_get_errors_called_for_each_run(
         self, mock_components: dict[str, MagicMock], mock_bse: MagicMock
     ) -> None:
-        """get_errors should be called once per run."""
+        """get_errors is no longer called directly by the study (it's inside estimate_bs)."""
         study_params = SweepStudyParams(name='ode_system.params["T"]', values=[0.1, 0.2])
 
         with patch(
@@ -425,7 +429,7 @@ class TestBasinStabilityStudyBSEArguments:
             )
             bs_study.run()
 
-            assert mock_bse.get_errors.call_count == 2
+            assert mock_bse.get_errors.call_count == 0
 
 
 class TestBasinStabilityStudyResults:
@@ -437,10 +441,9 @@ class TestBasinStabilityStudyResults:
         """Basin stabilities from BSE should be stored."""
         mock_bse = MagicMock()
         mock_bse.estimate_bs.side_effect = [
-            {"a": 0.7, "b": 0.3},
-            {"a": 0.5, "b": 0.5},
+            StudyResult(study_label={"baseline": True}, basin_stability={"a": 0.7, "b": 0.3}, errors={}, n_samples=100, labels=None, orbit_data=None),
+            StudyResult(study_label={"baseline": True}, basin_stability={"a": 0.5, "b": 0.5}, errors={}, n_samples=100, labels=None, orbit_data=None),
         ]
-        mock_bse.get_errors.return_value = {}
         mock_bse.solution = None
         mock_bse.y0 = None
         mock_bse.n = 100

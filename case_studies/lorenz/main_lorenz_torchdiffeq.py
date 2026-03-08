@@ -43,8 +43,8 @@ def main():
         output_dir="results_case1_torchdiffeq",
     )
 
-    basin_stability = bse.estimate_bs()
-    print("Basin Stability:", basin_stability)
+    result = bse.estimate_bs()
+    print("Basin Stability:", result["basin_stability"])
 
     # bse.save()
 

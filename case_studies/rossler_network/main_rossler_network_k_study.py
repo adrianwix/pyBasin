@@ -88,6 +88,7 @@ if __name__ == "__main__":
         computed_sync.append(sync_val)
         expected_val = float(EXPECTED_SB_FROM_PAPER[idx])
         diff = sync_val - expected_val
+        assert isinstance(study_label, dict)
         param_val = study_label["K"]
 
         e_abs = np.sqrt(sync_val * (1 - sync_val) / n_samples)

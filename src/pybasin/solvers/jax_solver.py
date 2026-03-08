@@ -279,6 +279,8 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
             "atol": self.atol,
             "max_steps": self.max_steps,
             "t_span": self.t_span,
+            "t_eval": self.t_eval,
+            "t_steps": self.t_steps,
         }
 
     def integrate(
@@ -364,7 +366,12 @@ class JaxSolver(SolverProtocol, DisplayNameMixin):
         :param save_ts: Save-region time points as JAX array.
         :return: (save_ts, y_values) as JAX arrays.
         """
-        term = ODETerm(ode_system)
+        ode_fn = ode_system.ode
+
+        def ode_wrapper(t: Any, y: Array, args: Any) -> Array:
+            return ode_fn(t, y, args)
+
+        term = ODETerm(ode_wrapper)
         t0 = float(self.t_span[0])
         t1 = float(self.t_eval[1] if self.t_eval is not None else self.t_span[1])
         saveat = SaveAt(ts=save_ts)

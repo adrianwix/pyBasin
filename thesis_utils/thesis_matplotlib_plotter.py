@@ -74,7 +74,7 @@ class MatplotlibPlotter:
         :param ax: Matplotlib axes to plot on. If None, creates a new figure.
         :return: The Axes object with the plot.
         """
-        if self.bse.bs_vals is None:
+        if self.bse.result is None:
             raise ValueError(
                 "No basin stability values available. Please run estimate_bs() before plotting."
             )
@@ -86,7 +86,7 @@ class MatplotlibPlotter:
             ax = plt.gca()  # type: ignore[assignment]
 
         # Plot bar chart
-        bar_labels, values = zip(*self.bse.bs_vals.items(), strict=True)
+        bar_labels, values = zip(*self.bse.result["basin_stability"].items(), strict=True)
         ax.bar(bar_labels, values, color=["#ff7f0e", "#1f77b4"])  # type: ignore[misc]
         ax.set_xticks(bar_labels)  # type: ignore[misc]
         ax.set_ylabel(r"$\mathcal{S}(\mathcal{B}_i)$")  # type: ignore[misc]

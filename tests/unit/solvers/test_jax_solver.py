@@ -15,7 +15,7 @@ class ExponentialParams(TypedDict):
 
 
 class ExponentialDecayJaxODE(JaxODESystem[ExponentialParams]):
-    def ode(self, t: Array, y: Array) -> Array:
+    def ode(self, t: Array, y: Array, args: Any = None) -> Array:
         return self.params["decay"] * y
 
     def get_str(self) -> str:
@@ -140,7 +140,7 @@ def test_jax_solver_t_eval_propagates_to_clone(
 
 def test_jax_solver_2d_system() -> None:
     class LorenzLikeODE(JaxODESystem[dict[str, float]]):
-        def ode(self, t: Array, y: Array) -> Array:
+        def ode(self, t: Array, y: Array, args: Any = None) -> Array:
             x, v = y[..., 0], y[..., 1]
             dx = v
             dv = -x

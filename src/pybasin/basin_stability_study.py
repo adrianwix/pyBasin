@@ -88,7 +88,8 @@ class BasinStabilityStudy:
         """
         if not self.results:
             return []
-        return list(self.results[0]["study_label"].keys())
+        first_label = self.results[0]["study_label"]
+        return list(first_label.keys())
 
     def _suppress_verbose_logs(self) -> dict[str, list[logging.Filter]]:
         """Suppress verbose logs, keeping only the BSE timing breakdown.
@@ -227,39 +228,15 @@ class BasinStabilityStudy:
 
             original_levels = self._suppress_verbose_logs()
             run_start = time.perf_counter()
-            basin_stability = bse.estimate_bs()
+            result = bse.estimate_bs()
             run_elapsed = time.perf_counter() - run_start
             self._restore_log_levels(original_levels)
 
-            # Compute errors for this parameter value
-            errors = bse.get_errors()
-
-            # Store only essential results (not the full solution to save memory)
-            if bse.solution is not None:
-                solution_summary: StudyResult = {
-                    "study_label": run_config.study_label,
-                    "basin_stability": basin_stability,
-                    "errors": errors,
-                    "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
-                    "labels": bse.solution.labels.copy()
-                    if bse.solution.labels is not None
-                    else None,
-                    "orbit_data": bse.solution.orbit_data,
-                }
-            else:
-                solution_summary = {
-                    "study_label": run_config.study_label,
-                    "basin_stability": basin_stability,
-                    "errors": errors,
-                    "n_samples": len(bse.y0) if bse.y0 is not None else bse.n,
-                    "labels": None,
-                    "orbit_data": None,
-                }
-
-            self.results.append(solution_summary)
+            result = {**result, "study_label": run_config.study_label}
+            self.results.append(result)
 
             # Format basin stability output
-            bs_str = ", ".join([f"{k}: {v:.4f}" for k, v in basin_stability.items()])
+            bs_str = ", ".join([f"{k}: {v:.4f}" for k, v in result["basin_stability"].items()])
             logger.info("Result: {%s}", bs_str)
             logger.info("Elapsed: %.2fs", run_elapsed)
 

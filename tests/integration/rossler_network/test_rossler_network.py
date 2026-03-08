@@ -61,7 +61,8 @@ class TestRosslerNetwork:
             feature_selector=None,
         )
 
-        basin_stability = bse.estimate_bs()
+        result = bse.estimate_bs()
+        basin_stability = result["basin_stability"]
 
         # Get individual attractor basin stabilities
         sync_bs = basin_stability.get("synchronized", 0.0)
@@ -200,6 +201,7 @@ class TestRosslerNetwork:
         for idx, result in enumerate(bs_study.results):
             study_label = result["study_label"]
             bs_dict = result["basin_stability"]
+            assert isinstance(study_label, dict)
             param_val = study_label["K"]
             sync_val = bs_dict.get("synchronized", 0.0)
             unbounded_val = bs_dict.get("unbounded", 0.0)

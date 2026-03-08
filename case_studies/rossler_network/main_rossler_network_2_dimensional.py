@@ -222,7 +222,9 @@ def main() -> None:
     # ------------------------------------------------------------------
     p_groups: dict[float, list[StudyResult]] = defaultdict(list)
     for result in results:
-        p_groups[result["study_label"]["p"]].append(result)
+        sl = result["study_label"]
+        assert isinstance(sl, dict)
+        p_groups[sl["p"]].append(result)
 
     p_summaries: list[dict[str, Any]] = []
     for p_val in sorted(p_groups.keys()):

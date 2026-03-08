@@ -78,8 +78,8 @@ bse = BasinStabilityEstimator(
     ),
 )
 
-bse.estimate_bs()
-print(bse.bs_vals)
+result = bse.estimate_bs()
+print(result["basin_stability"])
 ```
 
 ## Documentation

@@ -48,9 +48,9 @@ if __name__ == "__main__":
         / "main_pendulum_case1.json"
     )
 
-    if bse.bs_vals is not None:
+    if bse.result is not None:
         errors = bse.get_errors()
-        compare_with_expected_by_size(bse.bs_vals, expected_file, errors)
+        compare_with_expected_by_size(bse.result["basin_stability"], expected_file, errors)
 
     # Test matplotlib plotter with new modular functions
     mpl_plotter = MatplotlibPlotter(bse)

@@ -30,7 +30,7 @@ from pybasin.solution import Solution
 from pybasin.solvers.torchdiffeq_solver import TorchDiffEqSolver
 from pybasin.template_integrator import TemplateIntegrator
 from pybasin.ts_torch.settings import DEFAULT_TORCH_FC_PARAMETERS
-from pybasin.types import ErrorInfo
+from pybasin.types import ErrorInfo, StudyResult
 from pybasin.utils import (
     NumpyEncoder,
     OrbitData,
@@ -69,7 +69,7 @@ class BasinStabilityEstimator:
     Configures the analysis with an ODE system, sampler, and solver,
     and provides methods to estimate basin stability and save results.
 
-    :ivar bs_vals: Basin stability values (fraction of samples per class).
+    :ivar result: The last computed StudyResult, or None if estimate_bs() has not been called.
     :ivar y0: Initial conditions tensor.
     :ivar solution: Solution instance containing trajectory and analysis results.
     """
@@ -193,9 +193,15 @@ class BasinStabilityEstimator:
 
         self.compute_orbit_data = compute_orbit_data
 
-        self.bs_vals: dict[str, float] | None = None
+        self._bs_vals: dict[str, float] | None = None
+        self._result: StudyResult | None = None
         self.y0: torch.Tensor | None = None
         self.solution: Solution | None = None
+
+    @property
+    def result(self) -> StudyResult | None:
+        """The last computed StudyResult, or None if estimate_bs() has not been called."""
+        return self._result
 
     def _detect_unbounded_trajectories(self, y: torch.Tensor) -> torch.Tensor:
         """Detect unbounded trajectories based on Inf values.
@@ -290,7 +296,7 @@ class BasinStabilityEstimator:
 
         return features_filtered, filtered_names
 
-    def estimate_bs(self, parallel_integration: bool = True) -> dict[str, float]:
+    def estimate_bs(self, parallel_integration: bool = True) -> StudyResult:
         """
         Estimate basin stability by:
             1. Generating initial conditions using the sampler.
@@ -302,11 +308,11 @@ class BasinStabilityEstimator:
         This method sets:
             - self.y0
             - self.solution
-            - self.bs_vals
+            - self._bs_vals
 
         :param parallel_integration: If True and using a supervised classifier with template
                                      integrator, run main and template integration in parallel.
-        :return: A dictionary of basin stability values per class.
+        :return: A StudyResult with basin stability values, errors, labels, and orbit data.
         """
         logger.info("Starting Basin Stability Estimation...")
         total_start = time.perf_counter()
@@ -405,14 +411,22 @@ class BasinStabilityEstimator:
                 logger.info(
                     "  All trajectories are unbounded. Skipping feature extraction and classification."
                 )
-                self.bs_vals = {"unbounded": 1.0}
+                self._bs_vals = {"unbounded": 1.0}
                 labels = np.array(["unbounded"] * total_samples, dtype=object)
                 self.solution.set_labels(labels)
 
                 total_elapsed = time.perf_counter() - total_start
                 logger.info("BASIN STABILITY ESTIMATION COMPLETE")
                 logger.info("Total time: %.4fs", total_elapsed)
-                return self.bs_vals
+                self._result = StudyResult(
+                    study_label={"baseline": True},
+                    basin_stability=self._bs_vals,
+                    errors=self.get_errors(),
+                    n_samples=len(self.y0),
+                    labels=labels.copy(),
+                    orbit_data=None,
+                )
+                return self._result
 
             if n_unbounded > 0:
                 logger.info(
@@ -575,7 +589,7 @@ class BasinStabilityEstimator:
         labels_str = np.array([str(label) for label in labels], dtype=object)
         unique_labels, counts = np.unique(labels_str, return_counts=True)
 
-        self.bs_vals = {str(label): 0.0 for label in unique_labels}
+        self._bs_vals = {str(label): 0.0 for label in unique_labels}
 
         # Use the actual number of samples generated, not the requested n
         # This is important because GridSampler may generate more points than requested
@@ -584,7 +598,7 @@ class BasinStabilityEstimator:
 
         for label, fraction in zip(unique_labels, fractions, strict=True):
             basin_stability_fraction = float(fraction)
-            self.bs_vals[str(label)] = basin_stability_fraction
+            self._bs_vals[str(label)] = basin_stability_fraction
             logger.info("    %s: %.2f%%", label, basin_stability_fraction * 100)
 
         t7_elapsed = time.perf_counter() - t7
@@ -608,7 +622,16 @@ class BasinStabilityEstimator:
         _log_timing("6. Classification:", t6_elapsed, total_elapsed)
         _log_timing("7. BS Computation:", t7_elapsed, total_elapsed)
 
-        return self.bs_vals
+        result = StudyResult(
+            study_label={"baseline": True},
+            basin_stability=self._bs_vals,
+            errors=self.get_errors(),
+            n_samples=len(self.y0),
+            labels=self.solution.labels.copy() if self.solution.labels is not None else None,
+            orbit_data=self.solution.orbit_data,
+        )
+        self._result = result
+        return result
 
     def get_errors(self) -> dict[str, ErrorInfo]:
         """
@@ -622,13 +645,13 @@ class BasinStabilityEstimator:
         :return: Dictionary mapping each label to an ErrorInfo with ``e_abs`` and ``e_rel`` keys.
         :raises ValueError: If ``estimate_bs()`` has not been called yet.
         """
-        if self.bs_vals is None:
+        if self._bs_vals is None:
             raise ValueError("No results available. Please run estimate_bs() first.")
 
         errors: dict[str, ErrorInfo] = {}
         n = self.n
 
-        for label, s_b in self.bs_vals.items():
+        for label, s_b in self._bs_vals.items():
             e_abs = np.sqrt(s_b * (1 - s_b) / n)
 
             e_rel = 1 / np.sqrt(n * s_b) if s_b > 0 else float("inf")
@@ -646,7 +669,7 @@ class BasinStabilityEstimator:
         :raises ValueError: If ``estimate_bs()`` has not been called yet.
         :raises ValueError: If ``output_dir`` is not defined.
         """
-        if self.bs_vals is None:
+        if self._bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
 
         if self.output_dir is None:
@@ -696,7 +719,7 @@ class BasinStabilityEstimator:
             feature_selection_info["selector_type"] = "disabled"
 
         results: dict[str, Any] = {
-            "basin_of_attractions": self.bs_vals,
+            "basin_of_attractions": self._bs_vals,
             "region_of_interest": region_of_interest,
             "sampling_points": self.n,
             "sampling_method": self.sampler.__class__.__name__,
@@ -721,7 +744,7 @@ class BasinStabilityEstimator:
         :raises ValueError: If ``output_dir`` is not defined.
         :raises ValueError: If no solution data is available.
         """
-        if self.bs_vals is None:
+        if self._bs_vals is None:
             raise ValueError("No results to save. Please run estimate_bs() first.")
 
         if self.output_dir is None:

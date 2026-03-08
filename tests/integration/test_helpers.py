@@ -307,7 +307,8 @@ def run_basin_stability_test(
         feature_selector=None,
     )
 
-    basin_stability = bse.estimate_bs()
+    result = bse.estimate_bs()
+    basin_stability = result["basin_stability"]
 
     # Verify actual N used matches expected (GridSampler may generate more points)
     if bse.y0 is not None:
@@ -315,7 +316,7 @@ def run_basin_stability_test(
         print(f"\nExpected N: {expected_n}, Actual N: {actual_n}")
 
     # Get computed standard errors
-    errors = bse.get_errors()
+    errors = result["errors"]
 
     # Load ground truth labels from CSV if provided
     if ground_truth_csv is not None:
@@ -669,7 +670,7 @@ def run_single_point_test(
     failures: list[str] = []
     TOLERANCE = 0.05  # Allow 5% deviation for random sampling tests
     for label, expected_value in expected_bs.items():
-        actual_value = basin_stability.get(label, 0.0)
+        actual_value = basin_stability["basin_stability"].get(label, 0.0)
         if abs(actual_value - expected_value) > TOLERANCE:
             failures.append(
                 f"Label '{label}': expected {expected_value:.4f}, got {actual_value:.4f}"
@@ -677,5 +678,5 @@ def run_single_point_test(
 
     assert not failures, "Basin stability validation failed:\n" + "\n".join(failures)
 
-    total_bs = sum(basin_stability.values())
+    total_bs = sum(basin_stability["basin_stability"].values())
     assert abs(total_bs - 1.0) < 0.001, f"Basin stabilities should sum to 1.0, got {total_bs}"

@@ -1,6 +1,6 @@
 """JAX-native Lorenz system ODE for maximum performance."""
 
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import jax.numpy as jnp
 from jax import Array
@@ -38,7 +38,7 @@ class LorenzJaxODE(JaxODESystem[LorenzParams]):
     def __init__(self, params: LorenzParams):
         super().__init__(params)
 
-    def ode(self, t: Array, y: Array) -> Array:
+    def ode(self, t: Array, y: Array, args: Any = None) -> Array:
         """
         Right-hand side (RHS) for the Lorenz system using pure JAX.
 
