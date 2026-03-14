@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import torch
 
+from pybasin import set_seed
 from pybasin.sampler import CsvSampler, GaussianSampler, GridSampler, UniformRandomSampler
 
 
@@ -47,8 +48,6 @@ def test_uniform_sampler_bounds(sampler_params: SamplerParams) -> None:
 
 
 def test_uniform_sampler_seed_reproducibility(sampler_params: SamplerParams) -> None:
-    from pybasin import set_seed
-
     sampler = UniformRandomSampler(**sampler_params)
 
     set_seed(42)

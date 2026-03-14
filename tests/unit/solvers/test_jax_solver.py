@@ -471,7 +471,7 @@ def test_jax_solver_params_zip(two_decay_ode: TwoDecayJaxODE) -> None:
 
     assert y.shape == (11, B * P, 2)
     y0_vals = [[1.0, 2.0], [3.0, 4.0]]
-    pairs = list(zip(alphas.tolist(), betas.tolist()))
+    pairs: list[tuple[float, float]] = list(zip(alphas.tolist(), betas.tolist(), strict=True))  # type: ignore[arg-type]
     for ic in range(B):
         for p, (a, b) in enumerate(pairs):
             idx = ic * P + p

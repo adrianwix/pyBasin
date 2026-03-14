@@ -6,12 +6,14 @@ from pybasin.matplotlib_study_plotter import MatplotlibStudyPlotter
 from pybasin.study_params import SweepStudyParams
 from pybasin.utils import time_execution
 
+FRICTION_V_D_VALUES: list[float] = [float(v) for v in np.linspace(0.8, 2.225, 20)]
+
 
 def main():
     props = setup_friction_system()
 
     study_params = SweepStudyParams(
-        **{'ode_system.params["v_d"]': list(np.linspace(0.8, 2.225, 20))},
+        **{'ode_system.params["v_d"]': FRICTION_V_D_VALUES},
     )
 
     solver = props.get("solver")
