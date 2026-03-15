@@ -2522,7 +2522,7 @@ wheels = [
 
 [[package]]
 name = "pybasin"
-version = "0.2.0b1"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },

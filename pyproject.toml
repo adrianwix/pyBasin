@@ -1,6 +1,6 @@
 [project]
 name = "pybasin"
-version = "0.2.0b1"
+version = "0.2.0"
 description = "Basin stability estimation for dynamical systems"
 authors = [{ name = "Adrian Wix", email = "adrianwix18@gmail.com" }]
 readme = "README.md"
